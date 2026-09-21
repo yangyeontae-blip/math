@@ -129,7 +129,7 @@ export class World {
     this.addEntity('outfit', '오지후 · 의상 상점', 8, -3.8, makeCharacter(2, 4, 2));
     this.addEntity('arena', '별솔 · 대련장', 0, -9, makeCharacter(3, 5, 3));
     stageMonsters(0).forEach((m, i) => this.addEntity(`monster${i}`, MONSTERS[m.type].name, m.x, m.z, makeMonster(m.type)));
-    this.addEntity('journey', '모험의 문 · 10개의 사냥터', 4, 5, this.gate());
+    this.addEntity('journey', '모험의 문 · 10개의 사냥터', 10.5, 13.5, this.gate(0x9e78c9));
     // Keep the walking areas clear; peripheral trees frame the miniature world.
     for (let i = 0; i < 48; i++) { const a = i * 2.39996, r = 17 + (i % 4) * 1.65; const x = Math.cos(a) * r, z = Math.sin(a) * r * .77; if ((x > 14 && z > 1) || (Math.abs(x) < 5 && z < -12)) continue; this.tree(x, z, .85 + (i % 3) * .16, i % 6 === 0); }
     [[-15, -6], [-15, 8], [14, -9], [12, 15], [-6, 15]].forEach(([x, z], i) => this.tree(x, z, 1, i % 2 === 0));
@@ -137,14 +137,26 @@ export class World {
     for (const side of [-1, 1]) for (let i = 0; i < 7; i++) { const x = side * 22, z = -15 + i * 4.7; cylinder(this.scene, 0xd4bb88, x, .5, z, .08, .09, 1, 8); box(this.scene, 0xe7d3a3, x, .65, z + 2, .12, .11, 4.7); }
     this.addBerries();
   }
-  private gate() { const g = new T.Group(); for (const side of [-1, 1]) { cylinder(g, 0xd6bc80, side * 1.1, 1.25, 0, .23, .31, 2.5, 8); ball(g, 0x9fc985, side * 1.1, 2.6, 0, .38); } mesh(new T.TorusGeometry(1.1, .16, 7, 20, Math.PI), 0x83b27a, 0, 2.5, 0, g); mesh(new T.OctahedronGeometry(.26), 0xffdc81, 0, 3.5, 0, g); return g; }
+  private gate(color = 0x9e78c9) {
+    const g = new T.Group(), glow = new T.MeshBasicMaterial({ color: 0xf7ddff, transparent: true, opacity: .65 });
+    cylinder(g, 0xd6bc80, 0, .04, 0, 1.85, 1.85, .08, 24);
+    for (const side of [-1, 1]) {
+      cylinder(g, 0xe5c99c, side * 1.35, 1.35, 0, .27, .35, 2.7, 8); cylinder(g, color, side * 1.35, 2.7, 0, .36, .43, .2, 8); ball(g, 0xffdd91, side * 1.35, 3.02, 0, .25);
+      for (let i = 0; i < 3; i++) ball(g, [0xf3a9ca, 0xb7db9b, 0xb5d8ec][i], side * (1.65 + i * .11), .25 + i * .18, .05, .16, .08, .13);
+    }
+    const arch = mesh(new T.TorusGeometry(1.34, .19, 8, 24, Math.PI), color, 0, 2.66, 0, g); arch.rotation.z = 0;
+    const inner = new T.Mesh(new T.CircleGeometry(1.17, 30), glow); inner.position.set(0, 1.46, -.04); g.add(inner);
+    const star = mesh(new T.OctahedronGeometry(.3), 0xffe18a, 0, 3.72, 0, g); star.rotation.z = .4;
+    for (let i = 0; i < 7; i++) { const a = i * .89; const sparkle = mesh(new T.OctahedronGeometry(.075 + (i % 2) * .035), i % 2 ? 0xffdc91 : 0xf8c8e9, Math.cos(a) * 1.75, 1.1 + (i % 3) * .62, Math.sin(a) * .25, g); sparkle.userData.sparkle = true; }
+    g.userData.magicGate = true; return g;
+  }
   private addBerries() { stageBerries(this.stage).forEach(({ x, z }, id) => { const p = this.platforms.find(t => Math.abs(t.x - x) < 1 && Math.abs(t.z - z) < 1); const g = new T.Group(); ball(g, 0xf77591, -.09, 0, 0, .21, .24, .19); ball(g, 0xdd496f, .1, .015, 0, .2, .23, .19); const leaf = ball(g, 0x4a9853, 0, .26, 0, .18, .055, .09); leaf.rotation.z = .45; const y = (p?.h ?? 0) + .68; g.position.set(x, y, z); this.scene.add(g); this.coins.push({ mesh: g, id, y }); }); }
   private buildHunt(stage: number) {
     const spec = STAGES[stage - 1], size = stageSize(stage); this.platforms = stagePlatforms(stage); this.scene.background = new T.Color(spec.sky); this.scene.fog = new T.Fog(spec.sky, 55, 120);
     box(this.scene, spec.ground, 0, -.55, 0, size.x * 2, 1.1, size.z * 2); box(this.scene, 0x708f71, 0, -1.3, 0, size.x * 2 - 1, .5, size.z * 2 - 1);
     box(this.scene, spec.accent, 0, .02, 0, 3.8, .06, size.z * 2 - 5); for (const z of [14, 0, -15]) box(this.scene, spec.accent, 0, .025, z, size.x * 2 - 10, .06, 2.6);
     this.platforms.forEach(p => { box(this.scene, 0xa8a88c, p.x, p.h / 2, p.z, p.w, p.h, p.d); box(this.scene, spec.accent, p.x, p.h + .02, p.z, p.w + .05, .08, p.d + .05); });
-    this.addEntity('home', '베리숲 마을로 돌아가기', 0, size.z - 5, this.gate()); this.addEntity('next', stage === 10 ? '마지막 축하문' : `다음 길 · ${STAGES[stage].name}`, 0, -size.z + 5, this.gate());
+    this.addEntity('home', '베리숲 마을로 돌아가기', 0, size.z - 5, this.gate(0x6eb7a1)); this.addEntity('next', stage === 10 ? '마지막 축하문' : `다음 길 · ${STAGES[stage].name}`, 0, -size.z + 5, this.gate(0xc087d2));
     stageMonsters(stage).forEach((m, i) => this.addEntity(`monster${i}`, `${MONSTERS[m.type].name} · ${i + 1}`, m.x, m.z, makeMonster(m.type)));
     for (let i = 0; i < 55; i++) { const x = Math.sin(i * 2.399 + stage) * (size.x - 4), z = Math.cos(i * 1.73 + stage) * (size.z - 4); if (Math.abs(x) < 4 || [14, 0, -15].some(v => Math.abs(z - v) < 2.5)) continue; this.tree(x, z, .8 + i % 3 * .2, spec.theme === 'blossom', spec.foliage); }
     for (let i = 0; i < 14; i++) { const g = new T.Group(); g.position.set((i % 2 ? 1 : -1) * (size.x - 5), 0, size.z - 7 - Math.floor(i / 2) * 8); this.scene.add(g); if (spec.theme === 'crystal') { for (let j = 0; j < 3; j++) { const m = mesh(new T.OctahedronGeometry(.65), [0x9bade6, 0xc3a0df, 0x9bd6d4][j], j * .55 - .55, 1.3, 0, g); m.scale.y = 2 + j * .3; } } else if (spec.theme === 'mushroom') { cylinder(g, 0xf4e4cb, 0, .9, 0, .4, .6, 1.8); ball(g, 0xda8e9a, 0, 2, 0, 1.8, .65, 1.5); } else { for (let j = 0; j < 5; j++) ball(g, spec.foliage, Math.cos(j * 1.26), .7, Math.sin(j * 1.26), .4, .14, .4); } }
@@ -214,6 +226,7 @@ export class World {
     let near: Entity | undefined, distance = 2.8;
     for (const e of this.entities) {
       if (e.id.startsWith('monster')) { e.mesh.position.y = Math.max(0, Math.sin(this.time * 2 + e.x)) * .16; e.mesh.rotation.y = Math.sin(this.time * .5 + e.z) * .35; }
+      if (e.mesh.userData.magicGate) { e.mesh.rotation.y = Math.sin(this.time * .45 + e.x) * .07; e.mesh.traverse(o => { if (o.userData.sparkle) { o.position.y += Math.sin(this.time * 2.4 + o.position.x) * .0015; o.rotation.y += dt * 1.8; } }); }
       const d = Math.hypot(p.x - e.x, p.z - e.z); if (e.mesh.visible && d < distance) { near = e; distance = d; }
       const v = new T.Vector3(e.x, e.id.startsWith('monster') ? 2 : 2.6, e.z).project(this.camera);
       e.label.style.transform = `translate(-50%, -100%) translate(${(v.x * .5 + .5) * this.container.clientWidth}px, ${(-v.y * .5 + .5) * this.container.clientHeight}px)`;
