@@ -1,5 +1,5 @@
 import * as T from 'three';
-import { CHARACTERS, MONSTERS, OUTFITS, WEAPONS, type Save } from './rules';
+import { CHARACTERS, MONSTERS, OUTFITS, RIDES, WEAPONS, type Save } from './rules';
 import { STAGES, stageBerries, stageMonsters, stagePlatforms, stageTrees, stageSize } from './stages';
 
 type Entity = { id: string; name: string; x: number; z: number; mesh: T.Group; label: HTMLDivElement };
@@ -104,6 +104,24 @@ function makeYeontae() {
   return g;
 }
 
+function makeRide(id: number) {
+  const g = new T.Group(), ride = RIDES[id]; g.userData.rideModel = true;
+  if (id === 0) {
+    box(g, 0x73b7a3, 0, .34, 0, 1.25, .16, .58); cylinder(g, 0xf39a58, 0, .55, .1, .16, .3, .72, 10).rotation.z = Math.PI / 2;
+    for (const side of [-1, 1]) { const wheel = cylinder(g, 0x554b47, side * .48, .22, .08, .23, .23, .15, 12); wheel.rotation.z = Math.PI / 2; ball(g, 0xffd56c, side * .48, .22, .08, .08); }
+  } else if (id === 1) {
+    for (let i = 0; i < 7; i++) ball(g, 0xf5fbff, (i % 4 - 1.5) * .32, .55 + (i % 2) * .18, (Math.floor(i / 4) - .5) * .35, .42, .36, .38);
+    ball(g, 0xdcebf1, 0, .72, .42, .48, .43, .42); for (const side of [-1, 1]) { ball(g, 0x394844, side * .16, .8, .78, .045, .06, .03); ball(g, 0xc0dce7, side * .3, 1.07, .43, .14, .24, .12); }
+  } else {
+    ball(g, ride.color, 0, .62, 0, .85, .48, .48); ball(g, ride.color, 0, .9, .62, .47, .43, .52);
+    for (const side of [-1, 1]) { ball(g, 0x3f4251, side * .17, .98, 1.03, .045, .06, .03); const wing = mesh(new T.ConeGeometry(.48, 1.35, 3), id === 2 ? 0xf4ecff : 0x9cb4ea, side * .78, .92, -.05, g); wing.rotation.z = side * -.72; wing.rotation.x = -.2; wing.userData.rideWing = side; }
+    for (let i = 0; i < 4; i++) ball(g, id === 2 ? 0xffe5a6 : 0xa9d9ef, 0, .88 + i * .12, -.45 - i * .28, .2 - i * .025);
+    if (id === 2) { mesh(new T.ConeGeometry(.12, .65, 8), 0xffefb2, 0, 1.48, .7, g).rotation.x = -.35; }
+    else { for (const side of [-1, 1]) mesh(new T.ConeGeometry(.16, .42, 6), 0xbad6ff, side * .27, 1.35, .58, g).rotation.x = -.25; }
+  }
+  return g;
+}
+
 export class World {
   scene = new T.Scene(); renderer: T.WebGLRenderer; camera: T.OrthographicCamera;
   player = new T.Group(); private entities: Entity[] = []; private coins: { mesh: T.Group; id: number; y: number }[] = [];
@@ -111,7 +129,7 @@ export class World {
   private keys = new Set<string>(); private stick = { x: 0, z: 0 }; private clock = new T.Clock(); private time = 0; private vy = 0; private grounded = true;
   private particles: { mesh: T.Mesh; v: T.Vector3; life: number }[] = []; private lastSafe = new T.Vector3(0, 0, 8); private follow = new T.Vector3(0, 0, 1);
   private sun: T.DirectionalLight; private labelLayer: HTMLDivElement; private selectedId: string | null = null;
-  private swingUntil = 0;
+  private swingUntil = 0; private rideIndex = -1;
   active = false; paused = true; onCollect = (_id: number) => {}; onInteract = (_id: string) => {}; onAttack = (_id: string | null) => {}; onNear = (_name: string | null, _id: string | null) => {}; onJump = () => {}; onRescue = () => {};
   constructor(private container: HTMLElement) {
     this.scene.background = new T.Color(0xc5e5d4); this.scene.fog = new T.Fog(0xc5e5d4, 55, 105);
@@ -147,8 +165,8 @@ export class World {
     for (const [x, z] of [[-5, 11], [6, 11], [-5, -1], [6, -1]]) { cylinder(this.scene, 0x755a43, x, .65, z, .06, .08, 1.3, 7); ball(this.scene, 0xffe99a, x, 1.35, z, .22); }
     // Pastel bunting, tiny mushrooms and butterflies make the square feel festive.
     for (let i = 0; i < 9; i++) { const flag = mesh(new T.ConeGeometry(.18, .38, 3), [0xf6a7bc, 0xf5d37b, 0x92d4cc][i % 3], -5 + i * 1.25, 2.3 + Math.sin(i * .7) * .12, -2.2, this.scene); flag.rotation.z = Math.PI; }
-    for (const [x, z, c] of [[-4, 7, 0xf58da6], [4.5, 12, 0xffd66b], [-12, 1, 0xa9cceb], [13, 3, 0xd8a3e6]] as const) { cylinder(this.scene, 0xffeed6, x, .18, z, .08, .12, .36, 7); ball(this.scene, c, x, .42, z, .28, .16, .25); }
-    for (let i = 0; i < 8; i++) { const g = new T.Group(); g.position.set(-8 + i * 2.2, .9 + i % 2 * .35, 7 + Math.sin(i) * 1.8); this.scene.add(g); ball(g, i % 2 ? 0xf5a9ca : 0x9bd8e0, -.1, 0, 0, .12, .08, .03); ball(g, i % 2 ? 0xf5a9ca : 0x9bd8e0, .1, 0, 0, .12, .08, .03); cylinder(g, 0x75543e, 0, 0, 0, .025, .025, .16, 5); g.userData.butterfly = true; }
+    for (const [x, z, c] of [[-4, 7, 0xf58da6], [5, 7, 0xffd66b], [-12, 1, 0xa9cceb], [13, 3, 0xd8a3e6]] as const) { cylinder(this.scene, 0xffeed6, x, .18, z, .08, .12, .36, 7); ball(this.scene, c, x, .42, z, .28, .16, .25); }
+    for (let i = 0; i < 8; i++) { const x = -8 + i * 2.2, z = 7 + Math.sin(i) * 1.8; if (Math.hypot(x - 10.5, z - 13.5) < 7) continue; const g = new T.Group(); g.position.set(x, .9 + i % 2 * .35, z); this.scene.add(g); ball(g, i % 2 ? 0xf5a9ca : 0x9bd8e0, -.1, 0, 0, .12, .08, .03); ball(g, i % 2 ? 0xf5a9ca : 0x9bd8e0, .1, 0, 0, .12, .08, .03); cylinder(g, 0x75543e, 0, 0, 0, .025, .025, .16, 5); g.userData.butterfly = true; }
     // Arena: a lavender garden, not a threatening dungeon.
     cylinder(this.scene, 0xc7bdd8, 0, .08, -13, 4.3, 4.3, .14, 40); cylinder(this.scene, 0xe1d9e7, 0, .17, -13, 3.65, 3.65, .07, 40);
     const ring = mesh(new T.TorusGeometry(3.25, .055, 6, 48), 0xab96c4, 0, .22, -13, this.scene); ring.rotation.x = Math.PI / 2;
@@ -156,18 +174,24 @@ export class World {
     this.addEntity('guide', '연태쌤 · 마을 대장', 1.8, 3, makeYeontae());
     this.addEntity('weapon', '강지후 · 무기 상점', -8, -3.8, makeCharacter(1, 6, 1));
     this.addEntity('outfit', '오지후 · 의상 상점', 8, -3.8, makeCharacter(2, 4, 2));
+    this.addEntity('ride', '나현이 · 라이딩 상점', 14, -5.5, makeCharacter(0, 10, 6));
     this.addEntity('arena', '별솔 · 대련장', 0, -9, makeCharacter(3, 5, 3));
     stageMonsters(0).forEach((m, i) => this.addEntity(`monster${i}`, MONSTERS[m.type].name, m.x, m.z, makeMonster(m.type)));
     this.addEntity('journey', '모험의 문 · 10개의 사냥터', 10.5, 13.5, this.gate(0x9e78c9));
     // Keep the walking areas clear; peripheral trees frame the miniature world.
-    for (let i = 0; i < 48; i++) { const a = i * 2.39996, r = 17 + (i % 4) * 1.65; const x = Math.cos(a) * r, z = Math.sin(a) * r * .77; if ((x > 14 && z > 1) || (Math.abs(x) < 5 && z < -12)) continue; this.tree(x, z, .85 + (i % 3) * .16, i % 6 === 0); }
+    for (let i = 0; i < 48; i++) { const a = i * 2.39996, r = 17 + (i % 4) * 1.65; const x = Math.cos(a) * r, z = Math.sin(a) * r * .77; if ((x > 14 && z > 1) || Math.hypot(x - 10.5, z - 13.5) < 7 || (Math.abs(x) < 5 && z < -12)) continue; this.tree(x, z, .85 + (i % 3) * .16, i % 6 === 0); }
     stageTrees(0).forEach(({ x, z }, i) => this.addChoppableTree(i, x, z, 1, i % 2 === 0));
-    for (let i = 0; i < 65; i++) { const x = Math.sin(i * 12.97) * 23, z = Math.cos(i * 4.67) * 18; if (Math.abs(x) < 3 || (z < -2 && z > -11) || (x > 5 && z > 2 && z < 14)) continue; for (let j = 0; j < 3; j++) { const fx = x + j * .14; cylinder(this.scene, 0x538c50, fx, .14, z, .025, .025, .3, 5); ball(this.scene, [0xffe8ae, 0xf4aec4, 0xeae3ff][i % 3], fx, .32, z, .1, .09, .1); } }
+    for (let i = 0; i < 65; i++) { const x = Math.sin(i * 12.97) * 23, z = Math.cos(i * 4.67) * 18; if (Math.abs(x) < 3 || Math.hypot(x - 10.5, z - 13.5) < 7 || (z < -2 && z > -11) || (x > 5 && z > 2 && z < 14)) continue; for (let j = 0; j < 3; j++) { const fx = x + j * .14; cylinder(this.scene, 0x538c50, fx, .14, z, .025, .025, .3, 5); ball(this.scene, [0xffe8ae, 0xf4aec4, 0xeae3ff][i % 3], fx, .32, z, .1, .09, .1); } }
     for (const side of [-1, 1]) for (let i = 0; i < 7; i++) { const x = side * 22, z = -15 + i * 4.7; cylinder(this.scene, 0xd4bb88, x, .5, z, .08, .09, 1, 8); box(this.scene, 0xe7d3a3, x, .65, z + 2, .12, .11, 4.7); }
     this.addBerries();
   }
   private gate(color = 0x9e78c9) {
     const g = new T.Group(), glow = new T.MeshBasicMaterial({ color: 0xf7ddff, transparent: true, opacity: .65 });
+    const runeMat = new T.MeshBasicMaterial({ color: 0xffe5a3, transparent: true, opacity: .72, depthWrite: false });
+    const auraMat = new T.MeshBasicMaterial({ color, transparent: true, opacity: .2, depthWrite: false, side: T.DoubleSide });
+    const aura = new T.Mesh(new T.CircleGeometry(2.5, 48), auraMat); aura.rotation.x = -Math.PI / 2; aura.position.y = .035; aura.userData.gatePulse = true; g.add(aura);
+    const rune = new T.Mesh(new T.TorusGeometry(2.18, .055, 8, 64), runeMat); rune.rotation.x = Math.PI / 2; rune.position.y = .085; rune.userData.gateRing = .38; g.add(rune);
+    const runeInner = new T.Mesh(new T.TorusGeometry(1.72, .035, 8, 48), new T.MeshBasicMaterial({ color: 0xf7c5f1, transparent: true, opacity: .78, depthWrite: false })); runeInner.rotation.x = Math.PI / 2; runeInner.position.y = .095; runeInner.userData.gateRing = -.56; g.add(runeInner);
     cylinder(g, 0xd6bc80, 0, .04, 0, 1.85, 1.85, .08, 24);
     for (const side of [-1, 1]) {
       cylinder(g, 0xe5c99c, side * 1.35, 1.35, 0, .27, .35, 2.7, 8); cylinder(g, color, side * 1.35, 2.7, 0, .36, .43, .2, 8); ball(g, 0xffdd91, side * 1.35, 3.02, 0, .25);
@@ -175,8 +199,12 @@ export class World {
     }
     const arch = mesh(new T.TorusGeometry(1.34, .19, 8, 24, Math.PI), color, 0, 2.66, 0, g); arch.rotation.z = 0;
     const inner = new T.Mesh(new T.CircleGeometry(1.17, 30), glow); inner.position.set(0, 1.46, -.04); g.add(inner);
+    const halo = new T.Mesh(new T.TorusGeometry(1.02, .045, 8, 48), new T.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: .78, depthWrite: false })); halo.position.set(0, 1.46, .02); halo.userData.gateHalo = true; g.add(halo);
+    const beam = new T.Mesh(new T.CylinderGeometry(.72, 1.12, 2.7, 24, 1, true), new T.MeshBasicMaterial({ color: 0xecc9ff, transparent: true, opacity: .12, side: T.DoubleSide, depthWrite: false })); beam.position.y = 1.4; beam.userData.gateBeam = true; g.add(beam);
     const star = mesh(new T.OctahedronGeometry(.3), 0xffe18a, 0, 3.72, 0, g); star.rotation.z = .4;
     for (let i = 0; i < 7; i++) { const a = i * .89; const sparkle = mesh(new T.OctahedronGeometry(.075 + (i % 2) * .035), i % 2 ? 0xffdc91 : 0xf8c8e9, Math.cos(a) * 1.75, 1.1 + (i % 3) * .62, Math.sin(a) * .25, g); sparkle.userData.sparkle = true; }
+    for (let i = 0; i < 14; i++) { const a = i / 14 * Math.PI * 2, orb = ball(g, [0xffe49b, 0xf7b7dc, 0xaedcf1][i % 3], Math.cos(a) * 2.05, .35 + i % 4 * .52, Math.sin(a) * .42, .065 + i % 2 * .025); Object.assign(orb.userData, { gateOrb: true, gateAngle: a, gateRadius: 1.72 + i % 3 * .2, gateBaseY: .35 + i % 4 * .52, gateSpeed: .48 + i % 4 * .09 }); }
+    const light = new T.PointLight(0xe6c8ff, 6, 7); light.position.set(0, 1.7, .4); g.add(light);
     g.userData.magicGate = true; return g;
   }
   private addBerries() { stageBerries(this.stage).forEach(({ x, z }, id) => { const p = this.platforms.find(t => Math.abs(t.x - x) < 1 && Math.abs(t.z - z) < 1); const g = new T.Group(); ball(g, 0xf77591, -.09, 0, 0, .21, .24, .19); ball(g, 0xdd496f, .1, .015, 0, .2, .23, .19); const leaf = ball(g, 0x4a9853, 0, .26, 0, .18, .055, .09); leaf.rotation.z = .45; const y = (p?.h ?? 0) + .68; g.position.set(x, y, z); this.scene.add(g); this.coins.push({ mesh: g, id, y }); }); }
@@ -225,12 +253,14 @@ export class World {
     const label = document.createElement('div'); label.className = `entity-label ${id.startsWith('monster') ? 'monster-label' : ''}`; label.textContent = name; this.labelLayer.append(label);
     this.entities.push({ id, name, x, z, mesh: model, label });
   }
-  setAvatar(character: number, outfit: number, weapon: number, outfitLevel = 0, weaponLevel = 0) {
+  setAvatar(character: number, outfit: number, weapon: number, outfitLevel = 0, weaponLevel = 0, ride = -1) {
     const position = this.player.position.clone(), rotation = this.player.rotation.y;
     this.scene.remove(this.player); this.disposeModel(this.player); this.player = makeCharacter(character, outfit, weapon, outfitLevel, weaponLevel); this.player.position.copy(position); this.player.rotation.y = rotation; this.scene.add(this.player);
+    this.rideIndex = ride;
+    if (ride >= 0 && RIDES[ride]) { const body = this.player.userData.body as T.Group; body.position.y = RIDES[ride].flying ? 1.03 : .78; this.player.add(makeRide(ride)); }
   }
   private disposeModel(g: T.Group) { g.traverse(o => { if (o instanceof T.Mesh) o.geometry.dispose(); }); }
-  restore(s: Save) { this.setAvatar(s.character, s.outfit, s.weapon, s.outfits[s.outfit], s.weapons[s.weapon]); this.loadStage(s); this.quality(s.settings.lowQuality); }
+  restore(s: Save) { this.setAvatar(s.character, s.outfit, s.weapon, s.outfits[s.outfit], s.weapons[s.weapon], s.ride); this.loadStage(s); this.quality(s.settings.lowQuality); }
   quality(low: boolean) { this.renderer.setPixelRatio(Math.min(devicePixelRatio, low ? 1 : 1.7)); this.renderer.shadowMap.enabled = !low; this.sun.castShadow = !low; this.scene.traverse(o => { if (o instanceof T.Mesh) { const mats = Array.isArray(o.material) ? o.material : [o.material]; mats.forEach(m => m.needsUpdate = true); } }); }
   clearInput() { this.keys.clear(); this.stick = { x: 0, z: 0 }; }
   moveStick(x: number, z: number) { this.stick = { x, z }; }
@@ -255,15 +285,16 @@ export class World {
       let dx = Number(this.keys.has('d') || this.keys.has('arrowright')) - Number(this.keys.has('a') || this.keys.has('arrowleft')) + this.stick.x;
       let dz = Number(this.keys.has('s') || this.keys.has('arrowdown')) - Number(this.keys.has('w') || this.keys.has('arrowup')) + this.stick.z;
       const n = Math.hypot(dx, dz); if (n > 1) { dx /= n; dz /= n; }
-      const vx = (dx * .8 + dz * .6) * 5, vz = (-dx * .6 + dz * .8) * 5;
-      const allowed = (x: number, z: number) => !this.colliders.some(c => (!c.id || this.entities.find(e => e.id === c.id)?.mesh.visible) && Math.hypot(x - c.x, z - c.z) < c.r + .32) && !this.platforms.some(t => Math.abs(x - t.x) < t.w / 2 + .2 && Math.abs(z - t.z) < t.d / 2 + .2 && p.y < t.h - .13);
+      const ride = this.rideIndex >= 0 ? RIDES[this.rideIndex] : null, flying = !!ride?.flying, speed = 5 * (ride?.speed ?? 1);
+      const vx = (dx * .8 + dz * .6) * speed, vz = (-dx * .6 + dz * .8) * speed;
+      const allowed = (x: number, z: number) => flying || (!this.colliders.some(c => (!c.id || this.entities.find(e => e.id === c.id)?.mesh.visible) && Math.hypot(x - c.x, z - c.z) < c.r + .32) && !this.platforms.some(t => Math.abs(x - t.x) < t.w / 2 + .2 && Math.abs(z - t.z) < t.d / 2 + .2 && p.y < t.h - .13));
       if (allowed(p.x + vx * dt, p.z)) p.x += vx * dt; if (allowed(p.x, p.z + vz * dt)) p.z += vz * dt;
       if (n > .05) { this.player.rotation.y = Math.atan2(vx, vz); this.player.userData.feet?.forEach((f: T.Mesh, i: number) => { f.position.y = .18 + Math.max(0, Math.sin(this.time * 13 + i * Math.PI)) * .12; }); }
-      const platform = this.platforms.find(t => Math.abs(p.x - t.x) < t.w / 2 + .15 && Math.abs(p.z - t.z) < t.d / 2 + .15); const floor = platform?.h ?? 0;
+      const platform = flying ? undefined : this.platforms.find(t => Math.abs(p.x - t.x) < t.w / 2 + .15 && Math.abs(p.z - t.z) < t.d / 2 + .15); const floor = flying ? 1.65 + Math.sin(this.time * 2.2) * .08 : platform?.h ?? 0;
       this.vy -= 18 * dt; p.y += this.vy * dt; if (p.y <= floor && this.vy <= 0) { p.y = floor; this.vy = 0; this.grounded = true; } else this.grounded = false;
       const bounds = stageSize(this.stage);
-      if (Math.abs(p.x) > bounds.x - .5 || Math.abs(p.z) > bounds.z - .5 || (this.water(p.x, p.z) && p.y <= .2)) { p.copy(this.lastSafe); this.vy = 0; this.onRescue(); }
-      else if (this.grounded && !this.water(p.x, p.z) && Math.abs(p.x) < bounds.x - 2 && Math.abs(p.z) < bounds.z - 2) this.lastSafe.copy(p);
+      if (Math.abs(p.x) > bounds.x - .5 || Math.abs(p.z) > bounds.z - .5 || (!flying && this.water(p.x, p.z) && p.y <= .2)) { p.copy(this.lastSafe); this.vy = 0; this.onRescue(); }
+      else if (this.grounded && (flying || !this.water(p.x, p.z)) && Math.abs(p.x) < bounds.x - 2 && Math.abs(p.z) < bounds.z - 2) this.lastSafe.copy(p);
       for (const c of this.coins) if (c.mesh.visible && p.distanceTo(c.mesh.position) < 1) { c.mesh.visible = false; this.burst(c.mesh.position, 0xff9fb4, 6); this.onCollect(c.id); }
     }
     for (const c of this.coins) { c.mesh.rotation.y += dt; c.mesh.position.y = c.y + Math.sin(this.time * 2.8 + c.mesh.position.x) * .12; }
@@ -271,7 +302,14 @@ export class World {
     for (const e of this.entities) {
       if (e.id.startsWith('monster')) { e.mesh.position.y = Math.max(0, Math.sin(this.time * 2 + e.x)) * .16; e.mesh.rotation.y = Math.sin(this.time * .5 + e.z) * .35; }
       if (e.id.startsWith('tree') && e.mesh.userData.shakeUntil > this.time) e.mesh.rotation.z = Math.sin(this.time * 55) * .08; else if (e.id.startsWith('tree')) e.mesh.rotation.z = 0;
-      if (e.mesh.userData.magicGate) { e.mesh.rotation.y = Math.sin(this.time * .45 + e.x) * .07; e.mesh.traverse(o => { if (o.userData.sparkle) { o.position.y += Math.sin(this.time * 2.4 + o.position.x) * .0015; o.rotation.y += dt * 1.8; } }); }
+      if (e.mesh.userData.magicGate) { e.mesh.rotation.y = Math.sin(this.time * .45 + e.x) * .045; e.mesh.traverse(o => {
+        if (o.userData.sparkle) { o.rotation.y += dt * 2.4; o.rotation.z += dt * 1.2; }
+        if (o.userData.gateRing) o.rotation.z += dt * Number(o.userData.gateRing);
+        if (o.userData.gateHalo) { o.rotation.z += dt * .65; const pulse = 1 + Math.sin(this.time * 2.2) * .055; o.scale.setScalar(pulse); }
+        if (o.userData.gatePulse) { const pulse = 1 + (Math.sin(this.time * 1.8) + 1) * .08; o.scale.setScalar(pulse); (o as T.Mesh).material && (((o as T.Mesh).material as T.MeshBasicMaterial).opacity = .14 + (Math.sin(this.time * 1.8) + 1) * .06); }
+        if (o.userData.gateBeam) { o.rotation.y += dt * .3; (o as T.Mesh).material && (((o as T.Mesh).material as T.MeshBasicMaterial).opacity = .09 + (Math.sin(this.time * 2.5) + 1) * .035); }
+        if (o.userData.gateOrb) { o.userData.gateAngle += dt * o.userData.gateSpeed; o.position.x = Math.cos(o.userData.gateAngle) * o.userData.gateRadius; o.position.z = Math.sin(o.userData.gateAngle) * .48; o.position.y = o.userData.gateBaseY + Math.sin(this.time * 2.1 + o.userData.gateAngle) * .16; }
+      }); }
       const d = Math.hypot(p.x - e.x, p.z - e.z); if (e.mesh.visible && d < distance) { near = e; distance = d; }
       const v = new T.Vector3(e.x, e.id.startsWith('monster') ? 2 : 2.6, e.z).project(this.camera);
       e.label.style.transform = `translate(-50%, -100%) translate(${(v.x * .5 + .5) * this.container.clientWidth}px, ${(-v.y * .5 + .5) * this.container.clientHeight}px)`;
@@ -281,6 +319,7 @@ export class World {
     if ((near?.id ?? null) !== this.selectedId) { this.selectedId = near?.id ?? null; this.onNear(near?.name ?? null, near?.id ?? null); }
     this.scene.traverse(o => { if (o.userData.butterfly) { o.position.y += Math.sin(this.time * 4 + o.position.x) * .0015; o.rotation.y += dt * .7; } });
     const weapon = this.player.userData.weapon as T.Group | undefined; if (weapon) weapon.rotation.z = -.28 + (this.swingUntil > this.time ? Math.sin((this.swingUntil - this.time) / .28 * Math.PI) * -1.35 : 0);
+    this.player.traverse(o => { if (o.userData.rideWing) o.rotation.z = Number(o.userData.rideWing) * (-.72 + Math.sin(this.time * 7) * .18); });
     if (this.player.userData.sparkles) this.player.userData.sparkles.rotation.y += dt;
     for (let i = this.particles.length - 1; i >= 0; i--) { const q = this.particles[i]; q.life -= dt; q.v.y -= dt * 5; q.mesh.position.addScaledVector(q.v, dt); q.mesh.scale.setScalar(Math.max(0, q.life)); if (q.life <= 0) { this.scene.remove(q.mesh); q.mesh.geometry.dispose(); this.particles.splice(i, 1); } }
     const target = this.active ? p : new T.Vector3(0, 0, -1); this.follow.lerp(target, 1 - Math.exp(-dt * 3));

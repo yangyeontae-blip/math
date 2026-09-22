@@ -43,11 +43,18 @@ export const MONSTERS = [
   { name: '구름 토끼', icon: '☁️', berry: 12, xp: 15, score: 20, color: 0xeaf4fc },
   { name: '도토리 정령', icon: '🌰', berry: 15, xp: 20, score: 25, color: 0xd3aa74 },
 ] as const;
+export const RIDES = [
+  { name: '당근 씽씽카', price: 1000, speed: 1.35, flying: false, icon: '🥕', color: 0xf39a58, desc: '당근 바퀴로 통통 달리는 첫 라이딩' },
+  { name: '구름양 포포', price: 2500, speed: 1.55, flying: false, icon: '🐑', color: 0xd9eff7, desc: '폭신한 털을 흔들며 빠르게 달려요' },
+  { name: '별빛 페가수스', price: 5000, speed: 1.75, flying: true, icon: '🪽', color: 0xc9b5ef, desc: '반짝이는 날개로 물과 장애물 위를 날아요' },
+  { name: '달빛 아기용', price: 8000, speed: 2, flying: true, icon: '🐉', color: 0x7898d8, desc: '달빛 꼬리를 그리며 가장 빠르게 날아요' },
+] as const;
 export const WEAPON_UPGRADES = [60, 120, 240];
 export const OUTFIT_UPGRADES = [50, 100];
 export interface Save {
-  version: 3; nickname: string; character: number; berries: number; level: number; xp: number;
+  version: 4; nickname: string; character: number; berries: number; level: number; xp: number;
   weapon: number; outfit: number; weapons: Record<string, number>; outfits: Record<string, number>;
+  ride: number; rides: Record<string, boolean>; teacherMode: boolean;
   best: number; position: { x: number; z: number }; tutorial: { collected: boolean; battle: boolean; shop: boolean };
   settings: { music: boolean; sound: boolean; lowQuality: boolean };
   journey: { stage: number; maps: { berries: number[]; monsters: number[]; trees: number[]; cleared: boolean }[] };
@@ -55,10 +62,10 @@ export interface Save {
 export interface Question { dividend: number; divisor: number; answer: number }
 export function newSave(nickname: string, character: number): Save {
   if (!nickname.trim() || [...nickname.trim()].length > 10 || !Number.isInteger(character) || character < 0 || character > 3) throw new Error('이름은 1~10자, 캐릭터는 4명 중 골라 주세요.');
-  return { version: 3, nickname: nickname.trim(), character, berries: 0, level: 1, xp: 0, weapon: 0, outfit: 0, weapons: { 0: 0 }, outfits: { 0: 0 }, best: 0, position: { x: 0, z: 8 }, tutorial: { collected: false, battle: false, shop: false }, settings: { music: true, sound: true, lowQuality: false }, journey: emptyJourney() };
+  return { version: 4, nickname: nickname.trim(), character, berries: 0, level: 1, xp: 0, weapon: 0, outfit: 0, weapons: { 0: 0 }, outfits: { 0: 0 }, ride: -1, rides: {}, teacherMode: false, best: 0, position: { x: 0, z: 8 }, tutorial: { collected: false, battle: false, shop: false }, settings: { music: true, sound: true, lowQuality: false }, journey: emptyJourney() };
 }
 export function emptyJourney(): Save['journey'] { return { stage: 0, maps: Array.from({ length: 11 }, () => ({ berries: [], monsters: [], trees: [], cleared: false })) }; }
-export function canEnter(s: Save, stage: number) { return Number.isInteger(stage) && stage >= 0 && stage <= 10 && (stage <= 1 || s.journey.maps[stage - 1].cleared); }
+export function canEnter(s: Save, stage: number) { return Number.isInteger(stage) && stage >= 0 && stage <= 10 && (s.teacherMode || stage <= 1 || s.journey.maps[stage - 1].cleared); }
 export function collectBerry(s: Save, id: number) {
   const stage = s.journey.stage, map = s.journey.maps[stage];
   if (!Number.isInteger(id) || !stageBerries(stage)[id] || map.berries.includes(id)) return 0;
@@ -118,28 +125,47 @@ export function upgrade(s: Save, kind: 'weapon' | 'outfit', id: number): string 
   if (s.berries < cost) throw new Error(`${cost - s.berries}베리가 더 필요해요.`);
   s.berries -= cost; owned[id]++; return `${owned[id]}단계로 강화했어요!`;
 }
+export function buyRide(s: Save, id: number): string {
+  const ride = RIDES[id];
+  if (!Number.isInteger(id) || !ride) throw new Error('없는 라이딩이에요.');
+  if (s.rides[id]) { s.ride = id; return `${ride.name}에 탔어요!`; }
+  if (s.berries < ride.price) throw new Error(`${ride.price - s.berries}베리가 더 필요해요.`);
+  s.berries -= ride.price; s.rides[id] = true; s.ride = id; return `${ride.name}을(를) 만나 함께 달려요!`;
+}
+export function dismount(s: Save) { s.ride = -1; return '라이딩에서 내려 천천히 걸어요.'; }
+export function enableTeacherMode(s: Save, code: string): string {
+  if (code !== 'teacher') throw new Error('암호코드가 맞지 않아요.');
+  s.teacherMode = true; s.berries = 1_000_000;
+  WEAPONS.forEach((_, id) => { s.weapons[id] = 3; }); OUTFITS.forEach((_, id) => { s.outfits[id] = 2; }); RIDES.forEach((_, id) => { s.rides[id] = true; });
+  return '선생님 모드가 열렸어요! 모든 장비와 스테이지를 사용할 수 있어요.';
+}
 export function validateSave(value: unknown): Save {
   const fail = () => { throw new Error('베리숲 저장 파일이 아니거나 내용이 손상되었어요.'); };
   if (!value || typeof value !== 'object') return fail();
   const migrated = structuredClone(value) as Record<string, unknown>;
   if (migrated.version === 1) { migrated.version = 2; migrated.journey = emptyJourney(); }
   if (migrated.version === 2) { migrated.version = 3; const journey = migrated.journey as Save['journey']; journey.maps.forEach(m => { m.trees = []; }); }
+  if (migrated.version === 3) { migrated.version = 4; migrated.ride = -1; migrated.rides = {}; migrated.teacherMode = false; }
+  if (migrated.version === 4 && migrated.teacherMode === undefined) migrated.teacherMode = false;
   const s = migrated as unknown as Save;
   const integer = (v: unknown, min: number, max: number): v is number => typeof v === 'number' && Number.isSafeInteger(v) && v >= min && v <= max;
-  if (s.version !== 3 || typeof s.nickname !== 'string' || !s.nickname.trim() || [...s.nickname].length > 10 || !integer(s.character, 0, 3) || !integer(s.berries, 0, 1e9) || !integer(s.level, 1, 100000) || !integer(s.xp, 0, s.level * 40 - 1) || !integer(s.best, 0, 1e9)) return fail();
+  if (s.version !== 4 || typeof s.teacherMode !== 'boolean' || typeof s.nickname !== 'string' || !s.nickname.trim() || [...s.nickname].length > 10 || !integer(s.character, 0, 3) || !integer(s.berries, 0, 1e9) || !integer(s.level, 1, 100000) || !integer(s.xp, 0, s.level * 40 - 1) || !integer(s.best, 0, 1e9)) return fail();
   for (const [key, total, max] of [['weapons', WEAPONS.length, 3], ['outfits', OUTFITS.length, 2]] as const) {
     const map = s[key];
     if (!map || typeof map !== 'object' || Array.isArray(map) || !Object.hasOwn(map, '0')) return fail();
     for (const [id, v] of Object.entries(map)) if (!/^\d+$/.test(id) || !integer(Number(id), 0, total - 1) || !integer(v, 0, max)) return fail();
   }
   if (!integer(s.weapon, 0, WEAPONS.length - 1) || !integer(s.outfit, 0, OUTFITS.length - 1) || !Object.hasOwn(s.weapons, s.weapon) || !Object.hasOwn(s.outfits, s.outfit)) return fail();
+  if (!integer(s.ride, -1, RIDES.length - 1) || !s.rides || typeof s.rides !== 'object' || Array.isArray(s.rides)) return fail();
+  for (const [id, owned] of Object.entries(s.rides)) if (!/^\d+$/.test(id) || !integer(Number(id), 0, RIDES.length - 1) || owned !== true) return fail();
+  if (s.ride >= 0 && !s.rides[s.ride]) return fail();
   if (!s.journey || !integer(s.journey.stage, 0, 10) || !Array.isArray(s.journey.maps) || s.journey.maps.length !== 11) return fail();
   for (let stage = 0; stage <= 10; stage++) {
     const m = s.journey.maps[stage];
     if (!m || typeof m.cleared !== 'boolean') return fail();
     for (const [key, max] of [['berries', stageBerries(stage).length], ['monsters', stageMonsters(stage).length], ['trees', stageTrees(stage).length]] as const) if (!Array.isArray(m[key]) || m[key].some(id => !integer(id, 0, max - 1)) || new Set(m[key]).size !== m[key].length) return fail();
     if (stage > 0 && m.cleared !== (m.monsters.length === stageMonsters(stage).length)) return fail();
-    if (stage > 1 && (m.cleared || m.monsters.length || m.berries.length || m.trees.length) && !s.journey.maps[stage - 1].cleared) return fail();
+    if (!s.teacherMode && stage > 1 && (m.cleared || m.monsters.length || m.berries.length || m.trees.length) && !s.journey.maps[stage - 1].cleared) return fail();
   }
   if (!canEnter(s, s.journey.stage)) return fail();
   const bounds = stageSize(s.journey.stage);
