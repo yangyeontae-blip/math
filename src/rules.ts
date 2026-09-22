@@ -8,6 +8,10 @@ export const WEAPONS = [
   { name: '꿀벌 황금도끼', price: 620, bonus: 8, multiplier: 2.5, treePower: 4, icon: '🐝', color: 0xf0b52f },
   { name: '무지개 물뿌리개', price: 780, bonus: 10, multiplier: 2.8, treePower: 4, icon: '🌈', color: 0x72cbd4 },
   { name: '왕별 숲지팡이', price: 980, bonus: 12, multiplier: 3.2, treePower: 5, icon: '⭐', color: 0xffd95a },
+  { name: '딸기잼 국자', price: 1180, bonus: 14, multiplier: 3.5, treePower: 5, icon: '🍓', color: 0xe9657b },
+  { name: '구름양 대검', price: 1420, bonus: 16, multiplier: 3.8, treePower: 6, icon: '🐑', color: 0xeaf4ff },
+  { name: '개구리 연잎창', price: 1680, bonus: 18, multiplier: 4.2, treePower: 6, icon: '🐸', color: 0x6abf72 },
+  { name: '별사탕 왕홀', price: 2000, bonus: 21, multiplier: 4.6, treePower: 7, icon: '🍬', color: 0xc79bea },
 ] as const;
 export const OUTFITS = [
   { name: '새싹 탐험복', price: 0, color: 0x4d9c78, accent: 0xffe4a3, desc: '처음 떠나는 모험의 설렘', effect: '베리 +0', berryBonus: 0, xpBonus: 0, clearBonus: 0 },
@@ -22,6 +26,10 @@ export const OUTFITS = [
   { name: '노랑 오리 우비', price: 320, color: 0xf2c94c, accent: 0xfff4ad, desc: '빗방울도 신나는 통통한 우비', effect: '완료 +45베리', berryBonus: 0, xpBonus: 0, clearBonus: 45 },
   { name: '토끼 귀 소풍복', price: 390, color: 0xe7a5c4, accent: 0xfff2f7, desc: '긴 토끼 귀와 보송한 꼬리가 달린 옷', effect: '경험치 +6', berryBonus: 0, xpBonus: 6, clearBonus: 0 },
   { name: '도토리 숲지기', price: 480, color: 0x9b7448, accent: 0xd8bb71, desc: '도토리 모자와 나뭇잎 가방 세트', effect: '베리 +2 · 완료 +30베리', berryBonus: 2, xpBonus: 0, clearBonus: 30 },
+  { name: '고양이 카페 앞치마', price: 560, color: 0x8d7f9f, accent: 0xffd9df, desc: '고양이 귀와 리본 주머니가 달린 앞치마', effect: '베리 +3 · 경험치 +3', berryBonus: 3, xpBonus: 3, clearBonus: 0 },
+  { name: '구름양 잠옷', price: 660, color: 0xb9d9eb, accent: 0xffffff, desc: '몽글몽글 양 귀와 구름 단추가 달린 옷', effect: '경험치 +8', berryBonus: 0, xpBonus: 8, clearBonus: 0 },
+  { name: '개구리 연잎옷', price: 780, color: 0x70b978, accent: 0xd8f28c, desc: '동그란 눈과 연잎 망토가 귀여운 옷', effect: '베리 +5', berryBonus: 5, xpBonus: 0, clearBonus: 0 },
+  { name: '별사탕 요정복', price: 920, color: 0xb78ed3, accent: 0xffe083, desc: '별 날개와 사탕빛 리본이 반짝이는 옷', effect: '경험치 +5 · 완료 +50베리', berryBonus: 0, xpBonus: 5, clearBonus: 50 },
 ] as const;
 export const CHARACTERS = [
   { name: '봄이', desc: '동글동글 양 갈래', hair: 0x623d2e, skin: 0xffd8b1, style: 0 },
