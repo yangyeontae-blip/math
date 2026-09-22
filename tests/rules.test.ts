@@ -1,13 +1,14 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { questionPool, newSave, validateSave, buy, upgrade, grantReward, rewardFor, Encounter, WEAPONS, MONSTERS, collectBerry, finishHunt, canEnter } from '../src/rules.ts';
-import { stageBerries, stageMonsters, clearBonus, berryValue } from '../src/stages.ts';
+import { questionPool, newSave, validateSave, buy, upgrade, grantReward, rewardFor, Encounter, WEAPONS, MONSTERS, collectBerry, finishHunt, fellTree, treeDamage, canEnter } from '../src/rules.ts';
+import { stageBerries, stageMonsters, stageTrees, clearBonus, berryValue } from '../src/stages.ts';
 
 test('every question follows the curriculum; two-digit quotients begin at level 4', () => {
   for (const level of [1, 2, 3, 4, 10, 100]) {
     const pool = questionPool(level); assert.ok(pool.length > 0);
-    for (const q of pool) { assert.ok(q.dividend >= 10 && q.dividend <= 90 && q.dividend % 10 === 0); assert.ok(q.divisor >= 2 && q.divisor <= 9); assert.equal(q.divisor * q.answer, q.dividend); if (level < 4) assert.ok(q.answer < 10); }
+    for (const q of pool) { assert.ok(q.dividend >= 10 && q.dividend <= (level < 4 ? 90 : level < 7 ? 120 : 180) && q.dividend % 10 === 0); assert.ok(q.divisor >= 2 && q.divisor <= 9); assert.equal(q.divisor * q.answer, q.dividend); if (level < 4) assert.ok(q.answer < 10); }
     if (level >= 4) assert.ok(pool.some(q => q.answer >= 10));
+    if (level >= 7) assert.ok(pool.some(q => q.dividend > 90));
   }
 });
 test('all weapons and upgrades give the documented rewards for every monster', () => {
@@ -33,7 +34,7 @@ test('level-up threshold, remaining XP and 20 berry gift', () => {
 });
 test('save round-trip preserves state and rejects corrupted, unsafe or invalid files', () => {
   const s = newSave('모험가', 3); s.berries = 500; buy(s, 'outfit', 4); upgrade(s, 'outfit', 4); assert.deepEqual(validateSave(JSON.parse(JSON.stringify(s))), s);
-  for (const bad of [null, {}, { ...s, version: 3 }, { ...s, berries: -1 }, { ...s, xp: 10000 }, { ...s, weapon: 3 }, { ...s, position: { x: Infinity, z: 0 } }, { ...s, outfits: { 0: 0, 4: 9 } }, { ...s, settings: {} }]) assert.throws(() => validateSave(bad));
+  for (const bad of [null, {}, { ...s, version: 99 }, { ...s, berries: -1 }, { ...s, xp: 10000 }, { ...s, weapon: 3 }, { ...s, position: { x: Infinity, z: 0 } }, { ...s, outfits: { 0: 0, 4: 9 } }, { ...s, settings: {} }]) assert.throws(() => validateSave(bad));
   assert.throws(() => newSave(' ', 0)); assert.throws(() => newSave('12345678901', 0)); assert.throws(() => newSave('봄', 4));
 });
 test('stages have fixed, non-refilling berries and unlock only after all hunts', () => {
@@ -48,4 +49,15 @@ test('outfit effects boost rewards but do not make problems or weapons optional'
   const s = newSave('꽃', 0); s.berries = 1000; buy(s, 'outfit', 7); assert.equal(rewardFor(s, 0, false).xp, MONSTERS[0].xp + 2);
   const before = s.berries; s.journey.stage = 1; collectBerry(s, 0); assert.equal(s.berries - before, berryValue(1));
   const encounter = new Encounter(0, false, 1); assert.equal(encounter.answer(String(encounter.question.answer)), 'correct');
+});
+test('trees give only 1 or 2 berries once and stronger weapons cut faster', () => {
+  const s = newSave('나무', 0); assert.ok(stageTrees(0).length > 0); assert.equal(treeDamage(s), 1);
+  assert.equal(fellTree(s, 0, 2), 2); assert.equal(s.berries, 2); assert.equal(fellTree(s, 0, 2), 0); assert.equal(s.berries, 2);
+  s.berries = 5000; buy(s, 'weapon', WEAPONS.length - 1); assert.equal(treeDamage(s), WEAPONS.at(-1)!.treePower); upgrade(s, 'weapon', WEAPONS.length - 1); assert.equal(treeDamage(s), WEAPONS.at(-1)!.treePower + 1);
+  assert.equal(fellTree(s, 999, 1), 0); assert.equal(fellTree(s, 1, 3 as 1), 0);
+});
+test('version 2 saves migrate with untouched tree progress', () => {
+  const old = structuredClone(newSave('예전', 0)) as unknown as Record<string, unknown>; old.version = 2;
+  const journey = old.journey as { maps: Array<Record<string, unknown>> }; journey.maps.forEach(m => delete m.trees);
+  const migrated = validateSave(old); assert.equal(migrated.version, 3); assert.deepEqual(migrated.journey.maps[0].trees, []);
 });

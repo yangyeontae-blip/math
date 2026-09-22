@@ -1,6 +1,6 @@
 import * as T from 'three';
 import { CHARACTERS, MONSTERS, OUTFITS, WEAPONS, type Save } from './rules';
-import { STAGES, stageBerries, stageMonsters, stagePlatforms, stageSize } from './stages';
+import { STAGES, stageBerries, stageMonsters, stagePlatforms, stageTrees, stageSize } from './stages';
 
 type Entity = { id: string; name: string; x: number; z: number; mesh: T.Group; label: HTMLDivElement };
 const mat = (color: number, roughness = .86) => new T.MeshStandardMaterial({ color, roughness });
@@ -53,11 +53,20 @@ export function makeCharacter(character: number, outfit: number, weapon: number,
     for (let i = 0; i < 7; i++) mesh(new T.OctahedronGeometry(.065), o.accent, Math.cos(i * .9) * .8, .6 + (i % 3) * .45, Math.sin(i * .9) * .8, halo);
   }
   const w = new T.Group(); w.position.set(.62, .63, .12); w.rotation.z = -.28; body.add(w);
+  g.userData.weapon = w;
   cylinder(w, 0x8a6044, 0, .26, 0, .055, .065, .8, 8);
   if (weapon === 0) { const blade = box(w, WEAPONS[weapon].color, 0, .63, 0, .15, .52, .09); blade.rotation.z = -.08; box(w, o.accent, 0, .36, 0, .34, .07, .13); }
   if (weapon === 1) { cylinder(w, 0x89552f, 0, .74, 0, .3, .33, .36); ball(w, 0xc7985c, 0, .68, 0, .35, .3, .3); }
   if (weapon === 2) { const fan = mesh(new T.CircleGeometry(.43, 12, 0, Math.PI), 0xb8cbff, 0, .63, .05, w); (fan.material as T.Material).side = T.DoubleSide; for (let i = 0; i < 5; i++) { const rib = box(w, 0xffe3a2, 0, .69, .07, .024, .55, .02); rib.rotation.z = (i - 2) * .5; } }
   if (weapon === 3) { mesh(new T.OctahedronGeometry(.28), 0xffdd72, 0, .94, 0, w); ball(w, 0xf4a4d3, 0, .94, 0, .14); }
+  if (weapon === 4) { const blade = mesh(new T.ConeGeometry(.16, .58, 6), WEAPONS[weapon].color, 0, .75, 0, w); blade.rotation.z = Math.PI; ball(w, 0xffd0d8, 0, 1.02, 0, .17); }
+  if (weapon === 5) { const head = box(w, WEAPONS[weapon].color, 0, .82, 0, .62, .28, .18); head.rotation.z = -.12; for (const side of [-1, 1]) ball(w, 0x403629, side * .2, .87, .12, .045); }
+  if (weapon === 6) { const can = ball(w, WEAPONS[weapon].color, 0, .73, 0, .3, .25, .22); can.rotation.z = .3; cylinder(w, 0xf4d56e, .25, .86, 0, .06, .09, .48, 8).rotation.z = -1.15; }
+  if (weapon === 7) { mesh(new T.OctahedronGeometry(.34), WEAPONS[weapon].color, 0, .97, 0, w); for (let i = 0; i < 5; i++) ball(w, 0xfff0a4, Math.cos(i * 1.26) * .28, .97 + Math.sin(i * 1.26) * .28, 0, .08); }
+  if (outfit === 8) { box(body, 0xf55f74, 0, .82, .39, .3, .34, .08); for (const side of [-1, 1]) box(body, 0xf8d9a0, side * .18, .98, .36, .06, .42, .04); }
+  if (outfit === 9) { const brim = cylinder(body, o.accent, 0, 1.98, 0, .57, .57, .08); ball(body, o.color, 0, 2.12, 0, .38, .25, .34); }
+  if (outfit === 10) { for (const side of [-1, 1]) { const ear = ball(body, o.accent, side * .27, 2.26, 0, .17, .55, .15); ear.rotation.z = side * -.16; } ball(body, 0xffffff, 0, .77, -.38, .22); }
+  if (outfit === 11) { mesh(new T.SphereGeometry(.45, 12, 8, 0, Math.PI * 2, 0, Math.PI / 2), o.color, 0, 1.94, 0, body); ball(body, o.accent, 0, 2.23, 0, .16); box(body, o.accent, 0, .87, -.42, .52, .58, .18); }
   if (weaponLevel) for (let i = 0; i < weaponLevel; i++) ball(w, 0xffe891, 0, .3 + i * .16, .08, .06);
   return g;
 }
@@ -90,11 +99,12 @@ function makeYeontae() {
 export class World {
   scene = new T.Scene(); renderer: T.WebGLRenderer; camera: T.OrthographicCamera;
   player = new T.Group(); private entities: Entity[] = []; private coins: { mesh: T.Group; id: number; y: number }[] = [];
-  private colliders: { x: number; z: number; r: number }[] = []; private platforms = stagePlatforms(0); stage = 0;
+  private colliders: { x: number; z: number; r: number; id?: string }[] = []; private platforms = stagePlatforms(0); stage = 0;
   private keys = new Set<string>(); private stick = { x: 0, z: 0 }; private clock = new T.Clock(); private time = 0; private vy = 0; private grounded = true;
   private particles: { mesh: T.Mesh; v: T.Vector3; life: number }[] = []; private lastSafe = new T.Vector3(0, 0, 8); private follow = new T.Vector3(0, 0, 1);
   private sun: T.DirectionalLight; private labelLayer: HTMLDivElement; private selectedId: string | null = null;
-  active = false; paused = true; onCollect = (_id: number) => {}; onInteract = (_id: string) => {}; onNear = (_name: string | null) => {}; onJump = () => {}; onRescue = () => {};
+  private swingUntil = 0;
+  active = false; paused = true; onCollect = (_id: number) => {}; onInteract = (_id: string) => {}; onAttack = (_id: string | null) => {}; onNear = (_name: string | null, _id: string | null) => {}; onJump = () => {}; onRescue = () => {};
   constructor(private container: HTMLElement) {
     this.scene.background = new T.Color(0xc5e5d4); this.scene.fog = new T.Fog(0xc5e5d4, 55, 105);
     this.renderer = new T.WebGLRenderer({ antialias: true, alpha: false }); this.renderer.setPixelRatio(Math.min(devicePixelRatio, 1.7)); this.renderer.shadowMap.enabled = true; this.renderer.shadowMap.type = T.PCFSoftShadowMap; this.renderer.outputColorSpace = T.SRGBColorSpace; this.renderer.toneMapping = T.ACESFilmicToneMapping; this.renderer.toneMappingExposure = 1.35; container.append(this.renderer.domElement);
@@ -103,7 +113,7 @@ export class World {
     this.labelLayer = document.createElement('div'); this.labelLayer.className = 'world-labels'; container.append(this.labelLayer);
     this.buildVillage(); this.setAvatar(0, 0, 0); this.player.position.set(0, 0, 8); this.scene.add(this.player);
     window.addEventListener('resize', () => this.resize()); this.resize();
-    window.addEventListener('keydown', e => { if (!this.active || this.paused || /INPUT|TEXTAREA|SELECT/.test((e.target as HTMLElement).tagName)) return; if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' '].includes(e.key)) e.preventDefault(); this.keys.add(e.key.toLowerCase()); if (!e.repeat && e.code === 'Space') this.jump(); if (!e.repeat && e.key.toLowerCase() === 'e') this.interact(); });
+    window.addEventListener('keydown', e => { if (!this.active || this.paused || /INPUT|TEXTAREA|SELECT/.test((e.target as HTMLElement).tagName)) return; if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' '].includes(e.key)) e.preventDefault(); this.keys.add(e.key.toLowerCase()); if (!e.repeat && e.code === 'Space') this.jump(); if (!e.repeat && e.key.toLowerCase() === 'e') this.interact(); if (!e.repeat && e.key.toLowerCase() === 'f') this.attack(); });
     window.addEventListener('keyup', e => this.keys.delete(e.key.toLowerCase())); window.addEventListener('blur', () => this.clearInput()); document.addEventListener('visibilitychange', () => this.clearInput());
     this.renderer.setAnimationLoop(() => this.frame());
   }
@@ -120,6 +130,13 @@ export class World {
     for (let i = 0; i < 5; i++) { cylinder(this.scene, 0x72ad63, 17 + i % 2 * 3, .16, 4.5 + i * 1.5, .42, .42, .02, 12); ball(this.scene, 0xf0b6ce, 17 + i % 2 * 3, .24, 4.5 + i * 1.5, .14, .12, .14); }
     this.platforms.forEach(p => { box(this.scene, 0xa8a88c, p.x, p.h / 2, p.z, p.w, p.h, p.d); box(this.scene, 0xcfe298, p.x, p.h + .02, p.z, p.w + .05, .08, p.d + .05); });
     this.house(-9, -8, 0x659c91, 0xf6e5bd); this.house(9, -8, 0xd995a7, 0xffe9ce);
+    // Original cozy life-sim details: a tiny farm, mailbox, picnic bench and lanterns.
+    box(this.scene, 0x9d754d, -17, .05, -10, 6.5, .12, 4.5);
+    for (let row = 0; row < 3; row++) for (let col = 0; col < 5; col++) { cylinder(this.scene, 0x4c9555, -19.2 + col * 1.1, .28, -11.2 + row * 1.15, .035, .055, .5, 5); ball(this.scene, [0xf28fa8, 0xf4d66a, 0x9dcfe5][row], -19.2 + col * 1.1, .55, -11.2 + row * 1.15, .13); }
+    for (let i = 0; i < 7; i++) { box(this.scene, 0xe4c18c, -20.4 + i * 1.1, .42, -12.75, 1, .12, .12); cylinder(this.scene, 0xba8a58, -20.9 + i * 1.1, .4, -12.75, .045, .055, .8, 6); }
+    box(this.scene, 0x8f6949, 5.5, .55, 5.5, 2.2, .18, .65); box(this.scene, 0x8f6949, 5.5, .95, 5.75, 2.2, .18, .18); for (const x of [4.7, 6.3]) cylinder(this.scene, 0x76523d, x, .3, 5.5, .08, .08, .6, 6);
+    box(this.scene, 0xe59687, -6.1, 1.1, -4.9, .72, .95, .5); cylinder(this.scene, 0x81624b, -6.1, .45, -4.9, .09, .11, .9, 7); box(this.scene, 0xffe6a3, -5.85, 1.1, -4.62, .12, .12, .04);
+    for (const [x, z] of [[-5, 11], [6, 11], [-5, -1], [6, -1]]) { cylinder(this.scene, 0x755a43, x, .65, z, .06, .08, 1.3, 7); ball(this.scene, 0xffe99a, x, 1.35, z, .22); }
     // Arena: a lavender garden, not a threatening dungeon.
     cylinder(this.scene, 0xc7bdd8, 0, .08, -13, 4.3, 4.3, .14, 40); cylinder(this.scene, 0xe1d9e7, 0, .17, -13, 3.65, 3.65, .07, 40);
     const ring = mesh(new T.TorusGeometry(3.25, .055, 6, 48), 0xab96c4, 0, .22, -13, this.scene); ring.rotation.x = Math.PI / 2;
@@ -132,7 +149,7 @@ export class World {
     this.addEntity('journey', '모험의 문 · 10개의 사냥터', 10.5, 13.5, this.gate(0x9e78c9));
     // Keep the walking areas clear; peripheral trees frame the miniature world.
     for (let i = 0; i < 48; i++) { const a = i * 2.39996, r = 17 + (i % 4) * 1.65; const x = Math.cos(a) * r, z = Math.sin(a) * r * .77; if ((x > 14 && z > 1) || (Math.abs(x) < 5 && z < -12)) continue; this.tree(x, z, .85 + (i % 3) * .16, i % 6 === 0); }
-    [[-15, -6], [-15, 8], [14, -9], [12, 15], [-6, 15]].forEach(([x, z], i) => this.tree(x, z, 1, i % 2 === 0));
+    stageTrees(0).forEach(({ x, z }, i) => this.addChoppableTree(i, x, z, 1, i % 2 === 0));
     for (let i = 0; i < 65; i++) { const x = Math.sin(i * 12.97) * 23, z = Math.cos(i * 4.67) * 18; if (Math.abs(x) < 3 || (z < -2 && z > -11) || (x > 5 && z > 2 && z < 14)) continue; for (let j = 0; j < 3; j++) { const fx = x + j * .14; cylinder(this.scene, 0x538c50, fx, .14, z, .025, .025, .3, 5); ball(this.scene, [0xffe8ae, 0xf4aec4, 0xeae3ff][i % 3], fx, .32, z, .1, .09, .1); } }
     for (const side of [-1, 1]) for (let i = 0; i < 7; i++) { const x = side * 22, z = -15 + i * 4.7; cylinder(this.scene, 0xd4bb88, x, .5, z, .08, .09, 1, 8); box(this.scene, 0xe7d3a3, x, .65, z + 2, .12, .11, 4.7); }
     this.addBerries();
@@ -159,15 +176,16 @@ export class World {
     this.addEntity('home', '베리숲 마을로 돌아가기', 0, size.z - 5, this.gate(0x6eb7a1)); this.addEntity('next', stage === 10 ? '마지막 축하문' : `다음 길 · ${STAGES[stage].name}`, 0, -size.z + 5, this.gate(0xc087d2));
     stageMonsters(stage).forEach((m, i) => this.addEntity(`monster${i}`, `${MONSTERS[m.type].name} · ${i + 1}`, m.x, m.z, makeMonster(m.type)));
     for (let i = 0; i < 55; i++) { const x = Math.sin(i * 2.399 + stage) * (size.x - 4), z = Math.cos(i * 1.73 + stage) * (size.z - 4); if (Math.abs(x) < 4 || [14, 0, -15].some(v => Math.abs(z - v) < 2.5)) continue; this.tree(x, z, .8 + i % 3 * .2, spec.theme === 'blossom', spec.foliage); }
+    stageTrees(stage).forEach(({ x, z }, i) => this.addChoppableTree(i, x, z, .92 + (i % 3) * .08, spec.theme === 'blossom', spec.foliage));
     for (let i = 0; i < 14; i++) { const g = new T.Group(); g.position.set((i % 2 ? 1 : -1) * (size.x - 5), 0, size.z - 7 - Math.floor(i / 2) * 8); this.scene.add(g); if (spec.theme === 'crystal') { for (let j = 0; j < 3; j++) { const m = mesh(new T.OctahedronGeometry(.65), [0x9bade6, 0xc3a0df, 0x9bd6d4][j], j * .55 - .55, 1.3, 0, g); m.scale.y = 2 + j * .3; } } else if (spec.theme === 'mushroom') { cylinder(g, 0xf4e4cb, 0, .9, 0, .4, .6, 1.8); ball(g, 0xda8e9a, 0, 2, 0, 1.8, .65, 1.5); } else { for (let j = 0; j < 5; j++) ball(g, spec.foliage, Math.cos(j * 1.26), .7, Math.sin(j * 1.26), .4, .14, .4); } }
     this.addBerries();
   }
   loadStage(s: Save, fresh = false) {
-    this.clearInput(); this.selectedId = null; this.onNear(null); this.stage = s.journey.stage; this.entities.forEach(e => e.label.remove()); this.entities = []; this.coins = []; this.colliders = [];
+    this.clearInput(); this.selectedId = null; this.onNear(null, null); this.stage = s.journey.stage; this.entities.forEach(e => e.label.remove()); this.entities = []; this.coins = []; this.colliders = [];
     for (const child of [...this.scene.children]) if (child !== this.player && !(child instanceof T.Light)) this.scene.remove(child);
     this.scene.background = new T.Color(0xc5e5d4); this.scene.fog = new T.Fog(0xc5e5d4, 55, 105); this.platforms = stagePlatforms(this.stage);
     if (this.stage === 0) this.buildVillage(); else this.buildHunt(this.stage);
-    const map = s.journey.maps[this.stage]; this.coins.forEach(c => c.mesh.visible = !map.berries.includes(c.id)); this.entities.forEach(e => { if (e.id.startsWith('monster')) e.mesh.visible = !map.monsters.includes(Number(e.id.slice(7))); });
+    const map = s.journey.maps[this.stage]; this.coins.forEach(c => c.mesh.visible = !map.berries.includes(c.id)); this.entities.forEach(e => { if (e.id.startsWith('monster')) e.mesh.visible = !map.monsters.includes(Number(e.id.slice(7))); if (e.id.startsWith('tree')) e.mesh.visible = !map.trees.includes(Number(e.id.slice(4))); });
     const spawn = this.stage === 0 ? { x: 0, z: 8 } : { x: 0, z: stageSize(this.stage).z - 9 }; const p = fresh ? spawn : s.position; this.player.position.set(p.x, 0, p.z); this.lastSafe.copy(this.player.position); this.follow.copy(this.player.position);
   }
   private house(x: number, z: number, roof: number, wall: number) {
@@ -182,6 +200,11 @@ export class World {
   private tree(x: number, z: number, scale: number, pink: boolean, foliage?: number) {
     const g = new T.Group(); g.position.set(x, 0, z); g.scale.setScalar(scale); this.scene.add(g); cylinder(g, 0x94724e, 0, 1, 0, .19, .32, 2, 8);
     ball(g, foliage ?? (pink ? 0xe6a2ad : 0x63a56b), 0, 2.55, 0, 1.55, 1.5, 1.38); ball(g, foliage ?? (pink ? 0xf1b8bb : 0x88bd77), -.5, 3.35, 0, 1.12, 1.12, 1); ball(g, foliage ?? (pink ? 0xf5c9c7 : 0xa0cd7e), .5, 3.25, .45, .8, .83, .8); this.colliders.push({ x, z, r: .5 });
+  }
+  private addChoppableTree(id: number, x: number, z: number, scale: number, pink: boolean, foliage?: number) {
+    const g = new T.Group(); g.scale.setScalar(scale); cylinder(g, 0x94724e, 0, 1, 0, .19, .32, 2, 8);
+    ball(g, foliage ?? (pink ? 0xe6a2ad : 0x63a56b), 0, 2.55, 0, 1.55, 1.5, 1.38); ball(g, foliage ?? (pink ? 0xf1b8bb : 0x88bd77), -.5, 3.35, 0, 1.12, 1.12, 1); ball(g, foliage ?? (pink ? 0xf5c9c7 : 0xa0cd7e), .5, 3.25, .45, .8, .83, .8);
+    g.userData.hp = 7; this.addEntity(`tree${id}`, '베리나무 · 베기', x, z, g); this.colliders.push({ x, z, r: .5, id: `tree${id}` });
   }
   private addEntity(id: string, name: string, x: number, z: number, model: T.Group) {
     model.position.set(x, 0, z); this.scene.add(model);
@@ -199,6 +222,13 @@ export class World {
   moveStick(x: number, z: number) { this.stick = { x, z }; }
   jump() { if (this.active && !this.paused && this.grounded) { this.vy = 7.4; this.grounded = false; this.onJump(); } }
   interact() { if (this.active && !this.paused && this.selectedId) this.onInteract(this.selectedId); }
+  attack() { if (!this.active || this.paused) return; this.swingUntil = this.time + .28; this.onAttack(this.selectedId?.startsWith('tree') ? this.selectedId : null); }
+  hitTree(id: string, damage: number) {
+    const e = this.entities.find(e => e.id === id && e.mesh.visible); if (!e || !id.startsWith('tree')) return null;
+    e.mesh.userData.hp = Math.max(0, Number(e.mesh.userData.hp) - damage); e.mesh.userData.shakeUntil = this.time + .28; this.burst(e.mesh.position, 0xc5e88b, 5);
+    if (e.mesh.userData.hp === 0) { e.mesh.visible = false; e.label.hidden = true; cylinder(this.scene, 0xa77b50, e.x, .2, e.z, .32, .43, .4, 9); this.burst(e.mesh.position, 0xffa1b8, 12); this.selectedId = null; this.onNear(null, null); }
+    return { fell: e.mesh.userData.hp === 0, remaining: e.mesh.userData.hp as number };
+  }
   defeat(id: string) { const e = this.entities.find(e => e.id === id); if (e) { const monster = stageMonsters(this.stage)[Number(id.slice(7))]; this.burst(e.mesh.position, MONSTERS[monster.type].color); e.mesh.visible = false; } }
   celebrate() { this.burst(this.player.position, 0xffd371, 30); }
   private burst(pos: T.Vector3, color: number, count = 14) { for (let i = 0; i < count; i++) { const m = mesh(new T.OctahedronGeometry(.09), color, pos.x, pos.y + .9, pos.z, this.scene); this.particles.push({ mesh: m, v: new T.Vector3((Math.random() - .5) * 5, 2 + Math.random() * 3, (Math.random() - .5) * 5), life: 1 }); } }
@@ -212,7 +242,7 @@ export class World {
       let dz = Number(this.keys.has('s') || this.keys.has('arrowdown')) - Number(this.keys.has('w') || this.keys.has('arrowup')) + this.stick.z;
       const n = Math.hypot(dx, dz); if (n > 1) { dx /= n; dz /= n; }
       const vx = (dx * .8 + dz * .6) * 5, vz = (-dx * .6 + dz * .8) * 5;
-      const allowed = (x: number, z: number) => !this.colliders.some(c => Math.hypot(x - c.x, z - c.z) < c.r + .32) && !this.platforms.some(t => Math.abs(x - t.x) < t.w / 2 + .2 && Math.abs(z - t.z) < t.d / 2 + .2 && p.y < t.h - .13);
+      const allowed = (x: number, z: number) => !this.colliders.some(c => (!c.id || this.entities.find(e => e.id === c.id)?.mesh.visible) && Math.hypot(x - c.x, z - c.z) < c.r + .32) && !this.platforms.some(t => Math.abs(x - t.x) < t.w / 2 + .2 && Math.abs(z - t.z) < t.d / 2 + .2 && p.y < t.h - .13);
       if (allowed(p.x + vx * dt, p.z)) p.x += vx * dt; if (allowed(p.x, p.z + vz * dt)) p.z += vz * dt;
       if (n > .05) { this.player.rotation.y = Math.atan2(vx, vz); this.player.userData.feet?.forEach((f: T.Mesh, i: number) => { f.position.y = .18 + Math.max(0, Math.sin(this.time * 13 + i * Math.PI)) * .12; }); }
       const platform = this.platforms.find(t => Math.abs(p.x - t.x) < t.w / 2 + .15 && Math.abs(p.z - t.z) < t.d / 2 + .15); const floor = platform?.h ?? 0;
@@ -226,6 +256,7 @@ export class World {
     let near: Entity | undefined, distance = 2.8;
     for (const e of this.entities) {
       if (e.id.startsWith('monster')) { e.mesh.position.y = Math.max(0, Math.sin(this.time * 2 + e.x)) * .16; e.mesh.rotation.y = Math.sin(this.time * .5 + e.z) * .35; }
+      if (e.id.startsWith('tree') && e.mesh.userData.shakeUntil > this.time) e.mesh.rotation.z = Math.sin(this.time * 55) * .08; else if (e.id.startsWith('tree')) e.mesh.rotation.z = 0;
       if (e.mesh.userData.magicGate) { e.mesh.rotation.y = Math.sin(this.time * .45 + e.x) * .07; e.mesh.traverse(o => { if (o.userData.sparkle) { o.position.y += Math.sin(this.time * 2.4 + o.position.x) * .0015; o.rotation.y += dt * 1.8; } }); }
       const d = Math.hypot(p.x - e.x, p.z - e.z); if (e.mesh.visible && d < distance) { near = e; distance = d; }
       const v = new T.Vector3(e.x, e.id.startsWith('monster') ? 2 : 2.6, e.z).project(this.camera);
@@ -233,7 +264,8 @@ export class World {
       e.label.hidden = !this.active || !e.mesh.visible || Math.abs(v.x) > 1.15 || Math.abs(v.y) > 1.1;
       e.label.classList.toggle('near', d < 2.8);
     }
-    if ((near?.id ?? null) !== this.selectedId) { this.selectedId = near?.id ?? null; this.onNear(near?.name ?? null); }
+    if ((near?.id ?? null) !== this.selectedId) { this.selectedId = near?.id ?? null; this.onNear(near?.name ?? null, near?.id ?? null); }
+    const weapon = this.player.userData.weapon as T.Group | undefined; if (weapon) weapon.rotation.z = -.28 + (this.swingUntil > this.time ? Math.sin((this.swingUntil - this.time) / .28 * Math.PI) * -1.35 : 0);
     if (this.player.userData.sparkles) this.player.userData.sparkles.rotation.y += dt;
     for (let i = this.particles.length - 1; i >= 0; i--) { const q = this.particles[i]; q.life -= dt; q.v.y -= dt * 5; q.mesh.position.addScaledVector(q.v, dt); q.mesh.scale.setScalar(Math.max(0, q.life)); if (q.life <= 0) { this.scene.remove(q.mesh); q.mesh.geometry.dispose(); this.particles.splice(i, 1); } }
     const target = this.active ? p : new T.Vector3(0, 0, -1); this.follow.lerp(target, 1 - Math.exp(-dt * 3));

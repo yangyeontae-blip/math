@@ -24,5 +24,13 @@ export function stageBerries(stage: number) {
   const result = Array.from({ length: 26 + stage * 2 }, (_, i) => ({ x: Math.sin(i * 2.399 + stage) * (12 + i % 4 * 4), z: 23 - i / (25 + stage * 2) * 48 }));
   return [...result, ...stagePlatforms(stage).map(p => ({ x: p.x, z: p.z }))];
 }
+export function stageTrees(stage: number) {
+  if (stage === 0) return [[-15, -6], [-15, 8], [14, -9], [12, 15], [-6, 15]].map(([x, z]) => ({ x, z }));
+  const size = stageSize(stage), count = 7 + Math.min(stage, 5);
+  return Array.from({ length: count }, (_, i) => {
+    const side = i % 2 ? 1 : -1, lane = Math.floor(i / 2);
+    return { x: side * (8 + (lane % 3) * 6), z: size.z - 12 - lane * 8 };
+  });
+}
 export const berryValue = (stage: number) => stage === 0 ? 3 : 3 + stage;
 export const clearBonus = (stage: number) => 50 + stage * 25;
