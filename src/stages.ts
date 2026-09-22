@@ -12,20 +12,20 @@ export const STAGES = [
 ] as const;
 export function stageSize(stage: number) { return stage === 0 ? { x: 25, z: 20 } : { x: 38 + stage, z: 32 + stage }; }
 export function stageMonsters(stage: number) {
-  if (stage === 0) return [[-11, 5], [-9, 11], [-15, 1], [5, 15]].map(([x, z], i) => ({ x, z, type: i }));
+  if (stage === 0) return [[-11, 5], [-9, 11], [-15, 1], [15, -15]].map(([x, z], i) => ({ x, z, type: i }));
   const positions = [[-16, 14], [12, 10], [-23, 0], [24, -4], [-12, -14], [10, -18], [-25, -21], [25, -23], [0, -27]];
   return positions.slice(0, 5 + Math.floor((stage - 1) / 2)).map(([x, z], i) => ({ x: x * (stage % 2 ? 1 : -1), z: z + Math.sin(stage + i) * 2, type: (i + stage - 1) % 4 }));
 }
 export function stagePlatforms(stage: number) {
-  return stage === 0 ? [{ x: 7, z: 9, w: 2, d: 2, h: .5 }, { x: 10, z: 9, w: 2, d: 2, h: .95 }, { x: 13, z: 9, w: 2, d: 2, h: 1.4 }] : [0, 1, 2].map(i => ({ x: 9 + i * 3, z: 18, w: 2, d: 2, h: .5 + i * .45 }));
+  return stage === 0 ? [{ x: 15, z: -11, w: 2, d: 2, h: .5 }, { x: 18, z: -11, w: 2, d: 2, h: .95 }, { x: 21, z: -11, w: 2, d: 2, h: 1.4 }] : [0, 1, 2].map(i => ({ x: 9 + i * 3, z: 18, w: 2, d: 2, h: .5 + i * .45 }));
 }
 export function stageBerries(stage: number) {
-  if (stage === 0) return [[0, 6], [0, 4], [0, 1], [0, -1], [-3, -4], [-5, -4], [3, -4], [5, -4], [0, -6], [-5, 7], [-7, 9], [-9, 7], [-12, 8], [3, 9], [5, 9], [7, 9], [10, 9], [13, 9], [2, 13], [3, 15], [-3, 12], [-5, 14]].map(([x, z]) => ({ x, z }));
+  if (stage === 0) return [[0, 6], [0, 4], [0, 1], [0, -1], [-3, -4], [-5, -4], [3, -4], [5, -4], [0, -6], [-5, 7], [-7, 9], [-9, 7], [-12, 8], [3, 9], [5, 9], [15, -11], [18, -11], [21, -11], [2, 13], [3, 15], [-3, 12], [-5, 14]].map(([x, z]) => ({ x, z }));
   const result = Array.from({ length: 26 + stage * 2 }, (_, i) => ({ x: Math.sin(i * 2.399 + stage) * (12 + i % 4 * 4), z: 23 - i / (25 + stage * 2) * 48 }));
   return [...result, ...stagePlatforms(stage).map(p => ({ x: p.x, z: p.z }))];
 }
 export function stageTrees(stage: number) {
-  if (stage === 0) return [[-15, -6], [-15, 8], [14, -9], [12, 15], [-6, 15]].map(([x, z]) => ({ x, z }));
+  if (stage === 0) return [[-15, -6], [-15, 8], [14, -9], [16, -14], [-6, 15]].map(([x, z]) => ({ x, z }));
   const size = stageSize(stage), count = 7 + Math.min(stage, 5);
   return Array.from({ length: count }, (_, i) => {
     const side = i % 2 ? 1 : -1, lane = Math.floor(i / 2);

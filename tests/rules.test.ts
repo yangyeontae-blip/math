@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { questionPool, newSave, validateSave, buy, upgrade, grantReward, rewardFor, Encounter, WEAPONS, MONSTERS, collectBerry, finishHunt, fellTree, treeDamage, canEnter } from '../src/rules.ts';
+import { questionPool, newSave, validateSave, buy, upgrade, buyRide, dismount, enableTeacherMode, grantReward, rewardFor, Encounter, WEAPONS, OUTFITS, RIDES, MONSTERS, collectBerry, finishHunt, fellTree, treeDamage, canEnter } from '../src/rules.ts';
 import { stageBerries, stageMonsters, stageTrees, clearBonus, berryValue } from '../src/stages.ts';
 
 test('every question follows the curriculum; two-digit quotients begin at level 4', () => {
@@ -59,5 +59,14 @@ test('trees give only 1 or 2 berries once and stronger weapons cut faster', () =
 test('version 2 saves migrate with untouched tree progress', () => {
   const old = structuredClone(newSave('예전', 0)) as unknown as Record<string, unknown>; old.version = 2;
   const journey = old.journey as { maps: Array<Record<string, unknown>> }; journey.maps.forEach(m => delete m.trees);
-  const migrated = validateSave(old); assert.equal(migrated.version, 3); assert.deepEqual(migrated.journey.maps[0].trees, []);
+  const migrated = validateSave(old); assert.equal(migrated.version, 4); assert.deepEqual(migrated.journey.maps[0].trees, []); assert.equal(migrated.ride, -1); assert.deepEqual(migrated.rides, {});
+});
+test('rides cost at least 1000 berries and flying starts at 5000 berries', () => {
+  assert.ok(RIDES.every(ride => ride.price >= 1000)); assert.ok(RIDES.filter(ride => ride.flying).every(ride => ride.price >= 5000));
+  const s = newSave('라이더', 0); assert.throws(() => buyRide(s, 0)); s.berries = 6000; const before = s.berries; buyRide(s, 0); assert.equal(s.berries, before - RIDES[0].price); assert.equal(s.ride, 0); assert.equal(s.rides[0], true);
+  buyRide(s, 0); assert.equal(s.berries, before - RIDES[0].price); assert.equal(dismount(s), '라이딩에서 내려 천천히 걸어요.'); assert.equal(s.ride, -1);
+});
+test('teacher code unlocks all demonstration content without clearing hunts', () => {
+  const s = newSave('선생님', 0); assert.throws(() => enableTeacherMode(s, 'Teacher')); enableTeacherMode(s, 'teacher');
+  assert.equal(s.teacherMode, true); assert.equal(s.berries, 1_000_000); assert.equal(Object.keys(s.weapons).length, WEAPONS.length); assert.equal(Object.keys(s.outfits).length, OUTFITS.length); assert.equal(Object.keys(s.rides).length, RIDES.length); assert.equal(canEnter(s, 10), true); assert.equal(s.journey.maps[10].monsters.length, 0);
 });
