@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { questionPool, newSave, validateSave, buy, upgrade, buyRide, dismount, enableTeacherMode, grantReward, rewardFor, Encounter, WEAPONS, OUTFITS, RIDES, MONSTERS, collectBerry, finishHunt, fellTree, treeDamage, canEnter } from '../src/rules.ts';
+import { questionPool, newSave, validateSave, buy, upgrade, buyRide, dismount, enableTeacherMode, grantReward, rewardFor, Encounter, WEAPONS, OUTFITS, RIDES, MONSTERS, STAGE_DIVISION_DIFFICULTY, collectBerry, finishHunt, fellTree, treeDamage, canEnter } from '../src/rules.ts';
 import { stageBerries, stageMonsters, stageTrees, clearBonus, berryValue } from '../src/stages.ts';
 
 test('every question follows the curriculum; two-digit quotients begin at level 4', () => {
@@ -10,6 +10,17 @@ test('every question follows the curriculum; two-digit quotients begin at level 
     if (level >= 4) assert.ok(pool.some(q => q.answer >= 10));
     if (level >= 7) assert.ok(pool.some(q => q.dividend > 90));
   }
+});
+test('division questions grow gradually harder across the ten hunt stages', () => {
+  let previousMax = 0;
+  STAGE_DIVISION_DIFFICULTY.forEach((rule, index) => {
+    const stage = index + 1, pool = questionPool(1, stage); assert.ok(pool.length >= 8);
+    for (const q of pool) { assert.equal(q.dividend % 10, 0); assert.ok(q.dividend <= rule.maxDividend); assert.ok(q.answer <= rule.maxAnswer); assert.equal(q.divisor * q.answer, q.dividend); }
+    const maxAnswer = Math.max(...pool.map(q => q.answer)); assert.ok(maxAnswer >= previousMax); previousMax = maxAnswer;
+    if (stage === 1) assert.ok(pool.every(q => q.answer < 10));
+    if (stage >= 2) assert.ok(pool.some(q => q.answer >= 10));
+  });
+  assert.ok(questionPool(1, 10).some(q => q.answer >= 40));
 });
 test('all weapons and upgrades give the documented rewards for every monster', () => {
   const s = newSave('베리', 0);

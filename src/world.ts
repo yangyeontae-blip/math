@@ -5,15 +5,20 @@ import { STAGES, stageBerries, stageMonsters, stagePlatforms, stageTrees, stageS
 type Entity = { id: string; name: string; x: number; z: number; mesh: T.Group; label: HTMLDivElement };
 const mat = (color: number, roughness = .86) => new T.MeshStandardMaterial({ color, roughness });
 const materials = new Map<number, T.MeshStandardMaterial>();
+const sharedGeometries = new Set<T.BufferGeometry>();
+const sphereGeometry = new T.SphereGeometry(1, 12, 8); sharedGeometries.add(sphereGeometry);
+const boxGeometries = new Map<string, T.BoxGeometry>(), cylinderGeometries = new Map<string, T.CylinderGeometry>();
+function cachedBox(w: number, h: number, d: number) { const key = `${w},${h},${d}`; if (!boxGeometries.has(key)) { const geo = new T.BoxGeometry(w, h, d); boxGeometries.set(key, geo); sharedGeometries.add(geo); } return boxGeometries.get(key)!; }
+function cachedCylinder(top: number, bottom: number, h: number, sides: number) { const key = `${top},${bottom},${h},${sides}`; if (!cylinderGeometries.has(key)) { const geo = new T.CylinderGeometry(top, bottom, h, sides); cylinderGeometries.set(key, geo); sharedGeometries.add(geo); } return cylinderGeometries.get(key)!; }
 function material(color: number) { if (!materials.has(color)) materials.set(color, mat(color)); return materials.get(color)!; }
 function mesh(geo: T.BufferGeometry, color: number, x = 0, y = 0, z = 0, parent?: T.Object3D) {
   const m = new T.Mesh(geo, material(color)); m.position.set(x, y, z); m.castShadow = true; m.receiveShadow = true; parent?.add(m); return m;
 }
 function ball(p: T.Object3D, color: number, x: number, y: number, z: number, sx = 1, sy = sx, sz = sx) {
-  const m = mesh(new T.SphereGeometry(1, 14, 10), color, x, y, z, p); m.scale.set(sx, sy, sz); return m;
+  const m = mesh(sphereGeometry, color, x, y, z, p); m.scale.set(sx, sy, sz); return m;
 }
-function box(p: T.Object3D, color: number, x: number, y: number, z: number, w: number, h: number, d: number) { return mesh(new T.BoxGeometry(w, h, d), color, x, y, z, p); }
-function cylinder(p: T.Object3D, color: number, x: number, y: number, z: number, top: number, bottom: number, h: number, sides = 16) { return mesh(new T.CylinderGeometry(top, bottom, h, sides), color, x, y, z, p); }
+function box(p: T.Object3D, color: number, x: number, y: number, z: number, w: number, h: number, d: number) { return mesh(cachedBox(w, h, d), color, x, y, z, p); }
+function cylinder(p: T.Object3D, color: number, x: number, y: number, z: number, top: number, bottom: number, h: number, sides = 16) { return mesh(cachedCylinder(top, bottom, h, sides), color, x, y, z, p); }
 
 export function makeCharacter(character: number, outfit: number, weapon: number, outfitLevel = 0, weaponLevel = 0) {
   const g = new T.Group(), c = CHARACTERS[character], o = OUTFITS[outfit];
@@ -133,9 +138,9 @@ export class World {
   active = false; paused = true; onCollect = (_id: number) => {}; onInteract = (_id: string) => {}; onAttack = (_id: string | null) => {}; onNear = (_name: string | null, _id: string | null) => {}; onJump = () => {}; onRescue = () => {};
   constructor(private container: HTMLElement) {
     this.scene.background = new T.Color(0xc5e5d4); this.scene.fog = new T.Fog(0xc5e5d4, 55, 105);
-    this.renderer = new T.WebGLRenderer({ antialias: true, alpha: false }); this.renderer.setPixelRatio(Math.min(devicePixelRatio, 1.7)); this.renderer.shadowMap.enabled = true; this.renderer.shadowMap.type = T.PCFSoftShadowMap; this.renderer.outputColorSpace = T.SRGBColorSpace; this.renderer.toneMapping = T.ACESFilmicToneMapping; this.renderer.toneMappingExposure = 1.35; container.append(this.renderer.domElement);
+    this.renderer = new T.WebGLRenderer({ antialias: true, alpha: false, powerPreference: 'high-performance' }); this.renderer.setPixelRatio(Math.min(devicePixelRatio, 1.35)); this.renderer.shadowMap.enabled = true; this.renderer.shadowMap.type = T.PCFSoftShadowMap; this.renderer.outputColorSpace = T.SRGBColorSpace; this.renderer.toneMapping = T.ACESFilmicToneMapping; this.renderer.toneMappingExposure = 1.35; container.append(this.renderer.domElement);
     this.camera = new T.OrthographicCamera(-18, 18, 14, -14, .1, 140);
-    this.scene.add(new T.HemisphereLight(0xe9fbff, 0x6f9450, 2.2)); this.sun = new T.DirectionalLight(0xffefd2, 3.1); this.sun.position.set(-15, 30, 15); this.sun.castShadow = true; this.sun.shadow.mapSize.set(2048, 2048); Object.assign(this.sun.shadow.camera, { left: -34, right: 34, top: 32, bottom: -30, far: 85 }); this.sun.shadow.normalBias = .06; this.scene.add(this.sun);
+    this.scene.add(new T.HemisphereLight(0xe9fbff, 0x6f9450, 2.2)); this.sun = new T.DirectionalLight(0xffefd2, 3.1); this.sun.position.set(-15, 30, 15); this.sun.castShadow = true; this.sun.shadow.mapSize.set(1024, 1024); Object.assign(this.sun.shadow.camera, { left: -34, right: 34, top: 32, bottom: -30, far: 85 }); this.sun.shadow.normalBias = .06; this.scene.add(this.sun);
     this.labelLayer = document.createElement('div'); this.labelLayer.className = 'world-labels'; container.append(this.labelLayer);
     this.buildVillage(); this.setAvatar(0, 0, 0); this.player.position.set(0, 0, 8); this.scene.add(this.player);
     window.addEventListener('resize', () => this.resize()); this.resize();
@@ -259,9 +264,9 @@ export class World {
     this.rideIndex = ride;
     if (ride >= 0 && RIDES[ride]) { const body = this.player.userData.body as T.Group; body.position.y = RIDES[ride].flying ? 1.03 : .78; this.player.add(makeRide(ride)); }
   }
-  private disposeModel(g: T.Group) { g.traverse(o => { if (o instanceof T.Mesh) o.geometry.dispose(); }); }
+  private disposeModel(g: T.Group) { g.traverse(o => { if (o instanceof T.Mesh && !sharedGeometries.has(o.geometry)) o.geometry.dispose(); }); }
   restore(s: Save) { this.setAvatar(s.character, s.outfit, s.weapon, s.outfits[s.outfit], s.weapons[s.weapon], s.ride); this.loadStage(s); this.quality(s.settings.lowQuality); }
-  quality(low: boolean) { this.renderer.setPixelRatio(Math.min(devicePixelRatio, low ? 1 : 1.7)); this.renderer.shadowMap.enabled = !low; this.sun.castShadow = !low; this.scene.traverse(o => { if (o instanceof T.Mesh) { const mats = Array.isArray(o.material) ? o.material : [o.material]; mats.forEach(m => m.needsUpdate = true); } }); }
+  quality(low: boolean) { this.renderer.setPixelRatio(Math.min(devicePixelRatio, low ? 1 : 1.35)); this.renderer.shadowMap.enabled = !low; this.sun.castShadow = !low; this.scene.traverse(o => { if (o instanceof T.Mesh) { const mats = Array.isArray(o.material) ? o.material : [o.material]; mats.forEach(m => m.needsUpdate = true); } }); }
   clearInput() { this.keys.clear(); this.stick = { x: 0, z: 0 }; }
   moveStick(x: number, z: number) { this.stick = { x, z }; }
   jump() { if (this.active && !this.paused && this.grounded) { this.vy = 7.4; this.grounded = false; this.onJump(); } }
@@ -333,7 +338,7 @@ export class AvatarPreview {
     this.renderer = new T.WebGLRenderer({ alpha: true, antialias: true }); this.renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5)); this.renderer.setClearColor(0x000000, 0); this.renderer.toneMapping = T.ACESFilmicToneMapping; this.renderer.toneMappingExposure = 1.4; element.append(this.renderer.domElement); this.scene.add(new T.HemisphereLight(0xffffff, 0xa6ba93, 3)); const light = new T.DirectionalLight(0xffedcd, 3); light.position.set(-3, 4, 5); this.scene.add(light); this.camera.position.set(2.2, 1.9, 5.8); this.camera.lookAt(0, 1.1, 0);
     this.resizeObserver = new ResizeObserver(() => this.draw()); this.resizeObserver.observe(element);
   }
-  show(c: number, o: number, w: number, ol = 0, wl = 0) { this.scene.remove(this.model); this.model.traverse(x => { if (x instanceof T.Mesh) x.geometry.dispose(); }); this.model = makeCharacter(c, o, w, ol, wl); this.model.rotation.y = -.18; this.scene.add(this.model); this.draw(); }
+  show(c: number, o: number, w: number, ol = 0, wl = 0) { this.scene.remove(this.model); this.model.traverse(x => { if (x instanceof T.Mesh && !sharedGeometries.has(x.geometry)) x.geometry.dispose(); }); this.model = makeCharacter(c, o, w, ol, wl); this.model.rotation.y = -.18; this.scene.add(this.model); this.draw(); }
   private draw() { const w = this.element.clientWidth, h = this.element.clientHeight; if (!w || !h) return; this.renderer.setSize(w, h); this.camera.aspect = w / h; this.camera.updateProjectionMatrix(); this.renderer.render(this.scene, this.camera); }
-  dispose() { this.resizeObserver.disconnect(); this.model.traverse(x => { if (x instanceof T.Mesh) x.geometry.dispose(); }); this.renderer.dispose(); this.renderer.domElement.remove(); }
+  dispose() { this.resizeObserver.disconnect(); this.model.traverse(x => { if (x instanceof T.Mesh && !sharedGeometries.has(x.geometry)) x.geometry.dispose(); }); this.renderer.dispose(); this.renderer.domElement.remove(); }
 }

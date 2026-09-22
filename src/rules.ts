@@ -60,6 +60,18 @@ export interface Save {
   journey: { stage: number; maps: { berries: number[]; monsters: number[]; trees: number[]; cleared: boolean }[] };
 }
 export interface Question { dividend: number; divisor: number; answer: number }
+export const STAGE_DIVISION_DIFFICULTY = [
+  { maxDividend: 80, maxAnswer: 9 },
+  { maxDividend: 90, maxAnswer: 10 },
+  { maxDividend: 100, maxAnswer: 12 },
+  { maxDividend: 110, maxAnswer: 15 },
+  { maxDividend: 120, maxAnswer: 18 },
+  { maxDividend: 130, maxAnswer: 20 },
+  { maxDividend: 140, maxAnswer: 24 },
+  { maxDividend: 150, maxAnswer: 30 },
+  { maxDividend: 160, maxAnswer: 36 },
+  { maxDividend: 180, maxAnswer: 45 },
+] as const;
 export function newSave(nickname: string, character: number): Save {
   if (!nickname.trim() || [...nickname.trim()].length > 10 || !Number.isInteger(character) || character < 0 || character > 3) throw new Error('이름은 1~10자, 캐릭터는 4명 중 골라 주세요.');
   return { version: 4, nickname: nickname.trim(), character, berries: 0, level: 1, xp: 0, weapon: 0, outfit: 0, weapons: { 0: 0 }, outfits: { 0: 0 }, ride: -1, rides: {}, teacherMode: false, best: 0, position: { x: 0, z: 8 }, tutorial: { collected: false, battle: false, shop: false }, settings: { music: true, sound: true, lowQuality: false }, journey: emptyJourney() };
@@ -85,15 +97,17 @@ export function finishHunt(s: Save, id: number) {
   if (stage > 0 && map.monsters.length === monsters.length && !map.cleared) { map.cleared = true; clearReward = clearBonus(stage) + OUTFITS[s.outfit].clearBonus; s.berries += clearReward; }
   return { ...reward, clearReward };
 }
-export function questionPool(level: number): Question[] {
+export function questionPool(level: number, stage = 0): Question[] {
   const result: Question[] = [];
-  const maxDividend = level < 4 ? 90 : level < 7 ? 120 : 180;
-  for (let n = 10; n <= maxDividend; n += 10) for (let d = 2; d <= 9; d++) if (n % d === 0 && (level >= 4 || n / d < 10)) result.push({ dividend: n, divisor: d, answer: n / d });
+  const stageRule = stage > 0 ? STAGE_DIVISION_DIFFICULTY[Math.min(stage, 10) - 1] : null;
+  const maxDividend = stageRule?.maxDividend ?? (level < 4 ? 90 : level < 7 ? 120 : 180);
+  const maxAnswer = stageRule?.maxAnswer ?? (level < 4 ? 9 : Number.POSITIVE_INFINITY);
+  for (let n = 10; n <= maxDividend; n += 10) for (let d = 2; d <= 9; d++) if (n % d === 0 && n / d <= maxAnswer) result.push({ dividend: n, divisor: d, answer: n / d });
   return result;
 }
 const recentQuestions: string[] = [];
-export function pickQuestion(level: number, previous?: Question): Question {
-  const all = questionPool(level), blocked = new Set(recentQuestions.slice(-Math.min(8, Math.floor(all.length / 2))));
+export function pickQuestion(level: number, previous?: Question, stage = 0): Question {
+  const all = questionPool(level, stage), blocked = new Set(recentQuestions.slice(-Math.min(8, Math.floor(all.length / 2))));
   let pool = all.filter(q => `${q.dividend}/${q.divisor}` !== `${previous?.dividend}/${previous?.divisor}` && !blocked.has(`${q.dividend}/${q.divisor}`));
   if (!pool.length) pool = all;
   const picked = pool[Math.floor(Math.random() * pool.length)]; recentQuestions.push(`${picked.dividend}/${picked.divisor}`); if (recentQuestions.length > 16) recentQuestions.shift(); return picked;
@@ -175,8 +189,8 @@ export function validateSave(value: unknown): Save {
   return structuredClone(s);
 }
 export class Encounter {
-  question: Question; solved = false; monster: number; arena: boolean;
-  constructor(monster: number, arena: boolean, level: number, previous?: Question) { this.monster = monster; this.arena = arena; this.question = pickQuestion(level, previous); }
+  question: Question; solved = false; monster: number; arena: boolean; stage: number;
+  constructor(monster: number, arena: boolean, level: number, previous?: Question, stage = 0) { this.monster = monster; this.arena = arena; this.stage = stage; this.question = pickQuestion(level, previous, stage); }
   answer(value: string): 'correct' | 'wrong' | 'ignored' {
     if (this.solved) return 'ignored';
     if (!/^\d{1,2}$/.test(value) || Number(value) !== this.question.answer) return 'wrong';
