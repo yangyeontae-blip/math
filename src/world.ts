@@ -1,5 +1,5 @@
 import * as T from 'three';
-import { CHARACTERS, MONSTERS, OUTFITS, RIDES, WEAPONS, type Save } from './rules';
+import { CHARACTERS, MONSTERS, OUTFITS, PETS, RIDES, WEAPONS, type Save } from './rules';
 import { STAGES, stageBerries, stageMonsters, stagePlatforms, stageTrees, stageSize } from './stages';
 
 type Entity = { id: string; name: string; x: number; z: number; mesh: T.Group; label: HTMLDivElement };
@@ -20,7 +20,7 @@ function ball(p: T.Object3D, color: number, x: number, y: number, z: number, sx 
 function box(p: T.Object3D, color: number, x: number, y: number, z: number, w: number, h: number, d: number) { return mesh(cachedBox(w, h, d), color, x, y, z, p); }
 function cylinder(p: T.Object3D, color: number, x: number, y: number, z: number, top: number, bottom: number, h: number, sides = 16) { return mesh(cachedCylinder(top, bottom, h, sides), color, x, y, z, p); }
 
-export function makeCharacter(character: number, outfit: number, weapon: number, outfitLevel = 0, weaponLevel = 0) {
+export function makeCharacter(character: number, outfit: number, weapon: number, outfitLevel = 0, weaponLevel = 0, hairstyle = 0, face = 0) {
   const g = new T.Group(), c = CHARACTERS[character], o = OUTFITS[outfit];
   const body = new T.Group(); g.add(body); g.userData.body = body;
   // Short, rounded chibi proportions. All costumes are visible 3D geometry.
@@ -36,17 +36,21 @@ export function makeCharacter(character: number, outfit: number, weapon: number,
   }
   if (outfit === 2 || outfit === 5) { const cape = cylinder(body, o.color, 0, .73, -.2, .25, .64, 1, 12); cape.scale.z = .6; }
   ball(body, c.skin, 0, 1.5, 0, .53, .52, .46);
-  ball(body, c.hair, 0, 1.77, -.065, .55, .31, .46);
+  ball(body, c.hair, 0, 1.77, -.065, .55, hairstyle === 3 ? .38 : .31, .46);
   for (const side of [-1, 1]) {
     ball(body, c.skin, side * .51, 1.47, 0, .1, .14, .12);
-    ball(body, 0x343a39, side * .19, 1.5, .424, .047, .065, .026);
+    ball(body, 0x343a39, side * .19, 1.5, .424, face === 1 || face === 4 ? .065 : .047, face === 1 || face === 4 ? .085 : .065, .026);
     ball(body, 0xffffff, side * .18, 1.524, .444, .014);
-    ball(body, 0xf1a69d, side * .31, 1.37, .397, .086, .043, .021);
-    if (c.style === 0) { ball(body, c.hair, side * .55, 1.68, -.06, .24); ball(body, o.accent, side * .43, 1.84, .04, .12); }
-    if (c.style === 2) ball(body, c.hair, side * .43, 1.47, -.13, .18, .43, .3);
+    ball(body, face === 4 ? 0xf6c85f : 0xf1a69d, side * .31, 1.37, .397, .086, .043, .021);
+    if (hairstyle === 1 || hairstyle === 5) { ball(body, c.hair, side * .55, 1.68, -.06, hairstyle === 5 ? .3 : .24); ball(body, o.accent, side * .43, 1.84, .04, .12); }
+    if (hairstyle === 2) ball(body, c.hair, side * .43, 1.47, -.13, .18, .43, .3);
+    if (hairstyle === 4 && side > 0) { ball(body, c.hair, .53, 1.58, -.16, .25, .5, .27); ball(body, o.accent, .43, 1.88, -.02, .12); }
+    if (face === 2) { const brow = box(body, 0x4d4039, side * .19, 1.61, .445, .13, .025, .02); brow.rotation.z = side * -.16; }
   }
   const smile = mesh(new T.TorusGeometry(.075, .012, 5, 10, Math.PI), 0x975e57, 0, 1.35, .44, body); smile.rotation.z = Math.PI;
-  for (let i = 0; i < (c.style === 3 ? 7 : 4); i++) ball(body, c.hair, -.38 + i * (c.style === 3 ? .125 : .23), 1.86 + Math.sin(i) * .045, .19, c.style === 3 ? .18 : .16, .18, .2);
+  if (face === 3) { smile.scale.x = 1.35; for (const side of [-1, 1]) ball(body, 0x6a4f48, side * .08, 1.37, .452, .018, .045, .012); }
+  const curls = hairstyle === 3 ? 7 : 4; for (let i = 0; i < curls; i++) ball(body, c.hair, -.38 + i * (hairstyle === 3 ? .125 : .23), 1.86 + Math.sin(i) * .045, .19, hairstyle === 3 ? .18 : .16, .18, .2);
+  if (hairstyle === 5) for (const side of [-1, 1]) ball(body, c.hair, side * .38, 2.05, -.02, .26);
   if (outfit === 5) { cylinder(body, o.color, 0, 1.97, 0, .65, .65, .08); mesh(new T.ConeGeometry(.46, .75, 12), o.color, 0, 2.32, 0, body); }
   if (outfit === 7) { cylinder(body, o.accent, 0, 2.02, 0, .33, .35, .2, 6); ball(body, 0xe781a5, 0, 2.15, .28, .13); }
   if (outfitLevel >= 1) {
@@ -127,6 +131,18 @@ function makeRide(id: number) {
   return g;
 }
 
+function makePet(id: number) {
+  const g = new T.Group(), pet = PETS[id];
+  ball(g, pet.color, 0, .32, 0, .34, .29, .35); ball(g, pet.color, 0, .57, .18, .28, .27, .25);
+  for (const side of [-1, 1]) { ball(g, 0x35423e, side * .1, .61, .4, .035, .05, .02); ball(g, 0xf3a6b5, side * .19, .51, .38, .055, .03, .02); }
+  if (id === 0) for (const side of [-1, 1]) ball(g, pet.color, side * .2, .76, .1, .12);
+  if (id === 1) for (const side of [-1, 1]) ball(g, pet.color, side * .13, .92, .12, .09, .36, .09);
+  if (id === 2) for (const side of [-1, 1]) { const ear = mesh(new T.ConeGeometry(.1, .3, 5), pet.color, side * .16, .86, .13, g); ear.rotation.z = side * -.15; }
+  if (id === 3) { for (const side of [-1, 1]) ball(g, 0xf1d38b, side * .13, .62, .41, .08, .1, .025); for (const side of [-1, 1]) { const wing = ball(g, 0xc5addb, side * .32, .4, -.02, .2, .28, .08); wing.rotation.z = side * .35; } }
+  if (id === 4) { for (const side of [-1, 1]) mesh(new T.ConeGeometry(.08, .24, 5), 0xd5ef9a, side * .14, .86, .12, g); for (let i = 0; i < 3; i++) ball(g, 0xd5ef9a, 0, .42 + i * .09, -.35 - i * .13, .09 - i * .015); }
+  g.position.set(-1.05, .02, -.7); g.userData.petModel = true; return g;
+}
+
 export class World {
   scene = new T.Scene(); renderer: T.WebGLRenderer; camera: T.OrthographicCamera;
   player = new T.Group(); private entities: Entity[] = []; private coins: { mesh: T.Group; id: number; y: number }[] = [];
@@ -134,7 +150,7 @@ export class World {
   private keys = new Set<string>(); private stick = { x: 0, z: 0 }; private clock = new T.Clock(); private time = 0; private vy = 0; private grounded = true;
   private particles: { mesh: T.Mesh; v: T.Vector3; life: number }[] = []; private lastSafe = new T.Vector3(0, 0, 8); private follow = new T.Vector3(0, 0, 1);
   private sun: T.DirectionalLight; private labelLayer: HTMLDivElement; private selectedId: string | null = null;
-  private swingUntil = 0; private rideIndex = -1;
+  private swingUntil = 0; private rideIndex = -1; private petIndex = -1;
   active = false; paused = true; onCollect = (_id: number) => {}; onInteract = (_id: string) => {}; onAttack = (_id: string | null) => {}; onNear = (_name: string | null, _id: string | null) => {}; onJump = () => {}; onRescue = () => {};
   constructor(private container: HTMLElement) {
     this.scene.background = new T.Color(0xc5e5d4); this.scene.fog = new T.Fog(0xc5e5d4, 55, 105);
@@ -180,6 +196,8 @@ export class World {
     this.addEntity('weapon', '강지후 · 무기 상점', -8, -3.8, makeCharacter(1, 6, 1));
     this.addEntity('outfit', '오지후 · 의상 상점', 8, -3.8, makeCharacter(2, 4, 2));
     this.addEntity('ride', '나현이 · 라이딩 상점', 14, -5.5, makeCharacter(0, 10, 6));
+    this.addEntity('pet', '윤준 · 펫 상점', 18.5, -3.5, makeCharacter(1, 12, 10));
+    this.addEntity('beauty', '가영이 · 헤어와 성형', -15.5, -4.2, makeCharacter(2, 15, 2));
     this.addEntity('arena', '별솔 · 대련장', 0, -9, makeCharacter(3, 5, 3));
     stageMonsters(0).forEach((m, i) => this.addEntity(`monster${i}`, MONSTERS[m.type].name, m.x, m.z, makeMonster(m.type)));
     this.addEntity('journey', '모험의 문 · 10개의 사냥터', 10.5, 13.5, this.gate(0x9e78c9));
@@ -258,14 +276,15 @@ export class World {
     const label = document.createElement('div'); label.className = `entity-label ${id.startsWith('monster') ? 'monster-label' : ''}`; label.textContent = name; this.labelLayer.append(label);
     this.entities.push({ id, name, x, z, mesh: model, label });
   }
-  setAvatar(character: number, outfit: number, weapon: number, outfitLevel = 0, weaponLevel = 0, ride = -1) {
+  setAvatar(character: number, outfit: number, weapon: number, outfitLevel = 0, weaponLevel = 0, ride = -1, pet = -1, hairstyle = 0, face = 0) {
     const position = this.player.position.clone(), rotation = this.player.rotation.y;
-    this.scene.remove(this.player); this.disposeModel(this.player); this.player = makeCharacter(character, outfit, weapon, outfitLevel, weaponLevel); this.player.position.copy(position); this.player.rotation.y = rotation; this.scene.add(this.player);
-    this.rideIndex = ride;
+    this.scene.remove(this.player); this.disposeModel(this.player); this.player = makeCharacter(character, outfit, weapon, outfitLevel, weaponLevel, hairstyle, face); this.player.position.copy(position); this.player.rotation.y = rotation; this.scene.add(this.player);
+    this.rideIndex = ride; this.petIndex = pet;
     if (ride >= 0 && RIDES[ride]) { const body = this.player.userData.body as T.Group; body.position.y = RIDES[ride].flying ? 1.03 : .78; this.player.add(makeRide(ride)); }
+    if (pet >= 0 && PETS[pet]) this.player.add(makePet(pet));
   }
   private disposeModel(g: T.Group) { g.traverse(o => { if (o instanceof T.Mesh && !sharedGeometries.has(o.geometry)) o.geometry.dispose(); }); }
-  restore(s: Save) { this.setAvatar(s.character, s.outfit, s.weapon, s.outfits[s.outfit], s.weapons[s.weapon], s.ride); this.loadStage(s); this.quality(s.settings.lowQuality); }
+  restore(s: Save) { this.setAvatar(s.character, s.outfit, s.weapon, s.outfits[s.outfit], s.weapons[s.weapon], s.ride, s.pet, s.hairstyle, s.face); this.loadStage(s); this.quality(s.settings.lowQuality); }
   quality(low: boolean) { this.renderer.setPixelRatio(Math.min(devicePixelRatio, low ? 1 : 1.35)); this.renderer.shadowMap.enabled = !low; this.sun.castShadow = !low; this.scene.traverse(o => { if (o instanceof T.Mesh) { const mats = Array.isArray(o.material) ? o.material : [o.material]; mats.forEach(m => m.needsUpdate = true); } }); }
   clearInput() { this.keys.clear(); this.stick = { x: 0, z: 0 }; }
   moveStick(x: number, z: number) { this.stick = { x, z }; }
@@ -290,7 +309,7 @@ export class World {
       let dx = Number(this.keys.has('d') || this.keys.has('arrowright')) - Number(this.keys.has('a') || this.keys.has('arrowleft')) + this.stick.x;
       let dz = Number(this.keys.has('s') || this.keys.has('arrowdown')) - Number(this.keys.has('w') || this.keys.has('arrowup')) + this.stick.z;
       const n = Math.hypot(dx, dz); if (n > 1) { dx /= n; dz /= n; }
-      const ride = this.rideIndex >= 0 ? RIDES[this.rideIndex] : null, flying = !!ride?.flying, speed = 5 * (ride?.speed ?? 1);
+      const ride = this.rideIndex >= 0 ? RIDES[this.rideIndex] : null, flying = !!ride?.flying, speed = 6.5 * (ride?.speed ?? 1);
       const vx = (dx * .8 + dz * .6) * speed, vz = (-dx * .6 + dz * .8) * speed;
       const allowed = (x: number, z: number) => flying || (!this.colliders.some(c => (!c.id || this.entities.find(e => e.id === c.id)?.mesh.visible) && Math.hypot(x - c.x, z - c.z) < c.r + .32) && !this.platforms.some(t => Math.abs(x - t.x) < t.w / 2 + .2 && Math.abs(z - t.z) < t.d / 2 + .2 && p.y < t.h - .13));
       if (allowed(p.x + vx * dt, p.z)) p.x += vx * dt; if (allowed(p.x, p.z + vz * dt)) p.z += vz * dt;
@@ -300,7 +319,8 @@ export class World {
       const bounds = stageSize(this.stage);
       if (Math.abs(p.x) > bounds.x - .5 || Math.abs(p.z) > bounds.z - .5 || (!flying && this.water(p.x, p.z) && p.y <= .2)) { p.copy(this.lastSafe); this.vy = 0; this.onRescue(); }
       else if (this.grounded && (flying || !this.water(p.x, p.z)) && Math.abs(p.x) < bounds.x - 2 && Math.abs(p.z) < bounds.z - 2) this.lastSafe.copy(p);
-      for (const c of this.coins) if (c.mesh.visible && p.distanceTo(c.mesh.position) < 1) { c.mesh.visible = false; this.burst(c.mesh.position, 0xff9fb4, 6); this.onCollect(c.id); }
+      const collectRadius = this.petIndex >= 0 ? PETS[this.petIndex].radius : 1;
+      for (const c of this.coins) if (c.mesh.visible && p.distanceTo(c.mesh.position) < collectRadius) { c.mesh.visible = false; this.burst(c.mesh.position, 0xff9fb4, 6); this.onCollect(c.id); }
     }
     for (const c of this.coins) { c.mesh.rotation.y += dt; c.mesh.position.y = c.y + Math.sin(this.time * 2.8 + c.mesh.position.x) * .12; }
     let near: Entity | undefined, distance = 2.8;
@@ -325,6 +345,7 @@ export class World {
     this.scene.traverse(o => { if (o.userData.butterfly) { o.position.y += Math.sin(this.time * 4 + o.position.x) * .0015; o.rotation.y += dt * .7; } });
     const weapon = this.player.userData.weapon as T.Group | undefined; if (weapon) weapon.rotation.z = -.28 + (this.swingUntil > this.time ? Math.sin((this.swingUntil - this.time) / .28 * Math.PI) * -1.35 : 0);
     this.player.traverse(o => { if (o.userData.rideWing) o.rotation.z = Number(o.userData.rideWing) * (-.72 + Math.sin(this.time * 7) * .18); });
+    this.player.traverse(o => { if (o.userData.petModel) { o.position.y = .02 + Math.sin(this.time * 4) * .05; o.rotation.y = Math.sin(this.time * 2) * .12; } });
     if (this.player.userData.sparkles) this.player.userData.sparkles.rotation.y += dt;
     for (let i = this.particles.length - 1; i >= 0; i--) { const q = this.particles[i]; q.life -= dt; q.v.y -= dt * 5; q.mesh.position.addScaledVector(q.v, dt); q.mesh.scale.setScalar(Math.max(0, q.life)); if (q.life <= 0) { this.scene.remove(q.mesh); q.mesh.geometry.dispose(); this.particles.splice(i, 1); } }
     const target = this.active ? p : new T.Vector3(0, 0, -1); this.follow.lerp(target, 1 - Math.exp(-dt * 3));
@@ -338,7 +359,7 @@ export class AvatarPreview {
     this.renderer = new T.WebGLRenderer({ alpha: true, antialias: true }); this.renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5)); this.renderer.setClearColor(0x000000, 0); this.renderer.toneMapping = T.ACESFilmicToneMapping; this.renderer.toneMappingExposure = 1.4; element.append(this.renderer.domElement); this.scene.add(new T.HemisphereLight(0xffffff, 0xa6ba93, 3)); const light = new T.DirectionalLight(0xffedcd, 3); light.position.set(-3, 4, 5); this.scene.add(light); this.camera.position.set(2.2, 1.9, 5.8); this.camera.lookAt(0, 1.1, 0);
     this.resizeObserver = new ResizeObserver(() => this.draw()); this.resizeObserver.observe(element);
   }
-  show(c: number, o: number, w: number, ol = 0, wl = 0) { this.scene.remove(this.model); this.model.traverse(x => { if (x instanceof T.Mesh && !sharedGeometries.has(x.geometry)) x.geometry.dispose(); }); this.model = makeCharacter(c, o, w, ol, wl); this.model.rotation.y = -.18; this.scene.add(this.model); this.draw(); }
+  show(c: number, o: number, w: number, ol = 0, wl = 0, hairstyle = 0, face = 0) { this.scene.remove(this.model); this.model.traverse(x => { if (x instanceof T.Mesh && !sharedGeometries.has(x.geometry)) x.geometry.dispose(); }); this.model = makeCharacter(c, o, w, ol, wl, hairstyle, face); this.model.rotation.y = -.18; this.scene.add(this.model); this.draw(); }
   private draw() { const w = this.element.clientWidth, h = this.element.clientHeight; if (!w || !h) return; this.renderer.setSize(w, h); this.camera.aspect = w / h; this.camera.updateProjectionMatrix(); this.renderer.render(this.scene, this.camera); }
   dispose() { this.resizeObserver.disconnect(); this.model.traverse(x => { if (x instanceof T.Mesh && !sharedGeometries.has(x.geometry)) x.geometry.dispose(); }); this.renderer.dispose(); this.renderer.domElement.remove(); }
 }

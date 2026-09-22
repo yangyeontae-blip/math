@@ -44,17 +44,39 @@ export const MONSTERS = [
   { name: '도토리 정령', icon: '🌰', berry: 15, xp: 20, score: 25, color: 0xd3aa74 },
 ] as const;
 export const RIDES = [
-  { name: '당근 씽씽카', price: 1000, speed: 1.35, flying: false, icon: '🥕', color: 0xf39a58, desc: '당근 바퀴로 통통 달리는 첫 라이딩' },
-  { name: '구름양 포포', price: 2500, speed: 1.55, flying: false, icon: '🐑', color: 0xd9eff7, desc: '폭신한 털을 흔들며 빠르게 달려요' },
-  { name: '별빛 페가수스', price: 5000, speed: 1.75, flying: true, icon: '🪽', color: 0xc9b5ef, desc: '반짝이는 날개로 물과 장애물 위를 날아요' },
-  { name: '달빛 아기용', price: 8000, speed: 2, flying: true, icon: '🐉', color: 0x7898d8, desc: '달빛 꼬리를 그리며 가장 빠르게 날아요' },
+  { name: '당근 씽씽카', price: 1000, speed: 1.6, flying: false, icon: '🥕', color: 0xf39a58, desc: '당근 바퀴로 통통 달리는 첫 라이딩' },
+  { name: '구름양 포포', price: 1800, speed: 1.85, flying: false, icon: '🐑', color: 0xd9eff7, desc: '폭신한 털을 흔들며 빠르게 달려요' },
+  { name: '도토리 붕붕이', price: 2800, speed: 2.1, flying: false, icon: '🌰', color: 0xb98352, desc: '도토리 바퀴가 씩씩하게 숲길을 달려요' },
+  { name: '무지개 사슴', price: 4000, speed: 2.35, flying: false, icon: '🦌', color: 0x82cfb2, desc: '무지개 발자국을 남기는 빠른 사슴' },
+  { name: '별빛 페가수스', price: 5000, speed: 2.55, flying: true, icon: '🪽', color: 0xc9b5ef, desc: '반짝이는 날개로 물과 장애물 위를 날아요' },
+  { name: '솜사탕 열기구', price: 6500, speed: 2.75, flying: true, icon: '🎈', color: 0xf2a9cf, desc: '달콤한 구름을 타고 하늘을 둥실 날아요' },
+  { name: '달빛 아기용', price: 8000, speed: 3, flying: true, icon: '🐉', color: 0x7898d8, desc: '달빛 꼬리를 그리며 아주 빠르게 날아요' },
+  { name: '오로라 고래', price: 10000, speed: 3.25, flying: true, icon: '🐳', color: 0x65b9d8, desc: '오로라 물결을 헤치며 가장 빠르게 날아요' },
+] as const;
+export const PETS = [
+  { name: '딸기 햄찌', price: 400, radius: 2.8, icon: '🐹', color: 0xd9a16f, desc: '가까운 베리를 쪼르르 달려가 먹어 줘요' },
+  { name: '구름 토끼콩', price: 700, radius: 3.3, icon: '🐰', color: 0xf1e8ec, desc: '긴 귀로 베리 냄새를 잘 찾아요' },
+  { name: '숲냥이 모리', price: 1200, radius: 3.8, icon: '🐱', color: 0xb68b70, desc: '살금살금 다가가 주변 베리를 모아요' },
+  { name: '별부엉이 루루', price: 2000, radius: 4.5, icon: '🦉', color: 0x9b83bd, desc: '밝은 눈으로 조금 먼 베리도 찾아요' },
+  { name: '아기용 베리링', price: 3500, radius: 5.2, icon: '🐲', color: 0x75bd91, desc: '넓은 범위의 베리를 재빠르게 모아 줘요' },
+] as const;
+export const HAIRSTYLES = [
+  { name: '기본 머리', price: 0, icon: '🙂' }, { name: '몽실 양갈래', price: 100, icon: '🎀' },
+  { name: '반짝 단발', price: 160, icon: '✨' }, { name: '밤톨 웨이브', price: 240, icon: '🌰' },
+  { name: '별빛 포니테일', price: 360, icon: '⭐' }, { name: '구름 트윈번', price: 500, icon: '☁️' },
+] as const;
+export const FACES = [
+  { name: '해맑은 얼굴', price: 0, icon: '😊' }, { name: '초롱초롱 눈', price: 100, icon: '🥺' },
+  { name: '씩씩한 눈썹', price: 160, icon: '😎' }, { name: '방긋 고양이상', price: 240, icon: '😺' },
+  { name: '별눈 반짝이', price: 360, icon: '🤩' },
 ] as const;
 export const WEAPON_UPGRADES = [60, 120, 240];
 export const OUTFIT_UPGRADES = [50, 100];
 export interface Save {
-  version: 4; nickname: string; character: number; berries: number; level: number; xp: number;
+  version: 5; nickname: string; character: number; berries: number; level: number; xp: number;
   weapon: number; outfit: number; weapons: Record<string, number>; outfits: Record<string, number>;
-  ride: number; rides: Record<string, boolean>; teacherMode: boolean;
+  ride: number; rides: Record<string, boolean>; pet: number; pets: Record<string, boolean>;
+  hairstyle: number; hairstyles: Record<string, boolean>; face: number; faces: Record<string, boolean>; teacherMode: boolean;
   best: number; position: { x: number; z: number }; tutorial: { collected: boolean; battle: boolean; shop: boolean };
   settings: { music: boolean; sound: boolean; lowQuality: boolean };
   journey: { stage: number; maps: { berries: number[]; monsters: number[]; trees: number[]; cleared: boolean }[] };
@@ -74,7 +96,7 @@ export const STAGE_DIVISION_DIFFICULTY = [
 ] as const;
 export function newSave(nickname: string, character: number): Save {
   if (!nickname.trim() || [...nickname.trim()].length > 10 || !Number.isInteger(character) || character < 0 || character > 3) throw new Error('이름은 1~10자, 캐릭터는 4명 중 골라 주세요.');
-  return { version: 4, nickname: nickname.trim(), character, berries: 0, level: 1, xp: 0, weapon: 0, outfit: 0, weapons: { 0: 0 }, outfits: { 0: 0 }, ride: -1, rides: {}, teacherMode: false, best: 0, position: { x: 0, z: 8 }, tutorial: { collected: false, battle: false, shop: false }, settings: { music: true, sound: true, lowQuality: false }, journey: emptyJourney() };
+  return { version: 5, nickname: nickname.trim(), character, berries: 0, level: 1, xp: 0, weapon: 0, outfit: 0, weapons: { 0: 0 }, outfits: { 0: 0 }, ride: -1, rides: {}, pet: -1, pets: {}, hairstyle: 0, hairstyles: { 0: true }, face: 0, faces: { 0: true }, teacherMode: false, best: 0, position: { x: 0, z: 8 }, tutorial: { collected: false, battle: false, shop: false }, settings: { music: true, sound: true, lowQuality: false }, journey: emptyJourney() };
 }
 export function emptyJourney(): Save['journey'] { return { stage: 0, maps: Array.from({ length: 11 }, () => ({ berries: [], monsters: [], trees: [], cleared: false })) }; }
 export function canEnter(s: Save, stage: number) { return Number.isInteger(stage) && stage >= 0 && stage <= 10 && (s.teacherMode || stage <= 1 || s.journey.maps[stage - 1].cleared); }
@@ -147,11 +169,29 @@ export function buyRide(s: Save, id: number): string {
   s.berries -= ride.price; s.rides[id] = true; s.ride = id; return `${ride.name}을(를) 만나 함께 달려요!`;
 }
 export function dismount(s: Save) { s.ride = -1; return '라이딩에서 내려 천천히 걸어요.'; }
+export function buyPet(s: Save, id: number): string {
+  const pet = PETS[id]; if (!Number.isInteger(id) || !pet) throw new Error('없는 펫이에요.');
+  if (s.pets[id]) { s.pet = id; return `${pet.name}와 함께 모험해요!`; }
+  if (s.berries < pet.price) throw new Error(`${pet.price - s.berries}베리가 더 필요해요.`);
+  s.berries -= pet.price; s.pets[id] = true; s.pet = id; return `${pet.name}이(가) 새 친구가 되었어요!`;
+}
+export function unequipPet(s: Save) { s.pet = -1; return '펫이 포근한 집에서 쉬어요.'; }
+export function buyLook(s: Save, kind: 'hairstyle' | 'face', id: number): string {
+  const items = kind === 'hairstyle' ? HAIRSTYLES : FACES, owned = kind === 'hairstyle' ? s.hairstyles : s.faces;
+  if (!Number.isInteger(id) || !items[id]) throw new Error('없는 꾸미기예요.');
+  if (!owned[id]) { if (s.berries < items[id].price) throw new Error(`${items[id].price - s.berries}베리가 더 필요해요.`); s.berries -= items[id].price; owned[id] = true; }
+  s[kind] = id; return kind === 'hairstyle' ? '새 헤어스타일로 변신했어요!' : '새로운 표정으로 변신했어요!';
+}
 export function enableTeacherMode(s: Save, code: string): string {
+  return applyTeacherCode(s, code);
+}
+export function applyTeacherCode(s: Save, code: string): string {
+  if (code === 'showmethemoney') { s.berries += 1000; return '수업용 베리 1,000개를 추가했어요!'; }
+  if (code === 'greedisgood') { s.berries += 10000; return '수업용 베리 10,000개를 추가했어요!'; }
   if (code !== 'teacher') throw new Error('암호코드가 맞지 않아요.');
   s.teacherMode = true; s.berries = 1_000_000;
-  WEAPONS.forEach((_, id) => { s.weapons[id] = 3; }); OUTFITS.forEach((_, id) => { s.outfits[id] = 2; }); RIDES.forEach((_, id) => { s.rides[id] = true; });
-  return '선생님 모드가 열렸어요! 모든 장비와 스테이지를 사용할 수 있어요.';
+  WEAPONS.forEach((_, id) => { s.weapons[id] = 3; }); OUTFITS.forEach((_, id) => { s.outfits[id] = 2; }); RIDES.forEach((_, id) => { s.rides[id] = true; }); PETS.forEach((_, id) => { s.pets[id] = true; }); HAIRSTYLES.forEach((_, id) => { s.hairstyles[id] = true; }); FACES.forEach((_, id) => { s.faces[id] = true; });
+  return '선생님 모드가 열렸어요! 모든 아이템과 스테이지를 사용할 수 있어요.';
 }
 export function validateSave(value: unknown): Save {
   const fail = () => { throw new Error('베리숲 저장 파일이 아니거나 내용이 손상되었어요.'); };
@@ -161,9 +201,10 @@ export function validateSave(value: unknown): Save {
   if (migrated.version === 2) { migrated.version = 3; const journey = migrated.journey as Save['journey']; journey.maps.forEach(m => { m.trees = []; }); }
   if (migrated.version === 3) { migrated.version = 4; migrated.ride = -1; migrated.rides = {}; migrated.teacherMode = false; }
   if (migrated.version === 4 && migrated.teacherMode === undefined) migrated.teacherMode = false;
+  if (migrated.version === 4) { migrated.version = 5; migrated.pet = -1; migrated.pets = {}; migrated.hairstyle = 0; migrated.hairstyles = { 0: true }; migrated.face = 0; migrated.faces = { 0: true }; }
   const s = migrated as unknown as Save;
   const integer = (v: unknown, min: number, max: number): v is number => typeof v === 'number' && Number.isSafeInteger(v) && v >= min && v <= max;
-  if (s.version !== 4 || typeof s.teacherMode !== 'boolean' || typeof s.nickname !== 'string' || !s.nickname.trim() || [...s.nickname].length > 10 || !integer(s.character, 0, 3) || !integer(s.berries, 0, 1e9) || !integer(s.level, 1, 100000) || !integer(s.xp, 0, s.level * 40 - 1) || !integer(s.best, 0, 1e9)) return fail();
+  if (s.version !== 5 || typeof s.teacherMode !== 'boolean' || typeof s.nickname !== 'string' || !s.nickname.trim() || [...s.nickname].length > 10 || !integer(s.character, 0, 3) || !integer(s.berries, 0, 1e9) || !integer(s.level, 1, 100000) || !integer(s.xp, 0, s.level * 40 - 1) || !integer(s.best, 0, 1e9)) return fail();
   for (const [key, total, max] of [['weapons', WEAPONS.length, 3], ['outfits', OUTFITS.length, 2]] as const) {
     const map = s[key];
     if (!map || typeof map !== 'object' || Array.isArray(map) || !Object.hasOwn(map, '0')) return fail();
@@ -173,6 +214,11 @@ export function validateSave(value: unknown): Save {
   if (!integer(s.ride, -1, RIDES.length - 1) || !s.rides || typeof s.rides !== 'object' || Array.isArray(s.rides)) return fail();
   for (const [id, owned] of Object.entries(s.rides)) if (!/^\d+$/.test(id) || !integer(Number(id), 0, RIDES.length - 1) || owned !== true) return fail();
   if (s.ride >= 0 && !s.rides[s.ride]) return fail();
+  for (const [key, selected, items] of [['pets', s.pet, PETS], ['hairstyles', s.hairstyle, HAIRSTYLES], ['faces', s.face, FACES]] as const) {
+    const owned = s[key]; if (!owned || typeof owned !== 'object' || Array.isArray(owned)) return fail();
+    for (const [id, value] of Object.entries(owned)) if (!/^\d+$/.test(id) || !integer(Number(id), 0, items.length - 1) || value !== true) return fail();
+    if (!integer(selected, key === 'pets' ? -1 : 0, items.length - 1) || (selected >= 0 && !owned[selected])) return fail();
+  }
   if (!s.journey || !integer(s.journey.stage, 0, 10) || !Array.isArray(s.journey.maps) || s.journey.maps.length !== 11) return fail();
   for (let stage = 0; stage <= 10; stage++) {
     const m = s.journey.maps[stage];
