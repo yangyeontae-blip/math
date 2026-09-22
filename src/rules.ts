@@ -68,7 +68,9 @@ export const HAIRSTYLES = [
 export const FACES = [
   { name: '해맑은 얼굴', price: 0, icon: '😊' }, { name: '초롱초롱 눈', price: 100, icon: '🥺' },
   { name: '씩씩한 눈썹', price: 160, icon: '😎' }, { name: '방긋 고양이상', price: 240, icon: '😺' },
-  { name: '별눈 반짝이', price: 360, icon: '🤩' },
+  { name: '별눈 반짝이', price: 360, icon: '🤩' }, { name: '졸린 달눈', price: 520, icon: '🌙' },
+  { name: '토끼 앞니 미소', price: 700, icon: '🐰' }, { name: '하트 반짝눈', price: 900, icon: '💖' },
+  { name: '용감한 번개눈', price: 1200, icon: '⚡' }, { name: '무지개 웃음', price: 1500, icon: '🌈' },
 ] as const;
 export const WEAPON_UPGRADES = [60, 120, 240];
 export const OUTFIT_UPGRADES = [50, 100];
