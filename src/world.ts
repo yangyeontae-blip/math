@@ -7,6 +7,7 @@ const mat = (color: number, roughness = .86) => new T.MeshStandardMaterial({ col
 const materials = new Map<number, T.MeshStandardMaterial>();
 const sharedGeometries = new Set<T.BufferGeometry>();
 const sphereGeometry = new T.SphereGeometry(1, 12, 8); sharedGeometries.add(sphereGeometry);
+const particleGeometry = new T.OctahedronGeometry(.09); sharedGeometries.add(particleGeometry);
 const boxGeometries = new Map<string, T.BoxGeometry>(), cylinderGeometries = new Map<string, T.CylinderGeometry>();
 function cachedBox(w: number, h: number, d: number) { const key = `${w},${h},${d}`; if (!boxGeometries.has(key)) { const geo = new T.BoxGeometry(w, h, d); boxGeometries.set(key, geo); sharedGeometries.add(geo); } return boxGeometries.get(key)!; }
 function cachedCylinder(top: number, bottom: number, h: number, sides: number) { const key = `${top},${bottom},${h},${sides}`; if (!cylinderGeometries.has(key)) { const geo = new T.CylinderGeometry(top, bottom, h, sides); cylinderGeometries.set(key, geo); sharedGeometries.add(geo); } return cylinderGeometries.get(key)!; }
@@ -138,8 +139,11 @@ function makePet(id: number) {
   if (id === 0) for (const side of [-1, 1]) ball(g, pet.color, side * .2, .76, .1, .12);
   if (id === 1) for (const side of [-1, 1]) ball(g, pet.color, side * .13, .92, .12, .09, .36, .09);
   if (id === 2) for (const side of [-1, 1]) { const ear = mesh(new T.ConeGeometry(.1, .3, 5), pet.color, side * .16, .86, .13, g); ear.rotation.z = side * -.15; }
-  if (id === 3) { for (const side of [-1, 1]) ball(g, 0xf1d38b, side * .13, .62, .41, .08, .1, .025); for (const side of [-1, 1]) { const wing = ball(g, 0xc5addb, side * .32, .4, -.02, .2, .28, .08); wing.rotation.z = side * .35; } }
+  if (id === 3) { for (const side of [-1, 1]) ball(g, 0xf1d38b, side * .13, .62, .41, .08, .1, .025); for (const side of [-1, 1]) { const wing = ball(g, 0xc5addb, side * .32, .4, -.02, .2, .28, .08); wing.rotation.z = side * .35; wing.userData.petWing = side; } }
   if (id === 4) { for (const side of [-1, 1]) mesh(new T.ConeGeometry(.08, .24, 5), 0xd5ef9a, side * .14, .86, .12, g); for (let i = 0; i < 3; i++) ball(g, 0xd5ef9a, 0, .42 + i * .09, -.35 - i * .13, .09 - i * .015); }
+  // Original cozy-fantasy companion details: a tiny gem collar, travel pouch and glowing charm.
+  const collar = mesh(new T.TorusGeometry(.2, .025, 5, 16), 0xf4d478, 0, .48, .18, g); collar.rotation.x = Math.PI / 2;
+  box(g, 0x9b7653, -.3, .34, -.08, .18, .23, .1); const charm = mesh(new T.OctahedronGeometry(.065), id > 2 ? 0xbbeeff : 0xffd788, 0, .38, .43, g); charm.userData.petCharm = true;
   g.position.set(-1.05, .02, -.7); g.userData.petModel = true; return g;
 }
 
@@ -150,7 +154,8 @@ export class World {
   private keys = new Set<string>(); private stick = { x: 0, z: 0 }; private clock = new T.Clock(); private time = 0; private vy = 0; private grounded = true;
   private particles: { mesh: T.Mesh; v: T.Vector3; life: number }[] = []; private lastSafe = new T.Vector3(0, 0, 8); private follow = new T.Vector3(0, 0, 1);
   private sun: T.DirectionalLight; private labelLayer: HTMLDivElement; private selectedId: string | null = null;
-  private swingUntil = 0; private rideIndex = -1; private petIndex = -1;
+  private swingUntil = 0; private rideIndex = -1; private petIndex = -1; private petModel: T.Group | null = null;
+  private tempProjection = new T.Vector3(); private tempTarget = new T.Vector3(); private tempWorld = new T.Vector3(); private cameraTarget = new T.Vector3();
   active = false; paused = true; onCollect = (_id: number) => {}; onInteract = (_id: string) => {}; onAttack = (_id: string | null) => {}; onNear = (_name: string | null, _id: string | null) => {}; onJump = () => {}; onRescue = () => {};
   constructor(private container: HTMLElement) {
     this.scene.background = new T.Color(0xc5e5d4); this.scene.fog = new T.Fog(0xc5e5d4, 55, 105);
@@ -198,12 +203,12 @@ export class World {
     this.addEntity('ride', '나현이 · 라이딩 상점', 14, -5.5, makeCharacter(0, 10, 6));
     this.addEntity('pet', '윤준 · 펫 상점', 18.5, -3.5, makeCharacter(1, 12, 10));
     this.addEntity('beauty', '가영이 · 헤어와 성형', -15.5, -4.2, makeCharacter(2, 15, 2));
-    this.addEntity('arena', '별솔 · 대련장', 0, -9, makeCharacter(3, 5, 3));
+    this.addEntity('arena', '신비 · 대련장', 0, -9, makeCharacter(3, 5, 3));
     stageMonsters(0).forEach((m, i) => this.addEntity(`monster${i}`, MONSTERS[m.type].name, m.x, m.z, makeMonster(m.type)));
     this.addEntity('journey', '모험의 문 · 10개의 사냥터', 10.5, 13.5, this.gate(0x9e78c9));
     // Keep the walking areas clear; peripheral trees frame the miniature world.
-    for (let i = 0; i < 48; i++) { const a = i * 2.39996, r = 17 + (i % 4) * 1.65; const x = Math.cos(a) * r, z = Math.sin(a) * r * .77; if ((x > 14 && z > 1) || Math.hypot(x - 10.5, z - 13.5) < 7 || (Math.abs(x) < 5 && z < -12)) continue; this.tree(x, z, .85 + (i % 3) * .16, i % 6 === 0); }
-    stageTrees(0).forEach(({ x, z }, i) => this.addChoppableTree(i, x, z, 1, i % 2 === 0));
+    for (let i = 0; i < 48; i++) { const a = i * 2.39996, r = 17 + (i % 4) * 1.65; const x = Math.cos(a) * r, z = Math.sin(a) * r * .77; if ((x > 14 && z > 1) || Math.hypot(x - 10.5, z - 13.5) < 7 || Math.hypot(x - 18.5, z + 3.5) < 7 || (Math.abs(x) < 5 && z < -12)) continue; this.tree(x, z, .85 + (i % 3) * .16, i % 6 === 0); }
+    stageTrees(0).forEach(({ x, z }, i) => { if (Math.hypot(x - 18.5, z + 3.5) >= 8) this.addChoppableTree(i, x, z, 1, i % 2 === 0); });
     for (let i = 0; i < 65; i++) { const x = Math.sin(i * 12.97) * 23, z = Math.cos(i * 4.67) * 18; if (Math.abs(x) < 3 || Math.hypot(x - 10.5, z - 13.5) < 7 || (z < -2 && z > -11) || (x > 5 && z > 2 && z < 14)) continue; for (let j = 0; j < 3; j++) { const fx = x + j * .14; cylinder(this.scene, 0x538c50, fx, .14, z, .025, .025, .3, 5); ball(this.scene, [0xffe8ae, 0xf4aec4, 0xeae3ff][i % 3], fx, .32, z, .1, .09, .1); } }
     for (const side of [-1, 1]) for (let i = 0; i < 7; i++) { const x = side * 22, z = -15 + i * 4.7; cylinder(this.scene, 0xd4bb88, x, .5, z, .08, .09, 1, 8); box(this.scene, 0xe7d3a3, x, .65, z + 2, .12, .11, 4.7); }
     this.addBerries();
@@ -279,9 +284,9 @@ export class World {
   setAvatar(character: number, outfit: number, weapon: number, outfitLevel = 0, weaponLevel = 0, ride = -1, pet = -1, hairstyle = 0, face = 0) {
     const position = this.player.position.clone(), rotation = this.player.rotation.y;
     this.scene.remove(this.player); this.disposeModel(this.player); this.player = makeCharacter(character, outfit, weapon, outfitLevel, weaponLevel, hairstyle, face); this.player.position.copy(position); this.player.rotation.y = rotation; this.scene.add(this.player);
-    this.rideIndex = ride; this.petIndex = pet;
+    this.rideIndex = ride; this.petIndex = pet; this.petModel = null;
     if (ride >= 0 && RIDES[ride]) { const body = this.player.userData.body as T.Group; body.position.y = RIDES[ride].flying ? 1.03 : .78; this.player.add(makeRide(ride)); }
-    if (pet >= 0 && PETS[pet]) this.player.add(makePet(pet));
+    if (pet >= 0 && PETS[pet]) { this.petModel = makePet(pet); this.player.add(this.petModel); }
   }
   private disposeModel(g: T.Group) { g.traverse(o => { if (o instanceof T.Mesh && !sharedGeometries.has(o.geometry)) o.geometry.dispose(); }); }
   restore(s: Save) { this.setAvatar(s.character, s.outfit, s.weapon, s.outfits[s.outfit], s.weapons[s.weapon], s.ride, s.pet, s.hairstyle, s.face); this.loadStage(s); this.quality(s.settings.lowQuality); }
@@ -299,7 +304,7 @@ export class World {
   }
   defeat(id: string) { const e = this.entities.find(e => e.id === id); if (e) { const monster = stageMonsters(this.stage)[Number(id.slice(7))]; this.burst(e.mesh.position, MONSTERS[monster.type].color); e.mesh.visible = false; } }
   celebrate() { this.burst(this.player.position, 0xffd371, 30); }
-  private burst(pos: T.Vector3, color: number, count = 14) { for (let i = 0; i < count; i++) { const m = mesh(new T.OctahedronGeometry(.09), color, pos.x, pos.y + .9, pos.z, this.scene); this.particles.push({ mesh: m, v: new T.Vector3((Math.random() - .5) * 5, 2 + Math.random() * 3, (Math.random() - .5) * 5), life: 1 }); } }
+  private burst(pos: T.Vector3, color: number, count = 14) { for (let i = 0; i < count; i++) { const m = mesh(particleGeometry, color, pos.x, pos.y + .9, pos.z, this.scene); this.particles.push({ mesh: m, v: new T.Vector3((Math.random() - .5) * 5, 2 + Math.random() * 3, (Math.random() - .5) * 5), life: 1 }); } }
   private water(x: number, z: number) { return x > 15.25 && x < 22.75 && z > 2.75 && z < 13.25; }
   private resize() { const w = this.container.clientWidth, h = this.container.clientHeight; const span = w < 700 ? 13 : 14.5; this.camera.left = -span * w / h; this.camera.right = span * w / h; this.camera.top = span; this.camera.bottom = -span; this.camera.updateProjectionMatrix(); this.renderer.setSize(w, h); }
   private frame() {
@@ -319,8 +324,19 @@ export class World {
       const bounds = stageSize(this.stage);
       if (Math.abs(p.x) > bounds.x - .5 || Math.abs(p.z) > bounds.z - .5 || (!flying && this.water(p.x, p.z) && p.y <= .2)) { p.copy(this.lastSafe); this.vy = 0; this.onRescue(); }
       else if (this.grounded && (flying || !this.water(p.x, p.z)) && Math.abs(p.x) < bounds.x - 2 && Math.abs(p.z) < bounds.z - 2) this.lastSafe.copy(p);
-      const collectRadius = this.petIndex >= 0 ? PETS[this.petIndex].radius : 1;
-      for (const c of this.coins) if (c.mesh.visible && p.distanceTo(c.mesh.position) < collectRadius) { c.mesh.visible = false; this.burst(c.mesh.position, 0xff9fb4, 6); this.onCollect(c.id); }
+      for (const c of this.coins) if (c.mesh.visible && p.distanceTo(c.mesh.position) < 1) { c.mesh.visible = false; this.burst(c.mesh.position, 0xff9fb4, 6); this.onCollect(c.id); }
+      if (this.petModel && this.petIndex >= 0) {
+        let target: (typeof this.coins)[number] | undefined, best: number = PETS[this.petIndex].radius;
+        for (const c of this.coins) { if (!c.mesh.visible) continue; const d = Math.hypot(p.x - c.mesh.position.x, p.z - c.mesh.position.z); if (d < best) { target = c; best = d; } }
+        this.player.updateWorldMatrix(true, false);
+        if (target) { this.tempTarget.copy(target.mesh.position); this.player.worldToLocal(this.tempTarget); this.tempTarget.y = .22; }
+        else this.tempTarget.set(-1.05, .12, -.7);
+        const turnX = this.tempTarget.x - this.petModel.position.x, turnZ = this.tempTarget.z - this.petModel.position.z;
+        if (Math.hypot(turnX, turnZ) > .04) this.petModel.rotation.y = Math.atan2(turnX, turnZ);
+        this.petModel.position.lerp(this.tempTarget, 1 - Math.exp(-dt * (target ? 7.5 : 4.5)));
+        this.petModel.position.y += Math.sin(this.time * 8) * .012;
+        if (target && this.petModel.getWorldPosition(this.tempWorld).distanceTo(target.mesh.position) < .55) { target.mesh.visible = false; this.burst(target.mesh.position, 0xff9fb4, 6); this.onCollect(target.id); }
+      }
     }
     for (const c of this.coins) { c.mesh.rotation.y += dt; c.mesh.position.y = c.y + Math.sin(this.time * 2.8 + c.mesh.position.x) * .12; }
     let near: Entity | undefined, distance = 2.8;
@@ -336,7 +352,7 @@ export class World {
         if (o.userData.gateOrb) { o.userData.gateAngle += dt * o.userData.gateSpeed; o.position.x = Math.cos(o.userData.gateAngle) * o.userData.gateRadius; o.position.z = Math.sin(o.userData.gateAngle) * .48; o.position.y = o.userData.gateBaseY + Math.sin(this.time * 2.1 + o.userData.gateAngle) * .16; }
       }); }
       const d = Math.hypot(p.x - e.x, p.z - e.z); if (e.mesh.visible && d < distance) { near = e; distance = d; }
-      const v = new T.Vector3(e.x, e.id.startsWith('monster') ? 2 : 2.6, e.z).project(this.camera);
+      const v = this.tempProjection.set(e.x, e.id.startsWith('monster') ? 2 : 2.6, e.z).project(this.camera);
       e.label.style.transform = `translate(-50%, -100%) translate(${(v.x * .5 + .5) * this.container.clientWidth}px, ${(-v.y * .5 + .5) * this.container.clientHeight}px)`;
       e.label.hidden = !this.active || !e.mesh.visible || Math.abs(v.x) > 1.15 || Math.abs(v.y) > 1.1;
       e.label.classList.toggle('near', d < 2.8);
@@ -345,10 +361,10 @@ export class World {
     this.scene.traverse(o => { if (o.userData.butterfly) { o.position.y += Math.sin(this.time * 4 + o.position.x) * .0015; o.rotation.y += dt * .7; } });
     const weapon = this.player.userData.weapon as T.Group | undefined; if (weapon) weapon.rotation.z = -.28 + (this.swingUntil > this.time ? Math.sin((this.swingUntil - this.time) / .28 * Math.PI) * -1.35 : 0);
     this.player.traverse(o => { if (o.userData.rideWing) o.rotation.z = Number(o.userData.rideWing) * (-.72 + Math.sin(this.time * 7) * .18); });
-    this.player.traverse(o => { if (o.userData.petModel) { o.position.y = .02 + Math.sin(this.time * 4) * .05; o.rotation.y = Math.sin(this.time * 2) * .12; } });
+    if (this.petModel) this.petModel.traverse(o => { if (o.userData.petCharm) { o.rotation.y += dt * 3; const pulse = 1 + Math.sin(this.time * 6) * .12; o.scale.setScalar(pulse); } if (o.userData.petWing) o.rotation.z = Number(o.userData.petWing) * (.35 + Math.sin(this.time * 11) * .18); });
     if (this.player.userData.sparkles) this.player.userData.sparkles.rotation.y += dt;
-    for (let i = this.particles.length - 1; i >= 0; i--) { const q = this.particles[i]; q.life -= dt; q.v.y -= dt * 5; q.mesh.position.addScaledVector(q.v, dt); q.mesh.scale.setScalar(Math.max(0, q.life)); if (q.life <= 0) { this.scene.remove(q.mesh); q.mesh.geometry.dispose(); this.particles.splice(i, 1); } }
-    const target = this.active ? p : new T.Vector3(0, 0, -1); this.follow.lerp(target, 1 - Math.exp(-dt * 3));
+    for (let i = this.particles.length - 1; i >= 0; i--) { const q = this.particles[i]; q.life -= dt; q.v.y -= dt * 5; q.mesh.position.addScaledVector(q.v, dt); q.mesh.scale.setScalar(Math.max(0, q.life)); if (q.life <= 0) { this.scene.remove(q.mesh); this.particles.splice(i, 1); } }
+    const target = this.active ? p : this.cameraTarget.set(0, 0, -1); this.follow.lerp(target, 1 - Math.exp(-dt * 3));
     this.camera.position.copy(this.follow).add(new T.Vector3(18, 25, 24)); this.camera.lookAt(this.follow); this.renderer.render(this.scene, this.camera);
   }
 }

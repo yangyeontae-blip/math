@@ -14,22 +14,22 @@ export const WEAPONS = [
   { name: '별사탕 왕홀', price: 2000, bonus: 21, multiplier: 4.6, treePower: 7, icon: '🍬', color: 0xc79bea },
 ] as const;
 export const OUTFITS = [
-  { name: '새싹 탐험복', price: 0, color: 0x4d9c78, accent: 0xffe4a3, desc: '처음 떠나는 모험의 설렘', effect: '베리 +0', berryBonus: 0, xpBonus: 0, clearBonus: 0 },
-  { name: '색동 저고리', price: 40, color: 0xf08c9f, accent: 0x79c9d0, desc: '알록달록 소매와 고운 옷고름', effect: '베리 줍기 +1', berryBonus: 1, xpBonus: 0, clearBonus: 0 },
-  { name: '숲속 망토', price: 60, color: 0x267e68, accent: 0xc8df85, desc: '숲의 색을 닮은 포근한 망토', effect: '몬스터 경험치 +2', berryBonus: 0, xpBonus: 2, clearBonus: 0 },
-  { name: '구름 도포', price: 80, color: 0x79b5e2, accent: 0xf2f6ff, desc: '파란 하늘 아래 가벼운 발걸음', effect: '베리 줍기 +2', berryBonus: 2, xpBonus: 0, clearBonus: 0 },
-  { name: '꽃 도포', price: 100, color: 0xd77cba, accent: 0xffdf99, desc: '봄꽃처럼 화사한 긴 옷자락', effect: '스테이지 완료 +20베리', berryBonus: 0, xpBonus: 0, clearBonus: 20 },
-  { name: '별빛 마법사복', price: 140, color: 0x7761b3, accent: 0xf6d36e, desc: '작은 별이 머무는 마법사의 옷', effect: '몬스터 경험치 +4', berryBonus: 0, xpBonus: 4, clearBonus: 0 },
-  { name: '달빛 무사복', price: 180, color: 0x405b8c, accent: 0xcbe4ee, desc: '은빛 옷깃이 빛나는 의상', effect: '베리 줍기 +3', berryBonus: 3, xpBonus: 0, clearBonus: 0 },
-  { name: '왕실 꽃비단', price: 240, color: 0xeab356, accent: 0xf9f0d5, desc: '금빛 비단과 풍성한 꽃장식', effect: '완료 +35베리 · 경험치 +2', berryBonus: 0, xpBonus: 2, clearBonus: 35 },
-  { name: '딸기 농장 멜빵', price: 280, color: 0x6ea6d9, accent: 0xf55f74, desc: '주머니에 딸기를 담는 포근한 멜빵', effect: '베리 줍기 +4', berryBonus: 4, xpBonus: 0, clearBonus: 0 },
-  { name: '노랑 오리 우비', price: 320, color: 0xf2c94c, accent: 0xfff4ad, desc: '빗방울도 신나는 통통한 우비', effect: '완료 +45베리', berryBonus: 0, xpBonus: 0, clearBonus: 45 },
-  { name: '토끼 귀 소풍복', price: 390, color: 0xe7a5c4, accent: 0xfff2f7, desc: '긴 토끼 귀와 보송한 꼬리가 달린 옷', effect: '경험치 +6', berryBonus: 0, xpBonus: 6, clearBonus: 0 },
-  { name: '도토리 숲지기', price: 480, color: 0x9b7448, accent: 0xd8bb71, desc: '도토리 모자와 나뭇잎 가방 세트', effect: '베리 +2 · 완료 +30베리', berryBonus: 2, xpBonus: 0, clearBonus: 30 },
-  { name: '고양이 카페 앞치마', price: 560, color: 0x8d7f9f, accent: 0xffd9df, desc: '고양이 귀와 리본 주머니가 달린 앞치마', effect: '베리 +3 · 경험치 +3', berryBonus: 3, xpBonus: 3, clearBonus: 0 },
-  { name: '구름양 잠옷', price: 660, color: 0xb9d9eb, accent: 0xffffff, desc: '몽글몽글 양 귀와 구름 단추가 달린 옷', effect: '경험치 +8', berryBonus: 0, xpBonus: 8, clearBonus: 0 },
-  { name: '개구리 연잎옷', price: 780, color: 0x70b978, accent: 0xd8f28c, desc: '동그란 눈과 연잎 망토가 귀여운 옷', effect: '베리 +5', berryBonus: 5, xpBonus: 0, clearBonus: 0 },
-  { name: '별사탕 요정복', price: 920, color: 0xb78ed3, accent: 0xffe083, desc: '별 날개와 사탕빛 리본이 반짝이는 옷', effect: '경험치 +5 · 완료 +50베리', berryBonus: 0, xpBonus: 5, clearBonus: 50 },
+  { name: '새싹 탐험복', price: 0, color: 0x4d9c78, accent: 0xffe4a3, desc: '처음 떠나는 모험의 설렘', effect: '추가 효과가 없는 기본 옷이에요.', berryBonus: 0, xpBonus: 0, clearBonus: 0 },
+  { name: '색동 저고리', price: 40, color: 0xf08c9f, accent: 0x79c9d0, desc: '알록달록 소매와 고운 옷고름', effect: '길의 베리 1개를 주울 때마다 1베리를 더 받아요.', berryBonus: 1, xpBonus: 0, clearBonus: 0 },
+  { name: '숲속 망토', price: 60, color: 0x267e68, accent: 0xc8df85, desc: '숲의 색을 닮은 포근한 망토', effect: '몬스터 1마리를 이길 때마다 경험치를 2 더 받아요.', berryBonus: 0, xpBonus: 2, clearBonus: 0 },
+  { name: '구름 도포', price: 80, color: 0x79b5e2, accent: 0xf2f6ff, desc: '파란 하늘 아래 가벼운 발걸음', effect: '길의 베리 1개를 주울 때마다 2베리를 더 받아요.', berryBonus: 2, xpBonus: 0, clearBonus: 0 },
+  { name: '꽃 도포', price: 100, color: 0xd77cba, accent: 0xffdf99, desc: '봄꽃처럼 화사한 긴 옷자락', effect: '한 스테이지의 몬스터를 모두 이기면 통과 보상에 20베리가 더해져요.', berryBonus: 0, xpBonus: 0, clearBonus: 20 },
+  { name: '별빛 마법사복', price: 140, color: 0x7761b3, accent: 0xf6d36e, desc: '작은 별이 머무는 마법사의 옷', effect: '몬스터 1마리를 이길 때마다 경험치를 4 더 받아요.', berryBonus: 0, xpBonus: 4, clearBonus: 0 },
+  { name: '달빛 무사복', price: 180, color: 0x405b8c, accent: 0xcbe4ee, desc: '은빛 옷깃이 빛나는 의상', effect: '길의 베리 1개를 주울 때마다 3베리를 더 받아요.', berryBonus: 3, xpBonus: 0, clearBonus: 0 },
+  { name: '왕실 꽃비단', price: 240, color: 0xeab356, accent: 0xf9f0d5, desc: '금빛 비단과 풍성한 꽃장식', effect: '몬스터마다 경험치 +2, 스테이지를 통과하면 베리 +35를 받아요.', berryBonus: 0, xpBonus: 2, clearBonus: 35 },
+  { name: '딸기 농장 멜빵', price: 280, color: 0x6ea6d9, accent: 0xf55f74, desc: '주머니에 딸기를 담는 포근한 멜빵', effect: '길의 베리 1개를 주울 때마다 4베리를 더 받아요.', berryBonus: 4, xpBonus: 0, clearBonus: 0 },
+  { name: '노랑 오리 우비', price: 320, color: 0xf2c94c, accent: 0xfff4ad, desc: '빗방울도 신나는 통통한 우비', effect: '한 스테이지의 몬스터를 모두 이기면 통과 보상에 45베리가 더해져요.', berryBonus: 0, xpBonus: 0, clearBonus: 45 },
+  { name: '토끼 귀 소풍복', price: 390, color: 0xe7a5c4, accent: 0xfff2f7, desc: '긴 토끼 귀와 보송한 꼬리가 달린 옷', effect: '몬스터 1마리를 이길 때마다 경험치를 6 더 받아요.', berryBonus: 0, xpBonus: 6, clearBonus: 0 },
+  { name: '도토리 숲지기', price: 480, color: 0x9b7448, accent: 0xd8bb71, desc: '도토리 모자와 나뭇잎 가방 세트', effect: '길의 베리마다 +2, 스테이지를 통과하면 베리 +30을 받아요.', berryBonus: 2, xpBonus: 0, clearBonus: 30 },
+  { name: '고양이 카페 앞치마', price: 560, color: 0x8d7f9f, accent: 0xffd9df, desc: '고양이 귀와 리본 주머니가 달린 앞치마', effect: '길의 베리마다 +3, 몬스터마다 경험치 +3을 받아요.', berryBonus: 3, xpBonus: 3, clearBonus: 0 },
+  { name: '구름양 잠옷', price: 660, color: 0xb9d9eb, accent: 0xffffff, desc: '몽글몽글 양 귀와 구름 단추가 달린 옷', effect: '몬스터 1마리를 이길 때마다 경험치를 8 더 받아요.', berryBonus: 0, xpBonus: 8, clearBonus: 0 },
+  { name: '개구리 연잎옷', price: 780, color: 0x70b978, accent: 0xd8f28c, desc: '동그란 눈과 연잎 망토가 귀여운 옷', effect: '길의 베리 1개를 주울 때마다 5베리를 더 받아요.', berryBonus: 5, xpBonus: 0, clearBonus: 0 },
+  { name: '별사탕 요정복', price: 920, color: 0xb78ed3, accent: 0xffe083, desc: '별 날개와 사탕빛 리본이 반짝이는 옷', effect: '몬스터마다 경험치 +5, 스테이지를 통과하면 베리 +50을 받아요.', berryBonus: 0, xpBonus: 5, clearBonus: 50 },
 ] as const;
 export const CHARACTERS = [
   { name: '봄이', desc: '동글동글 양 갈래', hair: 0x623d2e, skin: 0xffd8b1, style: 0 },
@@ -85,11 +85,11 @@ export interface Question { dividend: number; divisor: number; answer: number }
 export const STAGE_DIVISION_DIFFICULTY = [
   { maxDividend: 80, maxAnswer: 9 },
   { maxDividend: 90, maxAnswer: 10 },
-  { maxDividend: 100, maxAnswer: 12 },
-  { maxDividend: 110, maxAnswer: 15 },
-  { maxDividend: 120, maxAnswer: 18 },
-  { maxDividend: 130, maxAnswer: 20 },
-  { maxDividend: 140, maxAnswer: 24 },
+  { maxDividend: 90, maxAnswer: 12 },
+  { maxDividend: 90, maxAnswer: 15 },
+  { maxDividend: 100, maxAnswer: 20 },
+  { maxDividend: 120, maxAnswer: 24 },
+  { maxDividend: 140, maxAnswer: 28 },
   { maxDividend: 150, maxAnswer: 30 },
   { maxDividend: 160, maxAnswer: 36 },
   { maxDividend: 180, maxAnswer: 45 },
@@ -106,9 +106,9 @@ export function collectBerry(s: Save, id: number) {
   const value = berryValue(stage) + OUTFITS[s.outfit].berryBonus; map.berries.push(id); s.berries += value; s.tutorial.collected = true; return value;
 }
 export function treeDamage(s: Save) { return WEAPONS[s.weapon].treePower + s.weapons[s.weapon]; }
-export function fellTree(s: Save, id: number, reward: 1 | 2) {
+export function fellTree(s: Save, id: number, reward: 2 | 3 | 4) {
   const map = s.journey.maps[s.journey.stage];
-  if (!Number.isInteger(id) || !stageTrees(s.journey.stage)[id] || map.trees.includes(id) || (reward !== 1 && reward !== 2)) return 0;
+  if (!Number.isInteger(id) || !stageTrees(s.journey.stage)[id] || map.trees.includes(id) || ![2, 3, 4].includes(reward)) return 0;
   map.trees.push(id); s.berries += reward; return reward;
 }
 export function finishHunt(s: Save, id: number) {
