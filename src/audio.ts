@@ -15,9 +15,9 @@ export class Sound {
     const n = melody[this.step++ % melody.length]; if (n) this.note(n, .8, .022);
     if (this.step % 4 === 0) this.note([131, 175, 147, 196][Math.floor(this.step / 4) % 4], 1.6, .025);
   }
-  play(kind: 'berry' | 'correct' | 'wrong' | 'level' | 'buy' | 'jump') {
+  play(kind: 'berry' | 'correct' | 'wrong' | 'level' | 'buy' | 'jump' | 'swing' | 'chop') {
     if (!this.effects) return;
-    const notes = { berry: [880, 1175], correct: [523, 659, 784], wrong: [330, 294], level: [523, 659, 784, 1047], buy: [659, 880], jump: [392, 523] }[kind];
+    const notes = { berry: [880, 1175], correct: [523, 659, 784], wrong: [330, 294], level: [523, 659, 784, 1047], buy: [659, 880], jump: [392, 523], swing: [260], chop: [180, 240] }[kind];
     notes.forEach((n, i) => this.note(n, .28, .05, i * .1));
   }
 }
