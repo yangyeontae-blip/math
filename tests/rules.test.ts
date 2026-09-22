@@ -19,6 +19,8 @@ test('division questions grow gradually harder across the ten hunt stages', () =
     const maxAnswer = Math.max(...pool.map(q => q.answer)); assert.ok(maxAnswer >= previousMax); previousMax = maxAnswer;
     if (stage === 1) assert.ok(pool.every(q => q.answer < 10));
     if (stage >= 2) assert.ok(pool.some(q => q.answer >= 10));
+    if (stage <= 4) assert.ok(pool.every(q => q.dividend < 100));
+    if (stage >= 5) assert.ok(pool.some(q => q.dividend >= 100));
   });
   assert.ok(questionPool(1, 10).some(q => q.answer >= 40));
 });
@@ -61,11 +63,11 @@ test('outfit effects boost rewards but do not make problems or weapons optional'
   const before = s.berries; s.journey.stage = 1; collectBerry(s, 0); assert.equal(s.berries - before, berryValue(1));
   const encounter = new Encounter(0, false, 1); assert.equal(encounter.answer(String(encounter.question.answer)), 'correct');
 });
-test('trees give only 1 or 2 berries once and stronger weapons cut faster', () => {
+test('trees give only 2 to 4 berries once and stronger weapons cut faster', () => {
   const s = newSave('나무', 0); assert.ok(stageTrees(0).length > 0); assert.equal(treeDamage(s), 1);
-  assert.equal(fellTree(s, 0, 2), 2); assert.equal(s.berries, 2); assert.equal(fellTree(s, 0, 2), 0); assert.equal(s.berries, 2);
+  assert.equal(fellTree(s, 0, 4), 4); assert.equal(s.berries, 4); assert.equal(fellTree(s, 0, 2), 0); assert.equal(s.berries, 4);
   s.berries = 5000; buy(s, 'weapon', WEAPONS.length - 1); assert.equal(treeDamage(s), WEAPONS.at(-1)!.treePower); upgrade(s, 'weapon', WEAPONS.length - 1); assert.equal(treeDamage(s), WEAPONS.at(-1)!.treePower + 1);
-  assert.equal(fellTree(s, 999, 1), 0); assert.equal(fellTree(s, 1, 3 as 1), 0);
+  assert.equal(fellTree(s, 999, 2), 0); assert.equal(fellTree(s, 1, 1 as 2), 0); assert.equal(fellTree(s, 1, 5 as 2), 0);
 });
 test('version 2 saves migrate with untouched tree progress', () => {
   const old = structuredClone(newSave('예전', 0)) as unknown as Record<string, unknown>; old.version = 2;
