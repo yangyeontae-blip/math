@@ -54,6 +54,16 @@ test('level-up threshold, remaining XP and 20 berry gift', () => {
   const s = newSave('성장', 3); for (let i = 0; i < 4; i++) grantReward(s, 0, true); assert.equal(s.level, 2); assert.equal(s.xp, 0); assert.equal(s.berries, 52); assert.equal(s.tutorial.battle, true);
   for (let i = 0; i < 4; i++) grantReward(s, 3, false); assert.equal(s.level, 3); assert.equal(s.xp, 0); assert.equal(s.berries, 132);
 });
+test('secret milestone gifts are paid once on crossing levels 30, 50 and 100', () => {
+  for (const [level, gift] of [[30, 30_000], [50, 50_000], [100, 100_000]]) {
+    const s = newSave('비밀', 0); s.level = level - 1; s.xp = s.level * 40 - 1;
+    const result = grantReward(s, 0, true);
+    assert.equal(s.level, level); assert.deepEqual(result.milestones, [{ level, berries: gift }]);
+    assert.equal(s.berries, 8 + 20 + gift);
+    assert.deepEqual(grantReward(s, 0, true).milestones, []);
+    assert.deepEqual(validateSave(JSON.parse(JSON.stringify(s))), s);
+  }
+});
 test('save round-trip preserves state and rejects corrupted, unsafe or invalid files', () => {
   const s = newSave('모험가', 3); s.berries = 500; buy(s, 'outfit', 4); upgrade(s, 'outfit', 4); assert.deepEqual(validateSave(JSON.parse(JSON.stringify(s))), s);
   for (const bad of [null, {}, { ...s, version: 99 }, { ...s, berries: -1 }, { ...s, xp: 10000 }, { ...s, weapon: 3 }, { ...s, position: { x: Infinity, z: 0 } }, { ...s, outfits: { 0: 0, 4: 9 } }, { ...s, settings: {} }]) assert.throws(() => validateSave(bad));
@@ -81,7 +91,7 @@ test('trees give only 2 to 4 berries once and stronger weapons cut faster', () =
 test('version 2 saves migrate with untouched tree progress', () => {
   const old = structuredClone(newSave('예전', 0)) as unknown as Record<string, unknown>; old.version = 2;
   const journey = old.journey as { maps: Array<Record<string, unknown>> }; journey.maps.forEach(m => delete m.trees);
-  const migrated = validateSave(old); assert.equal(migrated.version, 6); assert.deepEqual(migrated.journey.maps[0].trees, []); assert.equal(migrated.ride, -1); assert.deepEqual(migrated.rides, {}); assert.equal(migrated.pet, -1); assert.deepEqual(migrated.hairstyles, { 0: true }); assert.equal(migrated.settings.maxDividend, 0); assert.deepEqual(migrated.room.furniture, []);
+  const migrated = validateSave(old); assert.equal(migrated.version, 6); assert.deepEqual(migrated.journey.maps[0].trees, []); assert.equal(migrated.ride, -1); assert.deepEqual(migrated.rides, {}); assert.equal(migrated.pet, -1); assert.deepEqual(migrated.hairstyles, { 0: true }); assert.equal(migrated.settings.maxDividend, 0); assert.deepEqual(migrated.room, { furniture: [], inside: false });
 });
 test('teacher curriculum ceilings and local learning records behave safely', () => {
   const s = newSave('수업', 0);
@@ -91,6 +101,8 @@ test('teacher curriculum ceilings and local learning records behave safely', () 
   const q = { dividend: 40, divisor: 5, answer: 8 }; recordWrongAnswer(s, q); recordWrongAnswer(s, q); assert.equal(s.learning.wrong, 2); assert.equal(s.learning.wrongQuestions.length, 1);
   recordCorrectAnswer(s, 2); assert.equal(s.learning.correct, 1); assert.deepEqual(s.discoveries.monsters, [2]);
   s.settings.sessionMinutes = 15; s.learning.elapsedSeconds = 32; s.room.furniture = [0, 4]; assert.deepEqual(validateSave(JSON.parse(JSON.stringify(s))), s);
+  s.room.inside = true; assert.deepEqual(validateSave(JSON.parse(JSON.stringify(s))), s);
+  const oldRoom = JSON.parse(JSON.stringify(s)); delete oldRoom.room.inside; assert.equal(validateSave(oldRoom).room.inside, false);
 });
 test('rides cost at least 1000 berries and flying starts at 5000 berries', () => {
   assert.ok(RIDES.every(ride => ride.price >= 1000)); assert.ok(RIDES.filter(ride => ride.flying).every(ride => ride.price >= 5000));
@@ -98,6 +110,7 @@ test('rides cost at least 1000 berries and flying starts at 5000 berries', () =>
   buyRide(s, 0); assert.equal(s.berries, before - RIDES[0].price); assert.equal(dismount(s), '라이딩에서 내려 천천히 걸어요.'); assert.equal(s.ride, -1);
 });
 test('pet chase speed stays ahead of every ride so mounted berries can be reached', () => {
+  assert.ok(Math.abs(PLAYER_MOVE_SPEED / 6.5 - 1.3) < 1e-10);
   for (const ride of RIDES) assert.ok(petChaseSpeed(ride.speed) > PLAYER_MOVE_SPEED * ride.speed);
 });
 test('teacher code unlocks all demonstration content without clearing hunts', () => {

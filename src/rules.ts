@@ -53,7 +53,7 @@ export const RIDES = [
   { name: '달빛 아기용', price: 8000, speed: 3, flying: true, icon: '🐉', color: 0x7898d8, desc: '달빛 꼬리를 그리며 아주 빠르게 날아요' },
   { name: '오로라 고래', price: 10000, speed: 3.25, flying: true, icon: '🐳', color: 0x65b9d8, desc: '오로라 물결을 헤치며 가장 빠르게 날아요' },
 ] as const;
-export const PLAYER_MOVE_SPEED = 6.5;
+export const PLAYER_MOVE_SPEED = 8.45;
 export function petChaseSpeed(rideSpeed: number) { return Math.max(12, PLAYER_MOVE_SPEED * rideSpeed * 1.2); }
 export const PETS = [
   { name: '딸기 햄찌', price: 400, radius: 2.8, icon: '🐹', color: 0xd9a16f, desc: '가까운 베리를 쪼르르 달려가 먹어 줘요' },
@@ -85,7 +85,7 @@ export interface Save {
   settings: { music: boolean; sound: boolean; lowQuality: boolean; maxDividend: 0 | 90 | 180; sessionMinutes: number };
   learning: { elapsedSeconds: number; correct: number; wrong: number; wrongQuestions: Question[] };
   discoveries: { monsters: number[]; pets: number[]; outfits: number[] };
-  room: { furniture: number[] };
+  room: { furniture: number[]; inside: boolean };
   garden?: { rescued: number; flowers: number[] };
   journey: { stage: number; maps: { berries: number[]; monsters: number[]; trees: number[]; cleared: boolean }[] };
 }
@@ -105,7 +105,7 @@ export const STAGE_DIVISION_DIFFICULTY = [
 export function newSave(nickname: string, character: number): Save {
   if (!nickname.trim() || [...nickname.trim()].length > 10 || !Number.isInteger(character) || character < 0 || character > 3) throw new Error('이름은 1~10자, 캐릭터는 4명 중 골라 주세요.');
   const hairstyle = CHARACTERS[character].style;
-  return { version: 6, nickname: nickname.trim(), character, berries: 0, level: 1, xp: 0, weapon: 0, outfit: 0, weapons: { 0: 0 }, outfits: { 0: 0 }, ride: -1, rides: {}, pet: -1, pets: {}, hairstyle, hairstyles: { 0: true, [hairstyle]: true }, face: 0, faces: { 0: true }, teacherMode: false, best: 0, position: { x: 0, z: 8 }, tutorial: { collected: false, battle: false, shop: false }, settings: { music: true, sound: true, lowQuality: false, maxDividend: 0, sessionMinutes: 0 }, learning: { elapsedSeconds: 0, correct: 0, wrong: 0, wrongQuestions: [] }, discoveries: { monsters: [], pets: [], outfits: [0] }, room: { furniture: [] }, journey: emptyJourney(), garden: { rescued: 0, flowers: [-1, -1, -1] } };
+  return { version: 6, nickname: nickname.trim(), character, berries: 0, level: 1, xp: 0, weapon: 0, outfit: 0, weapons: { 0: 0 }, outfits: { 0: 0 }, ride: -1, rides: {}, pet: -1, pets: {}, hairstyle, hairstyles: { 0: true, [hairstyle]: true }, face: 0, faces: { 0: true }, teacherMode: false, best: 0, position: { x: 0, z: 8 }, tutorial: { collected: false, battle: false, shop: false }, settings: { music: true, sound: true, lowQuality: false, maxDividend: 0, sessionMinutes: 0 }, learning: { elapsedSeconds: 0, correct: 0, wrong: 0, wrongQuestions: [] }, discoveries: { monsters: [], pets: [], outfits: [0] }, room: { furniture: [], inside: false }, journey: emptyJourney(), garden: { rescued: 0, flowers: [-1, -1, -1] } };
 }
 export function emptyJourney(): Save['journey'] { return { stage: 0, maps: Array.from({ length: 11 }, () => ({ berries: [], monsters: [], trees: [], cleared: false })) }; }
 export function canEnter(s: Save, stage: number) { return Number.isInteger(stage) && stage >= 0 && stage <= 10 && (s.teacherMode || stage <= 1 || s.journey.maps[stage - 1].cleared); }
@@ -162,9 +162,14 @@ export function rewardFor(s: Save, monster: number, arena: boolean) {
 }
 export function grantReward(s: Save, monster: number, arena: boolean) {
   const reward = rewardFor(s, monster, arena); let levels = 0;
+  const milestones: { level: number; berries: number }[] = [];
   s.berries += reward.berries; s.xp += reward.xp; s.tutorial.battle = true;
-  while (s.xp >= s.level * 40) { s.xp -= s.level * 40; s.level++; s.berries += 20; levels++; }
-  return { ...reward, levels };
+  while (s.xp >= s.level * 40) {
+    s.xp -= s.level * 40; s.level++; s.berries += 20; levels++;
+    const gift = s.level === 30 ? 30_000 : s.level === 50 ? 50_000 : s.level === 100 ? 100_000 : 0;
+    if (gift) { s.berries += gift; milestones.push({ level: s.level, berries: gift }); }
+  }
+  return { ...reward, levels, milestones };
 }
 export function buy(s: Save, kind: 'weapon' | 'outfit', id: number): string {
   const items = kind === 'weapon' ? WEAPONS : OUTFITS;
@@ -230,10 +235,11 @@ export function validateSave(value: unknown): Save {
     migrated.settings = { ...(migrated.settings as object), maxDividend: 0, sessionMinutes: 0 };
     migrated.learning = { elapsedSeconds: 0, correct: 0, wrong: 0, wrongQuestions: [] };
     migrated.discoveries = { monsters: [], pets: Object.keys(migrated.pets as object).map(Number), outfits: Object.keys(migrated.outfits as object).map(Number) };
-    migrated.room = { furniture: [] };
+    migrated.room = { furniture: [], inside: false };
   }
   const s = migrated as unknown as Save;
   if (s.garden === undefined) s.garden = { rescued: 0, flowers: [-1, -1, -1] };
+  if (s.room && s.room.inside === undefined) s.room.inside = false;
   const integer = (v: unknown, min: number, max: number): v is number => typeof v === 'number' && Number.isSafeInteger(v) && v >= min && v <= max;
   if (!s.garden || !integer(s.garden.rescued, 0, 3) || !Array.isArray(s.garden.flowers) || s.garden.flowers.length !== 3 || s.garden.flowers.some(f => !integer(f, -1, 2)) || s.garden.flowers.filter(f => f >= 0).length > s.garden.rescued) return fail();
   if (s.version !== 6 || typeof s.teacherMode !== 'boolean' || typeof s.nickname !== 'string' || !s.nickname.trim() || [...s.nickname].length > 10 || !integer(s.character, 0, 3) || !integer(s.berries, 0, 1e9) || !integer(s.level, 1, 100000) || !integer(s.xp, 0, s.level * 40 - 1) || !integer(s.best, 0, 1e9)) return fail();
@@ -265,7 +271,8 @@ export function validateSave(value: unknown): Save {
   if (!s.tutorial || ['collected', 'battle', 'shop'].some(k => typeof s.tutorial[k as keyof Save['tutorial']] !== 'boolean')) return fail();
   if (!s.settings || ['music', 'sound', 'lowQuality'].some(k => typeof s.settings[k as keyof Save['settings']] !== 'boolean') || ![0, 90, 180].includes(s.settings.maxDividend) || !integer(s.settings.sessionMinutes, 0, 180)) return fail();
   if (!s.learning || !integer(s.learning.elapsedSeconds, 0, 1e9) || !integer(s.learning.correct, 0, 1e9) || !integer(s.learning.wrong, 0, 1e9) || !Array.isArray(s.learning.wrongQuestions) || s.learning.wrongQuestions.length > 30 || s.learning.wrongQuestions.some(q => !integer(q.dividend, 10, 999) || !integer(q.divisor, 2, 9) || q.dividend % q.divisor || q.answer !== q.dividend / q.divisor)) return fail();
-  if (!s.discoveries || !s.room || !Array.isArray(s.room.furniture) || s.room.furniture.some(id => !integer(id, 0, 7))) return fail();
+  if (!s.discoveries || !s.room || typeof s.room.inside !== 'boolean' || !Array.isArray(s.room.furniture) || s.room.furniture.some(id => !integer(id, 0, 7))) return fail();
+  if (s.room.inside && s.journey.stage !== 0) return fail();
   for (const [key, max] of [['monsters', MONSTERS.length], ['pets', PETS.length], ['outfits', OUTFITS.length]] as const) if (!Array.isArray(s.discoveries[key]) || s.discoveries[key].some(id => !integer(id, 0, max - 1))) return fail();
   return structuredClone(s);
 }
