@@ -11,12 +11,12 @@ const $ = <T extends HTMLElement = HTMLElement>(selector: string) => document.qu
 const root = $('#game');
 root.innerHTML = `<div id="world" aria-label="베리숲 3D 마을"></div><div id="hud" hidden>
   <header class="topbar"><div class="player-card"><span class="level-badge" id="level">1</span><div><strong id="nickname"></strong><div class="xp-track"><div id="xp-fill"></div></div><small id="xp-text"></small></div></div><div class="brand-mini">베리숲 <span>모험학교</span></div><div class="top-actions"><span class="wallet">🍓 <b id="berries">0</b><span>베리</span></span><button id="inventory" class="icon-button" aria-label="내 인벤토리">🎒</button><button id="stage-map" class="icon-button" aria-label="사냥터 지도">🗺</button><button id="settings" class="icon-button" aria-label="설정과 저장">⚙</button></div></header>
-  <aside class="quest-card"><span class="eyebrow">오늘의 작은 모험</span><strong id="quest-title">베리숲에 오신 걸 환영해요</strong><div id="quest-list"></div><button id="codex-open" class="text-button codex-open">📖 모험 발견 도감</button></aside>
+  <aside class="quest-card"><button id="quest-toggle" class="quest-toggle" aria-expanded="true" aria-controls="quest-body"><span>✿ 오늘의 작은 모험</span><span class="quest-chevron" aria-hidden="true">⌃</span></button><div id="quest-body" class="quest-body"><strong id="quest-title">베리숲에 오신 걸 환영해요</strong><div id="quest-list"></div><button id="codex-open" class="text-button codex-open">📖 모험 발견 도감</button></div></aside>
   <div class="location-pill">❋ 베리숲 마을 <span>평화로운 오후</span></div>
   <div class="equipment-card"><span id="weapon-name"></span><small id="weapon-effect"></small></div>
   <div class="controls-help"><kbd>W A S D</kbd> 이동 <kbd>Space</kbd> 점프 <kbd>E</kbd> 대화 <kbd>F</kbd> 휘두르기</div>
   <button id="interact" class="interaction" hidden></button>
-  <div id="touch-controls"><div id="joystick" role="group" aria-label="이동 조이스틱"><span id="stick"></span></div><div class="touch-actions"><button id="touch-talk">대화</button><button id="touch-attack">휘두르기</button><button id="touch-jump">점프 ↟</button></div></div>
+  <div id="touch-controls"><div id="joystick" role="group" aria-label="이동 조이스틱"><span id="stick"></span></div><div class="touch-actions"><button id="touch-talk">대화</button><button id="touch-attack">나무 베기</button><button id="touch-jump">점프 ↟</button></div></div>
 </div><div id="start-screen" class="start-layer"></div><dialog id="modal"><div id="modal-content"></div></dialog><div id="toast" role="status" aria-live="polite"></div><input type="file" id="import-file" accept="application/json,.json" hidden>`;
 
 let world: World, AvatarPreviewRuntime: typeof AvatarPreview;
@@ -28,6 +28,14 @@ $('#quest-list').after(gardenButton); gardenButton.onclick = () => openGarden();
 const expeditionButton = document.createElement('button');
 expeditionButton.id = 'expedition'; expeditionButton.className = 'secondary garden-entry'; expeditionButton.textContent = '✦ 별빛 재탐험';
 gardenButton.after(expeditionButton); expeditionButton.onclick = () => openExpeditionBoard();
+const questCard = $('.quest-card');
+function setQuestCollapsed(collapsed: boolean) {
+  questCard.classList.toggle('is-collapsed', collapsed);
+  $('#quest-toggle').setAttribute('aria-expanded', String(!collapsed));
+  $('#quest-body').hidden = collapsed;
+}
+setQuestCollapsed(matchMedia('(max-width: 600px), (max-height: 500px)').matches);
+$('#quest-toggle').onclick = () => setQuestCollapsed(!questCard.classList.contains('is-collapsed'));
 let state: Save | null = null, saved: Save | null = null, preview: AvatarPreview | null = null, startPreview: AvatarPreview | null = null;
 let startPreviewRequest = 0, startPortraits: string[] | null = null;
 let selected = 0, pendingImport: Save | null = null, toastTimer: ReturnType<typeof setTimeout>, modalOpener: HTMLElement | null = null;
@@ -54,7 +62,13 @@ function refresh() {
   $('.location-pill').innerHTML = world?.inRoom ? '⌂ 나의 집 <span>가구를 눌러 꾸며요</span>' : s.journey.stage ? `❋ ${s.journey.stage}단계 사냥터 <span>${expedition?.stage === s.journey.stage ? '✦ 별빛 재탐험' : STAGES[s.journey.stage - 1].name}</span>` : '❋ 베리숲 마을 <span>평화로운 오후</span>';
   const tasks = [[s.tutorial.collected, '길 위의 베리 줍기'], [s.tutorial.battle, '나눗셈으로 몬스터 만나기'], [s.tutorial.shop, '강지후·오지후 상점 구경']];
   const expeditionHere = expedition?.stage === s.journey.stage && !world?.inRoom;
-  $('#quest-list').innerHTML = expeditionHere ? [[expedition.stars.length === 3, `별빛 표식 ${expedition.stars.length} / 3`], [expedition.monsters.length === 2, `별빛 대련 ${expedition.monsters.length} / 2`], [false, '출구에서 이야기 문제 풀기']].map(([done, label]) => `<div class="quest ${done ? 'done' : ''}"><span>${done ? '✓' : '○'}</span>${label}</div>`).join('') : tasks.map(([done, label]) => `<div class="quest ${done ? 'done' : ''}"><span>${done ? '✓' : '○'}</span>${label}</div>`).join('');
+  const stage = s.journey.stage, map = s.journey.maps[stage];
+  const goals: [boolean, string][] = expeditionHere
+    ? [[expedition.stars.length === 3, `별빛 표식 ${expedition.stars.length} / 3`], [expedition.monsters.length === 2, `별빛 대련 ${expedition.monsters.length} / 2`], [false, '출구에서 이야기 문제 풀기']]
+    : stage && !world?.inRoom
+      ? [[map.cleared, `나눗셈 대련 ${map.monsters.length} / ${stageMonsters(stage).length}`], [map.berries.length === stageBerries(stage).length, `숲 베리 ${map.berries.length} / ${stageBerries(stage).length}`], [map.cleared, map.cleared ? '출구에서 다음 숲으로 가기' : STAGE_STORIES[stage - 1]]]
+      : tasks as [boolean, string][];
+  $('#quest-list').innerHTML = goals.map(([done, label]) => `<div class="quest ${done ? 'done' : ''}"><span>${done ? '✓' : '○'}</span>${label}</div>`).join('');
   $('#quest-title').textContent = expeditionHere ? `✦ ${s.journey.stage}단계 별빛 원정` : s.journey.stage ? `${s.journey.stage}단계 · ${STAGES[s.journey.stage - 1].name}` : tasks.every(t => t[0]) ? '모험의 문으로 사냥터에 떠나요!' : '숲과 친해지는 세 가지 방법';
   expeditionButton.hidden = !expeditionUnlocked(s);
   audio.music = s.settings.music; audio.effects = s.settings.sound;
@@ -158,7 +172,7 @@ function showSessionSummary() {
   $('#session-finish').onclick = () => { persist(); closeModal(); state = null; audio.music = false; showStart(); };
 }
 function openGuide() {
-  openModal(title('마을 대장 · 연태쌤', '베리숲에 온 걸 환영해요!') + `<div class="guide-content"><p>나는 연태쌤이야. 사냥터의 <strong>나눗셈 친구들</strong>을 모두 만나면 다음 길이 열린단다.</p><ol><li><b>🍓 스테이지 베리</b><span>한 번 모은 베리는 그 사냥터에서 다시 나타나지 않아. 더 많은 베리는 새 사냥터에 있어!</span></li><li><b>🌳 베리나무</b><span>나무 가까이에서 F 또는 휘두르기를 눌러 보렴. 다 베면 2~4베리가 나오고, 좋은 무기일수록 빨라!</span></li><li><b>🌱 사냥터 몬스터</b><span>몬스터를 모두 물리치면 스테이지 보너스와 다음 문을 받아.</span></li><li><b>✨ 마을 상점과 인벤토리</b><span>강지후의 무기, 오지후의 옷, 나현이의 라이딩, 윤준의 펫을 모아 봐. 가영이에게는 헤어와 성형을 바꿀 수 있어.</span></li></ol><p class="note">키보드는 WASD·방향키 이동, Space 점프, E 대화, F 휘두르기예요.<br>태블릿은 화면 아래 조이스틱과 버튼을 사용해요.</p><button class="primary wide" data-close>좋아, 모험을 떠나자!</button></div>`);
+  openModal(title('마을 대장 · 연태쌤', '베리숲에 온 걸 환영해요!') + `<div class="guide-content"><p>나는 연태쌤이야. 사냥터의 <strong>나눗셈 친구들</strong>을 모두 만나면 다음 길이 열린단다.</p><ol><li><b>🍓 스테이지 베리</b><span>한 번 모은 베리는 그 사냥터에서 다시 나타나지 않아. 더 많은 베리는 새 사냥터에 있어!</span></li><li><b>🌳 베리나무</b><span>나무 가까이에서 F 또는 나무 베기를 눌러 보렴. 다 베면 2~4베리가 나오고, 좋은 무기일수록 빨라!</span></li><li><b>🌱 사냥터 몬스터</b><span>몬스터를 모두 물리치면 스테이지 보너스와 다음 문을 받아.</span></li><li><b>✨ 마을 상점과 인벤토리</b><span>강지후의 무기, 오지후의 옷, 나현이의 라이딩, 윤준의 펫을 모아 봐. 가영이에게는 헤어와 성형을 바꿀 수 있어.</span></li></ol><p class="note">키보드는 WASD·방향키 이동, Space 점프, E 대화, F 나무 베기예요.<br>휴대폰과 태블릿은 화면 아래 조이스틱과 버튼을 사용해요.</p><button class="primary wide" data-close>좋아, 모험을 떠나자!</button></div>`);
 }
 async function loadWorld() {
   if (world!) return;
@@ -311,7 +325,7 @@ function shopAction(action: () => string, kind: 'weapon' | 'outfit', id: number)
 
 function openInventory(tab: 'weapon' | 'outfit' | 'ride' | 'pet' = 'weapon') {
   if (!state) return; const s = state;
-  const tabs = `<div class="inventory-tabs"><button data-inventory-tab="weapon" class="${tab === 'weapon' ? 'active' : ''}">⚔ 무기</button><button data-inventory-tab="outfit" class="${tab === 'outfit' ? 'active' : ''}">👗 옷</button><button data-inventory-tab="ride" class="${tab === 'ride' ? 'active' : ''}">🪽 라이딩</button><button data-inventory-tab="pet" class="${tab === 'pet' ? 'active' : ''}">🐾 펫</button></div>`;
+  const tabs = `<div class="inventory-tabs"><button data-inventory-tab="weapon" class="${tab === 'weapon' ? 'active' : ''}">⚔ 무기</button><button data-inventory-tab="outfit" class="${tab === 'outfit' ? 'active' : ''}">👗 옷</button><button data-inventory-tab="ride" class="${tab === 'ride' ? 'active' : ''}" aria-label="라이딩">🪽 탈것</button><button data-inventory-tab="pet" class="${tab === 'pet' ? 'active' : ''}">🐾 펫</button></div>`;
   let cards = '';
   if (tab === 'weapon') cards = Object.keys(s.weapons).map(Number).map(id => { const item = WEAPONS[id]; return `<article class="inventory-item ${s.weapon === id ? 'equipped' : ''}"><span class="inventory-icon" style="--item-color:#${item.color.toString(16).padStart(6, '0')}">${item.icon}</span><div><strong>${item.name} +${s.weapons[id]}</strong><small>몬스터마다 베리 +${item.bonus} · 대련장 점수 ${(item.multiplier + s.weapons[id] * .1).toFixed(1)}배 · 나무를 약 ${Math.ceil(7 / (item.treePower + s.weapons[id]))}번 때리면 성공</small></div><button class="${s.weapon === id ? 'equipped-button' : 'secondary'}" data-equip="weapon" data-id="${id}" ${s.weapon === id ? 'disabled' : ''}>${s.weapon === id ? '장착 중' : '장착'}</button></article>`; }).join('');
   if (tab === 'outfit') cards = Object.keys(s.outfits).map(Number).map(id => { const item = OUTFITS[id]; return `<article class="inventory-item ${s.outfit === id ? 'equipped' : ''}"><span class="inventory-icon" style="--item-color:#${item.color.toString(16).padStart(6, '0')}">${OUTFIT_ICONS[id]}</span><div><strong>${item.name} +${s.outfits[id]}</strong><small>${item.desc} · ${item.effect}</small></div><button class="${s.outfit === id ? 'equipped-button' : 'secondary'}" data-equip="outfit" data-id="${id}" ${s.outfit === id ? 'disabled' : ''}>${s.outfit === id ? '입는 중' : '입기'}</button></article>`; }).join('');
