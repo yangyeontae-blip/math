@@ -1,6 +1,7 @@
 import * as T from 'three';
 import { CHARACTERS, MONSTERS, OUTFITS, PETS, RIDES, WEAPONS, PLAYER_MOVE_SPEED, petChaseSpeed, type Save } from './rules';
 import { STAGES, stageBerries, stageMonsters, stagePlatforms, stageTrees, stageSize, isVillagePond } from './stages';
+import { EXPEDITION_STAR_SPOTS, expeditionLayout } from './expedition';
 
 type Entity = { id: string; name: string; x: number; z: number; mesh: T.Group; label: HTMLDivElement };
 const mat = (color: number, roughness = .86) => new T.MeshStandardMaterial({ color, roughness });
@@ -10,6 +11,7 @@ const CAMERA_OFFSET = new T.Vector3(18, 25, 24);
 const ROOM_CAMERA_OFFSET = new T.Vector3(10, 18, 15);
 const sphereGeometry = new T.SphereGeometry(1, 12, 8); sharedGeometries.add(sphereGeometry);
 const particleGeometry = new T.OctahedronGeometry(.09); sharedGeometries.add(particleGeometry);
+const expeditionStarGeometry = new T.OctahedronGeometry(.42); sharedGeometries.add(expeditionStarGeometry);
 const boxGeometries = new Map<string, T.BoxGeometry>(), cylinderGeometries = new Map<string, T.CylinderGeometry>();
 function cachedBox(w: number, h: number, d: number) { const key = `${w},${h},${d}`; if (!boxGeometries.has(key)) { const geo = new T.BoxGeometry(w, h, d); boxGeometries.set(key, geo); sharedGeometries.add(geo); } return boxGeometries.get(key)!; }
 function cachedCylinder(top: number, bottom: number, h: number, sides: number) { const key = `${top},${bottom},${h},${sides}`; if (!cylinderGeometries.has(key)) { const geo = new T.CylinderGeometry(top, bottom, h, sides); cylinderGeometries.set(key, geo); sharedGeometries.add(geo); } return cylinderGeometries.get(key)!; }
@@ -218,7 +220,7 @@ function makePet(id: number) {
 
 export class World {
   scene = new T.Scene(); renderer: T.WebGLRenderer; camera: T.OrthographicCamera;
-  player = new T.Group(); private entities: Entity[] = []; private coins: { mesh: T.Group; id: number; y: number }[] = [];
+  player = new T.Group(); private entities: Entity[] = []; private coins: { mesh: T.Group; id: number; y: number }[] = []; private stars: { mesh: T.Group; id: number; y: number; label: HTMLDivElement }[] = [];
   private colliders: { x: number; z: number; r: number; id?: string }[] = []; private platforms = stagePlatforms(0); stage = 0;
   private keys = new Set<string>(); private stick = { x: 0, z: 0 }; private clock = new T.Clock(); private time = 0; private vy = 0; private grounded = true;
   private particles: { mesh: T.Mesh; v: T.Vector3; life: number }[] = []; private lastSafe = new T.Vector3(0, 0, 8); private follow = new T.Vector3(0, 0, 1);
@@ -226,7 +228,7 @@ export class World {
   private swingUntil = 0; private rideIndex = -1; private petIndex = -1; private petModel: T.Group | null = null; private petTargetId: number | null = null; private animationRunning = false;
   private rideAnimated: T.Object3D[] = []; private butterflies: T.Object3D[] = []; private furnitureRoot: T.Group | null = null;
   private tempProjection = new T.Vector3(); private tempTarget = new T.Vector3(); private tempWorld = new T.Vector3(); private cameraTarget = new T.Vector3();
-  active = false; paused = true; inRoom = false; onCollect = (_id: number) => {}; onInteract = (_id: string) => {}; onAttack = (_id: string | null) => {}; onNear = (_name: string | null, _id: string | null) => {}; onJump = () => {}; onRescue = () => {};
+  active = false; paused = true; inRoom = false; onCollect = (_id: number) => {}; onStar = (_id: number) => {}; onInteract = (_id: string) => {}; onAttack = (_id: string | null) => {}; onNear = (_name: string | null, _id: string | null) => {}; onJump = () => {}; onRescue = () => {};
   constructor(private container: HTMLElement) {
     this.scene.background = new T.Color(0xd0eade); this.scene.fog = new T.Fog(0xd0eade, 58, 112);
     const touchDevice = matchMedia('(pointer: coarse)').matches;
@@ -310,6 +312,25 @@ export class World {
     g.userData.magicGate = true; return g;
   }
   private addBerries() { stageBerries(this.stage).forEach(({ x, z }, id) => { const p = this.platforms.find(t => Math.abs(t.x - x) < 1 && Math.abs(t.z - z) < 1); const g = new T.Group(); ball(g, 0xf77591, -.09, 0, 0, .21, .24, .19); ball(g, 0xdd496f, .1, .015, 0, .2, .23, .19); const leaf = ball(g, 0x4a9853, 0, .26, 0, .18, .055, .09); leaf.rotation.z = .45; const y = (p?.h ?? 0) + .68; g.position.set(x, y, z); this.scene.add(g); this.coins.push({ mesh: g, id, y }); }); }
+  private addExpeditionObjects(s: Save) {
+    const active = s.expedition.active;
+    if (!active) return;
+    const layout = expeditionLayout(s.expedition.completed);
+    for (const id of layout.stars) {
+      const spot = EXPEDITION_STAR_SPOTS[id], g = new T.Group();
+      mesh(expeditionStarGeometry, 0xffd36f, 0, 0, 0, g); ball(g, 0xfff8ce, 0, .12, 0, .16);
+      g.position.set(spot.x, .95, spot.z); g.visible = !active.stars.includes(id); this.scene.add(g);
+      const label = document.createElement('div'); label.className = 'entity-label star-label'; label.textContent = '✦ 별빛 표식'; this.labelLayer.append(label);
+      this.stars.push({ mesh: g, id, y: .95, label });
+    }
+    for (const id of layout.monsters) {
+      const monster = stageMonsters(this.stage)[id], model = makeMonster(monster.type); model.userData.monsterType = monster.type;
+      this.addEntity(`expMonster${id}`, `별빛 대련 · ${MONSTERS[monster.type].name}`, monster.x, monster.z, model);
+      const entity = this.entities[this.entities.length - 1]; entity.mesh.visible = !active.monsters.includes(id); entity.label.classList.add('monster-label');
+    }
+    const gate = this.entities.find(e => e.id === 'next');
+    if (gate) { gate.name = '별빛 원정 출구'; gate.label.textContent = gate.name; }
+  }
   private buildHunt(stage: number) {
     const spec = STAGES[stage - 1], size = stageSize(stage); this.platforms = stagePlatforms(stage); this.scene.background = new T.Color(spec.sky); this.scene.fog = new T.Fog(spec.sky, 55, 120);
     box(this.scene, spec.ground, 0, -.55, 0, size.x * 2, 1.1, size.z * 2); box(this.scene, 0x708f71, 0, -1.3, 0, size.x * 2 - 1, .5, size.z * 2 - 1);
@@ -325,7 +346,7 @@ export class World {
     this.addBerries();
   }
   private clearMap() {
-    this.selectedId = null; this.petTargetId = null; this.onNear(null, null); this.entities.forEach(e => e.label.remove()); this.entities = []; this.coins = []; this.colliders = [];
+    this.selectedId = null; this.petTargetId = null; this.onNear(null, null); this.entities.forEach(e => e.label.remove()); this.stars.forEach(star => star.label.remove()); this.entities = []; this.coins = []; this.stars = []; this.colliders = [];
     for (const child of [...this.scene.children]) if (child !== this.player && child !== this.petModel && !(child instanceof T.Light)) this.scene.remove(child);
     this.furnitureRoot = null;
   }
@@ -333,7 +354,10 @@ export class World {
     this.clearInput(); this.clearMap(); this.inRoom = false; s.room.inside = false; this.stage = s.journey.stage;
     this.scene.background = new T.Color(0xd0eade); this.scene.fog = new T.Fog(0xd0eade, 58, 112); this.platforms = stagePlatforms(this.stage);
     if (this.stage === 0) this.buildVillage(); else this.buildHunt(this.stage);
-    const map = s.journey.maps[this.stage]; this.coins.forEach(c => c.mesh.visible = !map.berries.includes(c.id)); this.entities.forEach(e => { if (e.id.startsWith('monster')) e.mesh.visible = !map.monsters.includes(Number(e.id.slice(7))); if (e.id.startsWith('tree')) e.mesh.visible = !map.trees.includes(Number(e.id.slice(4))); });
+    const map = s.journey.maps[this.stage], expedition = !!s.expedition.active && s.expedition.active.stage === this.stage;
+    this.coins.forEach(c => c.mesh.visible = !expedition && !map.berries.includes(c.id));
+    this.entities.forEach(e => { if (e.id.startsWith('monster')) e.mesh.visible = !expedition && !map.monsters.includes(Number(e.id.slice(7))); if (e.id.startsWith('tree')) e.mesh.visible = !expedition && !map.trees.includes(Number(e.id.slice(4))); });
+    if (expedition) this.addExpeditionObjects(s);
     const spawn = this.stage === 0 ? { x: 0, z: 8 } : { x: 0, z: stageSize(this.stage).z - 9 }; const p = fresh ? spawn : s.position; this.player.position.set(p.x, 0, p.z); this.placePetNearPlayer(); this.lastSafe.copy(this.player.position); this.follow.copy(this.player.position);
   }
   enterRoom(s: Save, preservePosition = false) {
@@ -451,7 +475,7 @@ export class World {
     if (e.mesh.userData.hp === 0) { e.mesh.visible = false; e.label.hidden = true; cylinder(this.scene, 0xa77b50, e.x, .2, e.z, .32, .43, .4, 9); this.burst(e.mesh.position, 0xffa1b8, 12); this.selectedId = null; this.onNear(null, null); }
     return { fell: e.mesh.userData.hp === 0, remaining: e.mesh.userData.hp as number };
   }
-  defeat(id: string) { const e = this.entities.find(e => e.id === id); if (e) { const monster = stageMonsters(this.stage)[Number(id.slice(7))]; this.burst(e.mesh.position, MONSTERS[monster.type].color); e.mesh.visible = false; } }
+  defeat(id: string) { const e = this.entities.find(e => e.id === id); if (e) { const type = id.startsWith('expMonster') ? Number(e.mesh.userData.monsterType) : stageMonsters(this.stage)[Number(id.slice(7))].type; this.burst(e.mesh.position, MONSTERS[type].color); e.mesh.visible = false; } }
   celebrate() { this.burst(this.player.position, 0xffd371, 30); }
   private burst(pos: T.Vector3, color: number, count = 14) { for (let i = 0; i < count; i++) { const m = mesh(particleGeometry, color, pos.x, pos.y + .9, pos.z, this.scene); this.particles.push({ mesh: m, v: new T.Vector3((Math.random() - .5) * 5, 2 + Math.random() * 3, (Math.random() - .5) * 5), life: 1 }); } }
   private water(x: number, z: number) { return !this.inRoom && isVillagePond(this.stage, x, z); }
@@ -475,6 +499,7 @@ export class World {
       if (Math.abs(p.x) > bounds.x - .5 || Math.abs(p.z) > bounds.z - .5 || (!flying && this.water(p.x, p.z) && p.y <= .2)) { p.copy(this.lastSafe); this.vy = 0; this.onRescue(); }
       else if (this.grounded && (flying || !this.water(p.x, p.z)) && Math.abs(p.x) < bounds.x - 2 && Math.abs(p.z) < bounds.z - 2) this.lastSafe.copy(p);
       for (const c of this.coins) if (c.mesh.visible && p.distanceTo(c.mesh.position) < 1) { c.mesh.visible = false; this.burst(c.mesh.position, 0xff9fb4, 6); this.onCollect(c.id); }
+      for (const star of this.stars) if (star.mesh.visible && Math.hypot(p.x - star.mesh.position.x, p.z - star.mesh.position.z) < 1.35) { star.mesh.visible = false; star.label.hidden = true; this.burst(star.mesh.position, 0xffdf83, 8); this.onStar(star.id); }
       if (this.petModel && this.petIndex >= 0) {
         let target = this.petTargetId === null ? undefined : this.coins.find(c => c.id === this.petTargetId && c.mesh.visible);
         if (!target) {
@@ -498,6 +523,12 @@ export class World {
       }
     }
     for (const c of this.coins) { c.mesh.rotation.y += dt; c.mesh.position.y = c.y + Math.sin(this.time * 2.8 + c.mesh.position.x) * .12; }
+    for (const star of this.stars) {
+      star.mesh.rotation.y += dt * 1.9; star.mesh.position.y = star.y + Math.sin(this.time * 3 + star.id) * .16;
+      const v = this.tempProjection.set(star.mesh.position.x, 2, star.mesh.position.z).project(this.camera);
+      star.label.style.transform = `translate(-50%, -100%) translate(${(v.x * .5 + .5) * this.container.clientWidth}px, ${(-v.y * .5 + .5) * this.container.clientHeight}px)`;
+      star.label.hidden = !this.active || !star.mesh.visible || Math.abs(v.x) > 1.15 || Math.abs(v.y) > 1.1;
+    }
     let near: Entity | undefined, distance = 2.8;
     for (const e of this.entities) {
       if (e.id.startsWith('monster')) { e.mesh.position.y = Math.max(0, Math.sin(this.time * 2 + e.x)) * .16; e.mesh.rotation.y = Math.sin(this.time * .5 + e.z) * .35; }

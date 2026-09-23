@@ -5,6 +5,7 @@ import { newSave, validateSave, CHARACTERS, MONSTERS, OUTFITS, PETS, RIDES, WEAP
 import { STAGES, stageMonsters, stageBerries, berryValue, clearBonus } from './stages';
 import { Sound } from './audio';
 import { RESCUES, FLOWERS, gardenOf, rescueSheep, plantFlower } from './garden';
+import { EXPEDITION_TITLES, expeditionLayout, expeditionUnlocked, startExpedition, collectExpeditionStar, defeatExpeditionMonster, canFinishExpedition, finishExpedition, selectExpeditionTitle } from './expedition';
 
 const $ = <T extends HTMLElement = HTMLElement>(selector: string) => document.querySelector<T>(selector)!;
 const root = $('#game');
@@ -24,10 +25,13 @@ const gardenButton = document.createElement('button');
 gardenButton.id = 'garden'; gardenButton.className = 'secondary garden-entry';
 gardenButton.textContent = '🐑 구름양 구출 · 내 화단';
 $('#quest-list').after(gardenButton); gardenButton.onclick = () => openGarden();
+const expeditionButton = document.createElement('button');
+expeditionButton.id = 'expedition'; expeditionButton.className = 'secondary garden-entry'; expeditionButton.textContent = '✦ 별빛 재탐험';
+gardenButton.after(expeditionButton); expeditionButton.onclick = () => openExpeditionBoard();
 let state: Save | null = null, saved: Save | null = null, preview: AvatarPreview | null = null, startPreview: AvatarPreview | null = null;
 let startPreviewRequest = 0, startPortraits: string[] | null = null;
 let selected = 0, pendingImport: Save | null = null, toastTimer: ReturnType<typeof setTimeout>, modalOpener: HTMLElement | null = null;
-let battle: { encounter: Encounter; id: string; round: number; score: number; result: ReturnType<typeof grantReward> | null } | null = null;
+let battle: { encounter: Encounter; id: string; kind: 'normal' | 'expMonster' | 'expGate'; round: number; score: number; result: ReturnType<typeof grantReward> | null; newTitle?: number } | null = null;
 let storageError = false, sessionExpired = false, sessionElapsed = 0, sessionCorrect = 0, sessionWrong = 0;
 const OUTFIT_ICONS = ['🌿', '🌈', '🍃', '☁️', '🌸', '🌟', '🌙', '👑', '🍓', '🐥', '🐰', '🌰', '🐱', '🐑', '🐸', '🧚'];
 try { const raw = localStorage.getItem(STORAGE); if (raw) saved = validateSave(JSON.parse(raw)); } catch { storageError = true; }
@@ -42,14 +46,17 @@ function persist() {
 }
 function refresh() {
   if (!state) return; const s = state;
-  $('#level').textContent = `${s.level}`; $('#nickname').textContent = `${s.nickname}${s.teacherMode ? ' · 선생님' : ''}`; $('#berries').textContent = s.berries.toLocaleString();
+  $('#level').textContent = `${s.level}`; $('#nickname').textContent = `${s.nickname}${s.expedition.selectedTitle ? ` · ${EXPEDITION_TITLES[s.expedition.selectedTitle].name}` : ''}${s.teacherMode ? ' · 선생님' : ''}`; $('#berries').textContent = s.berries.toLocaleString();
   $('#xp-fill').style.width = `${s.xp / (s.level * 40) * 100}%`; $('#xp-text').textContent = `경험치 ${s.xp} / ${s.level * 40}`;
   $('#weapon-name').textContent = `${WEAPONS[s.weapon].icon} ${WEAPONS[s.weapon].name} +${s.weapons[s.weapon]} · ${OUTFITS[s.outfit].name}`;
   $('#weapon-effect').textContent = `대련 ×${(WEAPONS[s.weapon].multiplier + s.weapons[s.weapon] * .1).toFixed(1)} · 나무 힘 ${treeDamage(s)} · ${s.ride >= 0 ? `${RIDES[s.ride].icon} 속도 ×${RIDES[s.ride].speed}` : `옷: ${OUTFITS[s.outfit].effect}`}${s.pet >= 0 ? ` · ${PETS[s.pet].icon} 펫` : ''}`;
-  $('.location-pill').innerHTML = world?.inRoom ? '⌂ 나의 집 <span>가구를 눌러 꾸며요</span>' : s.journey.stage ? `❋ ${s.journey.stage}단계 사냥터 <span>${STAGES[s.journey.stage - 1].name}</span>` : '❋ 베리숲 마을 <span>평화로운 오후</span>';
+  const expedition = s.expedition.active;
+  $('.location-pill').innerHTML = world?.inRoom ? '⌂ 나의 집 <span>가구를 눌러 꾸며요</span>' : s.journey.stage ? `❋ ${s.journey.stage}단계 사냥터 <span>${expedition?.stage === s.journey.stage ? '✦ 별빛 재탐험' : STAGES[s.journey.stage - 1].name}</span>` : '❋ 베리숲 마을 <span>평화로운 오후</span>';
   const tasks = [[s.tutorial.collected, '길 위의 베리 줍기'], [s.tutorial.battle, '나눗셈으로 몬스터 만나기'], [s.tutorial.shop, '강지후·오지후 상점 구경']];
-  $('#quest-list').innerHTML = tasks.map(([done, label]) => `<div class="quest ${done ? 'done' : ''}"><span>${done ? '✓' : '○'}</span>${label}</div>`).join('');
-  $('#quest-title').textContent = s.journey.stage ? `${s.journey.stage}단계 · ${STAGES[s.journey.stage - 1].name}` : tasks.every(t => t[0]) ? '모험의 문으로 사냥터에 떠나요!' : '숲과 친해지는 세 가지 방법';
+  const expeditionHere = expedition?.stage === s.journey.stage && !world?.inRoom;
+  $('#quest-list').innerHTML = expeditionHere ? [[expedition.stars.length === 3, `별빛 표식 ${expedition.stars.length} / 3`], [expedition.monsters.length === 2, `별빛 대련 ${expedition.monsters.length} / 2`], [false, '출구에서 이야기 문제 풀기']].map(([done, label]) => `<div class="quest ${done ? 'done' : ''}"><span>${done ? '✓' : '○'}</span>${label}</div>`).join('') : tasks.map(([done, label]) => `<div class="quest ${done ? 'done' : ''}"><span>${done ? '✓' : '○'}</span>${label}</div>`).join('');
+  $('#quest-title').textContent = expeditionHere ? `✦ ${s.journey.stage}단계 별빛 원정` : s.journey.stage ? `${s.journey.stage}단계 · ${STAGES[s.journey.stage - 1].name}` : tasks.every(t => t[0]) ? '모험의 문으로 사냥터에 떠나요!' : '숲과 친해지는 세 가지 방법';
+  expeditionButton.hidden = !expeditionUnlocked(s);
   audio.music = s.settings.music; audio.effects = s.settings.sound;
 }
 function syncAvatar() { if (state) world.setAvatar(state.character, state.outfit, state.weapon, state.outfits[state.outfit], state.weapons[state.weapon], state.ride, state.pet, state.hairstyle, state.face); }
@@ -158,10 +165,11 @@ async function loadWorld() {
   try {
     const module = await import('./world'); AvatarPreviewRuntime = module.AvatarPreview; world = new module.World($('#world'));
     world.onCollect = id => { if (!state) return; const value = collectBerry(state, id); if (!value) return; audio.play('berry'); refresh(); persist(); toast(`🍓 베리 +${value}`); };
+    world.onStar = id => { if (!state || !collectExpeditionStar(state, id)) return; audio.play('berry'); refresh(); persist(); toast(`✦ 별빛 표식 ${state.expedition.active!.stars.length} / 3`); };
     world.onJump = () => audio.play('jump'); world.onRescue = () => toast('폭신한 길로 돌아왔어요. 다시 가 볼까요?');
     world.onNear = (name, id) => { $('#interact').hidden = !name; $('#interact').textContent = name ? id?.startsWith('tree') ? `${name} · F로 휘두르기` : `${name} · 대화하기 E` : ''; $('#touch-talk').textContent = name?.includes('슬라임') || name?.includes('요정') || name?.includes('토끼') || name?.includes('정령') ? '대련' : '대화'; };
     world.onAttack = id => { if (!state) return; if (!id) { audio.play('swing'); return; } const result = world.hitTree(id, treeDamage(state)); if (!result) return; audio.play('chop'); if (!result.fell) { toast(`통통! 나무가 흔들렸어요 · ${result.remaining}만큼 남았어요`); return; } const reward = (2 + Math.floor(Math.random() * 3)) as 2 | 3 | 4, value = fellTree(state, Number(id.slice(4)), reward); if (!value) return; audio.play('berry'); refresh(); persist(); toast(`🌳 나무를 베었어요! 🍓 +${value}베리`); };
-    world.onInteract = id => { if (!state) return; if (id.startsWith('tree')) world.attack(); else if (id === 'guide') openGuide(); else if (id === 'weapon' || id === 'outfit') openShop(id); else if (id === 'ride') openInventory('ride'); else if (id === 'pet') openPetShop(); else if (id === 'beauty') openBeauty(); else if (id === 'arena') openArena(); else if (id === 'journey') openStageMap(); else if (id === 'room') { world.enterRoom(state); refresh(); persist(); toast('나의 포근한 방에 도착했어요. 문으로 가면 마을로 돌아가요!'); } else if (id === 'roomDecor') openRoom(); else if (id === 'roomExit') { state.position = { x: 0, z: 8 }; world.loadStage(state, true); refresh(); persist(); toast('베리숲 마을로 돌아왔어요!'); } else if (id === 'village') switchStage(0); else if (id === 'next') openNextGate(); else { const huntId = Number(id.slice(7)); startBattle(stageMonsters(state.journey.stage)[huntId].type, false, id); } };
+    world.onInteract = id => { if (!state) return; if (id.startsWith('tree')) world.attack(); else if (id === 'guide') openGuide(); else if (id === 'weapon' || id === 'outfit') openShop(id); else if (id === 'ride') openInventory('ride'); else if (id === 'pet') openPetShop(); else if (id === 'beauty') openBeauty(); else if (id === 'arena') openArena(); else if (id === 'journey') openStageMap(); else if (id === 'room') { world.enterRoom(state); refresh(); persist(); toast('나의 포근한 방에 도착했어요. 문으로 가면 마을로 돌아가요!'); } else if (id === 'roomDecor') openRoom(); else if (id === 'roomExit') { state.position = { x: 0, z: 8 }; world.loadStage(state, true); refresh(); persist(); toast('베리숲 마을로 돌아왔어요!'); } else if (id === 'village') switchStage(0); else if (id === 'next') openNextGate(); else if (id.startsWith('expMonster')) { const monsterId = Number(id.slice('expMonster'.length)), monster = stageMonsters(state.journey.stage)[monsterId]; if (state.expedition.active && monster) startBattle(monster.type, false, id); } else if (id.startsWith('monster')) { const huntId = Number(id.slice(7)); startBattle(stageMonsters(state.journey.stage)[huntId].type, false, id); } };
   } catch (e) {
     root.innerHTML = `<div class="fallback"><h1>숲을 그리지 못했어요</h1><p>3D 화면을 지원하는 최신 Chrome 또는 Edge에서 열어 주세요. 브라우저의 그래픽 가속이 켜져 있는지도 확인해 주세요.</p><button onclick="location.reload()">다시 열기</button></div>`; throw e;
   }
@@ -179,30 +187,68 @@ function openArena() {
 }
 function openStageMap() {
   if (!state) return; const s = state;
-  openModal(title('연태쌤의 모험 지도', '10개의 사냥터') + `<p class="shop-explainer">새 사냥터일수록 베리와 몬스터 사냥 보상이 커져요. 한 스테이지의 몬스터를 모두 물리치면 다음 길이 열립니다.</p><div class="stage-grid">${STAGES.map((stage, i) => { const step = i + 1, progress = s.journey.maps[step], open = canEnter(s, step), complete = progress.cleared; return `<button class="stage-card ${complete ? 'cleared' : ''}" data-stage="${step}" ${open ? '' : 'disabled'}><span class="stage-number">${complete ? '✓' : step}</span><strong>${stage.name}</strong><small>${STAGE_STORIES[i]}</small><small>${open ? complete ? '통과 완료 · 다시 탐험' : `${progress.monsters.length} / ${stageMonsters(step).length} 친구와 만나기` : '앞 스테이지를 통과해요'}</small></button>`; }).join('')}</div>`);
+  openModal(title('연태쌤의 모험 지도', '10개의 사냥터') + `<p class="shop-explainer">새 사냥터일수록 베리와 몬스터 사냥 보상이 커져요. 한 스테이지의 몬스터를 모두 물리치면 다음 길이 열립니다.</p>${expeditionUnlocked(s) ? '<button id="map-expedition" class="secondary wide">✦ 별빛 재탐험과 칭호 보기</button>' : ''}<div class="stage-grid">${STAGES.map((stage, i) => { const step = i + 1, progress = s.journey.maps[step], open = canEnter(s, step), complete = progress.cleared; return `<button class="stage-card ${complete ? 'cleared' : ''}" data-stage="${step}" ${open ? '' : 'disabled'}><span class="stage-number">${complete ? '✓' : step}</span><strong>${stage.name}</strong><small>${STAGE_STORIES[i]}</small><small>${open ? complete ? '통과 완료 · 다시 탐험' : `${progress.monsters.length} / ${stageMonsters(step).length} 친구와 만나기` : '앞 스테이지를 통과해요'}</small></button>`; }).join('')}</div>`);
+  const exp = document.querySelector<HTMLButtonElement>('#map-expedition'); if (exp) exp.onclick = openExpeditionBoard;
   document.querySelectorAll<HTMLButtonElement>('[data-stage]').forEach(b => b.onclick = () => switchStage(Number(b.dataset.stage)));
+}
+function openExpeditionBoard() {
+  if (!state || !expeditionUnlocked(state)) return;
+  const s = state, mission = s.expedition.active, next = expeditionLayout(s.expedition.completed);
+  openModal(title('연태쌤의 별빛 게시판', '별빛 재탐험') + `<p>10개의 숲을 새로운 목표로 다시 걸어요. 언제든 다시 도전할 수 있고, 틀려도 손해가 없어요.</p><p class="expedition-note">이번 원정: <b>${mission ? `${mission.stage}단계 · ${STAGES[mission.stage - 1].name}` : `${next.stage}단계 · ${STAGES[next.stage - 1].name}`}</b><br>별빛 표식 3개 · 몬스터 대련 2번 · 출구의 이야기 문제 1개<br><small>연습 원정에서는 베리와 경험치를 다시 받지 않아요.</small></p>${mission ? `<p>지금까지 표식 ${mission.stars.length}/3 · 대련 ${mission.monsters.length}/2</p>` : ''}<button id="expedition-start" class="primary wide">${mission ? '진행 중인 원정 이어하기' : '새 원정 떠나기'} →</button><h3 class="title-heading">🏅 나의 칭호 · 원정 ${s.expedition.completed}번 완수</h3><div class="title-list">${EXPEDITION_TITLES.map((item, id) => `<button data-title="${id}" class="secondary ${s.expedition.selectedTitle === id ? 'selected' : ''}" ${s.expedition.completed < item.need ? 'disabled' : ''}>${s.expedition.completed < item.need ? '🔒' : '✦'} ${item.name}<small>${item.need}번 완수${s.expedition.selectedTitle === id ? ' · 표시 중' : ''}</small></button>`).join('')}</div>`);
+  $('#expedition-start').onclick = beginExpedition;
+  document.querySelectorAll<HTMLButtonElement>('[data-title]').forEach(b => b.onclick = () => { if (selectExpeditionTitle(s, Number(b.dataset.title))) { refresh(); persist(); openExpeditionBoard(); } });
+}
+function beginExpedition() {
+  if (!state) return;
+  const resumeHere = !!state.expedition.active && state.expedition.active.stage === state.journey.stage && !world.inRoom;
+  if (!startExpedition(state)) return;
+  world.loadStage(state, !resumeHere); closeModal(); refresh(); persist(); toast('✦ 별빛 원정이 시작됐어요! 표식을 찾아보세요.');
 }
 function switchStage(stage: number) {
   if (!state || !canEnter(state, stage)) return; state.journey.stage = stage; state.position = stage === 0 ? { x: 0, z: 8 } : { x: 0, z: 26 }; world.loadStage(state, true); closeModal(); refresh(); persist(); toast(stage ? `${stage}단계 · ${STAGES[stage - 1].name}에 도착했어요!` : '베리숲 마을로 돌아왔어요.');
 }
 function openNextGate() {
   if (!state) return; const stage = state.journey.stage, map = state.journey.maps[stage], total = stageMonsters(stage).length;
+  if (state.expedition.active?.stage === stage) { if (!canFinishExpedition(state)) { const active = state.expedition.active; toast(`표식 ${3 - active.stars.length}개와 대련 ${2 - active.monsters.length}번을 더 마쳐요.`); return; } startExpeditionGate(); return; }
   if (!map.cleared) { toast(`사냥터 친구 ${total - map.monsters.length}명을 더 만나야 해요.`); return; }
-  if (stage === 10) { openModal(title('연태쌤의 축하', '열 개의 사냥터를 모두 통과했어요!') + `<div class="arena-intro"><div class="arena-symbol">🌈</div><p>베리숲의 모든 길을 걸으며 나눗셈 친구들을 만났어요.<br>대단해요! 다음 업데이트도 기대해 주세요.<br>언제든 사냥터를 다시 탐험해 보세요!</p><button class="primary wide" data-close>신나는 모험 계속하기</button></div>`); return; }
+  if (stage === 10) { openModal(title('연태쌤의 축하', '열 개의 사냥터를 모두 통과했어요!') + `<div class="arena-intro"><div class="arena-symbol">🌈</div><p>베리숲의 모든 길을 걸으며 나눗셈 친구들을 만났어요.<br>대단해요! 다음 업데이트도 기대해 주세요.<br>이제 별빛 재탐험도 시작할 수 있어요!</p><button id="celebrate-expedition" class="primary wide">✦ 별빛 재탐험 시작하기</button><button class="secondary wide" data-close>숲에서 더 놀기</button></div>`); $('#celebrate-expedition').onclick = openExpeditionBoard; return; }
   switchStage(stage + 1);
 }
 function startBattle(monster: number, arena: boolean, id: string) {
-  if (!state) return; const cleared = state.journey.maps.slice(1).filter(map => map.cleared).length, difficultyStage = arena ? Math.min(10, cleared + 1) : state.journey.stage; battle = { encounter: new Encounter(monster, arena, state.level, undefined, difficultyStage, state.settings.maxDividend), id, round: 1, score: 0, result: null }; renderBattle();
+  if (!state) return; const cleared = state.journey.maps.slice(1).filter(map => map.cleared).length, difficultyStage = arena ? Math.min(10, cleared + 1) : state.journey.stage; battle = { encounter: new Encounter(monster, arena, state.level, undefined, difficultyStage, state.settings.maxDividend), id, kind: id.startsWith('expMonster') ? 'expMonster' : 'normal', round: 1, score: 0, result: null }; renderBattle();
+}
+function startExpeditionGate() {
+  if (!state?.expedition.active || !canFinishExpedition(state)) return;
+  const active = state.expedition.active, encounter = new Encounter(0, false, state.level, undefined, active.stage, state.settings.maxDividend);
+  encounter.question = { ...active.gateQuestion };
+  battle = { encounter, id: 'expGate', kind: 'expGate', round: 1, score: 0, result: null }; renderBattle();
 }
 function renderBattle() {
   if (!battle || !state) return; const b = battle, e = b.encounter, m = MONSTERS[e.monster], q = e.question, reward = rewardFor(state, e.monster, e.arena);
   openModal(title(e.arena ? `신비의 대련장 · ${b.round} / 5` : '숲속 친구와 나눗셈', m.name) + `<div class="battle-top"><span>🌱 ${e.arena ? `이번 도전 ${b.score}점` : `${e.stage ? `${e.stage}단계 난이도` : '마을 연습 문제'} · 천천히 생각해요`}</span><span>🍓 ${reward.berries} · 경험치 ${reward.xp}</span></div><div class="monster-portrait" id="monster-portrait" style="--monster-color:#${m.color.toString(16).padStart(6, '0')}"><span class="battle-spark one">✦</span><span class="battle-spark two">✦</span><div class="monster-icon" aria-hidden="true">${m.icon}</div><div class="monster-speech"><strong>${m.name}</strong><span>나눗셈으로 힘을 보여 줘!</span></div></div><div class="question" aria-label="${q.dividend} 나누기 ${q.divisor}"><b>${q.dividend}</b><span>÷</span><b>${q.divisor}</b><span>=</span><input id="answer" aria-label="나눗셈의 답" inputmode="numeric" autocomplete="off" maxlength="2" placeholder="?" readonly></div><p class="answer-message" id="answer-message" role="status">몇씩 나누어 줄 수 있을까요?</p><div id="hint" hidden></div><div class="number-pad" aria-label="숫자판">${[1, 2, 3, 4, 5, 6, 7, 8, 9, '지우기', 0, '확인'].map(n => `<button data-number="${n}" class="${n === '확인' ? 'primary' : ''}">${n}</button>`).join('')}</div><div class="battle-footer"><button id="show-hint" class="text-button">💡 힌트 보기</button><button class="text-button" data-close>잠깐 쉬기</button></div><div id="battle-result" hidden></div>`, 'battle-modal');
+  if (b.kind !== 'normal') {
+    $('.modal-heading .eyebrow').textContent = b.kind === 'expGate' ? '별빛 원정 출구' : '별빛 원정 대련';
+    $('.modal-heading h2').textContent = b.kind === 'expGate' ? '마지막 이야기 문제' : m.name;
+    $('.battle-top').innerHTML = '<span>✦ 천천히 풀어도 괜찮아요</span><span>원정 기록 · 베리와 경험치 없음</span>';
+    if (b.kind === 'expGate') {
+      $('.monster-icon').textContent = '🌟'; $('.monster-speech strong').textContent = '별빛 친구의 부탁';
+      $('.monster-speech span').textContent = '이야기를 읽고 답을 찾아 주세요!';
+      const kind = state.expedition.active?.storyKind ?? 0;
+      const story = kind === 0 ? `별사탕 ${q.dividend}개를 친구 ${q.divisor}명에게 똑같이 나누어 주면 한 명이 몇 개씩 받을까요?` : `별사탕 ${q.dividend}개를 한 봉지에 ${q.divisor}개씩 담으면 봉지가 몇 개 필요할까요?`;
+      $('.question').insertAdjacentHTML('beforebegin', `<p class="expedition-story">${story}</p>`);
+    }
+  }
   document.querySelectorAll<HTMLButtonElement>('[data-number]').forEach(button => button.onclick = () => enterAnswer(button.dataset.number!));
   $('#show-hint').onclick = showHint; $('#answer').focus();
 }
 function showHint() {
   if (!battle) return; const q = battle.encounter.question;
   $('#hint').hidden = false;
+  if (battle.kind === 'expGate' && state?.expedition.active?.storyKind === 1) {
+    const shown = Math.min(q.answer, 8);
+    $('#hint').innerHTML = `<p>${q.dividend}개를 한 봉지에 ${q.divisor}개씩 담아요. 봉지는 몇 개일까요?</p><div class="groups">${Array.from({ length: shown }, () => `<div class="group"><span>${Array.from({ length: q.divisor }, () => '<i></i>').join('')}</span><small>한 봉지</small></div>`).join('')}</div>${q.answer > shown ? '<small>… 봉지가 더 필요해요</small>' : ''}<b>${q.divisor} × □ = ${q.dividend}</b>`;
+    return;
+  }
   const dots = Math.min(q.answer, 12), more = q.answer > dots ? `<small>… 모두 ${q.answer}개</small>` : '<small>한 묶음</small>';
   $('#hint').innerHTML = `<p>${q.dividend}개를 ${q.divisor}묶음에 똑같이 나눠요.</p><div class="groups">${Array.from({ length: q.divisor }, () => `<div class="group"><span>${Array.from({ length: dots }, () => '<i></i>').join('')}</span>${more}</div>`).join('')}</div><b>${q.divisor} × □ = ${q.dividend}</b><p>한 묶음의 개수를 곱셈으로 확인해 보세요.</p>`;
 }
@@ -219,21 +265,34 @@ function submitAnswer() {
   if (outcome === 'ignored') return;
   if (outcome === 'wrong') { recordWrongAnswer(state, b.encounter.question); sessionWrong++; audio.play('wrong'); persist(); $('#answer-message').textContent = '괜찮아요! 묶음을 살펴보고 다시 풀어 볼까요?'; input.value = ''; showHint(); return; }
   sessionCorrect++; recordCorrectAnswer(state, b.encounter.monster); state.discoveries.outfits.includes(state.outfit) || state.discoveries.outfits.push(state.outfit); if (state.pet >= 0 && !state.discoveries.pets.includes(state.pet)) state.discoveries.pets.push(state.pet);
-  b.result = b.encounter.arena ? grantReward(state, b.encounter.monster, true) : finishHunt(state, Number(b.id.slice(7)));
+  if (b.kind === 'expMonster') {
+    if (!defeatExpeditionMonster(state, Number(b.id.slice('expMonster'.length)))) return;
+    b.result = { berries: 0, xp: 0, score: 0, levels: 0, milestones: [] };
+  } else if (b.kind === 'expGate') {
+    const completed = finishExpedition(state, b.encounter.question.answer);
+    if (!completed) return;
+    b.newTitle = completed.newTitle;
+    b.result = { berries: 0, xp: 0, score: 0, levels: 0, milestones: [] };
+  } else b.result = b.encounter.arena ? grantReward(state, b.encounter.monster, true) : finishHunt(state, Number(b.id.slice(7)));
   if (!b.result) return;
   b.score += b.result.score;
-  if (b.encounter.arena) state.best = Math.max(state.best, b.score); else world.defeat(b.id);
+  if (b.encounter.arena) state.best = Math.max(state.best, b.score); else if (b.kind !== 'expGate') world.defeat(b.id);
   audio.play(b.result.levels ? 'level' : 'correct'); world.celebrate(); persist(); refresh();
   $('#answer-message').textContent = '정답이에요! 정말 잘했어요!'; $('#monster-portrait').classList.add('defeated');
   $('.number-pad').hidden = true; $('.battle-footer').hidden = true; $('#hint').hidden = true;
   $('#battle-result').hidden = false;
   const clearReward = (b.result as ReturnType<typeof grantReward> & { clearReward?: number }).clearReward ?? 0;
+  if (b.kind !== 'normal') {
+    $('#battle-result').innerHTML = `<div class="reward-banner"><strong>${b.kind === 'expGate' ? '🌟 별빛 원정 완수!' : '✦ 별빛 대련 성공!'}</strong><p>${b.kind === 'expGate' ? `원정 ${state.expedition.completed}번 완료했어요. ${b.newTitle && b.newTitle > 0 ? `새 칭호 「${EXPEDITION_TITLES[b.newTitle].name}」를 얻었어요!` : '다음 원정도 바로 떠날 수 있어요.'}` : `대련 ${state.expedition.active?.monsters.length ?? 2} / 2 · 출구까지 가 볼까요?`}</p><p>베리와 경험치는 중복으로 받지 않아요.</p></div><button class="primary wide" id="next-battle">${b.kind === 'expGate' ? '다음 원정 고르기 →' : '숲으로 돌아가기'}</button>`;
+    $('#next-battle').onclick = nextBattle; $('#next-battle').focus(); return;
+  }
   $('#battle-result').innerHTML = `<div class="reward-banner"><strong>✨ 멋진 나눗셈!</strong><p>🍓 +${b.result.berries}베리 · 경험치 +${b.result.xp}${b.encounter.arena ? ` · +${b.result.score}점` : ''}</p>${!b.encounter.arena && clearReward ? `<p class="level-up">사냥터 통과! 추가 +${clearReward}베리와 다음 길을 받았어요.</p>` : ''}${b.result.levels ? `<p class="level-up">레벨 ${state.level}! 선물 ${b.result.levels * 20}베리도 받았어요.</p>` : ''}${b.result.milestones.map(gift => `<p class="level-easter-egg">🎁 비밀 선물 발견! 레벨 ${gift.level} 달성 · ${gift.berries.toLocaleString()}베리를 받았어요!</p>`).join('')}</div><button class="primary wide" id="next-battle">${b.encounter.arena ? b.round < 5 ? '다음 친구 만나기 →' : '대련 결과 보기' : '숲으로 돌아가기'}</button>`;
   $('#next-battle').onclick = nextBattle; $('#next-battle').focus();
 }
 function nextBattle() {
   if (!battle || !state || !battle.encounter.solved) return;
   if (sessionExpired) { battle = null; showSessionSummary(); return; }
+  if (battle.kind === 'expGate') { battle = null; switchStage(0); openExpeditionBoard(); return; }
   if (!battle.encounter.arena) { battle = null; closeModal(); return; }
   if (battle.round === 5) { const score = battle.score; battle = null; openModal(title('오늘도 한 뼘 자랐어요', '대련을 마쳤어요!') + `<div class="arena-intro"><div class="arena-symbol">🏆</div><h3>${score}점</h3><p>다섯 친구와의 나눗셈 대련 성공!<br>나의 최고 기록은 ${state.best}점이에요.</p><button class="primary wide" data-close>마을로 돌아가기</button></div>`); return; }
   const previous = battle.encounter.question, difficultyStage = battle.encounter.stage; battle.round++; battle.encounter = new Encounter(Math.floor(Math.random() * 4), true, state.level, previous, difficultyStage, state.settings.maxDividend); battle.result = null; renderBattle();
