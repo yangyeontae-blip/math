@@ -507,12 +507,13 @@ export class World {
 }
 
 export class AvatarPreview {
-  private scene = new T.Scene(); private camera = new T.PerspectiveCamera(30, 1, .1, 20); private renderer: T.WebGLRenderer; private model = new T.Group(); private resizeObserver: ResizeObserver;
+  private scene = new T.Scene(); private camera = new T.PerspectiveCamera(30, 1, .1, 20); private renderer: T.WebGLRenderer; private model = new T.Group(); private resizeObserver: ResizeObserver; private animationFrame = 0; private lastFrame = 0; private drawWidth = 0; private drawHeight = 0;
   constructor(private element: HTMLElement) {
     this.renderer = new T.WebGLRenderer({ alpha: true, antialias: true }); this.renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5)); this.renderer.setClearColor(0x000000, 0); this.renderer.toneMapping = T.ACESFilmicToneMapping; this.renderer.toneMappingExposure = 1.4; element.append(this.renderer.domElement); this.scene.add(new T.HemisphereLight(0xffffff, 0xa6ba93, 3)); const light = new T.DirectionalLight(0xffedcd, 3); light.position.set(-3, 4, 5); this.scene.add(light); this.camera.position.set(2.2, 1.9, 5.8); this.camera.lookAt(0, 1.1, 0);
-    this.resizeObserver = new ResizeObserver(() => this.draw()); this.resizeObserver.observe(element);
+    this.resizeObserver = new ResizeObserver(() => this.draw()); this.resizeObserver.observe(element); this.animate(performance.now());
   }
   show(c: number, o: number, w: number, ol = 0, wl = 0, hairstyle = 0, face = 0) { this.scene.remove(this.model); this.model.traverse(x => { if (x instanceof T.Mesh && !sharedGeometries.has(x.geometry)) x.geometry.dispose(); }); this.model = makeCharacter(c, o, w, ol, wl, hairstyle, face); this.model.rotation.y = -.18; this.scene.add(this.model); this.draw(); }
-  private draw() { const w = this.element.clientWidth, h = this.element.clientHeight; if (!w || !h) return; this.renderer.setSize(w, h); this.camera.aspect = w / h; this.camera.updateProjectionMatrix(); this.renderer.render(this.scene, this.camera); }
-  dispose() { this.resizeObserver.disconnect(); this.model.traverse(x => { if (x instanceof T.Mesh && !sharedGeometries.has(x.geometry)) x.geometry.dispose(); }); this.renderer.dispose(); this.renderer.domElement.remove(); }
+  private draw() { const w = this.element.clientWidth, h = this.element.clientHeight; if (!w || !h) return; if (w !== this.drawWidth || h !== this.drawHeight) { this.drawWidth = w; this.drawHeight = h; this.renderer.setSize(w, h); this.camera.aspect = w / h; this.camera.updateProjectionMatrix(); } this.renderer.render(this.scene, this.camera); }
+  private animate = (time: number) => { this.animationFrame = requestAnimationFrame(this.animate); if (time - this.lastFrame < 33 || document.hidden || !this.element.isConnected) return; this.lastFrame = time; this.model.rotation.y = -.18 + Math.sin(time * .0007) * .13; const body = this.model.userData.body as T.Group | undefined; if (body) body.position.y = Math.sin(time * .003) * .035; const sparkles = this.model.userData.sparkles as T.Group | undefined; if (sparkles) sparkles.rotation.y += .025; this.draw(); };
+  dispose() { cancelAnimationFrame(this.animationFrame); this.resizeObserver.disconnect(); this.model.traverse(x => { if (x instanceof T.Mesh && !sharedGeometries.has(x.geometry)) x.geometry.dispose(); }); this.renderer.dispose(); this.renderer.domElement.remove(); }
 }

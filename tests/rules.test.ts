@@ -1,7 +1,16 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { questionPool, newSave, validateSave, buy, upgrade, buyRide, dismount, buyPet, buyLook, applyTeacherCode, enableTeacherMode, grantReward, rewardFor, Encounter, WEAPONS, OUTFITS, PETS, RIDES, HAIRSTYLES, FACES, MONSTERS, STAGE_DIVISION_DIFFICULTY, collectBerry, finishHunt, fellTree, treeDamage, canEnter, recordWrongAnswer, recordCorrectAnswer, PLAYER_MOVE_SPEED, petChaseSpeed } from '../src/rules.ts';
+import { questionPool, newSave, validateSave, buy, upgrade, buyRide, dismount, buyPet, buyLook, applyTeacherCode, enableTeacherMode, grantReward, rewardFor, Encounter, WEAPONS, OUTFITS, PETS, RIDES, HAIRSTYLES, FACES, MONSTERS, CHARACTERS, STAGE_DIVISION_DIFFICULTY, collectBerry, finishHunt, fellTree, treeDamage, canEnter, recordWrongAnswer, recordCorrectAnswer, PLAYER_MOVE_SPEED, petChaseSpeed } from '../src/rules.ts';
 import { stageBerries, stageMonsters, stageTrees, clearBonus, berryValue } from '../src/stages.ts';
+
+test('new characters start with their matching hairstyle unlocked', () => {
+  for (const character of [0, 1, 2, 3]) {
+    const save = newSave('모험가', character), hairstyle = CHARACTERS[character].style;
+    assert.equal(save.hairstyle, hairstyle);
+    assert.equal(save.hairstyles[hairstyle], true);
+    assert.deepEqual(validateSave(JSON.parse(JSON.stringify(save))), save);
+  }
+});
 
 test('every question follows the curriculum; two-digit quotients begin at level 4', () => {
   for (const level of [1, 2, 3, 4, 10, 100]) {
