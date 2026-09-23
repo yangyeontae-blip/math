@@ -165,7 +165,7 @@ function switchStage(stage: number) {
 function openNextGate() {
   if (!state) return; const stage = state.journey.stage, map = state.journey.maps[stage], total = stageMonsters(stage).length;
   if (!map.cleared) { toast(`사냥터 친구 ${total - map.monsters.length}명을 더 만나야 해요.`); return; }
-  if (stage === 10) { openModal(title('연태쌤의 축하', '열 개의 사냥터를 모두 통과했어요!') + `<div class="arena-intro"><div class="arena-symbol">🌈</div><p>베리숲의 모든 길을 걸으며 나눗셈 친구들을 만났어요.<br>언제든 사냥터를 다시 탐험해 보세요!</p><button class="primary wide" data-close>신나는 모험 계속하기</button></div>`); return; }
+  if (stage === 10) { openModal(title('연태쌤의 축하', '열 개의 사냥터를 모두 통과했어요!') + `<div class="arena-intro"><div class="arena-symbol">🌈</div><p>베리숲의 모든 길을 걸으며 나눗셈 친구들을 만났어요.<br>대단해요! 다음 업데이트도 기대해 주세요.<br>언제든 사냥터를 다시 탐험해 보세요!</p><button class="primary wide" data-close>신나는 모험 계속하기</button></div>`); return; }
   switchStage(stage + 1);
 }
 function startBattle(monster: number, arena: boolean, id: string) {
@@ -248,8 +248,8 @@ const FURNITURE = ['🍄 버섯 의자', '🪴 새싹 화분', '🧸 곰 인형'
 function openRoom() {
   if (!state) return;
   const placed = state.room.furniture, unlockedFurniture = Math.min(FURNITURE.length, state.discoveries.monsters.length + state.discoveries.pets.length + state.journey.maps.slice(1).filter(m => m.cleared).length);
-  openModal(title('나만의 작은 방', '모험가의 포근한 집') + `<p class="shop-explainer">발견한 가구를 눌러 방에 놓거나 치워 보세요. 친구를 만나고 사냥터를 통과할수록 가구가 열려요.</p><div class="room-view"><div class="room-window">☁️　☀️　☁️</div><div class="room-shelf">${placed.length ? placed.map(i => `<span title="${FURNITURE[i]}">${FURNITURE[i].split(' ')[0]}</span>`).join('') : '아직 빈 방이에요. 모험하며 가구를 찾아보세요!'}</div><div class="room-floor">🏡　포근한 나무 바닥　🏡</div></div><div class="item-grid room-items">${FURNITURE.map((item, id) => `<button class="item-card ${placed.includes(id) ? 'selected' : ''}" data-furniture="${id}" ${id >= unlockedFurniture ? 'disabled' : ''}><span class="item-swatch">${item.split(' ')[0]}</span><strong>${item.split(' ').slice(1).join(' ')}</strong><small>${placed.includes(id) ? '방에 놓여 있어요 · 눌러서 치우기' : id < unlockedFurniture ? '발견했어요 · 눌러서 놓기' : '친구를 더 만나면 열려요'}</small></button>`).join('')}</div>` , 'inventory-modal');
-  document.querySelectorAll<HTMLButtonElement>('[data-furniture]').forEach(button => button.onclick = () => { const id = Number(button.dataset.furniture); const list = state!.room.furniture; state!.room.furniture = list.includes(id) ? list.filter(x => x !== id) : [...list, id]; persist(); openRoom(); });
+  openModal(title('나만의 작은 방', '모험가의 포근한 집') + `<p class="shop-explainer">가구를 놓으면 뒤에 보이는 3D 방 모습도 바로 바뀌어요. 발견한 가구를 눌러 방에 놓거나 치워 보세요. 모험할수록 새 가구가 열려요.</p><div class="room-view"><div class="room-window">☁️　☀️　☁️</div><div class="room-shelf">${placed.length ? placed.map(i => `<span title="${FURNITURE[i]}">${FURNITURE[i].split(' ')[0]}</span>`).join('') : '아직 빈 방이에요. 모험하며 가구를 찾아보세요!'}</div><div class="room-floor">🏡　포근한 나무 바닥　🏡</div></div><div class="item-grid room-items">${FURNITURE.map((item, id) => `<button class="item-card ${placed.includes(id) ? 'selected' : ''}" data-furniture="${id}" ${id >= unlockedFurniture ? 'disabled' : ''}><span class="item-swatch">${item.split(' ')[0]}</span><strong>${item.split(' ').slice(1).join(' ')}</strong><small>${placed.includes(id) ? '방에 놓여 있어요 · 눌러서 치우기' : id < unlockedFurniture ? '발견했어요 · 눌러서 놓기' : '친구를 더 만나면 열려요'}</small></button>`).join('')}</div>` , 'inventory-modal');
+  document.querySelectorAll<HTMLButtonElement>('[data-furniture]').forEach(button => button.onclick = () => { const id = Number(button.dataset.furniture); const list = state!.room.furniture; state!.room.furniture = list.includes(id) ? list.filter(x => x !== id) : [...list, id]; world.enterRoom(state!, true); persist(); openRoom(); });
 }
 function openNotebook() {
   if (!state) return; const seenM = state.discoveries.monsters, seenP = state.discoveries.pets, seenO = state.discoveries.outfits;
