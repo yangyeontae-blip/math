@@ -1,8 +1,10 @@
 import './style.css';
+import './garden.css';
 import type { World, AvatarPreview } from './world';
 import { newSave, validateSave, CHARACTERS, MONSTERS, OUTFITS, PETS, RIDES, WEAPONS, HAIRSTYLES, FACES, WEAPON_UPGRADES, OUTFIT_UPGRADES, Encounter, grantReward, rewardFor, buy, upgrade, buyRide, dismount, buyPet, unequipPet, buyLook, applyTeacherCode, collectBerry, finishHunt, fellTree, treeDamage, canEnter, recordWrongAnswer, recordCorrectAnswer, STAGE_STORIES, type Save } from './rules';
 import { STAGES, stageMonsters, stageBerries, berryValue, clearBonus } from './stages';
 import { Sound } from './audio';
+import { RESCUES, FLOWERS, gardenOf, rescueSheep, plantFlower } from './garden';
 
 const $ = <T extends HTMLElement = HTMLElement>(selector: string) => document.querySelector<T>(selector)!;
 const root = $('#game');
@@ -18,6 +20,10 @@ root.innerHTML = `<div id="world" aria-label="베리숲 3D 마을"></div><div id
 
 let world: World, AvatarPreviewRuntime: typeof AvatarPreview;
 const audio = new Sound(), STORAGE = 'berry-forest-save-v1';
+const gardenButton = document.createElement('button');
+gardenButton.id = 'garden'; gardenButton.className = 'secondary garden-entry';
+gardenButton.textContent = '🐑 구름양 구출 · 내 화단';
+$('#quest-list').after(gardenButton); gardenButton.onclick = () => openGarden();
 let state: Save | null = null, saved: Save | null = null, preview: AvatarPreview | null = null;
 let selected = 0, pendingImport: Save | null = null, toastTimer: ReturnType<typeof setTimeout>, modalOpener: HTMLElement | null = null;
 let battle: { encounter: Encounter; id: string; round: number; score: number; result: ReturnType<typeof grantReward> | null } | null = null;
@@ -45,6 +51,42 @@ function refresh() {
   audio.music = s.settings.music; audio.effects = s.settings.sound;
 }
 function syncAvatar() { if (state) world.setAvatar(state.character, state.outfit, state.weapon, state.outfits[state.outfit], state.weapons[state.weapon], state.ride, state.pet, state.hairstyle, state.face); }
+function openGarden() {
+  if (!state) return;
+  const s = state, garden = gardenOf(s), seeds = garden.rescued - garden.flowers.filter(f => f >= 0).length;
+  openModal(title('구름양의 선물', '나의 작은 화단') + `<p>양들을 똑같이 나눠 집에 데려다주면 꽃씨를 받아요. 꽃은 기다리지 않아도 바로 피어나요!</p><p class="garden-progress">🐑 구출 ${garden.rescued} / 3 · 🌱 남은 꽃씨 ${seeds}개</p><div class="flower-plots">${garden.flowers.map((f, i) => `<button class="flower-plot" data-plot="${i}" aria-label="${i + 1}번 화단 ${f < 0 ? '꽃 심기' : '꽃 바꾸기'}"><span>${f < 0 ? '🌱' : FLOWERS[f]}</span>${f < 0 ? '꽃 심기' : '꽃 바꾸기'}</button>`).join('')}</div><p id="garden-message" role="status">${garden.rescued === 3 ? '🏅 구름양 지킴이! 세 가지 구출을 모두 해냈어요.' : '첫 번째 구출부터 차근차근 도전해요.'}</p><button id="rescue-start" class="primary wide">${garden.rescued < 3 ? `🐑 ${RESCUES[garden.rescued].name} 구하러 가기` : '🐑 다시 나눠 보기 (연습)'}</button>`, 'garden-modal');
+  $('#rescue-start').onclick = () => openRescue(garden.rescued < 3 ? garden.rescued : 0);
+  document.querySelectorAll<HTMLButtonElement>('[data-plot]').forEach(button => button.onclick = () => {
+    const slot = Number(button.dataset.plot);
+    if (garden.flowers[slot] < 0 && !seeds) { $('#garden-message').textContent = '양들을 구하면 꽃씨를 받을 수 있어요! 아래 구출 버튼을 눌러 주세요.'; return; }
+    openModal(title('내가 고르는 꽃', `${slot + 1}번 화단 꾸미기`) + `<p>좋아하는 꽃을 골라요. 나중에 무료로 바꿀 수도 있어요.</p><div class="flower-plots">${FLOWERS.map((flower, i) => `<button class="flower-plot" data-flower="${i}"><span>${flower}</span>${['튤립', '해바라기', '벚꽃'][i]}</button>`).join('')}</div><button id="garden-back" class="secondary wide">화단으로 돌아가기</button>`, 'garden-modal');
+    $('#garden-back').onclick = openGarden;
+    document.querySelectorAll<HTMLButtonElement>('[data-flower]').forEach(b => b.onclick = () => { if (plantFlower(s, slot, Number(b.dataset.flower))) { persist(); audio.play('berry'); openGarden(); } });
+  });
+}
+function openRescue(round: number) {
+  if (!state) return;
+  const s = state, quest = RESCUES[round], pens = Array<number>(quest.groups).fill(0);
+  openModal(title('구름양 구출 작전', quest.name) + `<p>${quest.story}</p><p class="garden-progress">양 ${quest.total}마리 ÷ 우리 ${quest.groups}개 = 우리마다 몇 마리?</p><div id="sheep-meadow" class="sheep-meadow" aria-label="남은 양"></div><p>우리의 <b>한 마리 데려오기</b>를 눌러요. 잘못 넣으면 돌려보낼 수 있어요.</p><div class="sheep-pens">${pens.map((_, i) => `<section class="sheep-pen"><h3>${i + 1}번 우리 <span id="pen-count-${i}"></span></h3><div id="pen-sheep-${i}" class="pen-flock"></div><button data-add="${i}" class="secondary">한 마리 데려오기</button><button data-undo="${i}" class="text-button">한 마리 돌려보내기</button></section>`).join('')}</div><p id="rescue-message" role="status" aria-live="polite">모든 우리에 같은 수의 양을 넣어 주세요.</p><button id="rescue-check" class="primary wide">모두 집에 도착했나요?</button><button id="rescue-hint" class="text-button">💡 도움이 필요해요</button><button id="rescue-back" class="text-button">화단으로 돌아가기</button>`, 'garden-modal');
+  const draw = () => {
+    const remaining = quest.total - pens.reduce((a, b) => a + b, 0);
+    $('#sheep-meadow').textContent = `${'🐑'.repeat(remaining)} ${remaining ? `남은 양 ${remaining}마리` : '모두 우리에 들어갔어요!'}`;
+    pens.forEach((n, i) => { $(`#pen-count-${i}`).textContent = `${n}마리`; $(`#pen-sheep-${i}`).textContent = '🐑'.repeat(n); });
+    document.querySelectorAll<HTMLButtonElement>('[data-add]').forEach(b => b.disabled = remaining === 0);
+    document.querySelectorAll<HTMLButtonElement>('[data-undo]').forEach(b => b.disabled = pens[Number(b.dataset.undo)] === 0);
+  };
+  document.querySelectorAll<HTMLButtonElement>('[data-add]').forEach(b => b.onclick = () => { if (pens.reduce((a, n) => a + n, 0) < quest.total) pens[Number(b.dataset.add)]++; draw(); });
+  document.querySelectorAll<HTMLButtonElement>('[data-undo]').forEach(b => b.onclick = () => { const i = Number(b.dataset.undo); if (pens[i]) pens[i]--; draw(); });
+  $('#rescue-hint').onclick = () => { $('#rescue-message').textContent = `우리 ${quest.groups}개에 한 마리씩 차례대로 넣어 보세요. 한 바퀴 돌 때마다 ${quest.groups}마리가 집에 가요!`; };
+  $('#rescue-back').onclick = openGarden;
+  $('#rescue-check').onclick = () => {
+    if (!pens.every(n => n === quest.total / quest.groups)) { $('#rescue-message').textContent = pens.reduce((a, n) => a + n, 0) < quest.total ? '아직 들판에 양이 남아 있어요. 모두 집으로 데려가 볼까요?' : '양들이 들어간 수가 달라요. 많은 우리에서 적은 우리로 옮겨 보세요!'; return; }
+    const rewarded = rescueSheep(s, round, pens); persist(); audio.play('level'); world.celebrate();
+    openModal(title('모두 무사히 돌아왔어요!', '구출 성공!') + `<div class="rescue-success">🐑 🌷 🐑</div><p class="garden-progress">${quest.total} ÷ ${quest.groups} = ${quest.total / quest.groups}</p><p>우리마다 ${quest.total / quest.groups}마리씩! ${rewarded ? '고마운 양들이 꽃씨 1개를 선물했어요.' : '다시 한번 똑같이 나누는 데 성공했어요! 연습에서는 꽃씨를 더 받지 않아요.'}</p><button id="rescue-reward" class="primary wide">내 화단으로 가기 🌱</button>`, 'garden-modal');
+    $('#rescue-reward').onclick = openGarden;
+  };
+  draw();
+}
 function closeModal() { preview?.dispose(); preview = null; $('#modal').classList.remove('shop-modal'); ($('#modal') as HTMLDialogElement).close(); if (world!) { world.paused = !state; world.clearInput(); } if (modalOpener?.isConnected && !modalOpener.closest('[hidden]')) modalOpener.focus(); }
 function openModal(html: string, cls = '') {
   preview?.dispose(); preview = null; if (world!) { world.paused = true; world.clearInput(); }
