@@ -36,7 +36,7 @@ function weaponExplanation(id: number, level = 0) { const item = WEAPONS[id], po
 function toast(message: string) { $('#toast').textContent = message; $('#toast').classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => $('#toast').classList.remove('show'), 3500); }
 function persist() {
   if (!state) return;
-  const p = world.player.position; state.position = { x: p.x, z: p.z };
+  if (!world.inRoom) { const p = world.player.position; state.position = { x: p.x, z: p.z }; }
   try { localStorage.setItem(STORAGE, JSON.stringify(state)); saved = structuredClone(state); } catch { if (!storageError) toast('자동 저장 공간이 부족해요. 설정에서 저장 파일을 내려받아 주세요.'); storageError = true; }
 }
 function refresh() {
@@ -87,9 +87,9 @@ function openRescue(round: number) {
   };
   draw();
 }
-function closeModal() { preview?.dispose(); preview = null; $('#modal').classList.remove('shop-modal'); ($('#modal') as HTMLDialogElement).close(); if (world!) { world.paused = !state; world.clearInput(); } if (modalOpener?.isConnected && !modalOpener.closest('[hidden]')) modalOpener.focus(); }
+function closeModal() { preview?.dispose(); preview = null; $('#modal').classList.remove('shop-modal'); ($('#modal') as HTMLDialogElement).close(); if (world!) { world.setPaused(!state); world.clearInput(); } if (modalOpener?.isConnected && !modalOpener.closest('[hidden]')) modalOpener.focus(); }
 function openModal(html: string, cls = '') {
-  preview?.dispose(); preview = null; if (world!) { world.paused = true; world.clearInput(); }
+  preview?.dispose(); preview = null; if (world!) { world.setPaused(true); world.clearInput(); }
   const dialog = $('#modal') as HTMLDialogElement; if (!dialog.open) modalOpener = document.activeElement as HTMLElement;
   dialog.className = cls; $('#modal-content').innerHTML = html; if (!dialog.open) dialog.showModal();
   $('#modal-content').querySelectorAll<HTMLElement>('[data-close]').forEach(el => el.onclick = () => { if (battle) exitBattle(); else closeModal(); });
@@ -98,7 +98,7 @@ function title(kicker: string, name: string) { return `<div class="modal-heading
 ($('#modal') as HTMLDialogElement).addEventListener('cancel', e => { e.preventDefault(); if (battle) exitBattle(); else closeModal(); });
 
 function showStart() {
-  if (world!) { world.active = false; world.paused = true; } $('#hud').hidden = true; $('#start-screen').hidden = false;
+  if (world!) { world.setActive(false); } $('#hud').hidden = true; $('#start-screen').hidden = false;
   $('#start-screen').innerHTML = `<section class="welcome-card"><div class="logo-mark">✿</div><span class="eyebrow">작은 모험, 자라는 생각</span><h1>베리숲<br><span>모험학교</span></h1><p class="intro">베리를 줍고, 나눗셈을 풀고.<br>나만의 모습으로 숲을 여행해요.</p><div id="start-avatar" class="start-avatar"></div><div class="character-picker" role="group" aria-label="캐릭터 선택">${CHARACTERS.map((c, i) => `<button class="character-choice ${i === selected ? 'selected' : ''}" data-character="${i}" aria-pressed="${i === selected}"><span class="character-dot" style="--hair:#${c.hair.toString(16)};--skin:#${c.skin.toString(16)}">${['✿', '●', '☾', '✦'][i]}</span>${c.name}</button>`).join('')}</div><p id="character-desc" class="subtle">${CHARACTERS[selected].desc} · 능력은 모두 같아요</p><label class="name-label" for="nickname-input">모험가의 이름</label><input id="nickname-input" maxlength="10" placeholder="닉네임을 적어 주세요" autocomplete="off"><p id="start-error" class="error" role="alert"></p><button class="primary start-button" id="new-game">${saved ? '새 모험 시작' : '숲으로 출발하기'} <span>→</span></button>${saved ? `<button class="secondary wide" id="continue">${escape(saved.nickname)} · Lv.${saved.level} 이어하기</button>` : ''}<button class="text-button" id="start-import">저장 파일 불러오기</button><small class="save-note">이 기기와 브라우저에 모험이 저장돼요</small></section><div class="start-world-caption"><span>❋</span> 오늘도, 새로운 모험이 기다려요</div>`;
   $('#start-avatar').innerHTML = `<span class="start-avatar-sticker">${['🌱', '🍄', '🌙', '☁️'][selected]}</span>`;
   document.querySelectorAll<HTMLButtonElement>('[data-character]').forEach(b => b.onclick = () => { selected = Number(b.dataset.character); document.querySelectorAll<HTMLButtonElement>('[data-character]').forEach(x => { x.classList.toggle('selected', x === b); x.setAttribute('aria-pressed', String(x === b)); }); $('#character-desc').textContent = `${CHARACTERS[selected].desc} · 능력은 모두 같아요`; $('#start-avatar').innerHTML = `<span class="start-avatar-sticker">${['🌱', '🍄', '🌙', '☁️'][selected]}</span>`; });
@@ -117,11 +117,11 @@ async function begin(s: Save, fresh: boolean) {
   try { await loadWorld(); } catch { $('#start-error').textContent = '3D 숲을 열지 못했어요. 최신 Chrome 또는 Edge에서 다시 시도해 주세요.'; if (launch) launch.disabled = false; return; }
   sessionExpired = false; sessionElapsed = 0; sessionCorrect = 0; sessionWrong = 0;
   closeModal(); state = s; preview?.dispose(); preview = null; $('#start-screen').hidden = true; $('#hud').hidden = false;
-  world.restore(s); world.active = true; world.paused = false; audio.music = s.settings.music; audio.effects = s.settings.sound; audio.start(); refresh(); persist();
+  world.restore(s); world.setActive(true); audio.music = s.settings.music; audio.effects = s.settings.sound; audio.start(); refresh(); persist();
   if (fresh) openGuide(); else toast(`${s.nickname}, 다시 만나 반가워요!`);
 }
 function showSessionSummary() {
-  if (!state) return; sessionExpired = false; world.paused = true; world.clearInput(); persist();
+  if (!state) return; sessionExpired = false; world.setPaused(true); world.clearInput(); persist();
   const mins = Math.floor(sessionElapsed / 60), secs = sessionElapsed % 60;
   openModal(title('오늘의 모험 정리', '오늘도 한 뼘 자랐어요!') + `<div class="arena-intro"><div class="arena-symbol">🌟</div><p>함께한 시간 <b>${mins}분 ${secs}초</b><br>맞힌 문제 <b>${sessionCorrect}개</b> · 다시 도전한 문제 <b>${sessionWrong}개</b><br>지금까지 모은 틀린 문제 <b>${state.learning.wrongQuestions.length}개</b></p><p class="note">모험과 학습 기록은 이 브라우저에 저장했어요.</p><button class="secondary wide" id="session-review">틀린 문제 다시 보기</button><button class="primary wide" id="session-finish">오늘은 여기까지</button></div>`);
   $('#session-review').onclick = () => openReview();
@@ -138,7 +138,7 @@ async function loadWorld() {
     world.onJump = () => audio.play('jump'); world.onRescue = () => toast('폭신한 길로 돌아왔어요. 다시 가 볼까요?');
     world.onNear = (name, id) => { $('#interact').hidden = !name; $('#interact').textContent = name ? id?.startsWith('tree') ? `${name} · F로 휘두르기` : `${name} · 대화하기 E` : ''; $('#touch-talk').textContent = name?.includes('슬라임') || name?.includes('요정') || name?.includes('토끼') || name?.includes('정령') ? '대련' : '대화'; };
     world.onAttack = id => { if (!state) return; if (!id) { audio.play('swing'); return; } const result = world.hitTree(id, treeDamage(state)); if (!result) return; audio.play('chop'); if (!result.fell) { toast(`통통! 나무가 흔들렸어요 · ${result.remaining}만큼 남았어요`); return; } const reward = (2 + Math.floor(Math.random() * 3)) as 2 | 3 | 4, value = fellTree(state, Number(id.slice(4)), reward); if (!value) return; audio.play('berry'); refresh(); persist(); toast(`🌳 나무를 베었어요! 🍓 +${value}베리`); };
-    world.onInteract = id => { if (!state) return; if (id.startsWith('tree')) world.attack(); else if (id === 'guide') openGuide(); else if (id === 'weapon' || id === 'outfit') openShop(id); else if (id === 'ride') openInventory('ride'); else if (id === 'pet') openPetShop(); else if (id === 'beauty') openBeauty(); else if (id === 'arena') openArena(); else if (id === 'journey') openStageMap(); else if (id === 'home') openRoom(); else if (id === 'next') openNextGate(); else { const huntId = Number(id.slice(7)); startBattle(stageMonsters(state.journey.stage)[huntId].type, false, id); } };
+    world.onInteract = id => { if (!state) return; if (id.startsWith('tree')) world.attack(); else if (id === 'guide') openGuide(); else if (id === 'weapon' || id === 'outfit') openShop(id); else if (id === 'ride') openInventory('ride'); else if (id === 'pet') openPetShop(); else if (id === 'beauty') openBeauty(); else if (id === 'arena') openArena(); else if (id === 'journey') openStageMap(); else if (id === 'room') { world.enterRoom(state); toast('나의 포근한 방에 도착했어요. 문으로 가면 마을로 돌아가요!'); } else if (id === 'roomDecor') openRoom(); else if (id === 'roomExit') { state.position = { x: 0, z: 8 }; world.loadStage(state, true); refresh(); persist(); toast('베리숲 마을로 돌아왔어요!'); } else if (id === 'village') switchStage(0); else if (id === 'next') openNextGate(); else { const huntId = Number(id.slice(7)); startBattle(stageMonsters(state.journey.stage)[huntId].type, false, id); } };
   } catch (e) {
     root.innerHTML = `<div class="fallback"><h1>숲을 그리지 못했어요</h1><p>3D 화면을 지원하는 최신 Chrome 또는 Edge에서 열어 주세요. 브라우저의 그래픽 가속이 켜져 있는지도 확인해 주세요.</p><button onclick="location.reload()">다시 열기</button></div>`; throw e;
   }
