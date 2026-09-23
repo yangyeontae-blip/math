@@ -6,6 +6,7 @@ type Entity = { id: string; name: string; x: number; z: number; mesh: T.Group; l
 const mat = (color: number, roughness = .86) => new T.MeshStandardMaterial({ color, roughness });
 const materials = new Map<number, T.MeshStandardMaterial>();
 const sharedGeometries = new Set<T.BufferGeometry>();
+const CAMERA_OFFSET = new T.Vector3(18, 25, 24);
 const sphereGeometry = new T.SphereGeometry(1, 12, 8); sharedGeometries.add(sphereGeometry);
 const particleGeometry = new T.OctahedronGeometry(.09); sharedGeometries.add(particleGeometry);
 const boxGeometries = new Map<string, T.BoxGeometry>(), cylinderGeometries = new Map<string, T.CylinderGeometry>();
@@ -210,22 +211,23 @@ export class World {
   private keys = new Set<string>(); private stick = { x: 0, z: 0 }; private clock = new T.Clock(); private time = 0; private vy = 0; private grounded = true;
   private particles: { mesh: T.Mesh; v: T.Vector3; life: number }[] = []; private lastSafe = new T.Vector3(0, 0, 8); private follow = new T.Vector3(0, 0, 1);
   private sun: T.DirectionalLight; private labelLayer: HTMLDivElement; private selectedId: string | null = null;
-  private swingUntil = 0; private rideIndex = -1; private petIndex = -1; private petModel: T.Group | null = null; private pauseRendered = false;
+  private swingUntil = 0; private rideIndex = -1; private petIndex = -1; private petModel: T.Group | null = null; private animationRunning = false;
   private rideAnimated: T.Object3D[] = []; private butterflies: T.Object3D[] = [];
   private tempProjection = new T.Vector3(); private tempTarget = new T.Vector3(); private tempWorld = new T.Vector3(); private cameraTarget = new T.Vector3();
   active = false; paused = true; onCollect = (_id: number) => {}; onInteract = (_id: string) => {}; onAttack = (_id: string | null) => {}; onNear = (_name: string | null, _id: string | null) => {}; onJump = () => {}; onRescue = () => {};
   constructor(private container: HTMLElement) {
     this.scene.background = new T.Color(0xc5e5d4); this.scene.fog = new T.Fog(0xc5e5d4, 55, 105);
-    this.renderer = new T.WebGLRenderer({ antialias: true, alpha: false, powerPreference: 'high-performance' }); this.renderer.setPixelRatio(Math.min(devicePixelRatio, 1.35)); this.renderer.shadowMap.enabled = true; this.renderer.shadowMap.type = T.PCFSoftShadowMap; this.renderer.outputColorSpace = T.SRGBColorSpace; this.renderer.toneMapping = T.ACESFilmicToneMapping; this.renderer.toneMappingExposure = 1.35; container.append(this.renderer.domElement);
+    const touchDevice = matchMedia('(pointer: coarse)').matches;
+    this.renderer = new T.WebGLRenderer({ antialias: !touchDevice, alpha: false, powerPreference: 'high-performance' }); this.renderer.setPixelRatio(Math.min(devicePixelRatio, touchDevice ? 1 : 1.25)); this.renderer.shadowMap.enabled = true; this.renderer.shadowMap.type = T.PCFSoftShadowMap; this.renderer.outputColorSpace = T.SRGBColorSpace; this.renderer.toneMapping = T.ACESFilmicToneMapping; this.renderer.toneMappingExposure = 1.35; container.append(this.renderer.domElement);
     this.camera = new T.OrthographicCamera(-18, 18, 14, -14, .1, 140);
     this.scene.add(new T.HemisphereLight(0xe9fbff, 0x6f9450, 2.2)); this.sun = new T.DirectionalLight(0xffefd2, 3.1); this.sun.position.set(-15, 30, 15); this.sun.castShadow = true; this.sun.shadow.mapSize.set(1024, 1024); Object.assign(this.sun.shadow.camera, { left: -34, right: 34, top: 32, bottom: -30, far: 85 }); this.sun.shadow.normalBias = .06; this.scene.add(this.sun);
     this.labelLayer = document.createElement('div'); this.labelLayer.className = 'world-labels'; container.append(this.labelLayer);
     this.buildVillage(); this.setAvatar(0, 0, 0); this.player.position.set(0, 0, 8); this.scene.add(this.player);
-    window.addEventListener('resize', () => this.resize()); this.resize();
-    document.addEventListener('visibilitychange', () => this.renderer.setAnimationLoop(document.hidden ? null : () => this.frame()));
+    window.addEventListener('resize', () => { this.resize(); this.renderOnce(); }); this.resize();
+    document.addEventListener('visibilitychange', () => { if (document.hidden) this.clearInput(); this.syncAnimation(); });
     window.addEventListener('keydown', e => { if (!this.active || this.paused || /INPUT|TEXTAREA|SELECT/.test((e.target as HTMLElement).tagName)) return; if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' '].includes(e.key)) e.preventDefault(); this.keys.add(e.key.toLowerCase()); if (!e.repeat && e.code === 'Space') this.jump(); if (!e.repeat && e.key.toLowerCase() === 'e') this.interact(); if (!e.repeat && e.key.toLowerCase() === 'f') this.attack(); });
-    window.addEventListener('keyup', e => this.keys.delete(e.key.toLowerCase())); window.addEventListener('blur', () => this.clearInput()); document.addEventListener('visibilitychange', () => this.clearInput());
-    this.renderer.setAnimationLoop(() => this.frame());
+    window.addEventListener('keyup', e => this.keys.delete(e.key.toLowerCase())); window.addEventListener('blur', () => this.clearInput());
+    this.renderOnce();
   }
   private buildVillage() {
     box(this.scene, 0x8cbc65, 0, -.55, 0, 51, 1.1, 41); box(this.scene, 0x719d55, 0, -1.3, 0, 50, .5, 40);
@@ -347,8 +349,16 @@ export class World {
     if (pet >= 0 && PETS[pet]) { this.petModel = makePet(pet); this.player.add(this.petModel); }
   }
   private disposeModel(g: T.Group) { g.traverse(o => { if (o instanceof T.Mesh && !sharedGeometries.has(o.geometry)) o.geometry.dispose(); }); }
+  setActive(active: boolean) { this.active = active; this.paused = !active; if (!active) this.clearInput(); this.syncAnimation(); }
+  setPaused(paused: boolean) { this.paused = paused; if (paused) this.clearInput(); this.syncAnimation(); }
+  private syncAnimation() {
+    const shouldRun = this.active && !this.paused && !document.hidden;
+    if (shouldRun && !this.animationRunning) { this.animationRunning = true; this.clock.start(); this.renderer.setAnimationLoop(() => this.frame()); }
+    else if (!shouldRun && this.animationRunning) { this.animationRunning = false; this.renderer.setAnimationLoop(null); if (!document.hidden) this.renderOnce(); }
+  }
+  private renderOnce() { if (!document.hidden) this.renderer.render(this.scene, this.camera); }
   restore(s: Save) { this.setAvatar(s.character, s.outfit, s.weapon, s.outfits[s.outfit], s.weapons[s.weapon], s.ride, s.pet, s.hairstyle, s.face); this.loadStage(s); this.quality(s.settings.lowQuality); }
-  quality(low: boolean) { this.renderer.setPixelRatio(Math.min(devicePixelRatio, low ? 1 : 1.25)); this.renderer.shadowMap.enabled = !low; this.sun.castShadow = !low; }
+  quality(low: boolean) { const touchDevice = matchMedia('(pointer: coarse)').matches; this.renderer.setPixelRatio(Math.min(devicePixelRatio, low || touchDevice ? 1 : 1.25)); this.renderer.shadowMap.enabled = !low; this.sun.castShadow = !low; }
   clearInput() { this.keys.clear(); this.stick = { x: 0, z: 0 }; }
   moveStick(x: number, z: number) { this.stick = { x, z }; }
   jump() { if (this.active && !this.paused && this.grounded) { this.vy = 7.4; this.grounded = false; this.onJump(); } }
@@ -366,9 +376,7 @@ export class World {
   private water(x: number, z: number) { return x > 15.25 && x < 22.75 && z > 2.75 && z < 13.25; }
   private resize() { const w = this.container.clientWidth, h = this.container.clientHeight; const span = w < 700 ? 13 : 14.5; this.camera.left = -span * w / h; this.camera.right = span * w / h; this.camera.top = span; this.camera.bottom = -span; this.camera.updateProjectionMatrix(); this.renderer.setSize(w, h); }
   private frame() {
-    if (document.hidden) return;
-    if (this.paused || !this.active) { if (this.pauseRendered) return; this.pauseRendered = true; }
-    else this.pauseRendered = false;
+    if (document.hidden || this.paused || !this.active) return;
     const dt = Math.min(this.clock.getDelta(), .04); this.time += dt;
     const p = this.player.position;
     if (this.active && !this.paused) {
@@ -433,7 +441,7 @@ export class World {
     if (this.player.userData.sparkles) this.player.userData.sparkles.rotation.y += dt;
     for (let i = this.particles.length - 1; i >= 0; i--) { const q = this.particles[i]; q.life -= dt; q.v.y -= dt * 5; q.mesh.position.addScaledVector(q.v, dt); q.mesh.scale.setScalar(Math.max(0, q.life)); if (q.life <= 0) { this.scene.remove(q.mesh); this.particles.splice(i, 1); } }
     const target = this.active ? p : this.cameraTarget.set(0, 0, -1); this.follow.lerp(target, 1 - Math.exp(-dt * 3));
-    this.camera.position.copy(this.follow).add(new T.Vector3(18, 25, 24)); this.camera.lookAt(this.follow); this.renderer.render(this.scene, this.camera);
+    this.camera.position.copy(this.follow).add(CAMERA_OFFSET); this.camera.lookAt(this.follow); this.renderer.render(this.scene, this.camera);
   }
 }
 
