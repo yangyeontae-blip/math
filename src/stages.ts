@@ -11,6 +11,10 @@ export const STAGES = [
   { name: '무지개 꽃섬', subtitle: '열 번의 모험이 꽃피는 마지막 섬', ground: 0xa2ce8c, foliage: 0xdca1ca, sky: 0xe0e8f3, accent: 0xf2d4b1, theme: 'rainbow' },
 ] as const;
 export function stageSize(stage: number) { return stage === 0 ? { x: 25, z: 20 } : { x: 38 + stage, z: 32 + stage }; }
+// The pond exists only in the village. Hunt maps reuse these coordinates as safe paths.
+export function isVillagePond(stage: number, x: number, z: number) {
+  return stage === 0 && x > 15.25 && x < 22.75 && z > 2.75 && z < 13.25;
+}
 export function stageMonsters(stage: number) {
   if (stage === 0) return [[-11, 5], [-9, 11], [-15, 1], [15, -15]].map(([x, z], i) => ({ x, z, type: i }));
   const positions = [[-16, 14], [12, 10], [-23, 0], [24, -4], [-12, -14], [10, -18], [-25, -21], [25, -23], [0, -27]];
