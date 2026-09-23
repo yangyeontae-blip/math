@@ -1,4 +1,15 @@
 .garden-entry { width: 100%; margin-top: 12px; min-height: 44px; white-space: normal; }
+#expedition { background: linear-gradient(140deg, #f4e5fb, #e4eafc); color: #645383; border: 2px solid #fffaf0; }
+.star-label { background: #fff4c8ed; color: #745b31; border-color: #fffdf0; }
+.expedition-note { padding: 13px 15px; border: 2px solid #e7d9f1; border-radius: 16px; background: #f8f1ff; color: #62547b; }
+.expedition-note small { color: #7d7190; }
+.title-heading { margin: 20px 0 9px; font-size: 1.04rem; }
+.title-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.title-list button { min-height: 57px; padding: 8px 10px; border-radius: 12px; text-align: left; }
+.title-list button.selected { background: #ddd2f3; color: #554576; outline: 2px solid #9c8ac5; }
+.title-list small { display: block; font-size: .72rem; font-weight: 600; }
+.expedition-story { margin: 10px 0; padding: 11px 13px; border-radius: 13px; background: #f2ecff; color: #594d7b; font-size: .93rem; font-weight: 800; }
+@media(max-width: 600px) { .title-list { grid-template-columns: 1fr; } .expedition-story { font-size: .82rem; } }
 dialog.garden-modal { width: min(760px, calc(100vw - 24px)); max-height: calc(100dvh - 32px); overflow-y: auto; }
 .garden-modal p { line-height: 1.65; }
 .garden-progress { padding: 12px; border-radius: 14px; background: #eaf4df; color: #304f2c; font-weight: 700; text-align: center; }
