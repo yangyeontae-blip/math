@@ -144,7 +144,7 @@ function makePet(id: number) {
   // Original cozy-fantasy companion details: a tiny gem collar, travel pouch and glowing charm.
   const collar = mesh(new T.TorusGeometry(.2, .025, 5, 16), 0xf4d478, 0, .48, .18, g); collar.rotation.x = Math.PI / 2;
   box(g, 0x9b7653, -.3, .34, -.08, .18, .23, .1); const charm = mesh(new T.OctahedronGeometry(.065), id > 2 ? 0xbbeeff : 0xffd788, 0, .38, .43, g); charm.userData.petCharm = true;
-  g.position.set(-1.05, .02, -.7); g.userData.petModel = true; return g;
+  g.position.set(-1.05, .02, -.7); g.userData.petModel = true; g.userData.petBody = g.children[0]; return g;
 }
 
 export class World {
@@ -154,7 +154,7 @@ export class World {
   private keys = new Set<string>(); private stick = { x: 0, z: 0 }; private clock = new T.Clock(); private time = 0; private vy = 0; private grounded = true;
   private particles: { mesh: T.Mesh; v: T.Vector3; life: number }[] = []; private lastSafe = new T.Vector3(0, 0, 8); private follow = new T.Vector3(0, 0, 1);
   private sun: T.DirectionalLight; private labelLayer: HTMLDivElement; private selectedId: string | null = null;
-  private swingUntil = 0; private rideIndex = -1; private petIndex = -1; private petModel: T.Group | null = null;
+  private swingUntil = 0; private rideIndex = -1; private petIndex = -1; private petModel: T.Group | null = null; private pauseRendered = false;
   private tempProjection = new T.Vector3(); private tempTarget = new T.Vector3(); private tempWorld = new T.Vector3(); private cameraTarget = new T.Vector3();
   active = false; paused = true; onCollect = (_id: number) => {}; onInteract = (_id: string) => {}; onAttack = (_id: string | null) => {}; onNear = (_name: string | null, _id: string | null) => {}; onJump = () => {}; onRescue = () => {};
   constructor(private container: HTMLElement) {
@@ -165,6 +165,7 @@ export class World {
     this.labelLayer = document.createElement('div'); this.labelLayer.className = 'world-labels'; container.append(this.labelLayer);
     this.buildVillage(); this.setAvatar(0, 0, 0); this.player.position.set(0, 0, 8); this.scene.add(this.player);
     window.addEventListener('resize', () => this.resize()); this.resize();
+    document.addEventListener('visibilitychange', () => this.renderer.setAnimationLoop(document.hidden ? null : () => this.frame()));
     window.addEventListener('keydown', e => { if (!this.active || this.paused || /INPUT|TEXTAREA|SELECT/.test((e.target as HTMLElement).tagName)) return; if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' '].includes(e.key)) e.preventDefault(); this.keys.add(e.key.toLowerCase()); if (!e.repeat && e.code === 'Space') this.jump(); if (!e.repeat && e.key.toLowerCase() === 'e') this.interact(); if (!e.repeat && e.key.toLowerCase() === 'f') this.attack(); });
     window.addEventListener('keyup', e => this.keys.delete(e.key.toLowerCase())); window.addEventListener('blur', () => this.clearInput()); document.addEventListener('visibilitychange', () => this.clearInput());
     this.renderer.setAnimationLoop(() => this.frame());
@@ -308,6 +309,9 @@ export class World {
   private water(x: number, z: number) { return x > 15.25 && x < 22.75 && z > 2.75 && z < 13.25; }
   private resize() { const w = this.container.clientWidth, h = this.container.clientHeight; const span = w < 700 ? 13 : 14.5; this.camera.left = -span * w / h; this.camera.right = span * w / h; this.camera.top = span; this.camera.bottom = -span; this.camera.updateProjectionMatrix(); this.renderer.setSize(w, h); }
   private frame() {
+    if (document.hidden) return;
+    if (this.paused || !this.active) { if (this.pauseRendered) return; this.pauseRendered = true; }
+    else this.pauseRendered = false;
     const dt = Math.min(this.clock.getDelta(), .04); this.time += dt;
     const p = this.player.position;
     if (this.active && !this.paused) {
@@ -333,9 +337,12 @@ export class World {
         else this.tempTarget.set(-1.05, .12, -.7);
         const turnX = this.tempTarget.x - this.petModel.position.x, turnZ = this.tempTarget.z - this.petModel.position.z;
         if (Math.hypot(turnX, turnZ) > .04) this.petModel.rotation.y = Math.atan2(turnX, turnZ);
-        this.petModel.position.lerp(this.tempTarget, 1 - Math.exp(-dt * (target ? 7.5 : 4.5)));
-        this.petModel.position.y += Math.sin(this.time * 8) * .012;
-        if (target && this.petModel.getWorldPosition(this.tempWorld).distanceTo(target.mesh.position) < .55) { target.mesh.visible = false; this.burst(target.mesh.position, 0xff9fb4, 6); this.onCollect(target.id); }
+        this.petModel.position.lerp(this.tempTarget, 1 - Math.exp(-dt * (target ? 3.8 : 2.6)));
+        const petMoving = Math.hypot(turnX, turnZ) > .06;
+        this.petModel.position.y = .02 + (petMoving ? Math.abs(Math.sin(this.time * 12)) * .11 : Math.sin(this.time * 2.4) * .025);
+        const petBody = this.petModel.userData.petBody as T.Object3D | undefined;
+        if (petBody) { petBody.scale.y = target && this.petModel.getWorldPosition(this.tempWorld).distanceTo(target.mesh.position) < .9 ? .78 + Math.abs(Math.sin(this.time * 13)) * .35 : petMoving ? .9 + Math.abs(Math.sin(this.time * 11)) * .15 : 1; }
+        if (target && this.petModel.getWorldPosition(this.tempWorld).distanceTo(target.mesh.position) < .55 && target.mesh.visible) { target.mesh.visible = false; this.burst(target.mesh.position, 0xff9fb4, 6); this.onCollect(target.id); }
       }
     }
     for (const c of this.coins) { c.mesh.rotation.y += dt; c.mesh.position.y = c.y + Math.sin(this.time * 2.8 + c.mesh.position.x) * .12; }

@@ -73,12 +73,15 @@ export const FACES = [
 export const WEAPON_UPGRADES = [60, 120, 240];
 export const OUTFIT_UPGRADES = [50, 100];
 export interface Save {
-  version: 5; nickname: string; character: number; berries: number; level: number; xp: number;
+  version: 6; nickname: string; character: number; berries: number; level: number; xp: number;
   weapon: number; outfit: number; weapons: Record<string, number>; outfits: Record<string, number>;
   ride: number; rides: Record<string, boolean>; pet: number; pets: Record<string, boolean>;
   hairstyle: number; hairstyles: Record<string, boolean>; face: number; faces: Record<string, boolean>; teacherMode: boolean;
   best: number; position: { x: number; z: number }; tutorial: { collected: boolean; battle: boolean; shop: boolean };
-  settings: { music: boolean; sound: boolean; lowQuality: boolean };
+  settings: { music: boolean; sound: boolean; lowQuality: boolean; maxDividend: 0 | 90 | 180; sessionMinutes: number };
+  learning: { elapsedSeconds: number; correct: number; wrong: number; wrongQuestions: Question[] };
+  discoveries: { monsters: number[]; pets: number[]; outfits: number[] };
+  room: { furniture: number[] };
   journey: { stage: number; maps: { berries: number[]; monsters: number[]; trees: number[]; cleared: boolean }[] };
 }
 export interface Question { dividend: number; divisor: number; answer: number }
@@ -96,7 +99,7 @@ export const STAGE_DIVISION_DIFFICULTY = [
 ] as const;
 export function newSave(nickname: string, character: number): Save {
   if (!nickname.trim() || [...nickname.trim()].length > 10 || !Number.isInteger(character) || character < 0 || character > 3) throw new Error('이름은 1~10자, 캐릭터는 4명 중 골라 주세요.');
-  return { version: 5, nickname: nickname.trim(), character, berries: 0, level: 1, xp: 0, weapon: 0, outfit: 0, weapons: { 0: 0 }, outfits: { 0: 0 }, ride: -1, rides: {}, pet: -1, pets: {}, hairstyle: 0, hairstyles: { 0: true }, face: 0, faces: { 0: true }, teacherMode: false, best: 0, position: { x: 0, z: 8 }, tutorial: { collected: false, battle: false, shop: false }, settings: { music: true, sound: true, lowQuality: false }, journey: emptyJourney() };
+  return { version: 6, nickname: nickname.trim(), character, berries: 0, level: 1, xp: 0, weapon: 0, outfit: 0, weapons: { 0: 0 }, outfits: { 0: 0 }, ride: -1, rides: {}, pet: -1, pets: {}, hairstyle: 0, hairstyles: { 0: true }, face: 0, faces: { 0: true }, teacherMode: false, best: 0, position: { x: 0, z: 8 }, tutorial: { collected: false, battle: false, shop: false }, settings: { music: true, sound: true, lowQuality: false, maxDividend: 0, sessionMinutes: 0 }, learning: { elapsedSeconds: 0, correct: 0, wrong: 0, wrongQuestions: [] }, discoveries: { monsters: [], pets: [], outfits: [0] }, room: { furniture: [] }, journey: emptyJourney() };
 }
 export function emptyJourney(): Save['journey'] { return { stage: 0, maps: Array.from({ length: 11 }, () => ({ berries: [], monsters: [], trees: [], cleared: false })) }; }
 export function canEnter(s: Save, stage: number) { return Number.isInteger(stage) && stage >= 0 && stage <= 10 && (s.teacherMode || stage <= 1 || s.journey.maps[stage - 1].cleared); }
@@ -105,6 +108,17 @@ export function collectBerry(s: Save, id: number) {
   if (!Number.isInteger(id) || !stageBerries(stage)[id] || map.berries.includes(id)) return 0;
   const value = berryValue(stage) + OUTFITS[s.outfit].berryBonus; map.berries.push(id); s.berries += value; s.tutorial.collected = true; return value;
 }
+export function recordWrongAnswer(s: Save, q: Question) {
+  s.learning.wrong++;
+  const key = `${q.dividend}/${q.divisor}`;
+  if (!s.learning.wrongQuestions.some(item => `${item.dividend}/${item.divisor}` === key)) s.learning.wrongQuestions.unshift({ ...q });
+  s.learning.wrongQuestions = s.learning.wrongQuestions.slice(0, 30);
+}
+export function recordCorrectAnswer(s: Save, monster: number) {
+  s.learning.correct++;
+  if (!s.discoveries.monsters.includes(monster)) s.discoveries.monsters.push(monster);
+}
+export const STAGE_STORIES = ['새싹 슬라임과 인사하고 들판의 봄빛을 되찾아요.', '버섯 요정의 길 안내를 받아 오솔길을 밝혀요.', '벚꽃 언덕에 흩어진 꽃잎 축제를 도와요.', '호숫가 친구들과 반짝이는 물길을 지켜요.', '도토리 정령과 숲의 가을 잔치를 준비해요.', '구름 정원의 바람 종을 다시 울려요.', '수정숲의 별빛 조각을 모아 길을 비춰요.', '눈꽃 산책길에 따뜻한 발자국을 남겨요.', '옛터의 돌기둥에 숨은 이야기를 찾아요.', '꽃섬 친구들과 무지개 축제를 열어요.'] as const;
 export function treeDamage(s: Save) { return WEAPONS[s.weapon].treePower + s.weapons[s.weapon]; }
 export function fellTree(s: Save, id: number, reward: 2 | 3 | 4) {
   const map = s.journey.maps[s.journey.stage];
@@ -119,17 +133,19 @@ export function finishHunt(s: Save, id: number) {
   if (stage > 0 && map.monsters.length === monsters.length && !map.cleared) { map.cleared = true; clearReward = clearBonus(stage) + OUTFITS[s.outfit].clearBonus; s.berries += clearReward; }
   return { ...reward, clearReward };
 }
-export function questionPool(level: number, stage = 0): Question[] {
+export function questionPool(level: number, stage = 0, maxDividend: 0 | 90 | 180 = 0): Question[] {
   const result: Question[] = [];
   const stageRule = stage > 0 ? STAGE_DIVISION_DIFFICULTY[Math.min(stage, 10) - 1] : null;
-  const maxDividend = stageRule?.maxDividend ?? (level < 4 ? 90 : level < 7 ? 120 : 180);
+  let dividendLimit: number = stageRule?.maxDividend ?? (level < 4 ? 90 : level < 7 ? 120 : 180);
+  if (maxDividend === 90 && dividendLimit >= 100) dividendLimit = 90;
+  if (maxDividend === 180) dividendLimit = Math.max(dividendLimit, 180);
   const maxAnswer = stageRule?.maxAnswer ?? (level < 4 ? 9 : Number.POSITIVE_INFINITY);
-  for (let n = 10; n <= maxDividend; n += 10) for (let d = 2; d <= 9; d++) if (n % d === 0 && n / d <= maxAnswer) result.push({ dividend: n, divisor: d, answer: n / d });
+  for (let n = 10; n <= dividendLimit; n += 10) for (let d = 2; d <= 9; d++) if (n % d === 0 && n / d <= maxAnswer) result.push({ dividend: n, divisor: d, answer: n / d });
   return result;
 }
 const recentQuestions: string[] = [];
-export function pickQuestion(level: number, previous?: Question, stage = 0): Question {
-  const all = questionPool(level, stage), blocked = new Set(recentQuestions.slice(-Math.min(8, Math.floor(all.length / 2))));
+export function pickQuestion(level: number, previous?: Question, stage = 0, maxDividend: 0 | 90 | 180 = 0): Question {
+  const all = questionPool(level, stage, maxDividend), blocked = new Set(recentQuestions.slice(-Math.min(8, Math.floor(all.length / 2))));
   let pool = all.filter(q => `${q.dividend}/${q.divisor}` !== `${previous?.dividend}/${previous?.divisor}` && !blocked.has(`${q.dividend}/${q.divisor}`));
   if (!pool.length) pool = all;
   const picked = pool[Math.floor(Math.random() * pool.length)]; recentQuestions.push(`${picked.dividend}/${picked.divisor}`); if (recentQuestions.length > 16) recentQuestions.shift(); return picked;
@@ -191,6 +207,7 @@ export function applyTeacherCode(s: Save, code: string): string {
   if (code !== 'teacher') throw new Error('암호코드가 맞지 않아요.');
   s.teacherMode = true; s.berries = 1_000_000;
   WEAPONS.forEach((_, id) => { s.weapons[id] = 3; }); OUTFITS.forEach((_, id) => { s.outfits[id] = 2; }); RIDES.forEach((_, id) => { s.rides[id] = true; }); PETS.forEach((_, id) => { s.pets[id] = true; }); HAIRSTYLES.forEach((_, id) => { s.hairstyles[id] = true; }); FACES.forEach((_, id) => { s.faces[id] = true; });
+  s.discoveries.monsters = MONSTERS.map((_, id) => id); s.discoveries.pets = PETS.map((_, id) => id); s.discoveries.outfits = OUTFITS.map((_, id) => id);
   return '선생님 모드가 열렸어요! 모든 아이템과 스테이지를 사용할 수 있어요.';
 }
 export function validateSave(value: unknown): Save {
@@ -202,9 +219,16 @@ export function validateSave(value: unknown): Save {
   if (migrated.version === 3) { migrated.version = 4; migrated.ride = -1; migrated.rides = {}; migrated.teacherMode = false; }
   if (migrated.version === 4 && migrated.teacherMode === undefined) migrated.teacherMode = false;
   if (migrated.version === 4) { migrated.version = 5; migrated.pet = -1; migrated.pets = {}; migrated.hairstyle = 0; migrated.hairstyles = { 0: true }; migrated.face = 0; migrated.faces = { 0: true }; }
+  if (migrated.version === 5) {
+    migrated.version = 6;
+    migrated.settings = { ...(migrated.settings as object), maxDividend: 0, sessionMinutes: 0 };
+    migrated.learning = { elapsedSeconds: 0, correct: 0, wrong: 0, wrongQuestions: [] };
+    migrated.discoveries = { monsters: [], pets: Object.keys(migrated.pets as object).map(Number), outfits: Object.keys(migrated.outfits as object).map(Number) };
+    migrated.room = { furniture: [] };
+  }
   const s = migrated as unknown as Save;
   const integer = (v: unknown, min: number, max: number): v is number => typeof v === 'number' && Number.isSafeInteger(v) && v >= min && v <= max;
-  if (s.version !== 5 || typeof s.teacherMode !== 'boolean' || typeof s.nickname !== 'string' || !s.nickname.trim() || [...s.nickname].length > 10 || !integer(s.character, 0, 3) || !integer(s.berries, 0, 1e9) || !integer(s.level, 1, 100000) || !integer(s.xp, 0, s.level * 40 - 1) || !integer(s.best, 0, 1e9)) return fail();
+  if (s.version !== 6 || typeof s.teacherMode !== 'boolean' || typeof s.nickname !== 'string' || !s.nickname.trim() || [...s.nickname].length > 10 || !integer(s.character, 0, 3) || !integer(s.berries, 0, 1e9) || !integer(s.level, 1, 100000) || !integer(s.xp, 0, s.level * 40 - 1) || !integer(s.best, 0, 1e9)) return fail();
   for (const [key, total, max] of [['weapons', WEAPONS.length, 3], ['outfits', OUTFITS.length, 2]] as const) {
     const map = s[key];
     if (!map || typeof map !== 'object' || Array.isArray(map) || !Object.hasOwn(map, '0')) return fail();
@@ -231,12 +255,15 @@ export function validateSave(value: unknown): Save {
   const bounds = stageSize(s.journey.stage);
   if (!s.position || !Number.isFinite(s.position.x) || !Number.isFinite(s.position.z) || Math.abs(s.position.x) > bounds.x || Math.abs(s.position.z) > bounds.z) return fail();
   if (!s.tutorial || ['collected', 'battle', 'shop'].some(k => typeof s.tutorial[k as keyof Save['tutorial']] !== 'boolean')) return fail();
-  if (!s.settings || ['music', 'sound', 'lowQuality'].some(k => typeof s.settings[k as keyof Save['settings']] !== 'boolean')) return fail();
+  if (!s.settings || ['music', 'sound', 'lowQuality'].some(k => typeof s.settings[k as keyof Save['settings']] !== 'boolean') || ![0, 90, 180].includes(s.settings.maxDividend) || !integer(s.settings.sessionMinutes, 0, 180)) return fail();
+  if (!s.learning || !integer(s.learning.elapsedSeconds, 0, 1e9) || !integer(s.learning.correct, 0, 1e9) || !integer(s.learning.wrong, 0, 1e9) || !Array.isArray(s.learning.wrongQuestions) || s.learning.wrongQuestions.length > 30 || s.learning.wrongQuestions.some(q => !integer(q.dividend, 10, 999) || !integer(q.divisor, 2, 9) || q.dividend % q.divisor || q.answer !== q.dividend / q.divisor)) return fail();
+  if (!s.discoveries || !s.room || !Array.isArray(s.room.furniture) || s.room.furniture.some(id => !integer(id, 0, 7))) return fail();
+  for (const [key, max] of [['monsters', MONSTERS.length], ['pets', PETS.length], ['outfits', OUTFITS.length]] as const) if (!Array.isArray(s.discoveries[key]) || s.discoveries[key].some(id => !integer(id, 0, max - 1))) return fail();
   return structuredClone(s);
 }
 export class Encounter {
   question: Question; solved = false; monster: number; arena: boolean; stage: number;
-  constructor(monster: number, arena: boolean, level: number, previous?: Question, stage = 0) { this.monster = monster; this.arena = arena; this.stage = stage; this.question = pickQuestion(level, previous, stage); }
+  constructor(monster: number, arena: boolean, level: number, previous?: Question, stage = 0, maxDividend: 0 | 90 | 180 = 0) { this.monster = monster; this.arena = arena; this.stage = stage; this.question = pickQuestion(level, previous, stage, maxDividend); }
   answer(value: string): 'correct' | 'wrong' | 'ignored' {
     if (this.solved) return 'ignored';
     if (!/^\d{1,2}$/.test(value) || Number(value) !== this.question.answer) return 'wrong';
