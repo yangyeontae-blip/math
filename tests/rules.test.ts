@@ -1,7 +1,15 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { questionPool, newSave, validateSave, buy, upgrade, buyRide, dismount, buyPet, buyLook, applyTeacherCode, enableTeacherMode, grantReward, rewardFor, Encounter, WEAPONS, OUTFITS, PETS, RIDES, HAIRSTYLES, FACES, MONSTERS, CHARACTERS, STAGE_DIVISION_DIFFICULTY, collectBerry, finishHunt, fellTree, treeDamage, canEnter, recordWrongAnswer, recordCorrectAnswer, PLAYER_MOVE_SPEED, petChaseSpeed } from '../src/rules.ts';
-import { stageBerries, stageMonsters, stageTrees, clearBonus, berryValue } from '../src/stages.ts';
+import { stageBerries, stageMonsters, stageTrees, clearBonus, berryValue, isVillagePond } from '../src/stages.ts';
+
+test('village pond never rescues a player on a hunt-stage path', () => {
+  assert.equal(isVillagePond(0, 19, 8), true);
+  for (let stage = 1; stage <= 10; stage++) {
+    assert.equal(isVillagePond(stage, 19, 8), false);
+  }
+  assert.equal(isVillagePond(0, 12, 8), false);
+});
 
 test('new characters start with their matching hairstyle unlocked', () => {
   for (const character of [0, 1, 2, 3]) {
