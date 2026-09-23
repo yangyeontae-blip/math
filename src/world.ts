@@ -270,7 +270,7 @@ export class World {
     for (const x of [-4.3, 4.3]) { cylinder(this.scene, 0xaca4b6, x, 1, -14, .38, .48, 2); ball(this.scene, 0xfbe5a2, x, 2.15, -14, .42); }
     this.addEntity('guide', '연태쌤 · 마을 대장', 1.8, 3, makeYeontae());
     this.addEntity('weapon', '강지후 · 무기 상점', -8, -3.8, makeCharacter(1, 6, 1));
-    this.addEntity('outfit', '오지후 · 의상 상점', 4.5, -3.8, makeCharacter(2, 4, 2));
+    this.addEntity('outfit', '오지후 · 의상 상점', -3, -3.8, makeCharacter(2, 4, 2));
     this.addEntity('ride', '나현이 · 라이딩 상점', 14, -5.5, makeCharacter(0, 10, 6));
     this.addEntity('pet', '윤준 · 펫 상점', 18.5, -3.5, makeCharacter(1, 12, 10));
     this.addEntity('beauty', '가영이 · 헤어와 성형', -15.5, -4.2, makeCharacter(2, 15, 2));
