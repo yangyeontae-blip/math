@@ -355,7 +355,7 @@ export class World {
     for (const x of [-1.35, 1.35]) box(this.scene, 0x9e795e, x, 1.25, 5.48, .2, 2.5, .25);
     box(this.scene, 0x9e795e, 0, 2.45, 5.48, 2.8, .2, .25);
     this.addEntity('roomExit', '마을로 돌아가기', 0, 4.2, this.gate(0x6eb7a1));
-    const sign = new T.Group(); box(sign, 0x9a754f, 0, 1, 0, 1.8, 1.5, .25); box(sign, 0xf2dfac, 0, 1.05, .16, 1.45, 1.1, .08); this.addEntity('roomDecor', '내 방 꾸미기', 3.7, -.2, sign);
+    const sign = new T.Group(); box(sign, 0x9a754f, 0, 1, 0, 1.8, 1.5, .25); box(sign, 0xf2dfac, 0, 1.05, .16, 1.45, 1.1, .08); this.addEntity('roomDecor', '내 방 꾸미기', 2.2, 1.2, sign);
     const spots = [[-4.8, -2.3], [-1.7, -2.3], [1.7, -2.3], [4.8, -2.3], [-4.8, 2], [-1.7, 2], [1.7, 2], [4.8, 2]] as const;
     for (const id of s.room.furniture) {
       const spot = spots[id]; if (!spot) continue;
