@@ -7,6 +7,7 @@ const mat = (color: number, roughness = .86) => new T.MeshStandardMaterial({ col
 const materials = new Map<number, T.MeshStandardMaterial>();
 const sharedGeometries = new Set<T.BufferGeometry>();
 const CAMERA_OFFSET = new T.Vector3(18, 25, 24);
+const ROOM_CAMERA_OFFSET = new T.Vector3(10, 18, 15);
 const sphereGeometry = new T.SphereGeometry(1, 12, 8); sharedGeometries.add(sphereGeometry);
 const particleGeometry = new T.OctahedronGeometry(.09); sharedGeometries.add(particleGeometry);
 const boxGeometries = new Map<string, T.BoxGeometry>(), cylinderGeometries = new Map<string, T.CylinderGeometry>();
@@ -223,7 +224,7 @@ export class World {
   private particles: { mesh: T.Mesh; v: T.Vector3; life: number }[] = []; private lastSafe = new T.Vector3(0, 0, 8); private follow = new T.Vector3(0, 0, 1);
   private sun: T.DirectionalLight; private labelLayer: HTMLDivElement; private selectedId: string | null = null;
   private swingUntil = 0; private rideIndex = -1; private petIndex = -1; private petModel: T.Group | null = null; private petTargetId: number | null = null; private animationRunning = false;
-  private rideAnimated: T.Object3D[] = []; private butterflies: T.Object3D[] = [];
+  private rideAnimated: T.Object3D[] = []; private butterflies: T.Object3D[] = []; private furnitureRoot: T.Group | null = null;
   private tempProjection = new T.Vector3(); private tempTarget = new T.Vector3(); private tempWorld = new T.Vector3(); private cameraTarget = new T.Vector3();
   active = false; paused = true; inRoom = false; onCollect = (_id: number) => {}; onInteract = (_id: string) => {}; onAttack = (_id: string | null) => {}; onNear = (_name: string | null, _id: string | null) => {}; onJump = () => {}; onRescue = () => {};
   constructor(private container: HTMLElement) {
@@ -271,7 +272,7 @@ export class World {
     for (const x of [-4.3, 4.3]) { cylinder(this.scene, 0xaca4b6, x, 1, -14, .38, .48, 2); ball(this.scene, 0xfbe5a2, x, 2.15, -14, .42); }
     this.addEntity('guide', '연태쌤 · 마을 대장', 1.8, 3, makeYeontae());
     this.addEntity('weapon', '강지후 · 무기 상점', -8, -3.8, makeCharacter(1, 6, 1));
-    this.addEntity('outfit', '오지후 · 의상 상점', -3, -3.8, makeCharacter(2, 4, 2));
+    this.addEntity('outfit', '오지후 · 의상 상점', -3.8, -7, makeCharacter(2, 4, 2));
     this.addEntity('ride', '나현이 · 라이딩 상점', 14, -5.5, makeCharacter(0, 10, 6));
     this.addEntity('pet', '윤준 · 펫 상점', 18.5, -3.5, makeCharacter(1, 12, 10));
     this.addEntity('beauty', '가영이 · 헤어와 성형', -15.5, -4.2, makeCharacter(2, 15, 2));
@@ -326,9 +327,10 @@ export class World {
   private clearMap() {
     this.selectedId = null; this.petTargetId = null; this.onNear(null, null); this.entities.forEach(e => e.label.remove()); this.entities = []; this.coins = []; this.colliders = [];
     for (const child of [...this.scene.children]) if (child !== this.player && child !== this.petModel && !(child instanceof T.Light)) this.scene.remove(child);
+    this.furnitureRoot = null;
   }
   loadStage(s: Save, fresh = false) {
-    this.clearInput(); this.clearMap(); this.inRoom = false; this.stage = s.journey.stage;
+    this.clearInput(); this.clearMap(); this.inRoom = false; s.room.inside = false; this.stage = s.journey.stage;
     this.scene.background = new T.Color(0xd0eade); this.scene.fog = new T.Fog(0xd0eade, 58, 112); this.platforms = stagePlatforms(this.stage);
     if (this.stage === 0) this.buildVillage(); else this.buildHunt(this.stage);
     const map = s.journey.maps[this.stage]; this.coins.forEach(c => c.mesh.visible = !map.berries.includes(c.id)); this.entities.forEach(e => { if (e.id.startsWith('monster')) e.mesh.visible = !map.monsters.includes(Number(e.id.slice(7))); if (e.id.startsWith('tree')) e.mesh.visible = !map.trees.includes(Number(e.id.slice(4))); });
@@ -336,18 +338,19 @@ export class World {
   }
   enterRoom(s: Save, preservePosition = false) {
     const roomPosition = preservePosition ? this.player.position.clone() : new T.Vector3(0, 0, 2.7);
-    this.clearInput(); this.clearMap(); this.inRoom = true; this.stage = 0; this.platforms = [];
+    this.clearInput(); this.clearMap(); this.inRoom = true; s.room.inside = true; this.stage = 0; this.platforms = [];
     this.scene.background = new T.Color(0xf1dfc5); this.scene.fog = new T.Fog(0xf1dfc5, 35, 65);
     box(this.scene, 0xa9845e, 0, -.58, 0, 15, 1.15, 12);
     box(this.scene, 0xd8bd94, 0, .02, 0, 14.4, .08, 11.4);
     box(this.scene, 0xf2d4c4, 0, 2.3, -5.8, 15, 4.6, .4);
-    box(this.scene, 0xe7c6b4, -7.3, 2.3, 0, .4, 4.6, 12);
-    box(this.scene, 0xe7c6b4, 7.3, 2.3, 0, .4, 4.6, 12);
-    box(this.scene, 0xe7c6b4, -4.9, 2.3, 5.8, 5.2, 4.6, .4);
-    box(this.scene, 0xe7c6b4, 4.9, 2.3, 5.8, 5.2, 4.6, .4);
+    // Low front and side walls let the camera see furniture inside the room.
+    box(this.scene, 0xe7c6b4, -7.3, .58, 0, .4, 1.16, 12);
+    box(this.scene, 0xe7c6b4, 7.3, .58, 0, .4, 1.16, 12);
+    box(this.scene, 0xe7c6b4, -4.9, .38, 5.8, 5.2, .76, .4);
+    box(this.scene, 0xe7c6b4, 4.9, .38, 5.8, 5.2, .76, .4);
     box(this.scene, 0x9e795e, 0, 4.55, -5.8, 15, .18, .48);
-    box(this.scene, 0x9e795e, -7.3, 4.55, 0, .48, .18, 12);
-    box(this.scene, 0x9e795e, 7.3, 4.55, 0, .48, .18, 12);
+    box(this.scene, 0x9e795e, -7.3, 1.19, 0, .48, .12, 12);
+    box(this.scene, 0x9e795e, 7.3, 1.19, 0, .48, .12, 12);
     box(this.scene, 0xc48676, 0, .09, 0, 8.4, .1, 5.6);
     box(this.scene, 0x9bd6df, 0, 2.7, -5.54, 3.3, 1.8, .08);
     box(this.scene, 0xf6e4a8, 0, 2.7, -5.46, .12, 1.9, .08);
@@ -357,10 +360,18 @@ export class World {
     box(this.scene, 0x9e795e, 0, 2.45, 5.48, 2.8, .2, .25);
     this.addEntity('roomExit', '마을로 돌아가기', 0, 4.2, this.gate(0x6eb7a1));
     const sign = new T.Group(); box(sign, 0x9a754f, 0, 1, 0, 1.8, 1.5, .25); box(sign, 0xf2dfac, 0, 1.05, .16, 1.45, 1.1, .08); this.addEntity('roomDecor', '내 방 꾸미기', 2.2, 1.2, sign);
+    this.furnitureRoot = new T.Group(); this.scene.add(this.furnitureRoot);
+    this.updateRoomFurniture(s, false);
+    this.player.position.copy(roomPosition); this.placePetNearPlayer(); this.lastSafe.copy(this.player.position); this.follow.copy(this.player.position);
+    this.camera.position.copy(this.follow).add(ROOM_CAMERA_OFFSET); this.camera.lookAt(this.follow); this.renderOnce();
+  }
+  updateRoomFurniture(s: Save, render = true) {
+    if (!this.inRoom || !this.furnitureRoot) return;
+    for (const child of [...this.furnitureRoot.children]) { this.furnitureRoot.remove(child); this.disposeModel(child as T.Group); }
     const spots = [[-4.8, -2.3], [-1.7, -2.3], [1.7, -2.3], [4.8, -2.3], [-4.8, 2], [-1.7, 2], [1.7, 2], [4.8, 2]] as const;
     for (const id of s.room.furniture) {
       const spot = spots[id]; if (!spot) continue;
-      const [x, z] = spot, g = new T.Group(); g.position.set(x, 0, z); this.scene.add(g);
+      const [x, z] = spot, g = new T.Group(); g.position.set(x, 0, z); this.furnitureRoot.add(g);
       if (id === 0) { cylinder(g, 0x9e7555, 0, .55, 0, .56, .62, .22, 8); cylinder(g, 0xe98b9a, 0, .75, 0, .4, .62, .26, 8); }
       else if (id === 1) { cylinder(g, 0xb97855, 0, .3, 0, .3, .38, .55, 8); cylinder(g, 0x579a68, 0, .85, 0, .04, .07, .95, 6); for (const side of [-1, 1]) ball(g, 0x87bf79, side * .25, 1.2, 0, .28); }
       else if (id === 2) { ball(g, 0xb98d62, 0, .55, 0, .48, .48, .38); ball(g, 0xb98d62, 0, 1.08, .04, .34); for (const side of [-1, 1]) ball(g, 0xb98d62, side * .39, .58, .08, .17); }
@@ -370,7 +381,7 @@ export class World {
       else if (id === 6) { cylinder(g, 0x9c795a, 0, .8, 0, .05, .07, 1.5, 7); ball(g, 0xffe699, 0, 1.65, 0, .3); }
       else { cylinder(g, 0xb47659, 0, .32, 0, .42, .5, .6, 10); for (let b = 0; b < 3; b++) ball(g, 0xe84f70, -.2 + b * .2, .7, 0, .13); }
     }
-    this.player.position.copy(roomPosition); this.placePetNearPlayer(); this.lastSafe.copy(this.player.position); this.follow.copy(this.player.position); this.renderOnce();
+    if (render) this.renderOnce();
   }
   private house(x: number, z: number, roof: number, wall: number) {
     const g = new T.Group(); g.position.set(x, 0, z); this.scene.add(g);
@@ -427,7 +438,7 @@ export class World {
     else if (!shouldRun && this.animationRunning) { this.animationRunning = false; this.renderer.setAnimationLoop(null); if (!document.hidden) this.renderOnce(); }
   }
   private renderOnce() { if (!document.hidden) this.renderer.render(this.scene, this.camera); }
-  restore(s: Save) { this.setAvatar(s.character, s.outfit, s.weapon, s.outfits[s.outfit], s.weapons[s.weapon], s.ride, s.pet, s.hairstyle, s.face); this.loadStage(s); this.quality(s.settings.lowQuality); }
+  restore(s: Save) { this.setAvatar(s.character, s.outfit, s.weapon, s.outfits[s.outfit], s.weapons[s.weapon], s.ride, s.pet, s.hairstyle, s.face); if (s.room.inside) this.enterRoom(s); else this.loadStage(s); this.quality(s.settings.lowQuality); }
   quality(low: boolean) { const touchDevice = matchMedia('(pointer: coarse)').matches; this.renderer.setPixelRatio(Math.min(devicePixelRatio, low || touchDevice ? 1 : 1.25)); this.renderer.shadowMap.enabled = !low; this.sun.castShadow = !low; }
   clearInput() { this.keys.clear(); this.stick = { x: 0, z: 0 }; }
   moveStick(x: number, z: number) { this.stick = { x, z }; }
@@ -517,7 +528,7 @@ export class World {
     if (this.player.userData.sparkles) this.player.userData.sparkles.rotation.y += dt;
     for (let i = this.particles.length - 1; i >= 0; i--) { const q = this.particles[i]; q.life -= dt; q.v.y -= dt * 5; q.mesh.position.addScaledVector(q.v, dt); q.mesh.scale.setScalar(Math.max(0, q.life)); if (q.life <= 0) { this.scene.remove(q.mesh); this.particles.splice(i, 1); } }
     const target = this.active ? p : this.cameraTarget.set(0, 0, -1); this.follow.lerp(target, 1 - Math.exp(-dt * 3));
-    this.camera.position.copy(this.follow).add(CAMERA_OFFSET); this.camera.lookAt(this.follow); this.renderer.render(this.scene, this.camera);
+    this.camera.position.copy(this.follow).add(this.inRoom ? ROOM_CAMERA_OFFSET : CAMERA_OFFSET); this.camera.lookAt(this.follow); this.renderer.render(this.scene, this.camera);
   }
 }
 
@@ -531,4 +542,30 @@ export class AvatarPreview {
   private draw() { const w = this.element.clientWidth, h = this.element.clientHeight; if (!w || !h) return; if (w !== this.drawWidth || h !== this.drawHeight) { this.drawWidth = w; this.drawHeight = h; this.renderer.setSize(w, h); this.camera.aspect = w / h; this.camera.updateProjectionMatrix(); } this.renderer.render(this.scene, this.camera); }
   private animate = (time: number) => { this.animationFrame = requestAnimationFrame(this.animate); if (time - this.lastFrame < 33 || document.hidden || !this.element.isConnected) return; this.lastFrame = time; this.model.rotation.y = -.18 + Math.sin(time * .0007) * .13; const body = this.model.userData.body as T.Group | undefined; if (body) body.position.y = Math.sin(time * .003) * .035; const sparkles = this.model.userData.sparkles as T.Group | undefined; if (sparkles) sparkles.rotation.y += .025; this.draw(); };
   dispose() { cancelAnimationFrame(this.animationFrame); this.resizeObserver.disconnect(); this.model.traverse(x => { if (x instanceof T.Mesh && !sharedGeometries.has(x.geometry)) x.geometry.dispose(); }); this.renderer.dispose(); this.renderer.domElement.remove(); }
+}
+
+/** Render the four selection portraits from the same 3D character models using one temporary WebGL context. */
+export function characterPortraits(): string[] {
+  const renderer = new T.WebGLRenderer({ alpha: true, antialias: true, preserveDrawingBuffer: true });
+  try {
+    renderer.setPixelRatio(1);
+    renderer.setSize(100, 112, false);
+    renderer.setClearColor(0x000000, 0);
+    renderer.toneMapping = T.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.4;
+    const scene = new T.Scene();
+    scene.add(new T.HemisphereLight(0xffffff, 0xa6ba93, 3));
+    const light = new T.DirectionalLight(0xffedcd, 3); light.position.set(-3, 4, 5); scene.add(light);
+    const camera = new T.PerspectiveCamera(30, 100 / 112, .1, 20);
+    camera.position.set(1.25, 1.75, 4.35); camera.lookAt(0, 1.13, 0);
+    return CHARACTERS.map((character, index) => {
+      const model = makeCharacter(index, 0, 0, 0, 0, character.style);
+      model.rotation.y = -.2;
+      scene.add(model); renderer.render(scene, camera);
+      const image = renderer.domElement.toDataURL('image/png');
+      scene.remove(model);
+      model.traverse(o => { if (o instanceof T.Mesh && !sharedGeometries.has(o.geometry)) o.geometry.dispose(); });
+      return image;
+    });
+  } finally { renderer.dispose(); renderer.forceContextLoss(); }
 }
