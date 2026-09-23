@@ -57,3 +57,53 @@ dialog::backdrop{background:#23493877;backdrop-filter:blur(3px)}
 #toast{border:2px solid #fff;box-shadow:0 5px 0 #52674315,0 12px 30px #344b3826}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
 dialog{background:linear-gradient(155deg,#fffdf4 0%,#f6fae9 58%,#fff1e8 100%);border-width:3px}.modal-heading h2{color:#315f49;text-shadow:0 2px #fff}.modal-heading .eyebrow{color:#b26d78}.item-detail p{line-height:1.75;text-align:left;background:#fffdf5b8;border-radius:14px;padding:11px}.inventory-item{box-shadow:0 4px 0 #71806118}.inventory-item:hover{border-color:#b6d39c}.inventory-icon{transition:transform .2s}.inventory-item:hover .inventory-icon{transform:translateY(-2px) rotate(-3deg)}.pet-shop .inventory-icon{border-radius:50%}.stage-card{box-shadow:0 3px 0 #6e865c1c}.stage-card:not(:disabled):hover .stage-number{transform:scale(1.08)}.stage-number{transition:transform .18s}.welcome-card{background:linear-gradient(155deg,#fffef7f7,#f6fbeaf2 65%,#fff0e6ee)}
+
+/* Keep the adventure goal available without covering the play field on phones. */
+.quest-card{position:absolute}
+.quest-toggle{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;min-height:44px;padding:0;background:transparent;color:#315d46;font-weight:900;text-align:left;font-size:.94rem}
+.quest-toggle .quest-chevron{font-size:1.15rem;transition:transform .18s}
+.quest-card.is-collapsed .quest-chevron{transform:rotate(180deg)}
+.quest-body{padding-top:6px}
+.quest-card.is-collapsed{padding-top:6px;padding-bottom:6px}
+@media(max-width:600px){
+  .stage-grid{grid-template-columns:1fr}
+  .stage-card{grid-template-columns:36px minmax(0,1fr);min-height:80px;column-gap:10px;padding:10px}
+  .stage-card .stage-number{width:34px;height:34px}
+  .quest-card{top:122px;left:12px;width:min(250px,calc(100vw - 24px));max-height:min(52dvh,360px);overflow-y:auto;padding:6px 12px}
+  .quest-toggle{font-size:.82rem}
+  .equipment-card{display:none}
+  .interaction{display:none}
+  .entity-label:not(.near){display:none}
+  #touch-controls{bottom:calc(18px + env(safe-area-inset-bottom));height:126px}
+  #joystick{left:18px;bottom:4px;width:104px;height:104px}
+  #stick{width:47px;height:47px}
+  .touch-actions{right:14px;bottom:5px;gap:6px}
+  .touch-actions button{width:62px;height:62px;font-size:.73rem}
+  .touch-actions button:first-child{width:52px;height:52px;margin-bottom:43px}
+  .touch-actions #touch-attack{font-size:.65rem;white-space:nowrap}
+  .inventory-tabs button{white-space:nowrap;min-height:44px}
+  .close{min-width:44px;min-height:44px;height:44px}
+  .player-card>div{min-width:0}
+  #nickname{max-width:100%;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+  .xp-track{max-width:100%}
+}
+@media(max-width:390px){
+  .top-actions{width:144px;display:grid;grid-template-columns:repeat(3,1fr);gap:4px;flex:none}
+  .wallet{grid-column:1 / -1;justify-self:end}
+  .icon-button{width:44px;min-height:44px;height:44px}
+  .player-card{flex:1;max-width:calc(100% - 151px)}
+}
+@media(max-width:350px){#joystick{left:14px;width:100px;height:100px}}
+@media(max-height:500px) and (max-width:900px){
+  .topbar{padding:10px 14px}
+  .player-card>div{min-width:0}
+  #nickname{max-width:100%;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+  .wallet span{display:none}
+  .quest-card{top:112px;max-height:calc(100dvh - 175px)}
+  .equipment-card,.location-pill{display:none}
+  .entity-label:not(.near){display:none}
+  #touch-controls{height:104px;bottom:calc(8px + env(safe-area-inset-bottom))}
+  #joystick{width:90px;height:90px;left:14px}
+  .touch-actions button{width:54px;height:54px;font-size:.68rem}
+  .touch-actions button:first-child{width:48px;height:48px;margin-bottom:29px}
+}
