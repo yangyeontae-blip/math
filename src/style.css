@@ -24,4 +24,26 @@
 @media(max-width:600px){.item-grid{grid-auto-rows:minmax(64px,max-content);padding:3px 6px 7px 3px}.item-card{min-height:64px;overflow:hidden}.item-card strong{font-size:.8rem;line-height:1.25}.item-card small{font-size:.7rem;line-height:1.25}.shop-explainer{line-height:1.5;margin-bottom:12px}.shop-explainer b{display:inline-block;margin-left:4px}.item-detail{position:static}.top-actions{flex-wrap:wrap;justify-content:flex-end}.equipment-card{max-width:48%;overflow-wrap:anywhere}}
 
 /* Cozy village-fantasy finish: clearer cards, candy colors, and light motion only. */
+/* A warmer storybook palette with garden-paper surfaces and calm, readable contrast. */
+:root{color:#294b3b;background:#d0eade;--berry-leaf:#3f7957;--berry-cream:#fff9e9;--berry-pink:#df8e9d}
+body{background:#d0eade}
+.start-layer{background:radial-gradient(ellipse at 78% 50%,#f4dba52b 0 23%,transparent 55%),linear-gradient(90deg,#17483955,transparent 68%)}
+.welcome-card,dialog{box-shadow:0 8px 0 #476b4012,0 28px 72px #244d452e}
+.welcome-card{border-color:#fffdf0;outline:1px solid #d9e4c8;outline-offset:-7px}
+.welcome-card h1{color:#286348;text-shadow:0 2px #fffefa}
+.character-choice{box-shadow:inset 0 2px #fff9;transition:transform .18s,border-color .18s,background .18s}
+.character-choice:hover{transform:translateY(-2px)}
+.character-choice.selected{box-shadow:inset 0 2px #ffffffa8,0 3px 0 #6e9e6a2e}
+.primary{background:linear-gradient(150deg,#55976c,#347653);box-shadow:0 4px 0 #285a40,inset 0 1px #ffffff4a}
+.secondary,.settings-list label{box-shadow:inset 0 1px #ffffffad,0 2px 0 #526b3d12}
+.player-card,.quest-card,.equipment-card,.location-pill,.wallet{backdrop-filter:blur(8px);border-color:#fffef2;box-shadow:0 4px 0 #52674315,0 12px 28px #34554218}
+.entity-label{border-color:#fffef2;box-shadow:0 3px 0 #526d4b20,0 5px 13px #35553a16}
+dialog{border-color:#e7ebd7;outline:2px solid #ffffffb8;outline-offset:-7px}
+dialog::backdrop{background:#23493877;backdrop-filter:blur(3px)}
+.modal-heading{border-bottom:1px solid #dfe7d1;padding-bottom:12px}
+.item-card,.inventory-item,.stage-card{transition:transform .16s,border-color .16s,box-shadow .16s}
+.item-card:not(:disabled):hover,.inventory-item:hover,.stage-card:not(:disabled):hover{transform:translateY(-2px);box-shadow:0 5px 0 #8798752b}
+.item-detail{border-radius:22px}
+#toast{border:2px solid #fff;box-shadow:0 5px 0 #52674315,0 12px 30px #344b3826}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
 dialog{background:linear-gradient(155deg,#fffdf4 0%,#f6fae9 58%,#fff1e8 100%);border-width:3px}.modal-heading h2{color:#315f49;text-shadow:0 2px #fff}.modal-heading .eyebrow{color:#b26d78}.item-detail p{line-height:1.75;text-align:left;background:#fffdf5b8;border-radius:14px;padding:11px}.inventory-item{box-shadow:0 4px 0 #71806118}.inventory-item:hover{border-color:#b6d39c}.inventory-icon{transition:transform .2s}.inventory-item:hover .inventory-icon{transform:translateY(-2px) rotate(-3deg)}.pet-shop .inventory-icon{border-radius:50%}.stage-card{box-shadow:0 3px 0 #6e865c1c}.stage-card:not(:disabled):hover .stage-number{transform:scale(1.08)}.stage-number{transition:transform .18s}.welcome-card{background:linear-gradient(155deg,#fffef7f7,#f6fbeaf2 65%,#fff0e6ee)}

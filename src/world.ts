@@ -227,11 +227,12 @@ export class World {
   private tempProjection = new T.Vector3(); private tempTarget = new T.Vector3(); private tempWorld = new T.Vector3(); private cameraTarget = new T.Vector3();
   active = false; paused = true; inRoom = false; onCollect = (_id: number) => {}; onInteract = (_id: string) => {}; onAttack = (_id: string | null) => {}; onNear = (_name: string | null, _id: string | null) => {}; onJump = () => {}; onRescue = () => {};
   constructor(private container: HTMLElement) {
-    this.scene.background = new T.Color(0xc5e5d4); this.scene.fog = new T.Fog(0xc5e5d4, 55, 105);
+    this.scene.background = new T.Color(0xd0eade); this.scene.fog = new T.Fog(0xd0eade, 58, 112);
     const touchDevice = matchMedia('(pointer: coarse)').matches;
     this.renderer = new T.WebGLRenderer({ antialias: !touchDevice, alpha: false, powerPreference: 'high-performance' }); this.renderer.setPixelRatio(Math.min(devicePixelRatio, touchDevice ? 1 : 1.25)); this.renderer.shadowMap.enabled = true; this.renderer.shadowMap.type = T.PCFSoftShadowMap; this.renderer.outputColorSpace = T.SRGBColorSpace; this.renderer.toneMapping = T.ACESFilmicToneMapping; this.renderer.toneMappingExposure = 1.35; container.append(this.renderer.domElement);
     this.camera = new T.OrthographicCamera(-18, 18, 14, -14, .1, 140);
-    this.scene.add(new T.HemisphereLight(0xe9fbff, 0x6f9450, 2.2)); this.sun = new T.DirectionalLight(0xffefd2, 3.1); this.sun.position.set(-15, 30, 15); this.sun.castShadow = true; this.sun.shadow.mapSize.set(1024, 1024); Object.assign(this.sun.shadow.camera, { left: -34, right: 34, top: 32, bottom: -30, far: 85 }); this.sun.shadow.normalBias = .06; this.scene.add(this.sun);
+    this.scene.add(new T.HemisphereLight(0xf3fff0, 0x688451, 2.35)); this.sun = new T.DirectionalLight(0xffedcf, 2.8); this.sun.position.set(-15, 30, 15); this.sun.castShadow = true; this.sun.shadow.mapSize.set(1024, 1024); Object.assign(this.sun.shadow.camera, { left: -34, right: 34, top: 32, bottom: -30, far: 85 }); this.sun.shadow.normalBias = .06; this.scene.add(this.sun);
+    const fill = new T.DirectionalLight(0xd8f3ff, .7); fill.position.set(18, 12, -14); this.scene.add(fill);
     this.labelLayer = document.createElement('div'); this.labelLayer.className = 'world-labels'; container.append(this.labelLayer);
     this.buildVillage(); this.setAvatar(0, 0, 0); this.player.position.set(0, 0, 8); this.scene.add(this.player);
     window.addEventListener('resize', () => { this.resize(); this.renderOnce(); }); this.resize();
@@ -328,7 +329,7 @@ export class World {
   }
   loadStage(s: Save, fresh = false) {
     this.clearInput(); this.clearMap(); this.inRoom = false; this.stage = s.journey.stage;
-    this.scene.background = new T.Color(0xc5e5d4); this.scene.fog = new T.Fog(0xc5e5d4, 55, 105); this.platforms = stagePlatforms(this.stage);
+    this.scene.background = new T.Color(0xd0eade); this.scene.fog = new T.Fog(0xd0eade, 58, 112); this.platforms = stagePlatforms(this.stage);
     if (this.stage === 0) this.buildVillage(); else this.buildHunt(this.stage);
     const map = s.journey.maps[this.stage]; this.coins.forEach(c => c.mesh.visible = !map.berries.includes(c.id)); this.entities.forEach(e => { if (e.id.startsWith('monster')) e.mesh.visible = !map.monsters.includes(Number(e.id.slice(7))); if (e.id.startsWith('tree')) e.mesh.visible = !map.trees.includes(Number(e.id.slice(4))); });
     const spawn = this.stage === 0 ? { x: 0, z: 8 } : { x: 0, z: stageSize(this.stage).z - 9 }; const p = fresh ? spawn : s.position; this.player.position.set(p.x, 0, p.z); this.placePetNearPlayer(); this.lastSafe.copy(this.player.position); this.follow.copy(this.player.position);
@@ -375,14 +376,28 @@ export class World {
     const g = new T.Group(); g.position.set(x, 0, z); this.scene.add(g);
     cylinder(g, 0xcebe96, 0, .22, 0, 2.65, 2.85, .44, 8); cylinder(g, wall, 0, 1.65, 0, 2.35, 2.45, 2.9, 12);
     const r = mesh(new T.ConeGeometry(3.25, 2.2, 8), roof, 0, 4.15, 0, g); r.rotation.y = Math.PI / 8;
+    const roofCap = new T.MeshStandardMaterial({ color: roof, roughness: .92, flatShading: true });
+    const eave = new T.Mesh(new T.CylinderGeometry(3.12, 3.12, .18, 8), roofCap); eave.position.y = 3.13; eave.rotation.y = Math.PI / 8; g.add(eave);
     cylinder(g, roof, 0, 3.13, 0, 3.1, 3.15, .22, 8); box(g, 0x836343, 0, 1.13, 2.23, 1.05, 1.95, .15); ball(g, 0xfbd180, .3, 1.12, 2.36, .07);
-    for (const sign of [-1, 1]) { box(g, 0xb19a6a, sign * 1.4, 1.9, 1.94, .84, .88, .1); box(g, 0xffdc94, sign * 1.4, 1.9, 2.01, .63, .65, .08); box(g, wall, sign * 1.4, 1.9, 2.07, .06, .66, .08); }
+    for (const sign of [-1, 1]) {
+      box(g, 0xb19a6a, sign * 1.4, 1.9, 1.94, .92, .96, .12); box(g, 0xffdc94, sign * 1.4, 1.9, 2.01, .68, .7, .08); box(g, wall, sign * 1.4, 1.9, 2.07, .07, .7, .08);
+      box(g, 0x9a704d, sign * 1.4, 1.37, 2.08, 1.02, .12, .28); for (let i = 0; i < 3; i++) ball(g, [0xf49bb2, 0xf5d36f, 0xb8d897][i], sign * 1.4 + (i - 1) * .27, 1.52, 2.18, .12, .14, .11);
+    }
+    // A little scalloped awning, timber framing and a hanging welcome sign make each shop feel handcrafted.
+    box(g, 0xf7e8cc, 0, 2.12, 2.1, 3.05, .2, .52);
+    for (let i = 0; i < 7; i++) { const stripe = box(g, i % 2 ? 0xe98f98 : 0xf8d98f, -1.28 + i * .43, 2.13, 2.37, .42, .23, .08); stripe.rotation.x = -.08; }
+    for (const side of [-1, 1]) { box(g, 0xf5e6c4, side * 2.15, 1.5, 1.76, .12, 2.65, .12); ball(g, 0xffe9a5, side * 2.15, 2.84, 1.76, .1); }
+    box(g, 0xf7e5b8, 0, 2.75, 2.52, 1.08, .35, .12); box(g, 0x9a704d, 0, 2.54, 2.52, .08, .28, .08);
     cylinder(g, 0xa47753, 1.3, 4.7, -.8, .3, .35, 1.5, 8); ball(g, 0xf1f1dc, 1.3, 5.8, -.8, .4, .24, .34);
+    for (const side of [-1, 1]) { ball(g, 0x8eb878, side * 2.55, .38, 1.7, .44, .26, .35); ball(g, side < 0 ? 0xf6c3cf : 0xf8e2a2, side * 2.55, .57, 1.7, .17, .13, .17); }
     this.colliders.push({ x, z, r: 2.7 });
   }
   private tree(x: number, z: number, scale: number, pink: boolean, foliage?: number) {
     const g = new T.Group(); g.position.set(x, 0, z); g.scale.setScalar(scale); this.scene.add(g); cylinder(g, 0x94724e, 0, 1, 0, .19, .32, 2, 8);
-    ball(g, foliage ?? (pink ? 0xe6a2ad : 0x63a56b), 0, 2.55, 0, 1.55, 1.5, 1.38); ball(g, foliage ?? (pink ? 0xf1b8bb : 0x88bd77), -.5, 3.35, 0, 1.12, 1.12, 1); ball(g, foliage ?? (pink ? 0xf5c9c7 : 0xa0cd7e), .5, 3.25, .45, .8, .83, .8); this.colliders.push({ x, z, r: .5 });
+    ball(g, foliage ?? (pink ? 0xe6a2ad : 0x63a56b), 0, 2.55, 0, 1.55, 1.5, 1.38); ball(g, foliage ?? (pink ? 0xf1b8bb : 0x88bd77), -.5, 3.35, 0, 1.12, 1.12, 1); ball(g, foliage ?? (pink ? 0xf5c9c7 : 0xa0cd7e), .5, 3.25, .45, .8, .83, .8);
+    // Soft pastel fruit and tiny blossoms add detail without textures or extra effects.
+    for (let i = 0; i < 3; i++) { const a = i * Math.PI * 2 / 3 + x * .37; ball(g, pink ? 0xffe3a1 : 0xe8798b, Math.cos(a) * .86, 2.28 + (i % 2) * .38, Math.sin(a) * .78, .13, .15, .13); }
+    ball(g, 0xfff0c6, -.9, 3.08, .1, .11, .1, .1); ball(g, 0xfff0c6, .84, 3.55, -.22, .1, .1, .1); this.colliders.push({ x, z, r: .5 });
   }
   private addChoppableTree(id: number, x: number, z: number, scale: number, pink: boolean, foliage?: number) {
     const g = new T.Group(); g.scale.setScalar(scale); cylinder(g, 0x94724e, 0, 1, 0, .19, .32, 2, 8);
