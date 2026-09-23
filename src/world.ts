@@ -214,7 +214,7 @@ export class World {
   private swingUntil = 0; private rideIndex = -1; private petIndex = -1; private petModel: T.Group | null = null; private animationRunning = false;
   private rideAnimated: T.Object3D[] = []; private butterflies: T.Object3D[] = [];
   private tempProjection = new T.Vector3(); private tempTarget = new T.Vector3(); private tempWorld = new T.Vector3(); private cameraTarget = new T.Vector3();
-  active = false; paused = true; onCollect = (_id: number) => {}; onInteract = (_id: string) => {}; onAttack = (_id: string | null) => {}; onNear = (_name: string | null, _id: string | null) => {}; onJump = () => {}; onRescue = () => {};
+  active = false; paused = true; inRoom = false; onCollect = (_id: number) => {}; onInteract = (_id: string) => {}; onAttack = (_id: string | null) => {}; onNear = (_name: string | null, _id: string | null) => {}; onJump = () => {}; onRescue = () => {};
   constructor(private container: HTMLElement) {
     this.scene.background = new T.Color(0xc5e5d4); this.scene.fog = new T.Fog(0xc5e5d4, 55, 105);
     const touchDevice = matchMedia('(pointer: coarse)').matches;
@@ -264,6 +264,7 @@ export class World {
     this.addEntity('pet', '윤준 · 펫 상점', 18.5, -3.5, makeCharacter(1, 12, 10));
     this.addEntity('beauty', '가영이 · 헤어와 성형', -15.5, -4.2, makeCharacter(2, 15, 2));
     this.addEntity('arena', '신비 · 대련장', 0, -9, makeCharacter(3, 5, 3));
+    this.addEntity('room', '나의 집 · 들어가기', 9, -4.5, this.gate(0xe5ad79));
     stageMonsters(0).forEach((m, i) => this.addEntity(`monster${i}`, MONSTERS[m.type].name, m.x, m.z, makeMonster(m.type)));
     this.addEntity('journey', '모험의 문 · 10개의 사냥터', 10.5, 13.5, this.gate(0x9e78c9));
     // Keep the walking areas clear; peripheral trees frame the miniature world.
@@ -301,7 +302,7 @@ export class World {
     box(this.scene, spec.ground, 0, -.55, 0, size.x * 2, 1.1, size.z * 2); box(this.scene, 0x708f71, 0, -1.3, 0, size.x * 2 - 1, .5, size.z * 2 - 1);
     box(this.scene, spec.accent, 0, .02, 0, 3.8, .06, size.z * 2 - 5); for (const z of [14, 0, -15]) box(this.scene, spec.accent, 0, .025, z, size.x * 2 - 10, .06, 2.6);
     this.platforms.forEach(p => { box(this.scene, 0xa8a88c, p.x, p.h / 2, p.z, p.w, p.h, p.d); box(this.scene, spec.accent, p.x, p.h + .02, p.z, p.w + .05, .08, p.d + .05); });
-    this.addEntity('home', '베리숲 마을로 돌아가기', 0, size.z - 5, this.gate(0x6eb7a1)); this.addEntity('next', stage === 10 ? '마지막 축하문' : `다음 길 · ${STAGES[stage].name}`, 0, -size.z + 5, this.gate(0xc087d2));
+    this.addEntity('village', '베리숲 마을로 돌아가기', 0, size.z - 5, this.gate(0x6eb7a1)); this.addEntity('next', stage === 10 ? '마지막 축하문' : `다음 길 · ${STAGES[stage].name}`, 0, -size.z + 5, this.gate(0xc087d2));
     stageMonsters(stage).forEach((m, i) => this.addEntity(`monster${i}`, `${MONSTERS[m.type].name} · ${i + 1}`, m.x, m.z, makeMonster(m.type)));
     for (let i = 0; i < 55; i++) { const x = Math.sin(i * 2.399 + stage) * (size.x - 4), z = Math.cos(i * 1.73 + stage) * (size.z - 4); if (Math.abs(x) < 4 || [14, 0, -15].some(v => Math.abs(z - v) < 2.5)) continue; this.tree(x, z, .8 + i % 3 * .2, spec.theme === 'blossom', spec.foliage); }
     stageTrees(stage).forEach(({ x, z }, i) => this.addChoppableTree(i, x, z, .92 + (i % 3) * .08, spec.theme === 'blossom', spec.foliage));
@@ -310,13 +311,53 @@ export class World {
     for (let i = 0; i < 14; i++) { const g = new T.Group(); g.position.set((i % 2 ? 1 : -1) * (size.x - 5), 0, size.z - 7 - Math.floor(i / 2) * 8); this.scene.add(g); if (spec.theme === 'crystal') { for (let j = 0; j < 3; j++) { const m = mesh(new T.OctahedronGeometry(.65), [0x9bade6, 0xc3a0df, 0x9bd6d4][j], j * .55 - .55, 1.3, 0, g); m.scale.y = 2 + j * .3; } } else if (spec.theme === 'mushroom') { cylinder(g, 0xf4e4cb, 0, .9, 0, .4, .6, 1.8); ball(g, 0xda8e9a, 0, 2, 0, 1.8, .65, 1.5); } else { for (let j = 0; j < 5; j++) ball(g, spec.foliage, Math.cos(j * 1.26), .7, Math.sin(j * 1.26), .4, .14, .4); } }
     this.addBerries();
   }
-  loadStage(s: Save, fresh = false) {
-    this.clearInput(); this.selectedId = null; this.onNear(null, null); this.stage = s.journey.stage; this.entities.forEach(e => e.label.remove()); this.entities = []; this.coins = []; this.colliders = [];
+  private clearMap() {
+    this.selectedId = null; this.onNear(null, null); this.entities.forEach(e => e.label.remove()); this.entities = []; this.coins = []; this.colliders = [];
     for (const child of [...this.scene.children]) if (child !== this.player && !(child instanceof T.Light)) this.scene.remove(child);
+  }
+  loadStage(s: Save, fresh = false) {
+    this.clearInput(); this.clearMap(); this.inRoom = false; this.stage = s.journey.stage;
     this.scene.background = new T.Color(0xc5e5d4); this.scene.fog = new T.Fog(0xc5e5d4, 55, 105); this.platforms = stagePlatforms(this.stage);
     if (this.stage === 0) this.buildVillage(); else this.buildHunt(this.stage);
     const map = s.journey.maps[this.stage]; this.coins.forEach(c => c.mesh.visible = !map.berries.includes(c.id)); this.entities.forEach(e => { if (e.id.startsWith('monster')) e.mesh.visible = !map.monsters.includes(Number(e.id.slice(7))); if (e.id.startsWith('tree')) e.mesh.visible = !map.trees.includes(Number(e.id.slice(4))); });
     const spawn = this.stage === 0 ? { x: 0, z: 8 } : { x: 0, z: stageSize(this.stage).z - 9 }; const p = fresh ? spawn : s.position; this.player.position.set(p.x, 0, p.z); this.lastSafe.copy(this.player.position); this.follow.copy(this.player.position);
+  }
+  enterRoom(s: Save) {
+    this.clearInput(); this.clearMap(); this.inRoom = true; this.stage = 0; this.platforms = [];
+    this.scene.background = new T.Color(0xf1dfc5); this.scene.fog = new T.Fog(0xf1dfc5, 35, 65);
+    box(this.scene, 0xa9845e, 0, -.58, 0, 15, 1.15, 12);
+    box(this.scene, 0xd8bd94, 0, .02, 0, 14.4, .08, 11.4);
+    box(this.scene, 0xf2d4c4, 0, 2.3, -5.8, 15, 4.6, .4);
+    box(this.scene, 0xe7c6b4, -7.3, 2.3, 0, .4, 4.6, 12);
+    box(this.scene, 0xe7c6b4, 7.3, 2.3, 0, .4, 4.6, 12);
+    box(this.scene, 0xe7c6b4, -4.9, 2.3, 5.8, 5.2, 4.6, .4);
+    box(this.scene, 0xe7c6b4, 4.9, 2.3, 5.8, 5.2, 4.6, .4);
+    box(this.scene, 0x9e795e, 0, 4.55, -5.8, 15, .18, .48);
+    box(this.scene, 0x9e795e, -7.3, 4.55, 0, .48, .18, 12);
+    box(this.scene, 0x9e795e, 7.3, 4.55, 0, .48, .18, 12);
+    box(this.scene, 0xc48676, 0, .09, 0, 8.4, .1, 5.6);
+    box(this.scene, 0x9bd6df, 0, 2.7, -5.54, 3.3, 1.8, .08);
+    box(this.scene, 0xf6e4a8, 0, 2.7, -5.46, .12, 1.9, .08);
+    box(this.scene, 0xf6e4a8, 0, 2.7, -5.44, 3.5, .12, .08);
+    // A dedicated doorway is the only way out; the hunt-gate remains a village return.
+    for (const x of [-1.35, 1.35]) box(this.scene, 0x9e795e, x, 1.25, 5.48, .2, 2.5, .25);
+    box(this.scene, 0x9e795e, 0, 2.45, 5.48, 2.8, .2, .25);
+    this.addEntity('roomExit', '마을로 돌아가기', 0, 4.2, this.gate(0x6eb7a1));
+    const sign = new T.Group(); box(sign, 0x9a754f, 0, 1, 0, 1.8, 1.5, .25); box(sign, 0xf2dfac, 0, 1.05, .16, 1.45, 1.1, .08); this.addEntity('roomDecor', '내 방 꾸미기', 3.7, -.2, sign);
+    const spots = [[-4.8, -2.3], [-1.7, -2.3], [1.7, -2.3], [4.8, -2.3], [-4.8, 2], [-1.7, 2], [1.7, 2], [4.8, 2]] as const;
+    for (const id of s.room.furniture) {
+      const spot = spots[id]; if (!spot) continue;
+      const [x, z] = spot, g = new T.Group(); g.position.set(x, 0, z); this.scene.add(g);
+      if (id === 0) { cylinder(g, 0x9e7555, 0, .55, 0, .56, .62, .22, 8); cylinder(g, 0xe98b9a, 0, .75, 0, .4, .62, .26, 8); }
+      else if (id === 1) { cylinder(g, 0xb97855, 0, .3, 0, .3, .38, .55, 8); cylinder(g, 0x579a68, 0, .85, 0, .04, .07, .95, 6); for (const side of [-1, 1]) ball(g, 0x87bf79, side * .25, 1.2, 0, .28); }
+      else if (id === 2) { ball(g, 0xb98d62, 0, .55, 0, .48, .48, .38); ball(g, 0xb98d62, 0, 1.08, .04, .34); for (const side of [-1, 1]) ball(g, 0xb98d62, side * .39, .58, .08, .17); }
+      else if (id === 3) { box(g, 0x8c6957, 0, 1.5, 0, 1.5, 1.25, .18); box(g, 0x9bd6df, 0, 1.5, .11, 1.23, .98, .05); }
+      else if (id === 4) { box(g, 0xe7c6b4, 0, .45, 0, 1.7, .5, 2.2); box(g, 0xf6eee0, 0, .76, -.25, 1.65, .18, 1.5); for (const side of [-1, 1]) ball(g, 0xfff7e9, side * .3, .8, .7, .28, .2, .28); }
+      else if (id === 5) { box(g, 0x906b50, 0, 1.05, 0, 1.25, 2.1, .55); for (const y of [.45, 1.1, 1.75]) { box(g, 0xc49a70, 0, y, .3, 1.3, .12, .65); for (let b = 0; b < 3; b++) box(g, [0xd88984, 0x83b6ae, 0xefd18c][b], -.4 + b * .4, y + .23, .3, .24, .35, .3); } }
+      else if (id === 6) { cylinder(g, 0x9c795a, 0, .8, 0, .05, .07, 1.5, 7); ball(g, 0xffe699, 0, 1.65, 0, .3); }
+      else { cylinder(g, 0xb47659, 0, .32, 0, .42, .5, .6, 10); for (let b = 0; b < 3; b++) ball(g, 0xe84f70, -.2 + b * .2, .7, 0, .13); }
+    }
+    this.player.position.set(0, 0, 2.7); this.lastSafe.copy(this.player.position); this.follow.copy(this.player.position); this.renderOnce();
   }
   private house(x: number, z: number, roof: number, wall: number) {
     const g = new T.Group(); g.position.set(x, 0, z); this.scene.add(g);
@@ -390,7 +431,7 @@ export class World {
       if (n > .05) { this.player.rotation.y = Math.atan2(vx, vz); this.player.userData.feet?.forEach((f: T.Mesh, i: number) => { f.position.y = .18 + Math.max(0, Math.sin(this.time * 13 + i * Math.PI)) * .12; }); }
       const platform = flying ? undefined : this.platforms.find(t => Math.abs(p.x - t.x) < t.w / 2 + .15 && Math.abs(p.z - t.z) < t.d / 2 + .15); const floor = flying ? 1.65 + Math.sin(this.time * 2.2) * .08 : platform?.h ?? 0;
       this.vy -= 18 * dt; p.y += this.vy * dt; if (p.y <= floor && this.vy <= 0) { p.y = floor; this.vy = 0; this.grounded = true; } else this.grounded = false;
-      const bounds = stageSize(this.stage);
+      const bounds = this.inRoom ? { x: 6.8, z: 5.2 } : stageSize(this.stage);
       if (Math.abs(p.x) > bounds.x - .5 || Math.abs(p.z) > bounds.z - .5 || (!flying && this.water(p.x, p.z) && p.y <= .2)) { p.copy(this.lastSafe); this.vy = 0; this.onRescue(); }
       else if (this.grounded && (flying || !this.water(p.x, p.z)) && Math.abs(p.x) < bounds.x - 2 && Math.abs(p.z) < bounds.z - 2) this.lastSafe.copy(p);
       for (const c of this.coins) if (c.mesh.visible && p.distanceTo(c.mesh.position) < 1) { c.mesh.visible = false; this.burst(c.mesh.position, 0xff9fb4, 6); this.onCollect(c.id); }
