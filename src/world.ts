@@ -1,5 +1,5 @@
 import * as T from 'three';
-import { CHARACTERS, MONSTERS, OUTFITS, PETS, RIDES, WEAPONS, type Save } from './rules';
+import { CHARACTERS, MONSTERS, OUTFITS, PETS, RIDES, WEAPONS, PLAYER_MOVE_SPEED, petChaseSpeed, type Save } from './rules';
 import { STAGES, stageBerries, stageMonsters, stagePlatforms, stageTrees, stageSize } from './stages';
 
 type Entity = { id: string; name: string; x: number; z: number; mesh: T.Group; label: HTMLDivElement };
@@ -211,7 +211,7 @@ export class World {
   private keys = new Set<string>(); private stick = { x: 0, z: 0 }; private clock = new T.Clock(); private time = 0; private vy = 0; private grounded = true;
   private particles: { mesh: T.Mesh; v: T.Vector3; life: number }[] = []; private lastSafe = new T.Vector3(0, 0, 8); private follow = new T.Vector3(0, 0, 1);
   private sun: T.DirectionalLight; private labelLayer: HTMLDivElement; private selectedId: string | null = null;
-  private swingUntil = 0; private rideIndex = -1; private petIndex = -1; private petModel: T.Group | null = null; private animationRunning = false;
+  private swingUntil = 0; private rideIndex = -1; private petIndex = -1; private petModel: T.Group | null = null; private petTargetId: number | null = null; private animationRunning = false;
   private rideAnimated: T.Object3D[] = []; private butterflies: T.Object3D[] = [];
   private tempProjection = new T.Vector3(); private tempTarget = new T.Vector3(); private tempWorld = new T.Vector3(); private cameraTarget = new T.Vector3();
   active = false; paused = true; inRoom = false; onCollect = (_id: number) => {}; onInteract = (_id: string) => {}; onAttack = (_id: string | null) => {}; onNear = (_name: string | null, _id: string | null) => {}; onJump = () => {}; onRescue = () => {};
@@ -312,15 +312,15 @@ export class World {
     this.addBerries();
   }
   private clearMap() {
-    this.selectedId = null; this.onNear(null, null); this.entities.forEach(e => e.label.remove()); this.entities = []; this.coins = []; this.colliders = [];
-    for (const child of [...this.scene.children]) if (child !== this.player && !(child instanceof T.Light)) this.scene.remove(child);
+    this.selectedId = null; this.petTargetId = null; this.onNear(null, null); this.entities.forEach(e => e.label.remove()); this.entities = []; this.coins = []; this.colliders = [];
+    for (const child of [...this.scene.children]) if (child !== this.player && child !== this.petModel && !(child instanceof T.Light)) this.scene.remove(child);
   }
   loadStage(s: Save, fresh = false) {
     this.clearInput(); this.clearMap(); this.inRoom = false; this.stage = s.journey.stage;
     this.scene.background = new T.Color(0xc5e5d4); this.scene.fog = new T.Fog(0xc5e5d4, 55, 105); this.platforms = stagePlatforms(this.stage);
     if (this.stage === 0) this.buildVillage(); else this.buildHunt(this.stage);
     const map = s.journey.maps[this.stage]; this.coins.forEach(c => c.mesh.visible = !map.berries.includes(c.id)); this.entities.forEach(e => { if (e.id.startsWith('monster')) e.mesh.visible = !map.monsters.includes(Number(e.id.slice(7))); if (e.id.startsWith('tree')) e.mesh.visible = !map.trees.includes(Number(e.id.slice(4))); });
-    const spawn = this.stage === 0 ? { x: 0, z: 8 } : { x: 0, z: stageSize(this.stage).z - 9 }; const p = fresh ? spawn : s.position; this.player.position.set(p.x, 0, p.z); this.lastSafe.copy(this.player.position); this.follow.copy(this.player.position);
+    const spawn = this.stage === 0 ? { x: 0, z: 8 } : { x: 0, z: stageSize(this.stage).z - 9 }; const p = fresh ? spawn : s.position; this.player.position.set(p.x, 0, p.z); this.placePetNearPlayer(); this.lastSafe.copy(this.player.position); this.follow.copy(this.player.position);
   }
   enterRoom(s: Save) {
     this.clearInput(); this.clearMap(); this.inRoom = true; this.stage = 0; this.platforms = [];
@@ -357,7 +357,7 @@ export class World {
       else if (id === 6) { cylinder(g, 0x9c795a, 0, .8, 0, .05, .07, 1.5, 7); ball(g, 0xffe699, 0, 1.65, 0, .3); }
       else { cylinder(g, 0xb47659, 0, .32, 0, .42, .5, .6, 10); for (let b = 0; b < 3; b++) ball(g, 0xe84f70, -.2 + b * .2, .7, 0, .13); }
     }
-    this.player.position.set(0, 0, 2.7); this.lastSafe.copy(this.player.position); this.follow.copy(this.player.position); this.renderOnce();
+    this.player.position.set(0, 0, 2.7); this.placePetNearPlayer(); this.lastSafe.copy(this.player.position); this.follow.copy(this.player.position); this.renderOnce();
   }
   private house(x: number, z: number, roof: number, wall: number) {
     const g = new T.Group(); g.position.set(x, 0, z); this.scene.add(g);
@@ -385,10 +385,12 @@ export class World {
   setAvatar(character: number, outfit: number, weapon: number, outfitLevel = 0, weaponLevel = 0, ride = -1, pet = -1, hairstyle = 0, face = 0) {
     const position = this.player.position.clone(), rotation = this.player.rotation.y;
     this.scene.remove(this.player); this.disposeModel(this.player); this.player = makeCharacter(character, outfit, weapon, outfitLevel, weaponLevel, hairstyle, face); this.player.position.copy(position); this.player.rotation.y = rotation; this.scene.add(this.player);
-    this.rideIndex = ride; this.petIndex = pet; this.petModel = null; this.rideAnimated = [];
+    if (this.petModel) { this.scene.remove(this.petModel); this.disposeModel(this.petModel); }
+    this.rideIndex = ride; this.petIndex = pet; this.petModel = null; this.petTargetId = null; this.rideAnimated = [];
     if (ride >= 0 && RIDES[ride]) { const body = this.player.userData.body as T.Group; body.position.y = RIDES[ride].flying ? 1.03 : .78; const rideModel = makeRide(ride); rideModel.traverse(o => { if (o.userData.rideWing || o.userData.ridePropeller || o.userData.rideGlow) this.rideAnimated.push(o); }); this.player.add(rideModel); }
-    if (pet >= 0 && PETS[pet]) { this.petModel = makePet(pet); this.player.add(this.petModel); }
+    if (pet >= 0 && PETS[pet]) { this.petModel = makePet(pet); this.scene.add(this.petModel); this.placePetNearPlayer(); }
   }
+  private placePetNearPlayer() { if (this.petModel) this.petModel.position.set(this.player.position.x - 1.05, this.player.position.y + .02, this.player.position.z - .7); }
   private disposeModel(g: T.Group) { g.traverse(o => { if (o instanceof T.Mesh && !sharedGeometries.has(o.geometry)) o.geometry.dispose(); }); }
   setActive(active: boolean) { this.active = active; this.paused = !active; if (!active) this.clearInput(); this.syncAnimation(); }
   setPaused(paused: boolean) { this.paused = paused; if (paused) this.clearInput(); this.syncAnimation(); }
@@ -424,7 +426,7 @@ export class World {
       let dx = Number(this.keys.has('d') || this.keys.has('arrowright')) - Number(this.keys.has('a') || this.keys.has('arrowleft')) + this.stick.x;
       let dz = Number(this.keys.has('s') || this.keys.has('arrowdown')) - Number(this.keys.has('w') || this.keys.has('arrowup')) + this.stick.z;
       const n = Math.hypot(dx, dz); if (n > 1) { dx /= n; dz /= n; }
-      const ride = this.rideIndex >= 0 ? RIDES[this.rideIndex] : null, flying = !!ride?.flying, speed = 6.5 * (ride?.speed ?? 1);
+      const ride = this.rideIndex >= 0 ? RIDES[this.rideIndex] : null, flying = !!ride?.flying, speed = PLAYER_MOVE_SPEED * (ride?.speed ?? 1);
       const vx = (dx * .8 + dz * .6) * speed, vz = (-dx * .6 + dz * .8) * speed;
       const allowed = (x: number, z: number) => flying || (!this.colliders.some(c => (!c.id || this.entities.find(e => e.id === c.id)?.mesh.visible) && Math.hypot(x - c.x, z - c.z) < c.r + .32) && !this.platforms.some(t => Math.abs(x - t.x) < t.w / 2 + .2 && Math.abs(z - t.z) < t.d / 2 + .2 && p.y < t.h - .13));
       if (allowed(p.x + vx * dt, p.z)) p.x += vx * dt; if (allowed(p.x, p.z + vz * dt)) p.z += vz * dt;
@@ -436,19 +438,25 @@ export class World {
       else if (this.grounded && (flying || !this.water(p.x, p.z)) && Math.abs(p.x) < bounds.x - 2 && Math.abs(p.z) < bounds.z - 2) this.lastSafe.copy(p);
       for (const c of this.coins) if (c.mesh.visible && p.distanceTo(c.mesh.position) < 1) { c.mesh.visible = false; this.burst(c.mesh.position, 0xff9fb4, 6); this.onCollect(c.id); }
       if (this.petModel && this.petIndex >= 0) {
-        let target: (typeof this.coins)[number] | undefined, best: number = PETS[this.petIndex].radius;
-        for (const c of this.coins) { if (!c.mesh.visible) continue; const d = Math.hypot(p.x - c.mesh.position.x, p.z - c.mesh.position.z); if (d < best) { target = c; best = d; } }
-        this.player.updateWorldMatrix(true, false);
-        if (target) { this.tempTarget.copy(target.mesh.position); this.player.worldToLocal(this.tempTarget); this.tempTarget.y = .22; }
-        else this.tempTarget.set(-1.05, .12, -.7);
-        const turnX = this.tempTarget.x - this.petModel.position.x, turnZ = this.tempTarget.z - this.petModel.position.z;
-        if (Math.hypot(turnX, turnZ) > .04) this.petModel.rotation.y = Math.atan2(turnX, turnZ);
-        this.petModel.position.lerp(this.tempTarget, 1 - Math.exp(-dt * (target ? 3.8 : 2.6)));
-        const petMoving = Math.hypot(turnX, turnZ) > .06;
-        this.petModel.position.y = .02 + (petMoving ? Math.abs(Math.sin(this.time * 12)) * .11 : Math.sin(this.time * 2.4) * .025);
+        let target = this.petTargetId === null ? undefined : this.coins.find(c => c.id === this.petTargetId && c.mesh.visible);
+        if (!target) {
+          this.petTargetId = null; let best: number = PETS[this.petIndex].radius;
+          for (const c of this.coins) { if (!c.mesh.visible) continue; const d = Math.hypot(p.x - c.mesh.position.x, p.z - c.mesh.position.z); if (d < best) { target = c; best = d; } }
+          if (target) this.petTargetId = target.id;
+        }
+        if (target) { this.tempTarget.copy(target.mesh.position); this.tempTarget.y -= .46; }
+        else this.tempTarget.set(-1.05, .12, -.7).applyQuaternion(this.player.quaternion).add(p);
+        this.tempWorld.set(this.tempTarget.x - this.petModel.position.x, 0, this.tempTarget.z - this.petModel.position.z); const distanceToTarget = this.tempWorld.length();
+        if (distanceToTarget > .04) this.petModel.rotation.y = Math.atan2(this.tempWorld.x, this.tempWorld.z);
+        const rideSpeed = this.rideIndex >= 0 ? RIDES[this.rideIndex].speed : 1;
+        const step = petChaseSpeed(rideSpeed) * dt;
+        if (distanceToTarget > step) this.petModel.position.addScaledVector(this.tempWorld, step / distanceToTarget); else this.petModel.position.copy(this.tempTarget);
+        const petMoving = distanceToTarget > .06;
+        const petBaseY = target ? target.mesh.position.y - .46 : p.y;
+        this.petModel.position.y = petBaseY + (petMoving ? Math.abs(Math.sin(this.time * 12)) * .11 : Math.sin(this.time * 2.4) * .025);
         const petBody = this.petModel.userData.petBody as T.Object3D | undefined;
-        if (petBody) { petBody.scale.y = target && this.petModel.getWorldPosition(this.tempWorld).distanceTo(target.mesh.position) < .9 ? .78 + Math.abs(Math.sin(this.time * 13)) * .35 : petMoving ? .9 + Math.abs(Math.sin(this.time * 11)) * .15 : 1; }
-        if (target && this.petModel.getWorldPosition(this.tempWorld).distanceTo(target.mesh.position) < .55 && target.mesh.visible) { target.mesh.visible = false; this.burst(target.mesh.position, 0xff9fb4, 6); this.onCollect(target.id); }
+        if (petBody) { petBody.scale.y = target && distanceToTarget < .9 ? .78 + Math.abs(Math.sin(this.time * 13)) * .35 : petMoving ? .9 + Math.abs(Math.sin(this.time * 11)) * .15 : 1; }
+        if (target && distanceToTarget < .55 && target.mesh.visible) { target.mesh.visible = false; this.petTargetId = null; this.burst(target.mesh.position, 0xff9fb4, 6); this.onCollect(target.id); }
       }
     }
     for (const c of this.coins) { c.mesh.rotation.y += dt; c.mesh.position.y = c.y + Math.sin(this.time * 2.8 + c.mesh.position.x) * .12; }

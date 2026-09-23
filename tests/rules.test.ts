@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { questionPool, newSave, validateSave, buy, upgrade, buyRide, dismount, buyPet, buyLook, applyTeacherCode, enableTeacherMode, grantReward, rewardFor, Encounter, WEAPONS, OUTFITS, PETS, RIDES, HAIRSTYLES, FACES, MONSTERS, STAGE_DIVISION_DIFFICULTY, collectBerry, finishHunt, fellTree, treeDamage, canEnter, recordWrongAnswer, recordCorrectAnswer } from '../src/rules.ts';
+import { questionPool, newSave, validateSave, buy, upgrade, buyRide, dismount, buyPet, buyLook, applyTeacherCode, enableTeacherMode, grantReward, rewardFor, Encounter, WEAPONS, OUTFITS, PETS, RIDES, HAIRSTYLES, FACES, MONSTERS, STAGE_DIVISION_DIFFICULTY, collectBerry, finishHunt, fellTree, treeDamage, canEnter, recordWrongAnswer, recordCorrectAnswer, PLAYER_MOVE_SPEED, petChaseSpeed } from '../src/rules.ts';
 import { stageBerries, stageMonsters, stageTrees, clearBonus, berryValue } from '../src/stages.ts';
 
 test('every question follows the curriculum; two-digit quotients begin at level 4', () => {
@@ -87,6 +87,9 @@ test('rides cost at least 1000 berries and flying starts at 5000 berries', () =>
   assert.ok(RIDES.every(ride => ride.price >= 1000)); assert.ok(RIDES.filter(ride => ride.flying).every(ride => ride.price >= 5000));
   const s = newSave('라이더', 0); assert.throws(() => buyRide(s, 0)); s.berries = 6000; const before = s.berries; buyRide(s, 0); assert.equal(s.berries, before - RIDES[0].price); assert.equal(s.ride, 0); assert.equal(s.rides[0], true);
   buyRide(s, 0); assert.equal(s.berries, before - RIDES[0].price); assert.equal(dismount(s), '라이딩에서 내려 천천히 걸어요.'); assert.equal(s.ride, -1);
+});
+test('pet chase speed stays ahead of every ride so mounted berries can be reached', () => {
+  for (const ride of RIDES) assert.ok(petChaseSpeed(ride.speed) > PLAYER_MOVE_SPEED * ride.speed);
 });
 test('teacher code unlocks all demonstration content without clearing hunts', () => {
   const s = newSave('선생님', 0); assert.throws(() => enableTeacherMode(s, 'Teacher')); enableTeacherMode(s, 'teacher');

@@ -53,6 +53,8 @@ export const RIDES = [
   { name: '달빛 아기용', price: 8000, speed: 3, flying: true, icon: '🐉', color: 0x7898d8, desc: '달빛 꼬리를 그리며 아주 빠르게 날아요' },
   { name: '오로라 고래', price: 10000, speed: 3.25, flying: true, icon: '🐳', color: 0x65b9d8, desc: '오로라 물결을 헤치며 가장 빠르게 날아요' },
 ] as const;
+export const PLAYER_MOVE_SPEED = 6.5;
+export function petChaseSpeed(rideSpeed: number) { return Math.max(12, PLAYER_MOVE_SPEED * rideSpeed * 1.2); }
 export const PETS = [
   { name: '딸기 햄찌', price: 400, radius: 2.8, icon: '🐹', color: 0xd9a16f, desc: '가까운 베리를 쪼르르 달려가 먹어 줘요' },
   { name: '구름 토끼콩', price: 700, radius: 3.3, icon: '🐰', color: 0xf1e8ec, desc: '긴 귀로 베리 냄새를 잘 찾아요' },
