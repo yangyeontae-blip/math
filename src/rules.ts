@@ -68,7 +68,9 @@ export const HAIRSTYLES = [
 export const FACES = [
   { name: '해맑은 얼굴', price: 0, icon: '😊' }, { name: '초롱초롱 눈', price: 100, icon: '🥺' },
   { name: '씩씩한 눈썹', price: 160, icon: '😎' }, { name: '방긋 고양이상', price: 240, icon: '😺' },
-  { name: '별눈 반짝이', price: 360, icon: '🤩' },
+  { name: '별눈 반짝이', price: 360, icon: '🤩' }, { name: '졸린 달눈', price: 520, icon: '🌙' },
+  { name: '토끼 앞니 미소', price: 700, icon: '🐰' }, { name: '하트 반짝눈', price: 900, icon: '💖' },
+  { name: '용감한 번개눈', price: 1200, icon: '⚡' }, { name: '무지개 웃음', price: 1500, icon: '🌈' },
 ] as const;
 export const WEAPON_UPGRADES = [60, 120, 240];
 export const OUTFIT_UPGRADES = [50, 100];
@@ -82,6 +84,7 @@ export interface Save {
   learning: { elapsedSeconds: number; correct: number; wrong: number; wrongQuestions: Question[] };
   discoveries: { monsters: number[]; pets: number[]; outfits: number[] };
   room: { furniture: number[] };
+  garden?: { rescued: number; flowers: number[] };
   journey: { stage: number; maps: { berries: number[]; monsters: number[]; trees: number[]; cleared: boolean }[] };
 }
 export interface Question { dividend: number; divisor: number; answer: number }
@@ -99,7 +102,7 @@ export const STAGE_DIVISION_DIFFICULTY = [
 ] as const;
 export function newSave(nickname: string, character: number): Save {
   if (!nickname.trim() || [...nickname.trim()].length > 10 || !Number.isInteger(character) || character < 0 || character > 3) throw new Error('이름은 1~10자, 캐릭터는 4명 중 골라 주세요.');
-  return { version: 6, nickname: nickname.trim(), character, berries: 0, level: 1, xp: 0, weapon: 0, outfit: 0, weapons: { 0: 0 }, outfits: { 0: 0 }, ride: -1, rides: {}, pet: -1, pets: {}, hairstyle: 0, hairstyles: { 0: true }, face: 0, faces: { 0: true }, teacherMode: false, best: 0, position: { x: 0, z: 8 }, tutorial: { collected: false, battle: false, shop: false }, settings: { music: true, sound: true, lowQuality: false, maxDividend: 0, sessionMinutes: 0 }, learning: { elapsedSeconds: 0, correct: 0, wrong: 0, wrongQuestions: [] }, discoveries: { monsters: [], pets: [], outfits: [0] }, room: { furniture: [] }, journey: emptyJourney() };
+  return { version: 6, nickname: nickname.trim(), character, berries: 0, level: 1, xp: 0, weapon: 0, outfit: 0, weapons: { 0: 0 }, outfits: { 0: 0 }, ride: -1, rides: {}, pet: -1, pets: {}, hairstyle: 0, hairstyles: { 0: true }, face: 0, faces: { 0: true }, teacherMode: false, best: 0, position: { x: 0, z: 8 }, tutorial: { collected: false, battle: false, shop: false }, settings: { music: true, sound: true, lowQuality: false, maxDividend: 0, sessionMinutes: 0 }, learning: { elapsedSeconds: 0, correct: 0, wrong: 0, wrongQuestions: [] }, discoveries: { monsters: [], pets: [], outfits: [0] }, room: { furniture: [] }, journey: emptyJourney(), garden: { rescued: 0, flowers: [-1, -1, -1] } };
 }
 export function emptyJourney(): Save['journey'] { return { stage: 0, maps: Array.from({ length: 11 }, () => ({ berries: [], monsters: [], trees: [], cleared: false })) }; }
 export function canEnter(s: Save, stage: number) { return Number.isInteger(stage) && stage >= 0 && stage <= 10 && (s.teacherMode || stage <= 1 || s.journey.maps[stage - 1].cleared); }
@@ -227,7 +230,9 @@ export function validateSave(value: unknown): Save {
     migrated.room = { furniture: [] };
   }
   const s = migrated as unknown as Save;
+  if (s.garden === undefined) s.garden = { rescued: 0, flowers: [-1, -1, -1] };
   const integer = (v: unknown, min: number, max: number): v is number => typeof v === 'number' && Number.isSafeInteger(v) && v >= min && v <= max;
+  if (!s.garden || !integer(s.garden.rescued, 0, 3) || !Array.isArray(s.garden.flowers) || s.garden.flowers.length !== 3 || s.garden.flowers.some(f => !integer(f, -1, 2)) || s.garden.flowers.filter(f => f >= 0).length > s.garden.rescued) return fail();
   if (s.version !== 6 || typeof s.teacherMode !== 'boolean' || typeof s.nickname !== 'string' || !s.nickname.trim() || [...s.nickname].length > 10 || !integer(s.character, 0, 3) || !integer(s.berries, 0, 1e9) || !integer(s.level, 1, 100000) || !integer(s.xp, 0, s.level * 40 - 1) || !integer(s.best, 0, 1e9)) return fail();
   for (const [key, total, max] of [['weapons', WEAPONS.length, 3], ['outfits', OUTFITS.length, 2]] as const) {
     const map = s[key];

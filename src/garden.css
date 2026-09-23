@@ -1,0 +1,19 @@
+.garden-entry { width: 100%; margin-top: 12px; min-height: 44px; white-space: normal; }
+dialog.garden-modal { width: min(760px, calc(100vw - 24px)); max-height: calc(100dvh - 32px); overflow-y: auto; }
+.garden-modal p { line-height: 1.65; }
+.garden-progress { padding: 12px; border-radius: 14px; background: #eaf4df; color: #304f2c; font-weight: 700; text-align: center; }
+.flower-plots { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin: 20px 0; }
+.flower-plot { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 18px 6px; border: 2px solid #cbdcae; border-radius: 20px; background: #f6f8e9; color: #35542f; font-weight: 700; }
+.flower-plot span { font-size: clamp(32px, 7vw, 58px); }
+.flower-plot:hover { background: #e7f3d4; }
+.sheep-meadow { padding: 16px; border-radius: 18px; background: #eaf4df; font-size: 23px; line-height: 1.7; overflow-wrap: anywhere; }
+.sheep-pens { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.sheep-pen { min-width: 0; padding: 12px; border: 3px solid #d6bd94; border-radius: 18px; background: #fffaf0; }
+.sheep-pen h3 { margin: 0 0 10px; font-size: 16px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 4px; }
+.pen-flock { min-height: 58px; font-size: 26px; line-height: 1.5; overflow-wrap: anywhere; }
+.sheep-pen button { width: 100%; min-height: 44px; padding: 8px 4px; white-space: normal; font-size: 14px; }
+.garden-modal button:focus-visible { outline: 3px solid #28734c; outline-offset: 3px; }
+.garden-modal button:disabled { opacity: .45; cursor: default; }
+.garden-modal .text-button { min-height: 44px; }
+.rescue-success { text-align: center; font-size: 48px; padding: 20px 0; }
+@media (max-width: 400px) { .sheep-pens { gap: 8px; } .sheep-pen { padding: 8px; } .garden-modal #modal-content { padding: 16px; } }
