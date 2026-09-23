@@ -97,11 +97,38 @@ function openModal(html: string, cls = '') {
 function title(kicker: string, name: string) { return `<div class="modal-heading"><div><span class="eyebrow">${kicker}</span><h2>${name}</h2></div><button class="close" data-close aria-label="닫기">×</button></div>`; }
 ($('#modal') as HTMLDialogElement).addEventListener('cancel', e => { e.preventDefault(); if (battle) exitBattle(); else closeModal(); });
 
+function startCharacterMarkup(index: number) {
+  const character = CHARACTERS[index], hair = `#${character.hair.toString(16).padStart(6, '0')}`, skin = `#${character.skin.toString(16).padStart(6, '0')}`;
+  const outfit = ['#e58da4', '#75b5a0', '#a397ce', '#e5ae59'][index];
+  const style = character.style;
+  const hairShape = style === 0
+    ? `<circle cx="31" cy="43" r="10" fill="${hair}"/><circle cx="89" cy="43" r="10" fill="${hair}"/><path d="M31 47 Q29 8 60 12 Q92 10 89 48 Q78 28 60 30 Q43 28 31 47Z" fill="${hair}"/>`
+    : style === 1
+      ? `<path d="M30 51 Q25 10 60 12 Q96 10 90 54 L79 45 Q70 52 60 42 Q48 53 39 45Z" fill="${hair}"/>`
+      : style === 2
+        ? `<path d="M29 53 Q24 11 60 12 Q97 11 91 60 L85 86 L76 79 L74 46 Q60 33 45 47 L43 80 L34 87Z" fill="${hair}"/>`
+        : `<circle cx="39" cy="28" r="13" fill="${hair}"/><circle cx="54" cy="18" r="13" fill="${hair}"/><circle cx="70" cy="19" r="13" fill="${hair}"/><circle cx="83" cy="31" r="13" fill="${hair}"/><path d="M31 51 Q30 20 60 20 Q90 20 89 51 Q75 40 60 43 Q44 40 31 51Z" fill="${hair}"/>`;
+  return `<svg class="start-avatar-svg" viewBox="0 0 120 150" role="img" aria-label="${character.name} 캐릭터 모습">
+    <ellipse cx="60" cy="140" rx="31" ry="6" fill="#52754c" opacity=".2"/>
+    <path d="M43 118 L41 137 Q48 141 54 137 L57 117 M63 117 L66 137 Q72 141 79 137 L76 118" fill="#76523e" stroke="#684734" stroke-width="3" stroke-linejoin="round"/>
+    <path d="M38 83 Q60 75 82 83 L88 117 Q60 130 32 117Z" fill="${outfit}" stroke="#fff5d9" stroke-width="3"/>
+    <path d="M39 89 L27 108 M81 89 L93 108" stroke="${skin}" stroke-width="9" stroke-linecap="round"/>
+    <path d="M45 85 L60 99 L75 85" fill="none" stroke="#fff0c8" stroke-width="4" stroke-linecap="round"/>
+    <circle cx="60" cy="49" r="31" fill="${skin}" stroke="#fff8e8" stroke-width="3"/>
+    ${hairShape}
+    <ellipse cx="49" cy="54" rx="2.7" ry="4" fill="#3c3835"/><ellipse cx="71" cy="54" rx="2.7" ry="4" fill="#3c3835"/>
+    <circle cx="41" cy="65" r="5" fill="#f29da0" opacity=".65"/><circle cx="79" cy="65" r="5" fill="#f29da0" opacity=".65"/>
+    <path d="M55 69 Q60 74 65 69" fill="none" stroke="#925e55" stroke-width="2.4" stroke-linecap="round"/>
+    <path d="M50 104 L60 110 L70 104" fill="none" stroke="#ffe391" stroke-width="3" stroke-linecap="round"/>
+    <circle cx="60" cy="88" r="3" fill="#ffe391"/>
+  </svg>`;
+}
+
 function showStart() {
   if (world!) { world.setActive(false); } $('#hud').hidden = true; $('#start-screen').hidden = false;
   $('#start-screen').innerHTML = `<section class="welcome-card"><div class="logo-mark">✿</div><span class="eyebrow">작은 모험, 자라는 생각</span><h1>베리숲<br><span>모험학교</span></h1><p class="intro">베리를 줍고, 나눗셈을 풀고.<br>나만의 모습으로 숲을 여행해요.</p><div id="start-avatar" class="start-avatar"></div><div class="character-picker" role="group" aria-label="캐릭터 선택">${CHARACTERS.map((c, i) => `<button class="character-choice ${i === selected ? 'selected' : ''}" data-character="${i}" aria-pressed="${i === selected}"><span class="character-dot" style="--hair:#${c.hair.toString(16)};--skin:#${c.skin.toString(16)}">${['✿', '●', '☾', '✦'][i]}</span>${c.name}</button>`).join('')}</div><p id="character-desc" class="subtle">${CHARACTERS[selected].desc} · 능력은 모두 같아요</p><label class="name-label" for="nickname-input">모험가의 이름</label><input id="nickname-input" maxlength="10" placeholder="닉네임을 적어 주세요" autocomplete="off"><p id="start-error" class="error" role="alert"></p><button class="primary start-button" id="new-game">${saved ? '새 모험 시작' : '숲으로 출발하기'} <span>→</span></button>${saved ? `<button class="secondary wide" id="continue">${escape(saved.nickname)} · Lv.${saved.level} 이어하기</button>` : ''}<button class="text-button" id="start-import">저장 파일 불러오기</button><small class="save-note">이 기기와 브라우저에 모험이 저장돼요</small></section><div class="start-world-caption"><span>❋</span> 오늘도, 새로운 모험이 기다려요</div>`;
-  $('#start-avatar').innerHTML = `<span class="start-avatar-sticker">${['🌱', '🍄', '🌙', '☁️'][selected]}</span>`;
-  document.querySelectorAll<HTMLButtonElement>('[data-character]').forEach(b => b.onclick = () => { selected = Number(b.dataset.character); document.querySelectorAll<HTMLButtonElement>('[data-character]').forEach(x => { x.classList.toggle('selected', x === b); x.setAttribute('aria-pressed', String(x === b)); }); $('#character-desc').textContent = `${CHARACTERS[selected].desc} · 능력은 모두 같아요`; $('#start-avatar').innerHTML = `<span class="start-avatar-sticker">${['🌱', '🍄', '🌙', '☁️'][selected]}</span>`; });
+  $('#start-avatar').innerHTML = startCharacterMarkup(selected);
+  document.querySelectorAll<HTMLButtonElement>('[data-character]').forEach(b => b.onclick = () => { selected = Number(b.dataset.character); document.querySelectorAll<HTMLButtonElement>('[data-character]').forEach(x => { x.classList.toggle('selected', x === b); x.setAttribute('aria-pressed', String(x === b)); }); $('#character-desc').textContent = `${CHARACTERS[selected].desc} · 능력은 모두 같아요`; $('#start-avatar').innerHTML = startCharacterMarkup(selected); });
   $('#new-game').onclick = () => {
     const nickname = $('#nickname-input') as HTMLInputElement; let next: Save;
     try { next = newSave(nickname.value, selected); } catch (e) { $('#start-error').textContent = (e as Error).message; nickname.focus(); return; }
