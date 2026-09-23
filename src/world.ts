@@ -151,37 +151,44 @@ function makeRide(id: number) {
   const g = new T.Group(), ride = RIDES[id]; g.userData.rideModel = true;
   if (id === 0) {
     box(g, 0x73b7a3, 0, .34, 0, 1.25, .16, .58); cylinder(g, 0xf39a58, 0, .55, .1, .16, .3, .72, 10).rotation.z = Math.PI / 2;
-    for (const side of [-1, 1]) { const wheel = cylinder(g, 0x554b47, side * .48, .22, .08, .23, .23, .15, 12); wheel.rotation.z = Math.PI / 2; ball(g, 0xffd56c, side * .48, .22, .08, .08); }
+    for (const side of [-1, 1]) { const wheel = cylinder(g, 0x554b47, side * .48, .22, .08, .23, .23, .15, 12); wheel.rotation.z = Math.PI / 2; ball(g, 0xffd56c, side * .48, .22, .08, .08); ball(g, 0xfff1b0, side * .3, .39, .31, .08, .07, .035); }
   } else if (id === 1) {
     for (let i = 0; i < 7; i++) ball(g, 0xf5fbff, (i % 4 - 1.5) * .32, .55 + (i % 2) * .18, (Math.floor(i / 4) - .5) * .35, .42, .36, .38);
-    ball(g, 0xdcebf1, 0, .72, .42, .48, .43, .42); for (const side of [-1, 1]) { ball(g, 0x394844, side * .16, .8, .78, .045, .06, .03); ball(g, 0xc0dce7, side * .3, 1.07, .43, .14, .24, .12); }
+    ball(g, 0xdcebf1, 0, .72, .42, .48, .43, .42); for (const side of [-1, 1]) { ball(g, 0x394844, side * .16, .8, .78, .045, .06, .03); ball(g, 0xc0dce7, side * .3, 1.07, .43, .14, .24, .12); ball(g, 0xf3a6b5, side * .27, .67, .78, .065, .045, .025); }
+    ball(g, 0xffd978, 0, .47, .78, .1, .12, .06);
   } else if (id === 2) { // 도토리 붕붕이: 도토리 차체와 네 바퀴
     ball(g, 0x9a653d, 0, .63, 0, .68, .48, .62); cylinder(g, 0x6d4835, 0, 1.05, 0, .52, .62, .22, 12);
     box(g, 0xf2daa0, 0, .78, .04, .56, .08, .42);
     for (const side of [-1, 1]) for (const front of [-1, 1]) { const wheel = cylinder(g, 0x4c4650, side * .54, .25, front * .42, .19, .19, .16, 10); wheel.rotation.z = Math.PI / 2; ball(g, 0xffdc6c, side * .55, .25, front * .42, .065); }
     for (const side of [-1, 1]) ball(g, 0x493c35, side * .17, 1.04, .54, .045, .06, .025);
+    const sprout = cylinder(g, 0x70a85b, 0, 1.38, 0, .035, .045, .35, 7); sprout.rotation.z = -.24; ball(g, 0x8acb75, -.13, 1.49, 0, .17, .08, .09);
   } else if (id === 3) { // 무지개 사슴: 다리·뿔·꼬리가 있는 탈것
     ball(g, 0x82cfb2, 0, .72, 0, .76, .5, .56); ball(g, 0x9ee5d3, 0, 1.08, .58, .39, .38, .42);
     for (const side of [-1, 1]) { for (const z of [-.34, .34]) cylinder(g, 0x6a9f79, side * .48, .35, z, .07, .09, .56, 7); ball(g, 0x414a42, side * .13, 1.16, .94, .043, .06, .025); const ear = ball(g, 0xc1a5ee, side * .28, 1.45, .52, .11, .28, .09); ear.rotation.z = side * -.28; }
     for (const side of [-1, 1]) { const antler = cylinder(g, 0xffd77d, side * .18, 1.55, .53, .025, .04, .42, 6); antler.rotation.z = side * -.24; }
     ball(g, 0xff8fb4, 0, .98, -.58, .17, .18, .32);
+    for (let i = 0; i < 3; i++) ball(g, [0xffe17a, 0xf4a6cd, 0xa9def0][i], -.22 + i * .22, .88, -.04, .055);
   } else if (id === 4) { // 별빛 페가수스: 말 실루엣과 깃털 날개
     ball(g, 0xc9b5ef, 0, .78, 0, .78, .48, .58); ball(g, 0xd9cefa, 0, 1.16, .55, .4, .4, .42);
     for (const side of [-1, 1]) { for (const z of [-.34, .34]) cylinder(g, 0x8f79c7, side * .5, .35, z, .065, .08, .62, 7); const wing = mesh(new T.CircleGeometry(.58, 12), side < 0 ? 0xf7d3ee : 0xc6e5ff, side * .64, 1.02, -.04, g); wing.scale.y = 1.45; wing.rotation.z = side * -.62; wing.userData.rideWing = side; ball(g, 0x45405e, side * .14, 1.23, .92, .045, .06, .025); }
     for (const side of [-1, 1]) { const ear = ball(g, 0xf7e9ff, side * .25, 1.48, .57, .09, .25, .07); ear.rotation.z = side * -.18; }
     for (let i = 0; i < 4; i++) ball(g, 0xffef9a, 0, .9 + i * .12, -.5 - i * .18, .16 - i * .02);
+    for (let i = 0; i < 3; i++) ball(g, 0xffe898, -.2 + i * .2, .87, -.2, .065, .055, .04);
   } else if (id === 5) { // 솜사탕 열기구: 커다란 풍선과 바구니
     ball(g, 0xf2a9cf, 0, 1.5, 0, .76, .86, .76); ball(g, 0xffd9e9, -.38, 1.65, .22, .33); ball(g, 0xbce6fa, .38, 1.55, .22, .3);
     box(g, 0xa8754e, 0, .46, 0, .58, .28, .48); for (const side of [-1, 1]) for (const z of [-1, 1]) cylinder(g, 0xf4e2b2, side * .22, .94, z * .18, .025, .025, .88, 6);
     const propeller = box(g, 0xffe891, 0, .53, -.34, .85, .09, .08); propeller.userData.ridePropeller = true; box(g, 0xffe891, 0, .53, -.34, .09, .85, .08).userData.ridePropeller = true;
+    for (let i = 0; i < 3; i++) box(g, [0xffe6a0, 0xc5e9ff, 0xfff4c9][i], -.28 + i * .28, 1.55, .58, .08, .48, .055);
   } else if (id === 6) { // 달빛 아기용: 날개·뿔·긴 꼬리
     ball(g, 0x7898d8, 0, .72, 0, .82, .5, .62); ball(g, 0x91ace8, 0, 1.08, .58, .43, .42, .45);
     for (const side of [-1, 1]) { const wing = mesh(new T.ConeGeometry(.46, 1.2, 3), 0xaed0f0, side * .72, .96, -.1, g); wing.rotation.z = side * -.78; wing.rotation.x = -.18; wing.userData.rideWing = side; ball(g, 0x343c62, side * .14, 1.15, .96, .045, .06, .025); const horn = mesh(new T.ConeGeometry(.07, .28, 6), 0xffe69a, side * .17, 1.48, .61, g); horn.rotation.x = -.2; }
     for (let i = 0; i < 5; i++) ball(g, 0x9fc9f0, 0, .83 + i * .1, -.44 - i * .25, .18 - i * .025);
+    for (let i = 0; i < 4; i++) { const spike = mesh(new T.ConeGeometry(.1, .25, 5), 0xa4c5f0, -.3 + i * .2, 1.42, -.22 + i * .12, g); spike.rotation.z = Math.PI; }
   } else { // 오로라 고래: 둥근 지느러미와 물결 꼬리
     ball(g, 0x65b9d8, 0, .82, 0, .94, .55, .72); ball(g, 0x89d7e6, 0, 1.02, .62, .5, .44, .44); ball(g, 0xe8f9ff, 0, .72, .5, .33, .22, .1);
     for (const side of [-1, 1]) { const fin = ball(g, 0x86d5e7, side * .8, .67, -.05, .42, .13, .34); fin.rotation.z = side * .48; ball(g, 0x354662, side * .18, 1.1, .94, .045, .065, .025); const tail = ball(g, 0x9fe6e5, side * .3, .88, -.78, .28, .1, .34); tail.rotation.z = side * .48; }
     for (let i = 0; i < 3; i++) ball(g, 0xb1f2db, -.18 + i * .18, 1.43 + Math.sin(i) * .06, .02, .08, .2, .07);
+    for (let i = 0; i < 3; i++) ball(g, 0xe7fbff, .86, 1.05 + i * .2, -.3 + i * .12, .07, .07, .07);
   }
   // 모든 탈것에 같은 모험 안장을 더해, 캐릭터가 자연스럽게 타고 있다는 느낌을 만듭니다.
   if (id !== 5) { box(g, 0x8d6046, 0, .92, -.05, .5, .12, .42); ball(g, 0xffd978, 0, .98, .12, .09); }
@@ -191,17 +198,21 @@ function makeRide(id: number) {
 
 function makePet(id: number) {
   const g = new T.Group(), pet = PETS[id];
-  ball(g, pet.color, 0, .32, 0, .34, .29, .35); ball(g, pet.color, 0, .57, .18, .28, .27, .25);
-  for (const side of [-1, 1]) { ball(g, 0x35423e, side * .1, .61, .4, .035, .05, .02); ball(g, 0xf3a6b5, side * .19, .51, .38, .055, .03, .02); }
-  if (id === 0) for (const side of [-1, 1]) ball(g, pet.color, side * .2, .76, .1, .12);
-  if (id === 1) for (const side of [-1, 1]) ball(g, pet.color, side * .13, .92, .12, .09, .36, .09);
-  if (id === 2) for (const side of [-1, 1]) { const ear = mesh(new T.ConeGeometry(.1, .3, 5), pet.color, side * .16, .86, .13, g); ear.rotation.z = side * -.15; }
-  if (id === 3) { for (const side of [-1, 1]) ball(g, 0xf1d38b, side * .13, .62, .41, .08, .1, .025); for (const side of [-1, 1]) { const wing = ball(g, 0xc5addb, side * .32, .4, -.02, .2, .28, .08); wing.rotation.z = side * .35; wing.userData.petWing = side; } }
-  if (id === 4) { for (const side of [-1, 1]) mesh(new T.ConeGeometry(.08, .24, 5), 0xd5ef9a, side * .14, .86, .12, g); for (let i = 0; i < 3; i++) ball(g, 0xd5ef9a, 0, .42 + i * .09, -.35 - i * .13, .09 - i * .015); }
+  const body = new T.Group(); g.add(body);
+  ball(body, pet.color, 0, .32, 0, .34, .29, .35); ball(body, pet.color, 0, .57, .18, .28, .27, .25);
+  ball(body, 0xffeee1, 0, .31, .31, .21, .19, .075); ball(body, 0xffd2bd, 0, .54, .405, .09, .065, .035);
+  for (const side of [-1, 1]) { ball(body, 0x35423e, side * .1, .61, .4, .035, .05, .02); ball(body, 0xf3a6b5, side * .19, .51, .38, .055, .03, .02); ball(body, pet.color, side * .2, .17, .12, .13, .12, .18); }
+  const tail = id === 0 ? ball(body, pet.color, -.34, .39, -.08, .13, .13, .18) : id === 1 ? ball(body, 0xfff9f3, 0, .39, -.34, .16, .16, .16) : id === 2 ? ball(body, pet.color, -.03, .31, -.36, .11, .11, .28) : id === 3 ? ball(body, 0xc5addb, 0, .3, -.37, .17, .2, .2) : ball(body, 0x75bd91, 0, .31, -.48, .18, .16, .28);
+  if (id === 2) { tail.rotation.z = .2; for (const side of [-1, 1]) { const whisker = box(body, 0x8e7569, side * .17, .49, .45, .14, .012, .012); whisker.rotation.z = side * .12; } }
+  if (id === 0) for (const side of [-1, 1]) { ball(body, 0xffd3a0, side * .2, .76, .1, .12); ball(body, 0xfff0d9, side * .18, .78, .18, .06, .075, .025); }
+  if (id === 1) for (const side of [-1, 1]) { const ear = ball(body, pet.color, side * .13, .92, .12, .09, .36, .09); ear.rotation.z = side * -.12; ball(body, 0xffcbd8, side * .13, .93, .19, .045, .25, .025); }
+  if (id === 2) for (const side of [-1, 1]) { const ear = mesh(new T.ConeGeometry(.1, .3, 5), pet.color, side * .16, .86, .13, body); ear.rotation.z = side * -.15; ball(body, 0xf5c3c5, side * .13, .82, .2, .045, .09, .025); }
+  if (id === 3) { for (const side of [-1, 1]) { ball(body, 0xf1d38b, side * .13, .62, .41, .08, .1, .025); const wing = ball(body, 0xc5addb, side * .32, .4, -.02, .2, .28, .08); wing.rotation.z = side * .35; wing.userData.petWing = side; } for (const side of [-1, 1]) { const tuft = mesh(new T.ConeGeometry(.07, .19, 5), 0xc5addb, side * .1, .83, .08, body); tuft.rotation.z = side * -.15; } }
+  if (id === 4) { for (const side of [-1, 1]) { const horn = mesh(new T.ConeGeometry(.08, .24, 5), 0xd5ef9a, side * .14, .86, .12, body); horn.rotation.z = side * -.12; } for (let i = 0; i < 4; i++) ball(body, 0xd5ef9a, 0, .42 + i * .09, -.35 - i * .13, .09 - i * .015); ball(body, 0xffe28a, 0, .76, .08, .11); }
   // Original cozy-fantasy companion details: a tiny gem collar, travel pouch and glowing charm.
-  const collar = mesh(new T.TorusGeometry(.2, .025, 5, 16), 0xf4d478, 0, .48, .18, g); collar.rotation.x = Math.PI / 2;
-  box(g, 0x9b7653, -.3, .34, -.08, .18, .23, .1); const charm = mesh(new T.OctahedronGeometry(.065), id > 2 ? 0xbbeeff : 0xffd788, 0, .38, .43, g); charm.userData.petCharm = true;
-  g.position.set(-1.05, .02, -.7); g.userData.petModel = true; g.userData.petBody = g.children[0]; return g;
+  const collar = mesh(new T.TorusGeometry(.2, .025, 5, 16), id > 2 ? 0xbbeeff : 0xf4d478, 0, .48, .18, body); collar.rotation.x = Math.PI / 2;
+  box(body, 0x9b7653, -.3, .34, -.08, .18, .23, .1); const charm = mesh(new T.OctahedronGeometry(.065), id > 2 ? 0xbbeeff : 0xffd788, 0, .38, .43, body); charm.userData.petCharm = true;
+  g.position.set(-1.05, .02, -.7); g.userData.petModel = true; g.userData.petBody = body; return g;
 }
 
 export class World {
@@ -259,7 +270,7 @@ export class World {
     for (const x of [-4.3, 4.3]) { cylinder(this.scene, 0xaca4b6, x, 1, -14, .38, .48, 2); ball(this.scene, 0xfbe5a2, x, 2.15, -14, .42); }
     this.addEntity('guide', '연태쌤 · 마을 대장', 1.8, 3, makeYeontae());
     this.addEntity('weapon', '강지후 · 무기 상점', -8, -3.8, makeCharacter(1, 6, 1));
-    this.addEntity('outfit', '오지후 · 의상 상점', 8, -3.8, makeCharacter(2, 4, 2));
+    this.addEntity('outfit', '오지후 · 의상 상점', 4.5, -3.8, makeCharacter(2, 4, 2));
     this.addEntity('ride', '나현이 · 라이딩 상점', 14, -5.5, makeCharacter(0, 10, 6));
     this.addEntity('pet', '윤준 · 펫 상점', 18.5, -3.5, makeCharacter(1, 12, 10));
     this.addEntity('beauty', '가영이 · 헤어와 성형', -15.5, -4.2, makeCharacter(2, 15, 2));
@@ -322,7 +333,8 @@ export class World {
     const map = s.journey.maps[this.stage]; this.coins.forEach(c => c.mesh.visible = !map.berries.includes(c.id)); this.entities.forEach(e => { if (e.id.startsWith('monster')) e.mesh.visible = !map.monsters.includes(Number(e.id.slice(7))); if (e.id.startsWith('tree')) e.mesh.visible = !map.trees.includes(Number(e.id.slice(4))); });
     const spawn = this.stage === 0 ? { x: 0, z: 8 } : { x: 0, z: stageSize(this.stage).z - 9 }; const p = fresh ? spawn : s.position; this.player.position.set(p.x, 0, p.z); this.placePetNearPlayer(); this.lastSafe.copy(this.player.position); this.follow.copy(this.player.position);
   }
-  enterRoom(s: Save) {
+  enterRoom(s: Save, preservePosition = false) {
+    const roomPosition = preservePosition ? this.player.position.clone() : new T.Vector3(0, 0, 2.7);
     this.clearInput(); this.clearMap(); this.inRoom = true; this.stage = 0; this.platforms = [];
     this.scene.background = new T.Color(0xf1dfc5); this.scene.fog = new T.Fog(0xf1dfc5, 35, 65);
     box(this.scene, 0xa9845e, 0, -.58, 0, 15, 1.15, 12);
@@ -357,7 +369,7 @@ export class World {
       else if (id === 6) { cylinder(g, 0x9c795a, 0, .8, 0, .05, .07, 1.5, 7); ball(g, 0xffe699, 0, 1.65, 0, .3); }
       else { cylinder(g, 0xb47659, 0, .32, 0, .42, .5, .6, 10); for (let b = 0; b < 3; b++) ball(g, 0xe84f70, -.2 + b * .2, .7, 0, .13); }
     }
-    this.player.position.set(0, 0, 2.7); this.placePetNearPlayer(); this.lastSafe.copy(this.player.position); this.follow.copy(this.player.position); this.renderOnce();
+    this.player.position.copy(roomPosition); this.placePetNearPlayer(); this.lastSafe.copy(this.player.position); this.follow.copy(this.player.position); this.renderOnce();
   }
   private house(x: number, z: number, roof: number, wall: number) {
     const g = new T.Group(); g.position.set(x, 0, z); this.scene.add(g);
