@@ -1,12 +1,13 @@
 import './style.css';
 import './garden.css';
 import type { World, AvatarPreview } from './world';
-import { newSave, validateSave, CHARACTERS, MONSTERS, OUTFITS, PETS, POTIONS, RIDES, WEAPONS, HAIRSTYLES, FACES, WEAPON_UPGRADES, OUTFIT_UPGRADES, Encounter, grantReward, rewardFor, buy, upgrade, buyRide, dismount, buyPet, unequipPet, buyLook, buyPotion, usePotion, applyTeacherCode, collectBerry, finishHunt, fellTree, treeDamage, canEnter, monsterBattleRounds, recordWrongAnswer, recordCorrectAnswer, STAGE_STORIES, journeyFor, multiplicationUsesStory, startMultiplicationFinal, answerMultiplicationFinal, type ForestKind, type Save } from './rules';
+import { newSave, validateSave, CHARACTERS, MONSTERS, OUTFITS, PETS, POTIONS, RIDES, WEAPONS, HAIRSTYLES, FACES, WEAPON_UPGRADES, OUTFIT_UPGRADES, Encounter, grantReward, rewardFor, potionEffects, buy, upgrade, buyRide, dismount, buyPet, unequipPet, buyLook, buyPotion, usePotion, applyTeacherCode, collectBerry, finishHunt, fellTree, treeDamage, canEnter, monsterBattleRounds, recordWrongAnswer, recordCorrectAnswer, STAGE_STORIES, journeyFor, multiplicationUsesStory, startMultiplicationFinal, answerMultiplicationFinal, type ForestKind, type Save } from './rules';
 import { STAGES, stageMonsters, stageBerries, berryValue, clearBonus } from './stages';
 import { Sound } from './audio';
 import { RESCUES, FLOWERS, gardenOf, rescueSheep, plantFlower } from './garden';
 import { EXPEDITION_TITLES, expeditionBerryReward, expeditionLayout, expeditionUnlocked, startExpedition, collectExpeditionStar, defeatExpeditionMonster, canFinishExpedition, finishExpedition, selectExpeditionTitle } from './expedition';
 import { parseLocalRanks, updateLocalRanks } from './ranking';
+import { getGlobalPlayerId, loadGlobalRanks, syncGlobalRank, type GlobalRank } from './global-ranking';
 
 const $ = <T extends HTMLElement = HTMLElement>(selector: string) => document.querySelector<T>(selector)!;
 const root = $('#game');
@@ -46,6 +47,11 @@ const OUTFIT_ICONS = ['🌿', '🌈', '🍃', '☁️', '🌸', '🌟', '🌙', 
 try { const raw = localStorage.getItem(STORAGE); if (raw) saved = validateSave(JSON.parse(raw)); } catch { storageError = true; }
 
 function escape(s: string) { return s.replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch]!); }
+function buffTime(seconds: number) { const minutes = Math.floor(seconds / 60), rest = seconds % 60; return minutes ? `${minutes}분 ${rest.toString().padStart(2, '0')}초` : `${rest}초`; }
+function equipmentEffectText(s: Save, now = Date.now()) {
+  const effect = potionEffects(s, now), potion = `${effect.berrySeconds ? ` · 🍓×${effect.berryMultiplier} ${buffTime(effect.berrySeconds)}` : ''}${effect.xpSeconds ? ` · 🧪경험×${effect.xpMultiplier} ${buffTime(effect.xpSeconds)}` : ''}`;
+  return `대련 ×${(WEAPONS[s.weapon].multiplier + s.weapons[s.weapon] * .1).toFixed(1)} · 나무 힘 ${treeDamage(s)} · ${s.ride >= 0 ? `${RIDES[s.ride].icon} 속도 ×${RIDES[s.ride].speed}` : `옷: ${OUTFITS[s.outfit].effect}`}${s.pet >= 0 ? ` · ${PETS[s.pet].icon} 펫` : ''}${potion}`;
+}
 function weaponExplanation(id: number, level = 0) { const item = WEAPONS[id], power = item.treePower + level; return `몬스터 1마리를 이길 때마다 기본 보상에 ${item.bonus}베리를 더 받아요.<br>대련장에서는 문제를 맞혀 받는 기본 점수가 ${(item.multiplier + level * .1).toFixed(1)}배가 돼요.<br>베리나무에 한 번 휘두르면 힘 ${power}만큼 깎여서 약 ${Math.ceil(7 / power)}번이면 벨 수 있어요.`; }
 function toast(message: string) { $('#toast').textContent = message; $('#toast').classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => $('#toast').classList.remove('show'), 3500); }
 function persist() {
@@ -59,8 +65,7 @@ function refresh() {
   $('#level').textContent = `${s.level}`; $('#nickname').textContent = `${s.nickname}${activeTitle ? ` · ${activeTitle}` : ''}${s.teacherMode ? ' · 선생님' : ''}`; $('#berries').textContent = s.berries.toLocaleString();
   $('#xp-fill').style.width = `${s.xp / (s.level * 40) * 100}%`; $('#xp-text').textContent = `경험치 ${s.xp} / ${s.level * 40}`;
   $('#weapon-name').textContent = `${WEAPONS[s.weapon].icon} ${WEAPONS[s.weapon].name} +${s.weapons[s.weapon]} · ${OUTFITS[s.outfit].name}`;
-  const potionEffect = `${s.potions.berryUses ? ` · 🍓×${s.potions.berryMultiplier} ${s.potions.berryUses}회` : ''}${s.potions.xpUses ? ` · 🧪경험×${s.potions.xpMultiplier} ${s.potions.xpUses}회` : ''}`;
-  $('#weapon-effect').textContent = `대련 ×${(WEAPONS[s.weapon].multiplier + s.weapons[s.weapon] * .1).toFixed(1)} · 나무 힘 ${treeDamage(s)} · ${s.ride >= 0 ? `${RIDES[s.ride].icon} 속도 ×${RIDES[s.ride].speed}` : `옷: ${OUTFITS[s.outfit].effect}`}${s.pet >= 0 ? ` · ${PETS[s.pet].icon} 펫` : ''}${potionEffect}`;
+  $('#weapon-effect').textContent = equipmentEffectText(s);
   const expedition = s.forest === 'division' ? s.expedition.active : null;
   $('.location-pill').innerHTML = world?.inRoom ? '⌂ 나의 집 <span>가구를 눌러 꾸며요</span>' : journey.stage ? `${s.forest === 'multiplication' ? '🌻' : '❋'} ${journey.stage}단계 사냥터 <span>${expedition?.stage === journey.stage ? '✦ 별빛 재탐험' : `${forestName} · ${STAGES[journey.stage - 1].name}`}</span>` : '❋ 베리숲 마을 <span>평화로운 오후</span>';
   const tasks = [[s.tutorial.collected, '길 위의 베리 줍기'], [s.tutorial.battle, '계산으로 몬스터 만나기'], [s.tutorial.shop, '강지후·오지후 상점 구경']];
@@ -219,14 +224,35 @@ function openStageMap(forest?: ForestKind) {
 function multiplicationStageLabel(stage: number) {
   if (stage === 1) return '2~5끼리 곱하기'; if (stage === 2) return '2~9 구구단'; if (stage === 3) return '몇십 × 2~5'; if (stage === 4) return '몇십 × 2~9'; if (stage === 5) return '두 자리 수 × 2~4 · 받아올림 없음'; if (stage === 6) return '두 자리 수 × 2~4 · 받아올림'; if (stage <= 8) return '11~79 × 2~6 · 받아올림'; return '11~99 × 2~9 · 복습 문제도 만나요';
 }
+function rankList(ranks: GlobalRank[]) {
+  if (!ranks.length) return '<p class="note">아직 등록된 원정 기록이 없어요. 첫 번째 별빛 탐험가가 되어 보세요!</p>';
+  return `<ol class="local-ranking">${ranks.map(rank => `<li class="${rank.isMine ? 'mine' : ''}"><b>${rank.rank}</b><span>${escape(rank.nickname)}${rank.isMine ? ' <small>나</small>' : ''}</span><strong>✦ ${rank.completed}회</strong></li>`).join('')}</ol>`;
+}
+async function loadGlobalRankingPanel(s: Save) {
+  const panel = document.querySelector<HTMLElement>('#global-ranking-panel'); if (!panel) return;
+  try {
+    const playerId = getGlobalPlayerId();
+    const ranks = s.teacherMode ? await loadGlobalRanks(playerId) : await syncGlobalRank(localStorage, playerId, s.nickname, s.expedition.completed);
+    const current = document.querySelector<HTMLElement>('#global-ranking-panel'); if (current) current.innerHTML = rankList(ranks);
+  } catch {
+    const current = document.querySelector<HTMLElement>('#global-ranking-panel');
+    if (current) current.innerHTML = '<p class="ranking-unavailable">🌧️ 전체 랭킹을 불러오지 못했어요.<br>인터넷을 확인하고 게시판을 다시 열어 주세요.</p>';
+  }
+}
 function openExpeditionBoard() {
   if (!state || !expeditionUnlocked(state)) return;
   const s = state, mission = s.expedition.active, next = expeditionLayout(s.expedition.completed);
   const localRanks = parseLocalRanks(localStorage.getItem(RANKING_STORAGE)), ranking = localRanks.length ? `<ol class="local-ranking">${localRanks.map((rank, id) => `<li class="${rank.nickname === s.nickname ? 'mine' : ''}"><b>${id + 1}</b><span>${escape(rank.nickname)}</span><strong>✦ ${rank.completed}회</strong></li>`).join('')}</ol>` : '<p class="note">첫 원정을 완수하면 이곳에 기록돼요.</p>';
   const rewardStage = mission?.stage ?? next.stage;
-  openModal(title('연태쌤의 별빛 게시판', '별빛 재탐험') + `<p>10개의 숲을 새로운 목표로 다시 걸어요. 언제든 다시 도전할 수 있고, 틀려도 손해가 없어요.</p><p class="expedition-note">이번 원정: <b>${mission ? `${mission.stage}단계 · ${STAGES[mission.stage - 1].name}` : `${next.stage}단계 · ${STAGES[next.stage - 1].name}`}</b><br>별빛 표식 3개 · 몬스터 대련 2번 · 출구의 이야기 문제 1개<br><small>완주하면 🍓 ${expeditionBerryReward(rewardStage)}베리! 예전에 받은 사냥터 보상은 다시 받지 않아요.</small></p>${mission ? `<p>지금까지 표식 ${mission.stars.length}/3 · 대련 ${mission.monsters.length}/2</p>` : ''}<button id="expedition-start" class="primary wide">${mission ? '진행 중인 원정 이어가기' : '새 원정 떠나기'} →</button><h3 class="title-heading">🏅 나의 칭호 · 원정 ${s.expedition.completed}번 완수</h3><div class="title-list">${EXPEDITION_TITLES.map((item, id) => `<button data-title="${id}" class="secondary ${s.expedition.selectedTitle === id ? 'selected' : ''}" ${s.expedition.completed < item.need ? 'disabled' : ''}>${s.expedition.completed < item.need ? '🔒' : '✦'} ${item.name}<small>${item.need}번 완수${s.expedition.selectedTitle === id ? ' · 표시 중' : ''}</small></button>`).join('')}</div><h3 class="title-heading">🏆 이 기기 별빛 랭킹</h3><p class="ranking-note">같은 브라우저에서 플레이한 닉네임별 최고 기록만 보여요. 다른 휴대폰으로 전송되지는 않아요.</p>${ranking}`);
+  openModal(title('연태쌤의 별빛 게시판', '별빛 재탐험') + `<p>10개의 숲을 새로운 목표로 다시 걸어요. 언제든 다시 도전할 수 있고, 틀려도 손해가 없어요.</p><p class="expedition-note">이번 원정: <b>${mission ? `${mission.stage}단계 · ${STAGES[mission.stage - 1].name}` : `${next.stage}단계 · ${STAGES[next.stage - 1].name}`}</b><br>별빛 표식 3개 · 몬스터 대련 2번 · 출구의 이야기 문제 1개<br><small>완주하면 🍓 ${expeditionBerryReward(rewardStage)}베리! 예전에 받은 사냥터 보상은 다시 받지 않아요.</small></p>${mission ? `<p>지금까지 표식 ${mission.stars.length}/3 · 대련 ${mission.monsters.length}/2</p>` : ''}<button id="expedition-start" class="primary wide">${mission ? '진행 중인 원정 이어가기' : '새 원정 떠나기'} →</button><h3 class="title-heading">🏅 나의 칭호 · 원정 ${s.expedition.completed}번 완수</h3><div class="title-list">${EXPEDITION_TITLES.map((item, id) => `<button data-title="${id}" class="secondary ${s.expedition.selectedTitle === id ? 'selected' : ''}" ${s.expedition.completed < item.need ? 'disabled' : ''}>${s.expedition.completed < item.need ? '🔒' : '✦'} ${item.name}<small>${item.need}번 완수${s.expedition.selectedTitle === id ? ' · 표시 중' : ''}</small></button>`).join('')}</div><h3 class="title-heading">🏆 별빛 재탐험 랭킹</h3><div class="ranking-tabs" role="tablist"><button class="active" data-rank-tab="global" role="tab" aria-selected="true">🌍 전체 랭킹</button><button data-rank-tab="local" role="tab" aria-selected="false">📱 이 기기</button></div><section id="global-ranking-panel" role="tabpanel"><p class="ranking-loading">✨ 전체 탐험가 기록을 불러오는 중…</p></section><section id="local-ranking-panel" role="tabpanel" hidden><p class="ranking-note">같은 브라우저에서 플레이한 닉네임별 최고 기록이에요.</p>${ranking}</section><p class="ranking-note">전체 랭킹에는 닉네임과 별빛 재탐험 완료 횟수만 올라가요. 선생님 모드 기록은 제외돼요.</p>`);
   $('#expedition-start').onclick = beginExpedition;
   document.querySelectorAll<HTMLButtonElement>('[data-title]').forEach(b => b.onclick = () => { if (selectExpeditionTitle(s, Number(b.dataset.title))) { refresh(); persist(); openExpeditionBoard(); } });
+  document.querySelectorAll<HTMLButtonElement>('[data-rank-tab]').forEach(button => button.onclick = () => {
+    const global = button.dataset.rankTab === 'global';
+    document.querySelectorAll<HTMLButtonElement>('[data-rank-tab]').forEach(item => { const selected = item === button; item.classList.toggle('active', selected); item.setAttribute('aria-selected', String(selected)); });
+    $('#global-ranking-panel').hidden = !global; $('#local-ranking-panel').hidden = global;
+  });
+  void loadGlobalRankingPanel(s);
 }
 function beginExpedition() {
   if (!state) return;
@@ -433,8 +459,8 @@ function openPetShop() {
 
 function openPotionShop() {
   if (!state) return; const s = state;
-  const active = `${s.potions.berryUses ? `🍓 베리 ${s.potions.berryMultiplier}배 · 남은 몬스터 ${s.potions.berryUses}명` : '🍓 베리 효과 없음'}<br>${s.potions.xpUses ? `🧪 경험치 ${s.potions.xpMultiplier}배 · 남은 몬스터 ${s.potions.xpUses}명` : '🧪 경험치 효과 없음'}`;
-  openModal(title('박준우의 물약 상점', '모험 보상을 키우는 물약') + `<p class="shop-explainer">물약은 산 뒤 <b>사용하기</b>를 눌러야 시작해요. 효과는 몬스터를 완전히 이겨 보상을 받을 때 한 번씩 줄어요. <b>🍓 ${s.berries.toLocaleString()}베리</b></p><p class="note">지금 효과<br>${active}</p><div class="inventory-list">${POTIONS.map((potion, id) => `<article class="inventory-item"><span class="inventory-icon potion-icon">${potion.icon}</span><div><strong>${potion.name}</strong><small>${potion.desc}<br>가방에 ${s.potions.stock[id]}개</small></div><div class="potion-actions"><button class="primary" data-buy-potion="${id}">🍓 ${potion.price}</button><button class="secondary" data-use-potion="${id}" ${s.potions.stock[id] ? '' : 'disabled'}>사용하기</button></div></article>`).join('')}</div><p class="error" id="potion-error" role="alert"></p>`, 'inventory-modal potion-shop');
+  const effect = potionEffects(s), active = `${effect.berrySeconds ? `🍓 베리 ${effect.berryMultiplier}배 · ${buffTime(effect.berrySeconds)} 남음` : '🍓 베리 효과 없음'}<br>${effect.xpSeconds ? `🧪 경험치 ${effect.xpMultiplier}배 · ${buffTime(effect.xpSeconds)} 남음` : '🧪 경험치 효과 없음'}`;
+  openModal(title('박준우의 물약 상점', '시간 동안 힘이 나는 물약') + `<p class="shop-explainer">물약은 산 뒤 <b>사용하기</b>를 누른 순간부터 시간이 줄어요. 문제를 풀거나 메뉴를 보는 동안에도 시간이 흘러요. <b>🍓 ${s.berries.toLocaleString()}베리</b></p><p class="note" id="potion-status">지금 효과<br>${active}</p><div class="inventory-list">${POTIONS.map((potion, id) => `<article class="inventory-item"><span class="inventory-icon potion-icon">${potion.icon}</span><div><strong>${potion.name}</strong><small>${potion.desc}<br>가방에 ${s.potions.stock[id]}개</small></div><div class="potion-actions"><button class="primary" data-buy-potion="${id}">🍓 ${potion.price}</button><button class="secondary" data-use-potion="${id}" ${s.potions.stock[id] ? '' : 'disabled'}>사용하기</button></div></article>`).join('')}</div><p class="error" id="potion-error" role="alert"></p>`, 'inventory-modal potion-shop');
   document.querySelectorAll<HTMLButtonElement>('[data-buy-potion]').forEach(button => button.onclick = () => { try { const msg = buyPotion(s, Number(button.dataset.buyPotion)); audio.play('buy'); refresh(); persist(); openPotionShop(); toast(msg); } catch (e) { $('#potion-error').textContent = (e as Error).message; } });
   document.querySelectorAll<HTMLButtonElement>('[data-use-potion]').forEach(button => button.onclick = () => { try { const msg = usePotion(s, Number(button.dataset.usePotion)); audio.play('level'); refresh(); persist(); openPotionShop(); toast(msg); } catch (e) { $('#potion-error').textContent = (e as Error).message; } });
 }
@@ -483,6 +509,9 @@ setInterval(() => {
     const limit = state.settings.sessionMinutes * 60;
     if (limit > 0 && sessionElapsed >= limit && !sessionExpired) { sessionExpired = true; if (!battle) showSessionSummary(); else toast('수업 시간이 다 되었어요. 지금 문제를 마치면 오늘 기록을 보여줄게요.'); }
   }
+  if (state) $('#weapon-effect').textContent = equipmentEffectText(state);
+  const potionStatus = document.querySelector<HTMLElement>('#potion-status');
+  if (state && potionStatus) { const effect = potionEffects(state); potionStatus.innerHTML = `지금 효과<br>${effect.berrySeconds ? `🍓 베리 ${effect.berryMultiplier}배 · ${buffTime(effect.berrySeconds)} 남음` : '🍓 베리 효과 없음'}<br>${effect.xpSeconds ? `🧪 경험치 ${effect.xpMultiplier}배 · ${buffTime(effect.xpSeconds)} 남음` : '🧪 경험치 효과 없음'}`; }
   persist();
 }, 1000); window.addEventListener('pagehide', persist); document.addEventListener('visibilitychange', () => { if (document.hidden) persist(); });
 
