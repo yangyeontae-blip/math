@@ -365,7 +365,7 @@ export function validateSave(value: unknown): Save {
   }
   const s = migrated as unknown as Save;
   if (s.garden === undefined) s.garden = { rescued: 0, flowers: [-1, -1, -1] };
-  if (s.potions === undefined) s.potions = { stock: [0, 0, 0], berryMultiplier: 1, berryUses: 0, xpMultiplier: 1, xpUses: 0 };
+  if (s.potions === undefined) s.potions = { stock: s.teacherMode ? POTIONS.map(() => 9) : [0, 0, 0], berryMultiplier: 1, berryUses: 0, xpMultiplier: 1, xpUses: 0 };
   if (s.room && s.room.inside === undefined) s.room.inside = false;
   const integer = (v: unknown, min: number, max: number): v is number => typeof v === 'number' && Number.isSafeInteger(v) && v >= min && v <= max;
   if (!s.garden || !integer(s.garden.rescued, 0, 3) || !Array.isArray(s.garden.flowers) || s.garden.flowers.length !== 3 || s.garden.flowers.some(f => !integer(f, -1, 2)) || s.garden.flowers.filter(f => f >= 0).length > s.garden.rescued) return fail();
