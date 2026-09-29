@@ -5,8 +5,14 @@ export const EXPEDITION_TITLES = [
   { name: '모험가', need: 0 },
   { name: '첫 발자국', need: 1 },
   { name: '숲길 길잡이', need: 3 },
+  { name: '반짝임 수집가', need: 5 },
+  { name: '별사탕 해결사', need: 7 },
   { name: '별빛 탐험가', need: 10 },
+  { name: '달빛 개척자', need: 15 },
+  { name: '해바라기 수호대', need: 20 },
   { name: '베리숲 수호자', need: 30 },
+  { name: '두 숲의 전설', need: 50 },
+  { name: '영원한 별빛 영웅', need: 100 },
 ] as const;
 
 // Every marker sits on one of the broad, unobstructed paths on all hunt maps.
@@ -39,6 +45,7 @@ export function expeditionLayout(completed: number) {
 }
 export function startExpedition(s: Save) {
   if (!expeditionUnlocked(s)) return false;
+  s.forest = 'division';
   const progress = s.expedition;
   const alreadyThere = !!progress.active && s.journey.stage === progress.active.stage && !s.room.inside;
   if (!progress.active) {
@@ -66,11 +73,14 @@ export function canFinishExpedition(s: Save) {
   const layout = expeditionLayout(s.expedition.completed);
   return active.stars.length === layout.stars.length && active.monsters.length === layout.monsters.length && layout.stars.every(id => active.stars.includes(id)) && layout.monsters.every(id => active.monsters.includes(id));
 }
+export function expeditionBerryReward(stage: number) { return 60 + Math.min(10, Math.max(1, stage)) * 15; }
 export function finishExpedition(s: Save, answer: number) {
   if (!canFinishExpedition(s) || answer !== s.expedition.active!.gateQuestion.answer) return null;
+  const berries = expeditionBerryReward(s.expedition.active!.stage);
   s.expedition.active = null;
   s.expedition.completed++;
-  return { completed: s.expedition.completed, newTitle: EXPEDITION_TITLES.findIndex(t => t.need === s.expedition.completed) };
+  s.berries += berries;
+  return { completed: s.expedition.completed, newTitle: EXPEDITION_TITLES.findIndex(t => t.need === s.expedition.completed), berries };
 }
 export function selectExpeditionTitle(s: Save, id: number) {
   if (!Number.isInteger(id) || !EXPEDITION_TITLES[id] || s.expedition.completed < EXPEDITION_TITLES[id].need) return false;

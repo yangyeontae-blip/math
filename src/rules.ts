@@ -13,6 +13,10 @@ export const WEAPONS = [
   { name: '구름양 대검', price: 1420, bonus: 16, multiplier: 3.8, treePower: 6, icon: '🐑', color: 0xeaf4ff },
   { name: '개구리 연잎창', price: 1680, bonus: 18, multiplier: 4.2, treePower: 6, icon: '🐸', color: 0x6abf72 },
   { name: '별사탕 왕홀', price: 2000, bonus: 21, multiplier: 4.6, treePower: 7, icon: '🍬', color: 0xc79bea },
+  { name: '해바라기 우산', price: 2400, bonus: 23, multiplier: 4.9, treePower: 7, icon: '🌻', color: 0xf4c84e },
+  { name: '꿀단지 철퇴', price: 2900, bonus: 25, multiplier: 5.2, treePower: 8, icon: '🍯', color: 0xd99736 },
+  { name: '구구단 마법책', price: 3500, bonus: 28, multiplier: 5.6, treePower: 8, icon: '📕', color: 0xe88352 },
+  { name: '황금벌 지휘봉', price: 4200, bonus: 31, multiplier: 6, treePower: 9, icon: '🐝', color: 0xf2bd35 },
 ] as const;
 export const OUTFITS = [
   { name: '새싹 탐험복', price: 0, color: 0x4d9c78, accent: 0xffe4a3, desc: '처음 떠나는 모험의 설렘', effect: '추가 효과가 없는 기본 옷이에요.', berryBonus: 0, xpBonus: 0, clearBonus: 0 },
@@ -31,6 +35,10 @@ export const OUTFITS = [
   { name: '구름양 잠옷', price: 660, color: 0xb9d9eb, accent: 0xffffff, desc: '몽글몽글 양 귀와 구름 단추가 달린 옷', effect: '몬스터 1마리를 이길 때마다 경험치를 8 더 받아요.', berryBonus: 0, xpBonus: 8, clearBonus: 0 },
   { name: '개구리 연잎옷', price: 780, color: 0x70b978, accent: 0xd8f28c, desc: '동그란 눈과 연잎 망토가 귀여운 옷', effect: '길의 베리 1개를 주울 때마다 5베리를 더 받아요.', berryBonus: 5, xpBonus: 0, clearBonus: 0 },
   { name: '별사탕 요정복', price: 920, color: 0xb78ed3, accent: 0xffe083, desc: '별 날개와 사탕빛 리본이 반짝이는 옷', effect: '몬스터마다 경험치 +5, 스테이지를 통과하면 베리 +50을 받아요.', berryBonus: 0, xpBonus: 5, clearBonus: 50 },
+  { name: '해바라기 원피스', price: 1080, color: 0xeebf3e, accent: 0x8fbf66, desc: '커다란 해바라기 리본이 달린 노란 원피스', effect: '길의 베리마다 +6, 몬스터마다 경험치 +2를 받아요.', berryBonus: 6, xpBonus: 2, clearBonus: 0 },
+  { name: '꿀벌 후드', price: 1280, color: 0xf0bd38, accent: 0x493c35, desc: '작은 더듬이와 줄무늬 날개가 달린 후드', effect: '몬스터마다 경험치 +7, 스테이지를 통과하면 베리 +35를 받아요.', berryBonus: 0, xpBonus: 7, clearBonus: 35 },
+  { name: '살구빛 구름옷', price: 1520, color: 0xf3ad79, accent: 0xffead3, desc: '살구빛 구름 자수와 폭신한 소매가 있는 옷', effect: '길의 베리마다 +4, 스테이지를 통과하면 베리 +55를 받아요.', berryBonus: 4, xpBonus: 0, clearBonus: 55 },
+  { name: '곱셈별 예복', price: 1900, color: 0xcc7755, accent: 0xffdf72, desc: '숫자별과 햇살 망토가 반짝이는 특별 예복', effect: '몬스터마다 경험치 +9, 스테이지를 통과하면 베리 +65를 받아요.', berryBonus: 0, xpBonus: 9, clearBonus: 65 },
 ] as const;
 export const CHARACTERS = [
   { name: '봄이', desc: '동글동글 양 갈래', hair: 0x623d2e, skin: 0xffd8b1, style: 0 },
@@ -39,11 +47,17 @@ export const CHARACTERS = [
   { name: '나루', desc: '폭신한 곱슬 머리', hair: 0x946544, skin: 0xc68e6c, style: 3 },
 ] as const;
 export const MONSTERS = [
-  { name: '새싹 슬라임', icon: '🌱', berry: 8, xp: 10, score: 10, color: 0x91d975 },
-  { name: '버섯 요정', icon: '🍄', berry: 10, xp: 12, score: 15, color: 0xf493a6 },
-  { name: '구름 토끼', icon: '☁️', berry: 12, xp: 15, score: 20, color: 0xeaf4fc },
-  { name: '도토리 정령', icon: '🌰', berry: 15, xp: 20, score: 25, color: 0xd3aa74 },
+  { name: '새싹 슬라임', icon: '🌱', berry: 8, xp: 10, score: 10, color: 0x91d975, rounds: 1 },
+  { name: '버섯 요정', icon: '🍄', berry: 10, xp: 12, score: 15, color: 0xf493a6, rounds: 1 },
+  { name: '구름 토끼', icon: '☁️', berry: 12, xp: 15, score: 20, color: 0xeaf4fc, rounds: 1 },
+  { name: '도토리 정령', icon: '🌰', berry: 15, xp: 20, score: 25, color: 0xd3aa74, rounds: 1 },
+  { name: '김나현 · 별꿀벌', icon: '🐝', berry: 18, xp: 23, score: 28, color: 0xf2c94c, rounds: 2 },
+  { name: '송하나 · 민들레 고양이', icon: '🐱', berry: 20, xp: 25, score: 31, color: 0xf3ad79, rounds: 2 },
+  { name: '박가현 · 달빛 여우', icon: '🦊', berry: 22, xp: 28, score: 35, color: 0xb99be7, rounds: 2 },
+  { name: '권소희 · 꽃구름 양', icon: '🐑', berry: 25, xp: 31, score: 39, color: 0xf0b7cf, rounds: 3 },
+  { name: '김민준 · 별도토리 곰', icon: '🐻', berry: 28, xp: 35, score: 44, color: 0x8eb7d6, rounds: 3 },
 ] as const;
+export function monsterBattleRounds(monster: number, arena = false) { return arena ? 1 : MONSTERS[monster]?.rounds ?? 1; }
 export const RIDES = [
   { name: '당근 씽씽카', price: 1000, speed: 1.6, flying: false, icon: '🥕', color: 0xf39a58, desc: '당근 바퀴로 통통 달리는 첫 라이딩' },
   { name: '구름양 포포', price: 1800, speed: 1.85, flying: false, icon: '🐑', color: 0xd9eff7, desc: '폭신한 털을 흔들며 빠르게 달려요' },
@@ -53,6 +67,8 @@ export const RIDES = [
   { name: '솜사탕 열기구', price: 6500, speed: 2.75, flying: true, icon: '🎈', color: 0xf2a9cf, desc: '달콤한 구름을 타고 하늘을 둥실 날아요' },
   { name: '달빛 아기용', price: 8000, speed: 3, flying: true, icon: '🐉', color: 0x7898d8, desc: '달빛 꼬리를 그리며 아주 빠르게 날아요' },
   { name: '오로라 고래', price: 10000, speed: 3.25, flying: true, icon: '🐳', color: 0x65b9d8, desc: '오로라 물결을 헤치며 가장 빠르게 날아요' },
+  { name: '해바라기 사자', price: 12000, speed: 3.45, flying: true, icon: '🦁', color: 0xe6aa43, desc: '꽃잎 갈기를 흔들며 햇살 길을 빠르게 날아요' },
+  { name: '꿀벌 하늘마차', price: 15000, speed: 3.7, flying: true, icon: '🐝', color: 0xf3c43f, desc: '꿀빛 날개 네 장으로 가장 빠르게 날아가요' },
 ] as const;
 export const PLAYER_MOVE_SPEED = 8.45;
 export function petChaseSpeed(rideSpeed: number) { return Math.max(12, PLAYER_MOVE_SPEED * rideSpeed * 1.2); }
@@ -62,11 +78,15 @@ export const PETS = [
   { name: '숲냥이 모리', price: 1200, radius: 3.8, icon: '🐱', color: 0xb68b70, desc: '살금살금 다가가 주변 베리를 모아요' },
   { name: '별부엉이 루루', price: 2000, radius: 4.5, icon: '🦉', color: 0x9b83bd, desc: '밝은 눈으로 조금 먼 베리도 찾아요' },
   { name: '아기용 베리링', price: 3500, radius: 5.2, icon: '🐲', color: 0x75bd91, desc: '넓은 범위의 베리를 재빠르게 모아 줘요' },
+  { name: '꿀벌 몽이', price: 4500, radius: 5.8, icon: '🐝', color: 0xf2c94c, desc: '꽃가루를 반짝이며 먼 베리까지 날아가요' },
+  { name: '해바라기 여우', price: 5500, radius: 6.4, icon: '🦊', color: 0xe8a15b, desc: '해바라기 꼬리를 흔들며 가장 넓게 찾아요' },
 ] as const;
 export const HAIRSTYLES = [
   { name: '기본 머리', price: 0, icon: '🙂' }, { name: '몽실 양갈래', price: 100, icon: '🎀' },
   { name: '반짝 단발', price: 160, icon: '✨' }, { name: '밤톨 웨이브', price: 240, icon: '🌰' },
   { name: '별빛 포니테일', price: 360, icon: '⭐' }, { name: '구름 트윈번', price: 500, icon: '☁️' },
+  { name: '해바라기 땋은머리', price: 680, icon: '🌻' }, { name: '꿀벌 동글번', price: 820, icon: '🐝' },
+  { name: '살구 웨이브', price: 980, icon: '🍑' }, { name: '햇살 왕관머리', price: 1250, icon: '☀️' },
 ] as const;
 export const FACES = [
   { name: '해맑은 얼굴', price: 0, icon: '😊' }, { name: '초롱초롱 눈', price: 100, icon: '🥺' },
@@ -74,24 +94,41 @@ export const FACES = [
   { name: '별눈 반짝이', price: 360, icon: '🤩' }, { name: '졸린 달눈', price: 520, icon: '🌙' },
   { name: '토끼 앞니 미소', price: 700, icon: '🐰' }, { name: '하트 반짝눈', price: 900, icon: '💖' },
   { name: '용감한 번개눈', price: 1200, icon: '⚡' }, { name: '무지개 웃음', price: 1500, icon: '🌈' },
+  { name: '햇살 초승달눈', price: 1750, icon: '☀️' }, { name: '꿀방울 미소', price: 2000, icon: '🍯' },
+  { name: '해바라기 반짝눈', price: 2300, icon: '🌻' }, { name: '별숲 용기눈', price: 2600, icon: '🌟' },
+] as const;
+export const POTIONS = [
+  { name: '달콤 베리물약', icon: '🧃', price: 140, kind: 'berry', multiplier: 2, uses: 5, desc: '사용하면 다음 몬스터 5명에게서 받는 베리가 2배가 돼요.' },
+  { name: '황금 베리물약', icon: '🍯', price: 360, kind: 'berry', multiplier: 3, uses: 5, desc: '사용하면 다음 몬스터 5명에게서 받는 베리가 3배가 돼요.' },
+  { name: '쑥쑥 경험물약', icon: '🧪', price: 320, kind: 'xp', multiplier: 3, uses: 5, desc: '사용하면 다음 몬스터 5명에게서 받는 경험치가 3배가 돼요.' },
 ] as const;
 export const WEAPON_UPGRADES = [60, 120, 240];
 export const OUTFIT_UPGRADES = [50, 100];
+export type ForestKind = 'division' | 'multiplication';
+export type MultiplicationRange = 'stage' | 'tables';
+export interface Journey { stage: number; maps: { berries: number[]; monsters: number[]; trees: number[]; cleared: boolean }[] }
+export interface MultiplicationFinal { left: number; right: number; step: 0 | 1 }
 export interface Save {
-  version: 7; nickname: string; character: number; berries: number; level: number; xp: number;
+  version: 8; nickname: string; character: number; berries: number; level: number; xp: number;
   weapon: number; outfit: number; weapons: Record<string, number>; outfits: Record<string, number>;
   ride: number; rides: Record<string, boolean>; pet: number; pets: Record<string, boolean>;
   hairstyle: number; hairstyles: Record<string, boolean>; face: number; faces: Record<string, boolean>; teacherMode: boolean;
   best: number; position: { x: number; z: number }; tutorial: { collected: boolean; battle: boolean; shop: boolean };
-  settings: { music: boolean; sound: boolean; lowQuality: boolean; maxDividend: 0 | 90 | 180; sessionMinutes: number };
+  settings: { music: boolean; sound: boolean; lowQuality: boolean; maxDividend: 0 | 90 | 180; multiplicationRange: MultiplicationRange; sessionMinutes: number };
   learning: { elapsedSeconds: number; correct: number; wrong: number; wrongQuestions: Question[] };
   discoveries: { monsters: number[]; pets: number[]; outfits: number[] };
   room: { furniture: number[]; inside: boolean };
   garden?: { rescued: number; flowers: number[] };
   expedition: ExpeditionProgress;
-  journey: { stage: number; maps: { berries: number[]; monsters: number[]; trees: number[]; cleared: boolean }[] };
+  forest: ForestKind;
+  journey: Journey;
+  multiplicationJourney: Journey;
+  multiplicationFinal: MultiplicationFinal | null;
+  multiplicationCompleted: boolean;
+  multiplicationRewardClaimed: boolean;
+  potions: { stock: number[]; berryMultiplier: 1 | 2 | 3; berryUses: number; xpMultiplier: 1 | 3; xpUses: number };
 }
-export interface Question { dividend: number; divisor: number; answer: number }
+export interface Question { dividend: number; divisor: number; answer: number; operation?: ForestKind }
 export const STAGE_DIVISION_DIFFICULTY = [
   { maxDividend: 80, maxAnswer: 9 },
   { maxDividend: 90, maxAnswer: 10 },
@@ -107,19 +144,20 @@ export const STAGE_DIVISION_DIFFICULTY = [
 export function newSave(nickname: string, character: number): Save {
   if (!nickname.trim() || [...nickname.trim()].length > 10 || !Number.isInteger(character) || character < 0 || character > 3) throw new Error('이름은 1~10자, 캐릭터는 4명 중 골라 주세요.');
   const hairstyle = CHARACTERS[character].style;
-  return { version: 7, nickname: nickname.trim(), character, berries: 0, level: 1, xp: 0, weapon: 0, outfit: 0, weapons: { 0: 0 }, outfits: { 0: 0 }, ride: -1, rides: {}, pet: -1, pets: {}, hairstyle, hairstyles: { 0: true, [hairstyle]: true }, face: 0, faces: { 0: true }, teacherMode: false, best: 0, position: { x: 0, z: 8 }, tutorial: { collected: false, battle: false, shop: false }, settings: { music: true, sound: true, lowQuality: false, maxDividend: 0, sessionMinutes: 0 }, learning: { elapsedSeconds: 0, correct: 0, wrong: 0, wrongQuestions: [] }, discoveries: { monsters: [], pets: [], outfits: [0] }, room: { furniture: [], inside: false }, journey: emptyJourney(), garden: { rescued: 0, flowers: [-1, -1, -1] }, expedition: emptyExpedition() };
+  return { version: 8, nickname: nickname.trim(), character, berries: 0, level: 1, xp: 0, weapon: 0, outfit: 0, weapons: { 0: 0 }, outfits: { 0: 0 }, ride: -1, rides: {}, pet: -1, pets: {}, hairstyle, hairstyles: { 0: true, [hairstyle]: true }, face: 0, faces: { 0: true }, teacherMode: false, best: 0, position: { x: 0, z: 8 }, tutorial: { collected: false, battle: false, shop: false }, settings: { music: true, sound: true, lowQuality: false, maxDividend: 0, multiplicationRange: 'stage', sessionMinutes: 0 }, learning: { elapsedSeconds: 0, correct: 0, wrong: 0, wrongQuestions: [] }, discoveries: { monsters: [], pets: [], outfits: [0] }, room: { furniture: [], inside: false }, forest: 'division', journey: emptyJourney(), multiplicationJourney: emptyJourney(), multiplicationFinal: null, multiplicationCompleted: false, multiplicationRewardClaimed: false, potions: { stock: [0, 0, 0], berryMultiplier: 1, berryUses: 0, xpMultiplier: 1, xpUses: 0 }, garden: { rescued: 0, flowers: [-1, -1, -1] }, expedition: emptyExpedition() };
 }
-export function emptyJourney(): Save['journey'] { return { stage: 0, maps: Array.from({ length: 11 }, () => ({ berries: [], monsters: [], trees: [], cleared: false })) }; }
-export function canEnter(s: Save, stage: number) { return Number.isInteger(stage) && stage >= 0 && stage <= 10 && (s.teacherMode || stage <= 1 || s.journey.maps[stage - 1].cleared); }
+export function emptyJourney(): Journey { return { stage: 0, maps: Array.from({ length: 11 }, () => ({ berries: [], monsters: [], trees: [], cleared: false })) }; }
+export function journeyFor(s: Save, forest: ForestKind = s.forest) { return forest === 'multiplication' ? s.multiplicationJourney : s.journey; }
+export function canEnter(s: Save, stage: number, forest: ForestKind = s.forest) { const journey = journeyFor(s, forest); return Number.isInteger(stage) && stage >= 0 && stage <= 10 && (s.teacherMode || stage <= 1 || journey.maps[stage - 1].cleared); }
 export function collectBerry(s: Save, id: number) {
-  const stage = s.journey.stage, map = s.journey.maps[stage];
+  const journey = journeyFor(s), stage = journey.stage, map = journey.maps[stage];
   if (!Number.isInteger(id) || !stageBerries(stage)[id] || map.berries.includes(id)) return 0;
   const value = berryValue(stage) + OUTFITS[s.outfit].berryBonus; map.berries.push(id); s.berries += value; s.tutorial.collected = true; return value;
 }
 export function recordWrongAnswer(s: Save, q: Question) {
   s.learning.wrong++;
-  const key = `${q.dividend}/${q.divisor}`;
-  if (!s.learning.wrongQuestions.some(item => `${item.dividend}/${item.divisor}` === key)) s.learning.wrongQuestions.unshift({ ...q });
+  const key = `${q.operation ?? 'division'}:${q.dividend}/${q.divisor}`;
+  if (!s.learning.wrongQuestions.some(item => `${item.operation ?? 'division'}:${item.dividend}/${item.divisor}` === key)) s.learning.wrongQuestions.unshift({ ...q, operation: q.operation ?? 'division' });
   s.learning.wrongQuestions = s.learning.wrongQuestions.slice(0, 30);
 }
 export function recordCorrectAnswer(s: Save, monster: number) {
@@ -129,12 +167,12 @@ export function recordCorrectAnswer(s: Save, monster: number) {
 export const STAGE_STORIES = ['새싹 슬라임과 인사하고 들판의 봄빛을 되찾아요.', '버섯 요정의 길 안내를 받아 오솔길을 밝혀요.', '벚꽃 언덕에 흩어진 꽃잎 축제를 도와요.', '호숫가 친구들과 반짝이는 물길을 지켜요.', '도토리 정령과 숲의 가을 잔치를 준비해요.', '구름 정원의 바람 종을 다시 울려요.', '수정숲의 별빛 조각을 모아 길을 비춰요.', '눈꽃 산책길에 따뜻한 발자국을 남겨요.', '옛터의 돌기둥에 숨은 이야기를 찾아요.', '꽃섬 친구들과 무지개 축제를 열어요.'] as const;
 export function treeDamage(s: Save) { return WEAPONS[s.weapon].treePower + s.weapons[s.weapon]; }
 export function fellTree(s: Save, id: number, reward: 2 | 3 | 4) {
-  const map = s.journey.maps[s.journey.stage];
-  if (!Number.isInteger(id) || !stageTrees(s.journey.stage)[id] || map.trees.includes(id) || ![2, 3, 4].includes(reward)) return 0;
+  const journey = journeyFor(s), map = journey.maps[journey.stage];
+  if (!Number.isInteger(id) || !stageTrees(journey.stage)[id] || map.trees.includes(id) || ![2, 3, 4].includes(reward)) return 0;
   map.trees.push(id); s.berries += reward; return reward;
 }
 export function finishHunt(s: Save, id: number) {
-  const stage = s.journey.stage, map = s.journey.maps[stage], monsters = stageMonsters(stage);
+  const journey = journeyFor(s), stage = journey.stage, map = journey.maps[stage], monsters = stageMonsters(stage);
   if (!Number.isInteger(id) || !monsters[id] || map.monsters.includes(id)) return null;
   map.monsters.push(id); const reward = grantReward(s, monsters[id].type, false);
   let clearReward = 0;
@@ -148,24 +186,81 @@ export function questionPool(level: number, stage = 0, maxDividend: 0 | 90 | 180
   if (maxDividend === 90 && dividendLimit >= 100) dividendLimit = 90;
   if (maxDividend === 180) dividendLimit = Math.max(dividendLimit, 180);
   const maxAnswer = stageRule?.maxAnswer ?? (level < 4 ? 9 : Number.POSITIVE_INFINITY);
-  for (let n = 10; n <= dividendLimit; n += 10) for (let d = 2; d <= 9; d++) if (n % d === 0 && n / d <= maxAnswer) result.push({ dividend: n, divisor: d, answer: n / d });
+  for (let n = 10; n <= dividendLimit; n += 10) for (let d = 2; d <= 9; d++) if (n % d === 0 && n / d <= maxAnswer) result.push({ dividend: n, divisor: d, answer: n / d, operation: 'division' });
+  return result;
+}
+export function multiplicationHasCarrying(left: number, right: number) { return left % 10 * right >= 10; }
+function multiplicationRange(stage: number, review = false) {
+  if (review) return { min: 2, max: 9, rightMin: 2, rightMax: 9, tables: true, carry: null as boolean | null };
+  if (stage <= 1) return { min: 2, max: 5, rightMin: 2, rightMax: 5, tables: true, carry: null };
+  if (stage === 2) return { min: 2, max: 9, rightMin: 2, rightMax: 9, tables: true, carry: null };
+  if (stage === 3) return { min: 10, max: 90, rightMin: 2, rightMax: 5, tens: true, carry: null };
+  if (stage === 4) return { min: 10, max: 90, rightMin: 2, rightMax: 9, tens: true, carry: null };
+  if (stage === 5) return { min: 11, max: 49, rightMin: 2, rightMax: 4, carry: false };
+  if (stage === 6) return { min: 11, max: 49, rightMin: 2, rightMax: 4, carry: true };
+  if (stage <= 8) return { min: 11, max: 79, rightMin: 2, rightMax: 6, carry: true };
+  return { min: 11, max: 99, rightMin: 2, rightMax: 9, carry: null };
+}
+export function multiplicationQuestionPool(stage = 1, tablesOnly = false, review = false): Question[] {
+  const rule = multiplicationRange(tablesOnly ? 2 : Math.min(10, Math.max(1, stage)), review);
+  const result: Question[] = [];
+  for (let left = rule.min; left <= rule.max; left++) {
+    if ('tens' in rule && rule.tens && left % 10 !== 0) continue;
+    for (let right = rule.rightMin; right <= rule.rightMax; right++) {
+      if (rule.carry !== null && multiplicationHasCarrying(left, right) !== rule.carry) continue;
+      result.push({ dividend: left, divisor: right, answer: left * right, operation: 'multiplication' });
+    }
+  }
   return result;
 }
 const recentQuestions: string[] = [];
 export function pickQuestion(level: number, previous?: Question, stage = 0, maxDividend: 0 | 90 | 180 = 0): Question {
-  const all = questionPool(level, stage, maxDividend), blocked = new Set(recentQuestions.slice(-Math.min(8, Math.floor(all.length / 2))));
-  let pool = all.filter(q => `${q.dividend}/${q.divisor}` !== `${previous?.dividend}/${previous?.divisor}` && !blocked.has(`${q.dividend}/${q.divisor}`));
+  const all = questionPool(level, stage, maxDividend), blocked = new Set(recentQuestions.slice(-Math.min(8, Math.floor(all.length / 2)))), key = (q: Question) => `division:${q.dividend}/${q.divisor}`;
+  let pool = all.filter(q => key(q) !== (previous ? key(previous) : '') && !blocked.has(key(q)));
   if (!pool.length) pool = all;
-  const picked = pool[Math.floor(Math.random() * pool.length)]; recentQuestions.push(`${picked.dividend}/${picked.divisor}`); if (recentQuestions.length > 16) recentQuestions.shift(); return picked;
+  const picked = pool[Math.floor(Math.random() * pool.length)]; recentQuestions.push(`${picked.operation ?? 'division'}:${picked.dividend}/${picked.divisor}`); if (recentQuestions.length > 16) recentQuestions.shift(); return picked;
+}
+export function pickMultiplicationQuestion(stage = 1, previous?: Question, range: MultiplicationRange = 'stage'): Question {
+  const review = range === 'stage' && stage >= 9 && Math.random() < .3;
+  const all = multiplicationQuestionPool(stage, range === 'tables', review);
+  const key = (q: Question) => `${q.operation}:${q.dividend}x${q.divisor}`;
+  const blocked = new Set(recentQuestions.slice(-Math.min(8, Math.floor(all.length / 2))));
+  let pool = all.filter(q => key(q) !== (previous ? key(previous) : '') && !blocked.has(key(q)));
+  if (!pool.length) pool = all;
+  const picked = pool[Math.floor(Math.random() * pool.length)]; recentQuestions.push(key(picked)); if (recentQuestions.length > 16) recentQuestions.shift(); return picked;
+}
+export function multiplicationUsesStory(monsterIndex: number) {
+  return Number.isInteger(monsterIndex) && monsterIndex >= 0 && (monsterIndex + 1) % 3 === 0;
+}
+export function startMultiplicationFinal(s: Save): MultiplicationFinal | null {
+  if (!s.teacherMode && !s.multiplicationJourney.maps[10].cleared) return null;
+  if (!s.multiplicationFinal) {
+    const q = multiplicationQuestionPool(2)[Math.floor(Math.random() * multiplicationQuestionPool(2).length)];
+    s.multiplicationFinal = { left: q.dividend, right: q.divisor, step: 0 };
+  }
+  return s.multiplicationFinal;
+}
+export function answerMultiplicationFinal(s: Save, answer: number) {
+  const gate = s.multiplicationFinal; if (!gate) return { correct: false, complete: false, reward: false };
+  const expected = gate.step === 0 ? gate.left * gate.right : gate.left;
+  if (answer !== expected) return { correct: false, complete: false, reward: false };
+  if (gate.step === 0) { gate.step = 1; return { correct: true, complete: false, reward: false }; }
+  s.multiplicationCompleted = true; s.multiplicationFinal = null;
+  const reward = !s.multiplicationRewardClaimed;
+  if (reward) s.multiplicationRewardClaimed = true;
+  return { correct: true, complete: true, reward };
 }
 export function rewardFor(s: Save, monster: number, arena: boolean) {
   const m = MONSTERS[monster], w = WEAPONS[s.weapon];
-  return { berries: m.berry + w.bonus + (arena ? 0 : s.journey.stage * 2), xp: m.xp + OUTFITS[s.outfit].xpBonus, score: arena ? Math.round(m.score * (w.multiplier + s.weapons[s.weapon] * 0.1)) : 0 };
+  const berryMultiplier = s.potions.berryUses > 0 ? s.potions.berryMultiplier : 1, xpMultiplier = s.potions.xpUses > 0 ? s.potions.xpMultiplier : 1;
+  return { berries: (m.berry + w.bonus + (arena ? 0 : 2 + journeyFor(s).stage * 2)) * berryMultiplier, xp: (m.xp + OUTFITS[s.outfit].xpBonus) * xpMultiplier, score: arena ? Math.round(m.score * (w.multiplier + s.weapons[s.weapon] * 0.1)) : 0 };
 }
 export function grantReward(s: Save, monster: number, arena: boolean) {
   const reward = rewardFor(s, monster, arena); let levels = 0;
   const milestones: { level: number; berries: number }[] = [];
   s.berries += reward.berries; s.xp += reward.xp; s.tutorial.battle = true;
+  if (s.potions.berryUses > 0 && --s.potions.berryUses === 0) s.potions.berryMultiplier = 1;
+  if (s.potions.xpUses > 0 && --s.potions.xpUses === 0) s.potions.xpMultiplier = 1;
   while (s.xp >= s.level * 40) {
     s.xp -= s.level * 40; s.level++; s.berries += 20; levels++;
     const gift = s.level === 30 ? 30_000 : s.level === 50 ? 50_000 : s.level === 100 ? 100_000 : 0;
@@ -211,6 +306,19 @@ export function buyLook(s: Save, kind: 'hairstyle' | 'face', id: number): string
   if (!owned[id]) { if (s.berries < items[id].price) throw new Error(`${items[id].price - s.berries}베리가 더 필요해요.`); s.berries -= items[id].price; owned[id] = true; }
   s[kind] = id; return kind === 'hairstyle' ? '새 헤어스타일로 변신했어요!' : '새로운 표정으로 변신했어요!';
 }
+export function buyPotion(s: Save, id: number) {
+  const potion = POTIONS[id]; if (!Number.isInteger(id) || !potion) throw new Error('없는 물약이에요.');
+  if (s.potions.stock[id] >= 99) throw new Error('이 물약은 99개까지 보관할 수 있어요.');
+  if (s.berries < potion.price) throw new Error(`${potion.price - s.berries}베리가 더 필요해요.`);
+  s.berries -= potion.price; s.potions.stock[id]++; return `${potion.name}을(를) 가방에 넣었어요!`;
+}
+export function usePotion(s: Save, id: number) {
+  const potion = POTIONS[id]; if (!Number.isInteger(id) || !potion || !s.potions.stock[id]) throw new Error('가방에 이 물약이 없어요.');
+  s.potions.stock[id]--;
+  if (potion.kind === 'berry') { s.potions.berryMultiplier = potion.multiplier as 2 | 3; s.potions.berryUses = potion.uses; }
+  else { s.potions.xpMultiplier = 3; s.potions.xpUses = potion.uses; }
+  return `${potion.name}을(를) 사용했어요. 다음 몬스터 ${potion.uses}명에게 효과가 있어요!`;
+}
 export function enableTeacherMode(s: Save, code: string): string {
   return applyTeacherCode(s, code);
 }
@@ -220,7 +328,9 @@ export function applyTeacherCode(s: Save, code: string): string {
   if (code !== 'teacher') throw new Error('암호코드가 맞지 않아요.');
   s.teacherMode = true; s.berries = 1_000_000;
   WEAPONS.forEach((_, id) => { s.weapons[id] = 3; }); OUTFITS.forEach((_, id) => { s.outfits[id] = 2; }); RIDES.forEach((_, id) => { s.rides[id] = true; }); PETS.forEach((_, id) => { s.pets[id] = true; }); HAIRSTYLES.forEach((_, id) => { s.hairstyles[id] = true; }); FACES.forEach((_, id) => { s.faces[id] = true; });
+  s.potions.stock = POTIONS.map(() => 9);
   s.discoveries.monsters = MONSTERS.map((_, id) => id); s.discoveries.pets = PETS.map((_, id) => id); s.discoveries.outfits = OUTFITS.map((_, id) => id);
+  s.multiplicationCompleted = true; s.multiplicationRewardClaimed = true;
   return '선생님 모드가 열렸어요! 모든 아이템과 스테이지를 사용할 수 있어요.';
 }
 export function validateSave(value: unknown): Save {
@@ -240,12 +350,27 @@ export function validateSave(value: unknown): Save {
     migrated.room = { furniture: [], inside: false };
   }
   if (migrated.version === 6) { migrated.version = 7; migrated.expedition = emptyExpedition(); }
+  if (migrated.version === 7) {
+    migrated.version = 8;
+    migrated.forest = 'division';
+    migrated.multiplicationJourney = emptyJourney();
+    migrated.multiplicationFinal = null;
+    migrated.multiplicationCompleted = migrated.teacherMode === true;
+    migrated.multiplicationRewardClaimed = migrated.teacherMode === true;
+    migrated.settings = { ...(migrated.settings as object), multiplicationRange: 'stage' };
+    const learning = migrated.learning as Save['learning'] | undefined;
+    if (learning?.wrongQuestions) learning.wrongQuestions = learning.wrongQuestions.map(q => ({ ...q, operation: q.operation ?? 'division' }));
+    const expedition = migrated.expedition as ExpeditionProgress | undefined;
+    if (expedition?.active?.gateQuestion) expedition.active.gateQuestion = { ...expedition.active.gateQuestion, operation: 'division' };
+  }
   const s = migrated as unknown as Save;
   if (s.garden === undefined) s.garden = { rescued: 0, flowers: [-1, -1, -1] };
+  if (s.potions === undefined) s.potions = { stock: [0, 0, 0], berryMultiplier: 1, berryUses: 0, xpMultiplier: 1, xpUses: 0 };
   if (s.room && s.room.inside === undefined) s.room.inside = false;
   const integer = (v: unknown, min: number, max: number): v is number => typeof v === 'number' && Number.isSafeInteger(v) && v >= min && v <= max;
   if (!s.garden || !integer(s.garden.rescued, 0, 3) || !Array.isArray(s.garden.flowers) || s.garden.flowers.length !== 3 || s.garden.flowers.some(f => !integer(f, -1, 2)) || s.garden.flowers.filter(f => f >= 0).length > s.garden.rescued) return fail();
-  if (s.version !== 7 || typeof s.teacherMode !== 'boolean' || typeof s.nickname !== 'string' || !s.nickname.trim() || [...s.nickname].length > 10 || !integer(s.character, 0, 3) || !integer(s.berries, 0, 1e9) || !integer(s.level, 1, 100000) || !integer(s.xp, 0, s.level * 40 - 1) || !integer(s.best, 0, 1e9)) return fail();
+  if (s.version !== 8 || !['division', 'multiplication'].includes(s.forest) || typeof s.teacherMode !== 'boolean' || typeof s.nickname !== 'string' || !s.nickname.trim() || [...s.nickname].length > 10 || !integer(s.character, 0, 3) || !integer(s.berries, 0, 1e9) || !integer(s.level, 1, 100000) || !integer(s.xp, 0, s.level * 40 - 1) || !integer(s.best, 0, 1e9)) return fail();
+  if (!s.potions || !Array.isArray(s.potions.stock) || s.potions.stock.length !== POTIONS.length || s.potions.stock.some(n => !integer(n, 0, 99)) || ![1, 2, 3].includes(s.potions.berryMultiplier) || !integer(s.potions.berryUses, 0, 5) || ![1, 3].includes(s.potions.xpMultiplier) || !integer(s.potions.xpUses, 0, 5) || (s.potions.berryUses === 0) !== (s.potions.berryMultiplier === 1) || (s.potions.xpUses === 0) !== (s.potions.xpMultiplier === 1)) return fail();
   const expedition = s.expedition;
   if (!expedition || !integer(expedition.completed, 0, 1e8) || !integer(expedition.selectedTitle, 0, EXPEDITION_TITLES.length - 1) || expedition.completed < EXPEDITION_TITLES[expedition.selectedTitle].need) return fail();
   if (expedition.active !== null) {
@@ -268,32 +393,43 @@ export function validateSave(value: unknown): Save {
     for (const [id, value] of Object.entries(owned)) if (!/^\d+$/.test(id) || !integer(Number(id), 0, items.length - 1) || value !== true) return fail();
     if (!integer(selected, key === 'pets' ? -1 : 0, items.length - 1) || (selected >= 0 && !owned[selected])) return fail();
   }
-  if (!s.journey || !integer(s.journey.stage, 0, 10) || !Array.isArray(s.journey.maps) || s.journey.maps.length !== 11) return fail();
-  for (let stage = 0; stage <= 10; stage++) {
-    const m = s.journey.maps[stage];
-    if (!m || typeof m.cleared !== 'boolean') return fail();
-    for (const [key, max] of [['berries', stageBerries(stage).length], ['monsters', stageMonsters(stage).length], ['trees', stageTrees(stage).length]] as const) if (!Array.isArray(m[key]) || m[key].some(id => !integer(id, 0, max - 1)) || new Set(m[key]).size !== m[key].length) return fail();
-    if (stage > 0 && m.cleared !== (m.monsters.length === stageMonsters(stage).length)) return fail();
-    if (!s.teacherMode && stage > 1 && (m.cleared || m.monsters.length || m.berries.length || m.trees.length) && !s.journey.maps[stage - 1].cleared) return fail();
+  for (const journey of [s.journey, s.multiplicationJourney]) {
+    if (!journey || !integer(journey.stage, 0, 10) || !Array.isArray(journey.maps) || journey.maps.length !== 11) return fail();
+    for (let stage = 0; stage <= 10; stage++) {
+      const m = journey.maps[stage];
+      if (!m || typeof m.cleared !== 'boolean') return fail();
+      for (const [key, max] of [['berries', stageBerries(stage).length], ['monsters', stageMonsters(stage).length], ['trees', stageTrees(stage).length]] as const) if (!Array.isArray(m[key]) || m[key].some(id => !integer(id, 0, max - 1)) || new Set(m[key]).size !== m[key].length) return fail();
+      if (stage > 0 && m.cleared !== (m.monsters.length === stageMonsters(stage).length)) return fail();
+      if (!s.teacherMode && stage > 1 && (m.cleared || m.monsters.length || m.berries.length || m.trees.length) && !journey.maps[stage - 1].cleared) return fail();
+    }
   }
+  if (typeof s.multiplicationCompleted !== 'boolean' || typeof s.multiplicationRewardClaimed !== 'boolean' || (s.multiplicationCompleted && !s.multiplicationRewardClaimed)) return fail();
+  if (s.multiplicationFinal !== null) {
+    const gate = s.multiplicationFinal;
+    if (!integer(gate.left, 2, 9) || !integer(gate.right, 2, 9) || ![0, 1].includes(gate.step)) return fail();
+  }
+  if ((s.multiplicationCompleted || s.multiplicationFinal) && !s.teacherMode && !s.multiplicationJourney.maps[10].cleared) return fail();
   if (expedition.active && !s.teacherMode && !s.journey.maps.slice(1).every(map => map.cleared)) return fail();
-  if (!canEnter(s, s.journey.stage)) return fail();
-  const bounds = stageSize(s.journey.stage);
+  if (!canEnter(s, journeyFor(s).stage)) return fail();
+  const bounds = stageSize(journeyFor(s).stage);
   if (!s.position || !Number.isFinite(s.position.x) || !Number.isFinite(s.position.z) || Math.abs(s.position.x) > bounds.x || Math.abs(s.position.z) > bounds.z) return fail();
   if (!s.tutorial || ['collected', 'battle', 'shop'].some(k => typeof s.tutorial[k as keyof Save['tutorial']] !== 'boolean')) return fail();
-  if (!s.settings || ['music', 'sound', 'lowQuality'].some(k => typeof s.settings[k as keyof Save['settings']] !== 'boolean') || ![0, 90, 180].includes(s.settings.maxDividend) || !integer(s.settings.sessionMinutes, 0, 180)) return fail();
-  if (!s.learning || !integer(s.learning.elapsedSeconds, 0, 1e9) || !integer(s.learning.correct, 0, 1e9) || !integer(s.learning.wrong, 0, 1e9) || !Array.isArray(s.learning.wrongQuestions) || s.learning.wrongQuestions.length > 30 || s.learning.wrongQuestions.some(q => !integer(q.dividend, 10, 999) || !integer(q.divisor, 2, 9) || q.dividend % q.divisor || q.answer !== q.dividend / q.divisor)) return fail();
-  if (!s.discoveries || !s.room || typeof s.room.inside !== 'boolean' || !Array.isArray(s.room.furniture) || s.room.furniture.some(id => !integer(id, 0, 7))) return fail();
-  if (s.room.inside && s.journey.stage !== 0) return fail();
+  if (!s.settings || ['music', 'sound', 'lowQuality'].some(k => typeof s.settings[k as keyof Save['settings']] !== 'boolean') || ![0, 90, 180].includes(s.settings.maxDividend) || !['stage', 'tables'].includes(s.settings.multiplicationRange) || !integer(s.settings.sessionMinutes, 0, 180)) return fail();
+  const validQuestion = (q: Question) => q.operation === 'multiplication'
+    ? integer(q.dividend, 2, 99) && integer(q.divisor, 2, 9) && q.answer === q.dividend * q.divisor
+    : integer(q.dividend, 10, 999) && integer(q.divisor, 2, 9) && q.dividend % q.divisor === 0 && q.answer === q.dividend / q.divisor;
+  if (!s.learning || !integer(s.learning.elapsedSeconds, 0, 1e9) || !integer(s.learning.correct, 0, 1e9) || !integer(s.learning.wrong, 0, 1e9) || !Array.isArray(s.learning.wrongQuestions) || s.learning.wrongQuestions.length > 30 || s.learning.wrongQuestions.some(q => !validQuestion(q))) return fail();
+  if (!s.discoveries || !s.room || typeof s.room.inside !== 'boolean' || !Array.isArray(s.room.furniture) || s.room.furniture.some(id => !integer(id, 0, 8))) return fail();
+  if (s.room.inside && journeyFor(s).stage !== 0) return fail();
   for (const [key, max] of [['monsters', MONSTERS.length], ['pets', PETS.length], ['outfits', OUTFITS.length]] as const) if (!Array.isArray(s.discoveries[key]) || s.discoveries[key].some(id => !integer(id, 0, max - 1))) return fail();
   return structuredClone(s);
 }
 export class Encounter {
   question: Question; solved = false; monster: number; arena: boolean; stage: number;
-  constructor(monster: number, arena: boolean, level: number, previous?: Question, stage = 0, maxDividend: 0 | 90 | 180 = 0) { this.monster = monster; this.arena = arena; this.stage = stage; this.question = pickQuestion(level, previous, stage, maxDividend); }
+  constructor(monster: number, arena: boolean, level: number, previous?: Question, stage = 0, maxDividend: 0 | 90 | 180 = 0, operation: ForestKind = 'division', multiplicationRange: MultiplicationRange = 'stage') { this.monster = monster; this.arena = arena; this.stage = stage; this.question = operation === 'multiplication' ? pickMultiplicationQuestion(stage || 1, previous, multiplicationRange) : pickQuestion(level, previous, stage, maxDividend); }
   answer(value: string): 'correct' | 'wrong' | 'ignored' {
     if (this.solved) return 'ignored';
-    if (!/^\d{1,2}$/.test(value) || Number(value) !== this.question.answer) return 'wrong';
+    if (!/^\d{1,3}$/.test(value) || Number(value) !== this.question.answer) return 'wrong';
     this.solved = true; return 'correct';
   }
 }

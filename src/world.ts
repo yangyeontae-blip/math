@@ -1,5 +1,5 @@
 import * as T from 'three';
-import { CHARACTERS, MONSTERS, OUTFITS, PETS, RIDES, WEAPONS, PLAYER_MOVE_SPEED, petChaseSpeed, type Save } from './rules';
+import { CHARACTERS, MONSTERS, OUTFITS, PETS, RIDES, WEAPONS, PLAYER_MOVE_SPEED, petChaseSpeed, journeyFor, type ForestKind, type Save } from './rules';
 import { STAGES, stageBerries, stageMonsters, stagePlatforms, stageTrees, stageSize, isVillagePond } from './stages';
 import { EXPEDITION_STAR_SPOTS, expeditionLayout } from './expedition';
 
@@ -75,6 +75,7 @@ export function makeCharacter(character: number, outfit: number, weapon: number,
     if (face === 9) { // 무지개 웃음: 양볼의 세 줄 무지개
       for (let stripe = 0; stripe < 3; stripe++) ball(body, [0xf58aa4, 0xf5cf65, 0x85cfa0][stripe], side * .34, 1.4 - stripe * .045, .43, .07, .012, .012);
     }
+    if (face >= 10) { const color = [0xf7c947, 0xe8a75c, 0xf2c640, 0xffdf76][face - 10] ?? 0xffdf76; ball(body, color, side * .19, 1.51, .462, .065, .075, .02); ball(body, 0xffffff, side * .17, 1.54, .476, .018, .022, .008); }
   }
   const smile = mesh(new T.TorusGeometry(.075, .012, 5, 10, Math.PI), 0x975e57, 0, 1.35, .44, body); smile.rotation.z = Math.PI;
   if (face === 1) { smile.scale.set(.72, 1.25, 1); ball(body, 0xf7a4b6, 0, 1.34, .45, .032, .05, .014); }
@@ -88,6 +89,7 @@ export function makeCharacter(character: number, outfit: number, weapon: number,
   if (face === 9) { smile.scale.set(1.5, 1.25, 1); }
   const curls = hairstyle === 3 ? 7 : 4; for (let i = 0; i < curls; i++) ball(body, c.hair, -.38 + i * (hairstyle === 3 ? .125 : .23), 1.86 + Math.sin(i) * .045, .19, hairstyle === 3 ? .18 : .16, .18, .2);
   if (hairstyle === 5) for (const side of [-1, 1]) ball(body, c.hair, side * .38, 2.05, -.02, .26);
+  if (hairstyle >= 6) { for (const side of [-1, 1]) ball(body, c.hair, side * .42, hairstyle === 7 ? 2.04 : 1.75, -.06, hairstyle === 7 ? .25 : .2, hairstyle === 6 ? .36 : .24, .2); for (let i = 0; i < 3; i++) ball(body, o.accent, -.22 + i * .22, 2.02 + Math.sin(i) * .06, .02, .08); }
   if (outfit === 5) { cylinder(body, o.color, 0, 1.97, 0, .65, .65, .08); mesh(new T.ConeGeometry(.46, .75, 12), o.color, 0, 2.32, 0, body); }
   if (outfit === 7) { cylinder(body, o.accent, 0, 2.02, 0, .33, .35, .2, 6); ball(body, 0xe781a5, 0, 2.15, .28, .13); }
   if (outfitLevel >= 1) {
@@ -113,6 +115,7 @@ export function makeCharacter(character: number, outfit: number, weapon: number,
   if (weapon === 9) { const blade = box(w, 0xeaf4ff, 0, .78, 0, .28, .72, .1); blade.rotation.z = -.12; for (const side of [-1, 1]) ball(w, 0xffffff, side * .2, 1.08, 0, .16); box(w, 0x9dc6df, 0, .4, 0, .48, .1, .16); }
   if (weapon === 10) { const leaf = mesh(new T.CircleGeometry(.34, 14), 0x78c780, 0, .98, .02, w); (leaf.material as T.Material).side = T.DoubleSide; cylinder(w, 0x97d081, 0, .7, 0, .04, .07, .78, 8); ball(w, 0xffef8e, 0, 1.02, .08, .08); }
   if (weapon === 11) { ball(w, 0xc99be8, 0, .98, 0, .3, .3, .18); for (let i = 0; i < 6; i++) ball(w, [0xff91ad, 0x8ed9e8, 0xffdc76][i % 3], Math.cos(i * 1.05) * .31, .98 + Math.sin(i * 1.05) * .31, 0, .095); }
+  if (weapon >= 12) { ball(w, WEAPONS[weapon].color, 0, .96, 0, .3, .27, .16); for (let i = 0; i < 8; i++) ball(w, i % 2 ? 0x7cad55 : 0xffdf65, Math.cos(i * Math.PI / 4) * .34, .96 + Math.sin(i * Math.PI / 4) * .34, 0, .095, .13, .07); }
   if (outfit === 8) { box(body, 0xf55f74, 0, .82, .39, .3, .34, .08); for (const side of [-1, 1]) box(body, 0xf8d9a0, side * .18, .98, .36, .06, .42, .04); }
   if (outfit === 9) { const brim = cylinder(body, o.accent, 0, 1.98, 0, .57, .57, .08); ball(body, o.color, 0, 2.12, 0, .38, .25, .34); }
   if (outfit === 10) { for (const side of [-1, 1]) { const ear = ball(body, o.accent, side * .27, 2.26, 0, .17, .55, .15); ear.rotation.z = side * -.16; } ball(body, 0xffffff, 0, .77, -.38, .22); }
@@ -121,6 +124,7 @@ export function makeCharacter(character: number, outfit: number, weapon: number,
   if (outfit === 13) { for (const side of [-1, 1]) ball(body, 0xffffff, side * .28, 2.05, 0, .25, .3, .22); for (let i = 0; i < 3; i++) ball(body, 0xffffff, -.22 + i * .22, .72, .4, .09); }
   if (outfit === 14) { for (const side of [-1, 1]) ball(body, 0xeef397, side * .25, 2.02, .03, .28, .18, .18); const cape = mesh(new T.CircleGeometry(.65, 16), 0x78bf70, 0, .82, -.31, body); cape.rotation.x = -.2; }
   if (outfit === 15) { for (const side of [-1, 1]) { const wing = mesh(new T.CircleGeometry(.38, 12), side < 0 ? 0xf7b6dc : 0xaedcf4, side * .42, 1, -.25, body); wing.scale.y = 1.5; } for (let i = 0; i < 3; i++) mesh(new T.OctahedronGeometry(.08), o.accent, -.2 + i * .2, .72, .41, body); }
+  if (outfit >= 16) { for (let i = 0; i < 8; i++) ball(body, i % 2 ? o.accent : 0xffd84f, Math.cos(i * Math.PI / 4) * .36, 2.03 + Math.sin(i * Math.PI / 4) * .31, .02, .095, .13, .075); for (const side of [-1, 1]) { const wing = mesh(new T.CircleGeometry(.3, 10), 0xffe59a, side * .4, .92, -.23, body); wing.scale.y = 1.4; } }
   if (weaponLevel) for (let i = 0; i < weaponLevel; i++) ball(w, 0xffe891, 0, .3 + i * .16, .08, .06);
   return g;
 }
@@ -133,6 +137,11 @@ export function makeMonster(type: number) {
   if (type === 1) { ball(g, 0xe86c83, 0, 1, -.02, .84, .34, .72); for (const [x, z] of [[-.35, .2], [.25, .35], [.1, -.3]]) ball(g, 0xffe9cc, x, 1.28, z, .12, .04, .1); }
   if (type === 2) for (const side of [-1, 1]) { ball(g, c, side * .26, 1.23, 0, .16, .49, .17); ball(g, 0xeeb8d1, side * .26, 1.26, .14, .075, .28, .03); }
   if (type === 3) { ball(g, 0x866043, 0, .96, 0, .7, .25, .63); cylinder(g, 0x866043, 0, 1.18, 0, .08, .1, .3); }
+  if (type === 4) { for (const side of [-1, 1]) { cylinder(g, 0x4e4036, side * .23, 1.13, 0, .025, .025, .3); ball(g, 0xffdf57, side * .27, 1.32, 0, .07); const wing = mesh(new T.CircleGeometry(.3, 10), 0xfff0a4, side * .52, .58, -.1, g); wing.scale.y = 1.35; } for (const y of [.4, .66]) cylinder(g, 0x4e4036, 0, y, .02, .67, .67, .1); }
+  if (type === 5) { for (const side of [-1, 1]) { const ear = mesh(new T.ConeGeometry(.2, .42, 5), c, side * .3, 1.12, 0, g); ear.rotation.z = side * -.12; } ball(g, 0xffda67, .42, 1.04, .08, .18, .07, .16); }
+  if (type === 6) { for (const side of [-1, 1]) { const ear = mesh(new T.ConeGeometry(.23, .5, 5), c, side * .31, 1.13, 0, g); ear.rotation.z = side * -.18; } ball(g, 0xffe8c9, 0, .5, .55, .25, .2, .06); ball(g, 0xffffff, .48, .72, -.22, .32, .24, .18); }
+  if (type === 7) { for (let i = 0; i < 7; i++) ball(g, 0xfff8f0, (i % 4 - 1.5) * .22, .98 + (i % 2) * .16, -.05, .25, .2, .24); for (const side of [-1, 1]) ball(g, 0xf6c7db, side * .52, .83, 0, .16, .32, .13); }
+  if (type === 8) { for (const side of [-1, 1]) ball(g, c, side * .39, 1.02, 0, .22, .22, .17); for (let i = 0; i < 5; i++) { const a = i * Math.PI * 2 / 5; ball(g, 0xffdf72, Math.cos(a) * .25, 1.14 + Math.sin(a) * .22, .12, .07, .07, .035); } }
   for (const side of [-1, 1]) { ball(g, 0x314c40, side * .23, .62, .52, .055, .07, .035); ball(g, 0xf5a2ac, side * .38, .47, .48, .1, .045, .03); }
   ball(g, 0x805b54, 0, .44, .586, .055, .028, .016); return g;
 }
@@ -187,11 +196,18 @@ function makeRide(id: number) {
     for (const side of [-1, 1]) { const wing = mesh(new T.ConeGeometry(.46, 1.2, 3), 0xaed0f0, side * .72, .96, -.1, g); wing.rotation.z = side * -.78; wing.rotation.x = -.18; wing.userData.rideWing = side; ball(g, 0x343c62, side * .14, 1.15, .96, .045, .06, .025); const horn = mesh(new T.ConeGeometry(.07, .28, 6), 0xffe69a, side * .17, 1.48, .61, g); horn.rotation.x = -.2; }
     for (let i = 0; i < 5; i++) ball(g, 0x9fc9f0, 0, .83 + i * .1, -.44 - i * .25, .18 - i * .025);
     for (let i = 0; i < 4; i++) { const spike = mesh(new T.ConeGeometry(.1, .25, 5), 0xa4c5f0, -.3 + i * .2, 1.42, -.22 + i * .12, g); spike.rotation.z = Math.PI; }
-  } else { // 오로라 고래: 둥근 지느러미와 물결 꼬리
+  } else if (id === 7) { // 오로라 고래: 둥근 지느러미와 물결 꼬리
     ball(g, 0x65b9d8, 0, .82, 0, .94, .55, .72); ball(g, 0x89d7e6, 0, 1.02, .62, .5, .44, .44); ball(g, 0xe8f9ff, 0, .72, .5, .33, .22, .1);
     for (const side of [-1, 1]) { const fin = ball(g, 0x86d5e7, side * .8, .67, -.05, .42, .13, .34); fin.rotation.z = side * .48; ball(g, 0x354662, side * .18, 1.1, .94, .045, .065, .025); const tail = ball(g, 0x9fe6e5, side * .3, .88, -.78, .28, .1, .34); tail.rotation.z = side * .48; }
     for (let i = 0; i < 3; i++) ball(g, 0xb1f2db, -.18 + i * .18, 1.43 + Math.sin(i) * .06, .02, .08, .2, .07);
     for (let i = 0; i < 3; i++) ball(g, 0xe7fbff, .86, 1.05 + i * .2, -.3 + i * .12, .07, .07, .07);
+  } else if (id === 8) { // 해바라기 사자
+    ball(g, 0xe4a24d, 0, .76, 0, .82, .52, .62); ball(g, 0xf1b967, 0, 1.12, .58, .43, .42, .43);
+    for (let i = 0; i < 10; i++) ball(g, i % 2 ? 0xf4c947 : 0xe89b3e, Math.cos(i * .628) * .46, 1.14 + Math.sin(i * .628) * .46, .48, .14, .18, .1);
+    for (const side of [-1, 1]) { const wing = mesh(new T.CircleGeometry(.52, 12), 0xffe6a0, side * .68, .95, -.08, g); wing.scale.y = 1.35; wing.rotation.z = side * -.55; wing.userData.rideWing = side; ball(g, 0x493b32, side * .14, 1.17, .95, .045, .06, .025); }
+  } else { // 꿀벌 하늘마차
+    ball(g, 0xf0bd38, 0, .72, 0, .9, .48, .62); for (const z of [-.25, .1, .42]) box(g, 0x4f4338, 0, .72, z, .94, .1, .12);
+    for (const side of [-1, 1]) { const wing = mesh(new T.CircleGeometry(.6, 12), 0xfff2c5, side * .7, 1.02, -.08, g); wing.scale.y = 1.4; wing.rotation.z = side * -.62; wing.userData.rideWing = side; ball(g, 0x3d3733, side * .16, 1.04, .74, .05, .065, .025); const antenna = cylinder(g, 0x4f4338, side * .16, 1.42, .5, .025, .03, .35, 6); antenna.rotation.z = side * -.3; }
   }
   // 모든 탈것에 같은 모험 안장을 더해, 캐릭터가 자연스럽게 타고 있다는 느낌을 만듭니다.
   if (id !== 5) { box(g, 0x8d6046, 0, .92, -.05, .5, .12, .42); ball(g, 0xffd978, 0, .98, .12, .09); }
@@ -212,6 +228,8 @@ function makePet(id: number) {
   if (id === 2) for (const side of [-1, 1]) { const ear = mesh(new T.ConeGeometry(.1, .3, 5), pet.color, side * .16, .86, .13, body); ear.rotation.z = side * -.15; ball(body, 0xf5c3c5, side * .13, .82, .2, .045, .09, .025); }
   if (id === 3) { for (const side of [-1, 1]) { ball(body, 0xf1d38b, side * .13, .62, .41, .08, .1, .025); const wing = ball(body, 0xc5addb, side * .32, .4, -.02, .2, .28, .08); wing.rotation.z = side * .35; wing.userData.petWing = side; } for (const side of [-1, 1]) { const tuft = mesh(new T.ConeGeometry(.07, .19, 5), 0xc5addb, side * .1, .83, .08, body); tuft.rotation.z = side * -.15; } }
   if (id === 4) { for (const side of [-1, 1]) { const horn = mesh(new T.ConeGeometry(.08, .24, 5), 0xd5ef9a, side * .14, .86, .12, body); horn.rotation.z = side * -.12; } for (let i = 0; i < 4; i++) ball(body, 0xd5ef9a, 0, .42 + i * .09, -.35 - i * .13, .09 - i * .015); ball(body, 0xffe28a, 0, .76, .08, .11); }
+  if (id === 5) { for (const side of [-1, 1]) { const wing = mesh(new T.CircleGeometry(.22, 10), 0xfff2c5, side * .3, .47, -.04, body); wing.scale.y = 1.45; wing.rotation.z = side * .45; wing.userData.petWing = side; const antenna = cylinder(body, 0x4b4036, side * .09, .86, .12, .018, .025, .25, 5); antenna.rotation.z = side * -.26; } box(body, 0x4b4036, 0, .36, .05, .62, .08, .13); }
+  if (id === 6) { for (const side of [-1, 1]) { const ear = mesh(new T.ConeGeometry(.13, .38, 5), pet.color, side * .18, .88, .12, body); ear.rotation.z = side * -.18; } for (let i = 0; i < 7; i++) ball(body, i % 2 ? 0xf6cb45 : 0xe5a344, Math.cos(i * .9) * .28, .38 + Math.sin(i * .9) * .24, -.3, .13); }
   // Original cozy-fantasy companion details: a tiny gem collar, travel pouch and glowing charm.
   const collar = mesh(new T.TorusGeometry(.2, .025, 5, 16), id > 2 ? 0xbbeeff : 0xf4d478, 0, .48, .18, body); collar.rotation.x = Math.PI / 2;
   box(body, 0x9b7653, -.3, .34, -.08, .18, .23, .1); const charm = mesh(new T.OctahedronGeometry(.065), id > 2 ? 0xbbeeff : 0xffd788, 0, .38, .43, body); charm.userData.petCharm = true;
@@ -221,7 +239,7 @@ function makePet(id: number) {
 export class World {
   scene = new T.Scene(); renderer: T.WebGLRenderer; camera: T.OrthographicCamera;
   player = new T.Group(); private entities: Entity[] = []; private coins: { mesh: T.Group; id: number; y: number }[] = []; private stars: { mesh: T.Group; id: number; y: number; label: HTMLDivElement }[] = [];
-  private colliders: { x: number; z: number; r: number; id?: string }[] = []; private platforms = stagePlatforms(0); stage = 0;
+  private colliders: { x: number; z: number; r: number; id?: string }[] = []; private platforms = stagePlatforms(0); stage = 0; forest: ForestKind = 'division';
   private keys = new Set<string>(); private stick = { x: 0, z: 0 }; private clock = new T.Clock(); private time = 0; private vy = 0; private grounded = true;
   private particles: { mesh: T.Mesh; v: T.Vector3; life: number }[] = []; private lastSafe = new T.Vector3(0, 0, 8); private follow = new T.Vector3(0, 0, 1);
   private sun: T.DirectionalLight; private labelLayer: HTMLDivElement; private selectedId: string | null = null;
@@ -277,6 +295,7 @@ export class World {
     this.addEntity('outfit', '오지후 · 의상 상점', -3.8, -7, makeCharacter(2, 4, 2));
     this.addEntity('ride', '나현이 · 라이딩 상점', 14, -5.5, makeCharacter(0, 10, 6));
     this.addEntity('pet', '윤준 · 펫 상점', 18.5, -3.5, makeCharacter(1, 12, 10));
+    this.addEntity('potion', '박준우 · 물약 상점', 8, -1.8, makeCharacter(0, 16, 12));
     this.addEntity('beauty', '가영이 · 헤어와 성형', -15.5, -4.2, makeCharacter(2, 15, 2));
     this.addEntity('arena', '신비 · 대련장', 0, -9, makeCharacter(3, 5, 3));
     this.addEntity('room', '나의 집 · 들어가기', 9, -4.5, this.gate(0xe5ad79));
@@ -332,16 +351,17 @@ export class World {
     if (gate) { gate.name = '별빛 원정 출구'; gate.label.textContent = gate.name; }
   }
   private buildHunt(stage: number) {
-    const spec = STAGES[stage - 1], size = stageSize(stage); this.platforms = stagePlatforms(stage); this.scene.background = new T.Color(spec.sky); this.scene.fog = new T.Fog(spec.sky, 55, 120);
+    const base = STAGES[stage - 1], spec = this.forest === 'multiplication' ? { ...base, sky: 0xffe7b8, ground: 0xe7d99b, accent: 0xf2bd72, foliage: 0x8dbb65 } : base, size = stageSize(stage); this.platforms = stagePlatforms(stage); this.scene.background = new T.Color(spec.sky); this.scene.fog = new T.Fog(spec.sky, 55, 120);
     box(this.scene, spec.ground, 0, -.55, 0, size.x * 2, 1.1, size.z * 2); box(this.scene, 0x708f71, 0, -1.3, 0, size.x * 2 - 1, .5, size.z * 2 - 1);
     box(this.scene, spec.accent, 0, .02, 0, 3.8, .06, size.z * 2 - 5); for (const z of [14, 0, -15]) box(this.scene, spec.accent, 0, .025, z, size.x * 2 - 10, .06, 2.6);
     this.platforms.forEach(p => { box(this.scene, 0xa8a88c, p.x, p.h / 2, p.z, p.w, p.h, p.d); box(this.scene, spec.accent, p.x, p.h + .02, p.z, p.w + .05, .08, p.d + .05); });
-    this.addEntity('village', '베리숲 마을로 돌아가기', 0, size.z - 5, this.gate(0x6eb7a1)); this.addEntity('next', stage === 10 ? '마지막 축하문' : `다음 길 · ${STAGES[stage].name}`, 0, -size.z + 5, this.gate(0xc087d2));
+    this.addEntity('village', '베리숲 마을로 돌아가기', 0, size.z - 5, this.gate(0x6eb7a1)); this.addEntity('next', stage === 10 ? (this.forest === 'multiplication' ? '구구단 햇살문' : '마지막 축하문') : `다음 길 · ${STAGES[stage].name}`, 0, -size.z + 5, this.gate(this.forest === 'multiplication' ? 0xe5a743 : 0xc087d2));
     stageMonsters(stage).forEach((m, i) => this.addEntity(`monster${i}`, `${MONSTERS[m.type].name} · ${i + 1}`, m.x, m.z, makeMonster(m.type)));
     for (let i = 0; i < 55; i++) { const x = Math.sin(i * 2.399 + stage) * (size.x - 4), z = Math.cos(i * 1.73 + stage) * (size.z - 4); if (Math.abs(x) < 4 || [14, 0, -15].some(v => Math.abs(z - v) < 2.5)) continue; this.tree(x, z, .8 + i % 3 * .2, spec.theme === 'blossom', spec.foliage); }
     stageTrees(stage).forEach(({ x, z }, i) => this.addChoppableTree(i, x, z, .92 + (i % 3) * .08, spec.theme === 'blossom', spec.foliage));
     for (const z of [20, 6, -9, -23]) { box(this.scene, 0xb98d58, -3.4, .65, z, .12, 1.25, .12); box(this.scene, 0xe6ca8f, -2.8, 1.05, z, 1.35, .56, .12); ball(this.scene, 0xffe98d, -3.35, 1.36, z, .1); }
     for (let i = 0; i < 30; i++) { const x = Math.sin(i * 5.7 + stage) * (size.x - 7), z = Math.cos(i * 3.3 + stage) * (size.z - 8); cylinder(this.scene, 0x5c9a59, x, .12, z, .025, .025, .24, 5); ball(this.scene, [0xffb3c7, 0xffdf82, 0xc5b2ef, 0xa9dfe1][i % 4], x, .29, z, .1, .08, .1); }
+    if (this.forest === 'multiplication') for (let i = 0; i < 18; i++) { const x = Math.sin(i * 4.31 + stage) * (size.x - 7), z = Math.cos(i * 2.71 + stage) * (size.z - 8); cylinder(this.scene, 0x5d934b, x, .45, z, .04, .06, .85, 6); ball(this.scene, 0x6e512f, x, .93, z, .14); for (let p = 0; p < 8; p++) ball(this.scene, 0xf6cb42, x + Math.cos(p * Math.PI / 4) * .25, .93 + Math.sin(p * Math.PI / 4) * .25, z, .11, .15, .06); if (i % 3 === 0) { const bee = new T.Group(); bee.position.set(x + .45, 1.4, z); ball(bee, 0xf2c340, 0, 0, 0, .15, .11, .12); box(bee, 0x4b4036, 0, 0, .08, .3, .06, .08); this.scene.add(bee); this.butterflies.push(bee); } }
     for (let i = 0; i < 14; i++) { const g = new T.Group(); g.position.set((i % 2 ? 1 : -1) * (size.x - 5), 0, size.z - 7 - Math.floor(i / 2) * 8); this.scene.add(g); if (spec.theme === 'crystal') { for (let j = 0; j < 3; j++) { const m = mesh(new T.OctahedronGeometry(.65), [0x9bade6, 0xc3a0df, 0x9bd6d4][j], j * .55 - .55, 1.3, 0, g); m.scale.y = 2 + j * .3; } } else if (spec.theme === 'mushroom') { cylinder(g, 0xf4e4cb, 0, .9, 0, .4, .6, 1.8); ball(g, 0xda8e9a, 0, 2, 0, 1.8, .65, 1.5); } else { for (let j = 0; j < 5; j++) ball(g, spec.foliage, Math.cos(j * 1.26), .7, Math.sin(j * 1.26), .4, .14, .4); } }
     this.addBerries();
   }
@@ -351,10 +371,10 @@ export class World {
     this.furnitureRoot = null;
   }
   loadStage(s: Save, fresh = false) {
-    this.clearInput(); this.clearMap(); this.inRoom = false; s.room.inside = false; this.stage = s.journey.stage;
+    this.clearInput(); this.clearMap(); this.inRoom = false; s.room.inside = false; this.forest = s.forest; const journey = journeyFor(s); this.stage = journey.stage;
     this.scene.background = new T.Color(0xd0eade); this.scene.fog = new T.Fog(0xd0eade, 58, 112); this.platforms = stagePlatforms(this.stage);
     if (this.stage === 0) this.buildVillage(); else this.buildHunt(this.stage);
-    const map = s.journey.maps[this.stage], expedition = !!s.expedition.active && s.expedition.active.stage === this.stage;
+    const map = journey.maps[this.stage], expedition = s.forest === 'division' && !!s.expedition.active && s.expedition.active.stage === this.stage;
     this.coins.forEach(c => c.mesh.visible = !expedition && !map.berries.includes(c.id));
     this.entities.forEach(e => { if (e.id.startsWith('monster')) e.mesh.visible = !expedition && !map.monsters.includes(Number(e.id.slice(7))); if (e.id.startsWith('tree')) e.mesh.visible = !expedition && !map.trees.includes(Number(e.id.slice(4))); });
     if (expedition) this.addExpeditionObjects(s);
@@ -392,7 +412,7 @@ export class World {
   updateRoomFurniture(s: Save, render = true) {
     if (!this.inRoom || !this.furnitureRoot) return;
     for (const child of [...this.furnitureRoot.children]) { this.furnitureRoot.remove(child); this.disposeModel(child as T.Group); }
-    const spots = [[-4.8, -2.3], [-1.7, -2.3], [1.7, -2.3], [4.8, -2.3], [-4.8, 2], [-1.7, 2], [1.7, 2], [4.8, 2]] as const;
+    const spots = [[-4.8, -2.3], [-1.7, -2.3], [1.7, -2.3], [4.8, -2.3], [-4.8, 2], [-1.7, 2], [1.7, 2], [4.8, 2], [0, 0]] as const;
     for (const id of s.room.furniture) {
       const spot = spots[id]; if (!spot) continue;
       const [x, z] = spot, g = new T.Group(); g.position.set(x, 0, z); this.furnitureRoot.add(g);
@@ -403,7 +423,8 @@ export class World {
       else if (id === 4) { box(g, 0xe7c6b4, 0, .45, 0, 1.7, .5, 2.2); box(g, 0xf6eee0, 0, .76, -.25, 1.65, .18, 1.5); for (const side of [-1, 1]) ball(g, 0xfff7e9, side * .3, .8, .7, .28, .2, .28); }
       else if (id === 5) { box(g, 0x906b50, 0, 1.05, 0, 1.25, 2.1, .55); for (const y of [.45, 1.1, 1.75]) { box(g, 0xc49a70, 0, y, .3, 1.3, .12, .65); for (let b = 0; b < 3; b++) box(g, [0xd88984, 0x83b6ae, 0xefd18c][b], -.4 + b * .4, y + .23, .3, .24, .35, .3); } }
       else if (id === 6) { cylinder(g, 0x9c795a, 0, .8, 0, .05, .07, 1.5, 7); ball(g, 0xffe699, 0, 1.65, 0, .3); }
-      else { cylinder(g, 0xb47659, 0, .32, 0, .42, .5, .6, 10); for (let b = 0; b < 3; b++) ball(g, 0xe84f70, -.2 + b * .2, .7, 0, .13); }
+      else if (id === 7) { cylinder(g, 0xb47659, 0, .32, 0, .42, .5, .6, 10); for (let b = 0; b < 3; b++) ball(g, 0xe84f70, -.2 + b * .2, .7, 0, .13); }
+      else { cylinder(g, 0xc9824b, 0, .34, 0, .44, .55, .62, 10); cylinder(g, 0x5d934b, 0, 1.05, 0, .05, .07, 1.2, 7); ball(g, 0x6e512f, 0, 1.7, 0, .18); for (let p = 0; p < 10; p++) ball(g, 0xf6cb42, Math.cos(p * Math.PI / 5) * .38, 1.7 + Math.sin(p * Math.PI / 5) * .38, 0, .15, .2, .08); }
     }
     if (render) this.renderOnce();
   }

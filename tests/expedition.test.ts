@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { newSave, questionPool, validateSave } from '../src/rules.ts';
 import { stageMonsters } from '../src/stages.ts';
-import { EXPEDITION_STAR_SPOTS, EXPEDITION_TITLES, expeditionLayout, expeditionUnlocked, startExpedition, collectExpeditionStar, defeatExpeditionMonster, canFinishExpedition, finishExpedition, selectExpeditionTitle } from '../src/expedition.ts';
+import { EXPEDITION_STAR_SPOTS, EXPEDITION_TITLES, expeditionBerryReward, expeditionLayout, expeditionUnlocked, startExpedition, collectExpeditionStar, defeatExpeditionMonster, canFinishExpedition, finishExpedition, selectExpeditionTitle } from '../src/expedition.ts';
 
 function finishedStory() {
   const s = newSave('별빛', 0);
@@ -48,7 +48,7 @@ test('gate questions follow the current stage and teacher range', () => {
   }
 });
 
-test('wrong or duplicate objectives never give berries, XP or a second completion', () => {
+test('wrong or duplicate objectives never give duplicate berries, XP or a second completion', () => {
   const s = finishedStory(); s.berries = 321; s.xp = 17;
   assert.equal(startExpedition(s), true);
   const active = s.expedition.active!, layout = expeditionLayout(0);
@@ -59,9 +59,9 @@ test('wrong or duplicate objectives never give berries, XP or a second completio
   for (const id of layout.monsters) { assert.equal(defeatExpeditionMonster(s, id), true); assert.equal(defeatExpeditionMonster(s, id), false); }
   assert.equal(canFinishExpedition(s), true);
   assert.equal(finishExpedition(s, active.gateQuestion.answer + 1), null);
-  assert.deepEqual(finishExpedition(s, active.gateQuestion.answer), { completed: 1, newTitle: 1 });
+  assert.deepEqual(finishExpedition(s, active.gateQuestion.answer), { completed: 1, newTitle: 1, berries: expeditionBerryReward(1) });
   assert.equal(finishExpedition(s, active.gateQuestion.answer), null);
-  assert.equal(s.berries, 321); assert.equal(s.xp, 17); assert.equal(s.expedition.completed, 1);
+  assert.equal(s.berries, 321 + expeditionBerryReward(1)); assert.equal(s.xp, 17); assert.equal(s.expedition.completed, 1);
   assert.equal(selectExpeditionTitle(s, 1), true);
   assert.equal(selectExpeditionTitle(s, 2), false);
   assert.equal(EXPEDITION_TITLES[s.expedition.selectedTitle].name, '첫 발자국');
@@ -77,7 +77,7 @@ test('an active expedition and old version 6 saves survive loading', () => {
   const old = { ...finishedStory(), version: 6 } as Record<string, unknown>;
   delete old.expedition;
   const migrated = validateSave(old);
-  assert.equal(migrated.version, 7);
+  assert.equal(migrated.version, 8);
   assert.deepEqual(migrated.expedition, { completed: 0, selectedTitle: 0, active: null });
   assert.equal(migrated.journey.maps[10].cleared, true);
   const broken = structuredClone(s);
@@ -85,8 +85,8 @@ test('an active expedition and old version 6 saves survive loading', () => {
   assert.throws(() => validateSave(broken));
 });
 
-test('titles at 3, 10 and 30 completions unlock exactly once', () => {
-  for (const milestone of [3, 10, 30]) {
+test('many title milestones unlock exactly once', () => {
+  for (const milestone of EXPEDITION_TITLES.slice(1).map(title => title.need)) {
     const s = finishedStory(); s.expedition.completed = milestone - 1;
     assert.equal(startExpedition(s), true);
     const layout = expeditionLayout(s.expedition.completed), answer = s.expedition.active!.gateQuestion.answer;
