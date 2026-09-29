@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { questionPool, newSave, validateSave, buy, upgrade, buyRide, dismount, buyPet, buyLook, buyPotion, usePotion, applyTeacherCode, enableTeacherMode, grantReward, rewardFor, Encounter, WEAPONS, OUTFITS, PETS, POTIONS, RIDES, HAIRSTYLES, FACES, MONSTERS, CHARACTERS, STAGE_DIVISION_DIFFICULTY, collectBerry, finishHunt, fellTree, treeDamage, canEnter, monsterBattleRounds, recordWrongAnswer, recordCorrectAnswer, PLAYER_MOVE_SPEED, petChaseSpeed } from '../src/rules.ts';
+import { questionPool, newSave, validateSave, buy, upgrade, buyRide, dismount, buyPet, buyLook, buyPotion, usePotion, potionEffects, applyTeacherCode, enableTeacherMode, grantReward, rewardFor, Encounter, WEAPONS, OUTFITS, PETS, POTIONS, RIDES, HAIRSTYLES, FACES, MONSTERS, CHARACTERS, STAGE_DIVISION_DIFFICULTY, collectBerry, finishHunt, fellTree, treeDamage, canEnter, monsterBattleRounds, recordWrongAnswer, recordCorrectAnswer, PLAYER_MOVE_SPEED, petChaseSpeed } from '../src/rules.ts';
 import { stageBerries, stageMonsters, stageTrees, clearBonus, berryValue, isVillagePond } from '../src/stages.ts';
 
 test('village pond never rescues a player on a hunt-stage path', () => {
@@ -105,7 +105,7 @@ test('trees give only 2 to 4 berries once and stronger weapons cut faster', () =
 test('version 2 saves migrate with untouched tree progress', () => {
   const old = structuredClone(newSave('예전', 0)) as unknown as Record<string, unknown>; old.version = 2;
   const journey = old.journey as { maps: Array<Record<string, unknown>> }; journey.maps.forEach(m => delete m.trees);
-  const migrated = validateSave(old); assert.equal(migrated.version, 8); assert.deepEqual(migrated.journey.maps[0].trees, []); assert.equal(migrated.ride, -1); assert.deepEqual(migrated.rides, {}); assert.equal(migrated.pet, -1); assert.deepEqual(migrated.hairstyles, { 0: true }); assert.equal(migrated.settings.maxDividend, 0); assert.equal(migrated.settings.multiplicationRange, 'stage'); assert.deepEqual(migrated.room, { furniture: [], inside: false }); assert.deepEqual(migrated.expedition, { completed: 0, selectedTitle: 0, active: null }); assert.equal(migrated.forest, 'division'); assert.equal(migrated.multiplicationJourney.stage, 0);
+  const migrated = validateSave(old); assert.equal(migrated.version, 9); assert.deepEqual(migrated.journey.maps[0].trees, []); assert.equal(migrated.ride, -1); assert.deepEqual(migrated.rides, {}); assert.equal(migrated.pet, -1); assert.deepEqual(migrated.hairstyles, { 0: true }); assert.equal(migrated.settings.maxDividend, 0); assert.equal(migrated.settings.multiplicationRange, 'stage'); assert.deepEqual(migrated.room, { furniture: [], inside: false }); assert.deepEqual(migrated.expedition, { completed: 0, selectedTitle: 0, active: null }); assert.equal(migrated.forest, 'division'); assert.equal(migrated.multiplicationJourney.stage, 0);
 });
 test('teacher curriculum ceilings and local learning records behave safely', () => {
   const s = newSave('수업', 0);
@@ -137,13 +137,20 @@ test('money codes add the exact berries and pet and beauty purchases stay safe',
   const beforeHair = s.berries; buyLook(s, 'hairstyle', 1); assert.equal(s.berries, beforeHair - HAIRSTYLES[1].price); assert.equal(s.hairstyle, 1); buyLook(s, 'hairstyle', 0); assert.equal(s.hairstyle, 0);
   assert.throws(() => applyTeacherCode(s, 'SHOWMETHEMONEY')); assert.equal(RIDES.length, 10); assert.equal(PETS.length, 7);
 });
-test('Junwoo potions multiply exactly five monster rewards and never overspend', () => {
-  const s = newSave('물약', 0); s.berries = 1_000;
-  buyPotion(s, 0); assert.equal(s.berries, 1_000 - POTIONS[0].price); assert.equal(s.potions.stock[0], 1);
-  usePotion(s, 0); assert.equal(s.potions.berryMultiplier, 2); assert.equal(s.potions.berryUses, 5);
-  const doubled = rewardFor(s, 0, false).berries; assert.equal(doubled, (MONSTERS[0].berry + 2) * 2);
-  for (let i = 0; i < 5; i++) grantReward(s, 0, false);
-  assert.equal(s.potions.berryMultiplier, 1); assert.equal(s.potions.berryUses, 0); assert.equal(rewardFor(s, 0, false).berries, MONSTERS[0].berry + 2);
-  assert.throws(() => usePotion(s, 0));
+test('Junwoo potions last for their exact time and never overspend', () => {
+  const s = newSave('물약', 0); s.berries = 1_000; const now = 1_800_000_000_000;
+  buyPotion(s, 0); buyPotion(s, 0); assert.equal(s.berries, 1_000 - POTIONS[0].price * 2); assert.equal(s.potions.stock[0], 2);
+  usePotion(s, 0, now); assert.equal(s.potions.berryMultiplier, 2); assert.equal(potionEffects(s, now).berrySeconds, 600);
+  assert.throws(() => usePotion(s, 0, now + 1_000)); assert.equal(s.potions.stock[0], 1);
+  const doubled = rewardFor(s, 0, false, now + 599_000).berries; assert.equal(doubled, (MONSTERS[0].berry + 2) * 2);
+  for (let i = 0; i < 8; i++) grantReward(s, 0, false, now + 599_000);
+  assert.equal(potionEffects(s, now + 600_001).berryMultiplier, 1); assert.equal(rewardFor(s, 0, false, now + 600_001).berries, MONSTERS[0].berry + 2);
+  usePotion(s, 0, now + 600_001); assert.equal(s.potions.stock[0], 0);
   const poor = newSave('부족', 0); assert.throws(() => buyPotion(poor, 2)); assert.equal(poor.berries, 0);
+});
+test('version 8 active potions become a safe five-minute time effect', () => {
+  const old = structuredClone(newSave('옛물약', 0)) as unknown as Record<string, unknown>;
+  old.version = 8; old.potions = { stock: [1, 0, 0], berryMultiplier: 2, berryUses: 3, xpMultiplier: 1, xpUses: 0 };
+  const restored = validateSave(old), effect = potionEffects(restored);
+  assert.equal(restored.version, 9); assert.equal(effect.berryMultiplier, 2); assert.ok(effect.berrySeconds > 295 && effect.berrySeconds <= 300); assert.equal(effect.xpSeconds, 0);
 });
