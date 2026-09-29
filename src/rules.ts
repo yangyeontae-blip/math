@@ -98,9 +98,9 @@ export const FACES = [
   { name: '해바라기 반짝눈', price: 2300, icon: '🌻' }, { name: '별숲 용기눈', price: 2600, icon: '🌟' },
 ] as const;
 export const POTIONS = [
-  { name: '달콤 베리물약', icon: '🧃', price: 140, kind: 'berry', multiplier: 2, uses: 5, desc: '사용하면 다음 몬스터 5명에게서 받는 베리가 2배가 돼요.' },
-  { name: '황금 베리물약', icon: '🍯', price: 360, kind: 'berry', multiplier: 3, uses: 5, desc: '사용하면 다음 몬스터 5명에게서 받는 베리가 3배가 돼요.' },
-  { name: '쑥쑥 경험물약', icon: '🧪', price: 320, kind: 'xp', multiplier: 3, uses: 5, desc: '사용하면 다음 몬스터 5명에게서 받는 경험치가 3배가 돼요.' },
+  { name: '달콤 베리물약', icon: '🧃', price: 140, kind: 'berry', multiplier: 2, durationMinutes: 10, desc: '사용한 뒤 10분 동안 몬스터에게 받는 베리가 2배가 돼요.' },
+  { name: '황금 베리물약', icon: '🍯', price: 360, kind: 'berry', multiplier: 3, durationMinutes: 5, desc: '사용한 뒤 5분 동안 몬스터에게 받는 베리가 3배가 돼요.' },
+  { name: '쑥쑥 경험물약', icon: '🧪', price: 320, kind: 'xp', multiplier: 3, durationMinutes: 10, desc: '사용한 뒤 10분 동안 몬스터에게 받는 경험치가 3배가 돼요.' },
 ] as const;
 export const WEAPON_UPGRADES = [60, 120, 240];
 export const OUTFIT_UPGRADES = [50, 100];
@@ -109,7 +109,7 @@ export type MultiplicationRange = 'stage' | 'tables';
 export interface Journey { stage: number; maps: { berries: number[]; monsters: number[]; trees: number[]; cleared: boolean }[] }
 export interface MultiplicationFinal { left: number; right: number; step: 0 | 1 }
 export interface Save {
-  version: 8; nickname: string; character: number; berries: number; level: number; xp: number;
+  version: 9; nickname: string; character: number; berries: number; level: number; xp: number;
   weapon: number; outfit: number; weapons: Record<string, number>; outfits: Record<string, number>;
   ride: number; rides: Record<string, boolean>; pet: number; pets: Record<string, boolean>;
   hairstyle: number; hairstyles: Record<string, boolean>; face: number; faces: Record<string, boolean>; teacherMode: boolean;
@@ -126,7 +126,7 @@ export interface Save {
   multiplicationFinal: MultiplicationFinal | null;
   multiplicationCompleted: boolean;
   multiplicationRewardClaimed: boolean;
-  potions: { stock: number[]; berryMultiplier: 1 | 2 | 3; berryUses: number; xpMultiplier: 1 | 3; xpUses: number };
+  potions: { stock: number[]; berryMultiplier: 1 | 2 | 3; berryUntil: number; xpMultiplier: 1 | 3; xpUntil: number };
 }
 export interface Question { dividend: number; divisor: number; answer: number; operation?: ForestKind }
 export const STAGE_DIVISION_DIFFICULTY = [
@@ -144,7 +144,7 @@ export const STAGE_DIVISION_DIFFICULTY = [
 export function newSave(nickname: string, character: number): Save {
   if (!nickname.trim() || [...nickname.trim()].length > 10 || !Number.isInteger(character) || character < 0 || character > 3) throw new Error('이름은 1~10자, 캐릭터는 4명 중 골라 주세요.');
   const hairstyle = CHARACTERS[character].style;
-  return { version: 8, nickname: nickname.trim(), character, berries: 0, level: 1, xp: 0, weapon: 0, outfit: 0, weapons: { 0: 0 }, outfits: { 0: 0 }, ride: -1, rides: {}, pet: -1, pets: {}, hairstyle, hairstyles: { 0: true, [hairstyle]: true }, face: 0, faces: { 0: true }, teacherMode: false, best: 0, position: { x: 0, z: 8 }, tutorial: { collected: false, battle: false, shop: false }, settings: { music: true, sound: true, lowQuality: false, maxDividend: 0, multiplicationRange: 'stage', sessionMinutes: 0 }, learning: { elapsedSeconds: 0, correct: 0, wrong: 0, wrongQuestions: [] }, discoveries: { monsters: [], pets: [], outfits: [0] }, room: { furniture: [], inside: false }, forest: 'division', journey: emptyJourney(), multiplicationJourney: emptyJourney(), multiplicationFinal: null, multiplicationCompleted: false, multiplicationRewardClaimed: false, potions: { stock: [0, 0, 0], berryMultiplier: 1, berryUses: 0, xpMultiplier: 1, xpUses: 0 }, garden: { rescued: 0, flowers: [-1, -1, -1] }, expedition: emptyExpedition() };
+  return { version: 9, nickname: nickname.trim(), character, berries: 0, level: 1, xp: 0, weapon: 0, outfit: 0, weapons: { 0: 0 }, outfits: { 0: 0 }, ride: -1, rides: {}, pet: -1, pets: {}, hairstyle, hairstyles: { 0: true, [hairstyle]: true }, face: 0, faces: { 0: true }, teacherMode: false, best: 0, position: { x: 0, z: 8 }, tutorial: { collected: false, battle: false, shop: false }, settings: { music: true, sound: true, lowQuality: false, maxDividend: 0, multiplicationRange: 'stage', sessionMinutes: 0 }, learning: { elapsedSeconds: 0, correct: 0, wrong: 0, wrongQuestions: [] }, discoveries: { monsters: [], pets: [], outfits: [0] }, room: { furniture: [], inside: false }, forest: 'division', journey: emptyJourney(), multiplicationJourney: emptyJourney(), multiplicationFinal: null, multiplicationCompleted: false, multiplicationRewardClaimed: false, potions: { stock: [0, 0, 0], berryMultiplier: 1, berryUntil: 0, xpMultiplier: 1, xpUntil: 0 }, garden: { rescued: 0, flowers: [-1, -1, -1] }, expedition: emptyExpedition() };
 }
 export function emptyJourney(): Journey { return { stage: 0, maps: Array.from({ length: 11 }, () => ({ berries: [], monsters: [], trees: [], cleared: false })) }; }
 export function journeyFor(s: Save, forest: ForestKind = s.forest) { return forest === 'multiplication' ? s.multiplicationJourney : s.journey; }
@@ -250,17 +250,23 @@ export function answerMultiplicationFinal(s: Save, answer: number) {
   if (reward) s.multiplicationRewardClaimed = true;
   return { correct: true, complete: true, reward };
 }
-export function rewardFor(s: Save, monster: number, arena: boolean) {
+export function potionEffects(s: Save, now = Date.now()) {
+  return {
+    berryMultiplier: s.potions.berryUntil > now ? s.potions.berryMultiplier : 1,
+    berrySeconds: Math.max(0, Math.ceil((s.potions.berryUntil - now) / 1000)),
+    xpMultiplier: s.potions.xpUntil > now ? s.potions.xpMultiplier : 1,
+    xpSeconds: Math.max(0, Math.ceil((s.potions.xpUntil - now) / 1000)),
+  } as const;
+}
+export function rewardFor(s: Save, monster: number, arena: boolean, now = Date.now()) {
   const m = MONSTERS[monster], w = WEAPONS[s.weapon];
-  const berryMultiplier = s.potions.berryUses > 0 ? s.potions.berryMultiplier : 1, xpMultiplier = s.potions.xpUses > 0 ? s.potions.xpMultiplier : 1;
+  const { berryMultiplier, xpMultiplier } = potionEffects(s, now);
   return { berries: (m.berry + w.bonus + (arena ? 0 : 2 + journeyFor(s).stage * 2)) * berryMultiplier, xp: (m.xp + OUTFITS[s.outfit].xpBonus) * xpMultiplier, score: arena ? Math.round(m.score * (w.multiplier + s.weapons[s.weapon] * 0.1)) : 0 };
 }
-export function grantReward(s: Save, monster: number, arena: boolean) {
-  const reward = rewardFor(s, monster, arena); let levels = 0;
+export function grantReward(s: Save, monster: number, arena: boolean, now = Date.now()) {
+  const reward = rewardFor(s, monster, arena, now); let levels = 0;
   const milestones: { level: number; berries: number }[] = [];
   s.berries += reward.berries; s.xp += reward.xp; s.tutorial.battle = true;
-  if (s.potions.berryUses > 0 && --s.potions.berryUses === 0) s.potions.berryMultiplier = 1;
-  if (s.potions.xpUses > 0 && --s.potions.xpUses === 0) s.potions.xpMultiplier = 1;
   while (s.xp >= s.level * 40) {
     s.xp -= s.level * 40; s.level++; s.berries += 20; levels++;
     const gift = s.level === 30 ? 30_000 : s.level === 50 ? 50_000 : s.level === 100 ? 100_000 : 0;
@@ -312,12 +318,15 @@ export function buyPotion(s: Save, id: number) {
   if (s.berries < potion.price) throw new Error(`${potion.price - s.berries}베리가 더 필요해요.`);
   s.berries -= potion.price; s.potions.stock[id]++; return `${potion.name}을(를) 가방에 넣었어요!`;
 }
-export function usePotion(s: Save, id: number) {
+export function usePotion(s: Save, id: number, now = Date.now()) {
   const potion = POTIONS[id]; if (!Number.isInteger(id) || !potion || !s.potions.stock[id]) throw new Error('가방에 이 물약이 없어요.');
+  const effects = potionEffects(s, now);
+  if (potion.kind === 'berry' && effects.berrySeconds) throw new Error(`베리 물약 효과가 ${Math.ceil(effects.berrySeconds / 60)}분 정도 남아 있어요.`);
+  if (potion.kind === 'xp' && effects.xpSeconds) throw new Error(`경험치 물약 효과가 ${Math.ceil(effects.xpSeconds / 60)}분 정도 남아 있어요.`);
   s.potions.stock[id]--;
-  if (potion.kind === 'berry') { s.potions.berryMultiplier = potion.multiplier as 2 | 3; s.potions.berryUses = potion.uses; }
-  else { s.potions.xpMultiplier = 3; s.potions.xpUses = potion.uses; }
-  return `${potion.name}을(를) 사용했어요. 다음 몬스터 ${potion.uses}명에게 효과가 있어요!`;
+  if (potion.kind === 'berry') { s.potions.berryMultiplier = potion.multiplier as 2 | 3; s.potions.berryUntil = now + potion.durationMinutes * 60_000; }
+  else { s.potions.xpMultiplier = 3; s.potions.xpUntil = now + potion.durationMinutes * 60_000; }
+  return `${potion.name}을(를) 사용했어요. ${potion.durationMinutes}분 동안 효과가 있어요!`;
 }
 export function enableTeacherMode(s: Save, code: string): string {
   return applyTeacherCode(s, code);
@@ -363,14 +372,27 @@ export function validateSave(value: unknown): Save {
     const expedition = migrated.expedition as ExpeditionProgress | undefined;
     if (expedition?.active?.gateQuestion) expedition.active.gateQuestion = { ...expedition.active.gateQuestion, operation: 'division' };
   }
+  if (migrated.version === 8) {
+    const old = migrated.potions as { stock?: number[]; berryMultiplier?: number; berryUses?: number; xpMultiplier?: number; xpUses?: number } | undefined;
+    const now = Date.now(), preserveMs = 5 * 60_000;
+    const berryActive = !!old?.berryUses && [2, 3].includes(old.berryMultiplier ?? 0), xpActive = !!old?.xpUses && old.xpMultiplier === 3;
+    migrated.version = 9;
+    migrated.potions = {
+      stock: Array.isArray(old?.stock) ? old.stock : (migrated.teacherMode ? POTIONS.map(() => 9) : [0, 0, 0]),
+      berryMultiplier: berryActive ? old!.berryMultiplier : 1,
+      berryUntil: berryActive ? now + preserveMs : 0,
+      xpMultiplier: xpActive ? 3 : 1,
+      xpUntil: xpActive ? now + preserveMs : 0,
+    };
+  }
   const s = migrated as unknown as Save;
   if (s.garden === undefined) s.garden = { rescued: 0, flowers: [-1, -1, -1] };
-  if (s.potions === undefined) s.potions = { stock: s.teacherMode ? POTIONS.map(() => 9) : [0, 0, 0], berryMultiplier: 1, berryUses: 0, xpMultiplier: 1, xpUses: 0 };
+  if (s.potions === undefined) s.potions = { stock: s.teacherMode ? POTIONS.map(() => 9) : [0, 0, 0], berryMultiplier: 1, berryUntil: 0, xpMultiplier: 1, xpUntil: 0 };
   if (s.room && s.room.inside === undefined) s.room.inside = false;
   const integer = (v: unknown, min: number, max: number): v is number => typeof v === 'number' && Number.isSafeInteger(v) && v >= min && v <= max;
   if (!s.garden || !integer(s.garden.rescued, 0, 3) || !Array.isArray(s.garden.flowers) || s.garden.flowers.length !== 3 || s.garden.flowers.some(f => !integer(f, -1, 2)) || s.garden.flowers.filter(f => f >= 0).length > s.garden.rescued) return fail();
-  if (s.version !== 8 || !['division', 'multiplication'].includes(s.forest) || typeof s.teacherMode !== 'boolean' || typeof s.nickname !== 'string' || !s.nickname.trim() || [...s.nickname].length > 10 || !integer(s.character, 0, 3) || !integer(s.berries, 0, 1e9) || !integer(s.level, 1, 100000) || !integer(s.xp, 0, s.level * 40 - 1) || !integer(s.best, 0, 1e9)) return fail();
-  if (!s.potions || !Array.isArray(s.potions.stock) || s.potions.stock.length !== POTIONS.length || s.potions.stock.some(n => !integer(n, 0, 99)) || ![1, 2, 3].includes(s.potions.berryMultiplier) || !integer(s.potions.berryUses, 0, 5) || ![1, 3].includes(s.potions.xpMultiplier) || !integer(s.potions.xpUses, 0, 5) || (s.potions.berryUses === 0) !== (s.potions.berryMultiplier === 1) || (s.potions.xpUses === 0) !== (s.potions.xpMultiplier === 1)) return fail();
+  if (s.version !== 9 || !['division', 'multiplication'].includes(s.forest) || typeof s.teacherMode !== 'boolean' || typeof s.nickname !== 'string' || !s.nickname.trim() || [...s.nickname].length > 10 || !integer(s.character, 0, 3) || !integer(s.berries, 0, 1e9) || !integer(s.level, 1, 100000) || !integer(s.xp, 0, s.level * 40 - 1) || !integer(s.best, 0, 1e9)) return fail();
+  if (!s.potions || !Array.isArray(s.potions.stock) || s.potions.stock.length !== POTIONS.length || s.potions.stock.some(n => !integer(n, 0, 99)) || ![1, 2, 3].includes(s.potions.berryMultiplier) || !integer(s.potions.berryUntil, 0, Number.MAX_SAFE_INTEGER) || ![1, 3].includes(s.potions.xpMultiplier) || !integer(s.potions.xpUntil, 0, Number.MAX_SAFE_INTEGER) || (s.potions.berryUntil === 0) !== (s.potions.berryMultiplier === 1) || (s.potions.xpUntil === 0) !== (s.potions.xpMultiplier === 1)) return fail();
   const expedition = s.expedition;
   if (!expedition || !integer(expedition.completed, 0, 1e8) || !integer(expedition.selectedTitle, 0, EXPEDITION_TITLES.length - 1) || expedition.completed < EXPEDITION_TITLES[expedition.selectedTitle].need) return fail();
   if (expedition.active !== null) {
