@@ -18,7 +18,7 @@ export function isVillagePond(stage: number, x: number, z: number) {
 export function stageMonsters(stage: number) {
   if (stage === 0) return [[-11, 5], [-9, 11], [-15, 1], [15, -15]].map(([x, z], i) => ({ x, z, type: i }));
   const positions = [[-16, 14], [12, 10], [-23, 0], [24, -4], [-12, -14], [10, -18], [-25, -21], [25, -23], [0, -27]];
-  return positions.slice(0, 5 + Math.floor((stage - 1) / 2)).map(([x, z], i) => ({ x: x * (stage % 2 ? 1 : -1), z: z + Math.sin(stage + i) * 2, type: (i + stage - 1) % 4 }));
+  return positions.slice(0, 5 + Math.floor((stage - 1) / 2)).map(([x, z], i) => ({ x: x * (stage % 2 ? 1 : -1), z: z + Math.sin(stage + i) * 2, type: (i + stage - 1) % 9 }));
 }
 export function stagePlatforms(stage: number) {
   return stage === 0 ? [{ x: 15, z: -11, w: 2, d: 2, h: .5 }, { x: 18, z: -11, w: 2, d: 2, h: .95 }, { x: 21, z: -11, w: 2, d: 2, h: 1.4 }] : [0, 1, 2].map(i => ({ x: 9 + i * 3, z: 18, w: 2, d: 2, h: .5 + i * .45 }));
@@ -36,5 +36,7 @@ export function stageTrees(stage: number) {
     return { x: side * (8 + (lane % 3) * 6), z: size.z - 12 - lane * 8 };
   });
 }
-export const berryValue = (stage: number) => stage === 0 ? 3 : 3 + stage;
-export const clearBonus = (stage: number) => 50 + stage * 25;
+// Give children a steady path toward the larger shops without making one
+// activity infinitely repeatable.
+export const berryValue = (stage: number) => stage === 0 ? 4 : 5 + stage;
+export const clearBonus = (stage: number) => 70 + stage * 30;
