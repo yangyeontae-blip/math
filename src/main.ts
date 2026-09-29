@@ -55,7 +55,8 @@ function persist() {
 }
 function refresh() {
   if (!state) return; const s = state, journey = journeyFor(s), forestName = s.forest === 'multiplication' ? '곱셈의 숲' : '나눗셈의 숲';
-  $('#level').textContent = `${s.level}`; $('#nickname').textContent = `${s.nickname}${s.multiplicationCompleted ? ' · 곱셈숲 탐험가' : s.expedition.selectedTitle ? ` · ${EXPEDITION_TITLES[s.expedition.selectedTitle].name}` : ''}${s.teacherMode ? ' · 선생님' : ''}`; $('#berries').textContent = s.berries.toLocaleString();
+  const activeTitle = s.expedition.selectedTitle ? EXPEDITION_TITLES[s.expedition.selectedTitle].name : s.multiplicationCompleted ? '곱셈숲 탐험가' : '';
+  $('#level').textContent = `${s.level}`; $('#nickname').textContent = `${s.nickname}${activeTitle ? ` · ${activeTitle}` : ''}${s.teacherMode ? ' · 선생님' : ''}`; $('#berries').textContent = s.berries.toLocaleString();
   $('#xp-fill').style.width = `${s.xp / (s.level * 40) * 100}%`; $('#xp-text').textContent = `경험치 ${s.xp} / ${s.level * 40}`;
   $('#weapon-name').textContent = `${WEAPONS[s.weapon].icon} ${WEAPONS[s.weapon].name} +${s.weapons[s.weapon]} · ${OUTFITS[s.outfit].name}`;
   const potionEffect = `${s.potions.berryUses ? ` · 🍓×${s.potions.berryMultiplier} ${s.potions.berryUses}회` : ''}${s.potions.xpUses ? ` · 🧪경험×${s.potions.xpMultiplier} ${s.potions.xpUses}회` : ''}`;
