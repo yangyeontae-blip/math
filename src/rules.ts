@@ -389,6 +389,15 @@ export function validateSave(value: unknown): Save {
   if (s.garden === undefined) s.garden = { rescued: 0, flowers: [-1, -1, -1] };
   if (s.potions === undefined) s.potions = { stock: s.teacherMode ? POTIONS.map(() => 9) : [0, 0, 0], berryMultiplier: 1, berryUntil: 0, xpMultiplier: 1, xpUntil: 0 };
   if (s.room && s.room.inside === undefined) s.room.inside = false;
+  // Teacher saves may predate newly released collection items. Keep the demonstration wardrobe complete.
+  const hasTeacherCollection = s.teacherMode && (Object.keys(s.weapons).length > 1 || Object.keys(s.outfits).length > 1 || Object.keys(s.rides).length > 0 || Object.keys(s.pets).length > 0);
+  if (hasTeacherCollection) {
+    WEAPONS.forEach((_, id) => { if (s.weapons[id] === undefined) s.weapons[id] = 3; });
+    OUTFITS.forEach((_, id) => { if (s.outfits[id] === undefined) s.outfits[id] = 2; });
+    RIDES.forEach((_, id) => { s.rides[id] = true; }); PETS.forEach((_, id) => { s.pets[id] = true; });
+    HAIRSTYLES.forEach((_, id) => { s.hairstyles[id] = true; }); FACES.forEach((_, id) => { s.faces[id] = true; });
+    s.discoveries.monsters = MONSTERS.map((_, id) => id); s.discoveries.pets = PETS.map((_, id) => id); s.discoveries.outfits = OUTFITS.map((_, id) => id);
+  }
   const integer = (v: unknown, min: number, max: number): v is number => typeof v === 'number' && Number.isSafeInteger(v) && v >= min && v <= max;
   if (!s.garden || !integer(s.garden.rescued, 0, 3) || !Array.isArray(s.garden.flowers) || s.garden.flowers.length !== 3 || s.garden.flowers.some(f => !integer(f, -1, 2)) || s.garden.flowers.filter(f => f >= 0).length > s.garden.rescued) return fail();
   if (s.version !== 9 || !['division', 'multiplication'].includes(s.forest) || typeof s.teacherMode !== 'boolean' || typeof s.nickname !== 'string' || !s.nickname.trim() || [...s.nickname].length > 10 || !integer(s.character, 0, 3) || !integer(s.berries, 0, 1e9) || !integer(s.level, 1, 100000) || !integer(s.xp, 0, s.level * 40 - 1) || !integer(s.best, 0, 1e9)) return fail();

@@ -130,6 +130,8 @@ test('pet chase speed stays ahead of every ride so mounted berries can be reache
 test('teacher code unlocks all demonstration content without clearing hunts', () => {
   const s = newSave('선생님', 0); assert.throws(() => enableTeacherMode(s, 'Teacher')); enableTeacherMode(s, 'teacher');
   assert.equal(s.teacherMode, true); assert.equal(s.berries, 1_000_000); assert.equal(Object.keys(s.weapons).length, WEAPONS.length); assert.equal(Object.keys(s.outfits).length, OUTFITS.length); assert.equal(Object.keys(s.rides).length, RIDES.length); assert.equal(Object.keys(s.pets).length, PETS.length); assert.equal(Object.keys(s.hairstyles).length, HAIRSTYLES.length); assert.equal(Object.keys(s.faces).length, FACES.length); assert.equal(canEnter(s, 10), true); assert.equal(s.journey.maps[10].monsters.length, 0);
+  delete s.rides[RIDES.length - 1]; delete s.pets[PETS.length - 1]; delete s.outfits[OUTFITS.length - 1];
+  const refreshed = validateSave(s); assert.equal(Object.keys(refreshed.rides).length, RIDES.length); assert.equal(Object.keys(refreshed.pets).length, PETS.length); assert.equal(Object.keys(refreshed.outfits).length, OUTFITS.length);
 });
 test('money codes add the exact berries and pet and beauty purchases stay safe', () => {
   const s = newSave('꾸미기', 0); applyTeacherCode(s, 'showmethemoney'); assert.equal(s.berries, 1000); applyTeacherCode(s, 'greedisgood'); assert.equal(s.berries, 11000);
