@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { newSave, validateSave, Encounter, collectBerry, finishHunt, canEnter, recordWrongAnswer, recordCorrectAnswer, journeyFor, startMultiplicationFinal, answerMultiplicationFinal, type ForestKind } from '../src/rules.ts';
+import { newSave, validateSave, Encounter, collectBerry, finishHunt, canEnter, recordWrongAnswer, recordCorrectAnswer, journeyFor, questionAnswerText, startMultiplicationFinal, answerMultiplicationFinal, type ForestKind } from '../src/rules.ts';
 import { stageBerries, stageMonsters } from '../src/stages.ts';
 
 test('300 complete two-forest journeys keep saves and repeated rewards safe', () => {
@@ -24,8 +24,9 @@ test('300 complete two-forest journeys keep saves and repeated rewards safe', ()
             assert.equal(encounter.answer(String(encounter.question.answer + 1)), 'wrong');
             recordWrongAnswer(save, encounter.question);
           }
-          assert.equal(encounter.answer(String(encounter.question.answer)), 'correct');
-          assert.equal(encounter.answer(String(encounter.question.answer)), 'ignored');
+          const correctAnswer = questionAnswerText(encounter.question);
+          assert.equal(encounter.answer(correctAnswer), 'correct');
+          assert.equal(encounter.answer(correctAnswer), 'ignored');
           recordCorrectAnswer(save, monster.type);
           const reward = finishHunt(save, id);
           assert.ok(reward);

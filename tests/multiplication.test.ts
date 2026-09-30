@@ -14,14 +14,15 @@ test('all multiplication stage pools follow the fixed curriculum', () => {
     const pool = multiplicationQuestionPool(stage); assert.ok(pool.length > 0);
     for (const q of pool) {
       assert.equal(q.operation, 'multiplication'); assert.equal(q.answer, q.dividend * q.divisor);
-      assert.ok(q.answer <= 891); assert.ok(q.divisor >= 2 && q.divisor <= 9);
+      assert.ok(q.answer <= 9801); assert.ok(q.divisor >= 2 && q.divisor <= 99);
       if (stage === 1) { assert.ok(q.dividend <= 5); assert.ok(q.divisor <= 5); }
       if (stage === 2) { assert.ok(q.dividend <= 9); }
       if (stage === 3) { assert.equal(q.dividend % 10, 0); assert.ok(q.divisor <= 5); }
       if (stage === 4) assert.equal(q.dividend % 10, 0);
       if (stage === 5) assert.equal(multiplicationHasCarrying(q.dividend, q.divisor), false);
       if (stage >= 6 && stage <= 8) assert.equal(multiplicationHasCarrying(q.dividend, q.divisor), true);
-      if (stage >= 9) assert.ok(q.dividend >= 11 && q.dividend <= 99);
+      if (stage === 9) { assert.ok(q.dividend >= 100 && q.dividend <= 399); assert.ok(q.divisor >= 2 && q.divisor <= 9); }
+      if (stage === 10) { assert.ok(q.dividend >= 11 && q.dividend <= 99); assert.ok(q.divisor >= 11 && q.divisor <= 29); }
     }
   }
   const review = multiplicationQuestionPool(10, false, true);
@@ -29,11 +30,11 @@ test('all multiplication stage pools follow the fixed curriculum', () => {
   assert.ok(multiplicationQuestionPool(10, true).every(q => q.dividend <= 9));
 });
 
-test('pickers and encounters accept three-digit multiplication answers', () => {
+test('pickers and encounters accept four-digit multiplication answers', () => {
   for (let i = 0; i < 100; i++) assert.equal(pickMultiplicationQuestion(10).operation, 'multiplication');
   const encounter = new Encounter(0, false, 1, undefined, 10, 0, 'multiplication');
-  encounter.question = { dividend: 99, divisor: 9, answer: 891, operation: 'multiplication' };
-  assert.equal(encounter.answer('89'), 'wrong'); assert.equal(encounter.answer('891'), 'correct'); assert.equal(encounter.answer('891'), 'ignored');
+  encounter.question = { dividend: 399, divisor: 9, answer: 3591, operation: 'multiplication' };
+  assert.equal(encounter.answer('359'), 'wrong'); assert.equal(encounter.answer('3591'), 'correct'); assert.equal(encounter.answer('3591'), 'ignored');
 });
 
 test('late stages mix about 30 percent review questions and every third monster tells a story', () => {
@@ -71,7 +72,7 @@ test('version 7 saves become division progress and teacher mode previews everyth
   const old = structuredClone(newSave('예전숲', 0)) as unknown as Record<string, unknown>; old.version = 7;
   delete old.forest; delete old.multiplicationJourney; delete old.multiplicationFinal; delete old.multiplicationCompleted; delete old.multiplicationRewardClaimed; delete old.potions;
   const settings = old.settings as Record<string, unknown>; delete settings.multiplicationRange;
-  const migrated = validateSave(old); assert.equal(migrated.version, 9); assert.equal(migrated.forest, 'division'); assert.equal(migrated.multiplicationJourney.maps[1].cleared, false);
+  const migrated = validateSave(old); assert.equal(migrated.version, 10); assert.equal(migrated.forest, 'division'); assert.equal(migrated.multiplicationJourney.maps[1].cleared, false);
   assert.deepEqual(migrated.potions, { stock: [0, 0, 0], berryMultiplier: 1, berryUntil: 0, xpMultiplier: 1, xpUntil: 0 });
   applyTeacherCode(migrated, 'teacher');
   assert.equal(canEnter(migrated, 10, 'multiplication'), true); assert.equal(migrated.multiplicationCompleted, true); assert.equal(migrated.multiplicationRewardClaimed, true);
