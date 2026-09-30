@@ -41,11 +41,11 @@ $('#quest-toggle').onclick = () => setQuestCollapsed(!questCard.classList.contai
 let state: Save | null = null, saved: Save | null = null, preview: AvatarPreview | null = null, startPreview: AvatarPreview | null = null;
 let startPreviewRequest = 0, startPortraits: string[] | null = null;
 let selected = 0, pendingImport: Save | null = null, toastTimer: ReturnType<typeof setTimeout>, modalOpener: HTMLElement | null = null;
-let battle: { encounter: Encounter; id: string; kind: 'normal' | 'expMonster' | 'expGate' | 'multiplicationGate'; round: number; goalRounds?: number; score: number; result: ReturnType<typeof grantReward> | null; newTitle?: number; story?: boolean } | null = null;
+let battle: { encounter: Encounter; id: string; kind: 'normal' | 'expMonster' | 'expGate' | 'multiplicationGate'; round: number; goalRounds?: number; score: number; result: ReturnType<typeof grantReward> | null; newTitle?: number; story?: boolean; missedCurrent?: boolean } | null = null;
 type CurriculumModule = typeof import('./curriculum');
 type CurriculumQuestion = import('./curriculum').CurriculumQuestion;
 let curriculumModulePromise: Promise<CurriculumModule> | null = null;
-let curriculumRun: { unit: CurriculumUnitId; mission: number; question: CurriculumQuestion; index: number; total: number; wrong: number; hints: number; hintLevel: number; graduation?: boolean; review?: boolean } | null = null;
+let curriculumRun: { unit: CurriculumUnitId; mission: number; question: CurriculumQuestion; index: number; total: number; wrong: number; hints: number; hintLevel: number; missedCurrent?: boolean; graduation?: boolean; review?: boolean } | null = null;
 let storageError = false, sessionExpired = false, sessionElapsed = 0, sessionCorrect = 0, sessionWrong = 0;
 const OUTFIT_ICONS = ['🌿', '🌈', '🍃', '☁️', '🌸', '🌟', '🌙', '👑', '🍓', '🐥', '🐰', '🌰', '🐱', '🐑', '🐸', '🧚', '🌻', '🐝', '🍑', '✴️'];
 const CURRICULUM_REGIONS: { id: CurriculumUnitId; icon: string; name: string; short: string; className: string }[] = [
@@ -263,14 +263,19 @@ function openStageMap(forest?: ForestKind) {
   document.querySelectorAll<HTMLButtonElement>('[data-stage]').forEach(b => b.onclick = () => switchStage(Number(b.dataset.stage), forest));
 }
 function multiplicationStageLabel(stage: number) {
-  if (stage === 1) return '2~5끼리 곱하기'; if (stage === 2) return '2~9 구구단'; if (stage === 3) return '몇십 × 2~5'; if (stage === 4) return '몇십 × 2~9'; if (stage === 5) return '두 자리 수 × 2~4 · 받아올림 없음'; if (stage === 6) return '두 자리 수 × 2~4 · 받아올림'; if (stage <= 8) return '11~79 × 2~6 · 받아올림'; if (stage === 9) return '세 자리 수 × 한 자리 수'; return '두 자리 수 × 두 자리 수 · 구구단 복습도 만나요';
+  if (stage === 1) return '2~5끼리 곱하기'; if (stage === 2) return '2~9 구구단'; if (stage === 3) return '몇십 × 2~5'; if (stage === 4) return '몇십 × 2~9'; if (stage === 5) return '두 자리 수 × 2~4 · 어느 자리에도 받아올림 없음'; if (stage === 6) return '11~49 × 2~4 · 받아올림'; if (stage === 7) return '11~59 × 2~5 · 받아올림'; if (stage === 8) return '11~79 × 2~6 · 받아올림'; if (stage === 9) return '100~299 × 2~6'; return '11~49 × 11~19 · 부분곱으로 풀기';
 }
 function divisionStageLabel(stage: number) {
-  if (stage <= 3) return `${stage === 1 ? '몫 한 자리' : '몫 두 자리'} · 몇십 ÷ 한 자리 수`;
-  if (stage === 4) return '두 자리 수 ÷ 한 자리 수 · 나누어떨어짐';
-  if (stage <= 6) return '세 자리 수 ÷ 한 자리 수 · 나누어떨어짐';
-  if (stage === 7) return '두 자리 수 ÷ 한 자리 수 · 나머지';
-  return `세 자리 수 ÷ 한 자리 수 · ${stage === 10 ? '나머지 종합' : '나머지'}`;
+  if (stage === 1) return '몫 한 자리 · 몇십 ÷ 한 자리 수';
+  if (stage === 2) return '몫 12까지 · 몇십 ÷ 한 자리 수';
+  if (stage === 3) return '두 자리 수 ÷ 한 자리 수 · 몫 20까지';
+  if (stage === 4) return '두 자리 수 ÷ 한 자리 수 · 몫 30까지';
+  if (stage === 5) return '100~299 ÷ 한 자리 수 · 몫 두 자리';
+  if (stage === 6) return '100~499 ÷ 한 자리 수 · 몫 150까지';
+  if (stage === 7) return '두 자리 수 ÷ 한 자리 수 · 작은 나머지';
+  if (stage === 8) return '100~299 ÷ 한 자리 수 · 나머지';
+  if (stage === 9) return '100~599 ÷ 한 자리 수 · 나머지';
+  return '세 자리 수 나눗셈 · 몫 250까지 종합';
 }
 
 const CURRICULUM_GIFTS: Record<NewCurriculumUnitId, string> = {
@@ -306,26 +311,35 @@ function curriculumQuestionVisual(question: CurriculumQuestion) {
   }
   if (visual.kind === 'measure') {
     const icons = visual.measure === 'capacity' ? '🧪' : '📦';
-    return `<div class="curriculum-visual measure-visual"><span>${visual.values.map(value => `<b>${icons}<small>${value} ${visual.unit}</small></b>`).join('')}</span><em>${visual.measure === 'capacity' ? '들이' : '무게'}를 같은 단위로 살펴봐요</em></div>`;
+    return `<div class="curriculum-visual measure-visual"><span>${visual.values.map((value, index) => `<b>${icons}<small>${escape(visual.labels?.[index] ?? `${value} ${visual.unit}`)}</small></b>`).join('')}</span><em>${visual.measure === 'capacity' ? '들이' : '무게'}를 같은 단위로 살펴봐요</em></div>`;
   }
-  if (visual.kind === 'pictograph') return `<div class="curriculum-visual pictograph-visual"><p><b>${visual.icon}</b> 하나 = ${visual.value}명</p>${visual.rows.map(row => `<div><strong>${row.label}</strong><span>${visual.icon.repeat(row.icons)}</span></div>`).join('')}</div>`;
+  if (visual.kind === 'pictograph') return `<div class="curriculum-visual pictograph-visual"><p><b>${visual.icon}</b> 하나 = ${visual.value}${escape(visual.unitLabel ?? '명')}</p>${visual.rows.map(row => `<div><strong>${escape(row.label)}</strong><span>${visual.icon.repeat(row.icons)}</span></div>`).join('')}</div>`;
   if (visual.kind === 'array') return `<div class="curriculum-visual array-visual" style="--array-columns:${visual.columns}">${Array.from({ length: visual.rows * visual.columns }, () => '<i></i>').join('')}</div>`;
   return `<div class="curriculum-visual groups-visual"><span>${Array.from({ length: Math.min(visual.divisor, 9) }, () => '<b>●●●</b>').join('')}</span><small>${visual.total}개를 ${visual.divisor}씩 묶으면 ${visual.remainder ? `${visual.remainder}개가 남아요` : '남는 것이 없어요'}</small></div>`;
 }
 
+const GUARDIAN_BLUEPRINTS: Record<NewCurriculumUnitId, number[]> = {
+  circle: [0, 1, 3, 4, 5, 7], fraction: [0, 2, 3, 4, 5, 7], measurement: [0, 1, 3, 4, 5, 7], pictograph: [0, 1, 2, 4, 5, 7],
+};
+function guardianQuestion(module: CurriculumModule, unit: NewCurriculumUnitId, index: number) {
+  const blueprint = GUARDIAN_BLUEPRINTS[unit];
+  return module.generateCurriculumQuestion(unit, blueprint[index % blueprint.length]);
+}
 function nextCurriculumQuestion(module: CurriculumModule, run: NonNullable<typeof curriculumRun>) {
   const order: CurriculumUnitId[] = ['multiplication', 'division', 'circle', 'fraction', 'measurement', 'pictograph'];
   if (run.graduation) return module.generateReviewQuestion(order[run.index % order.length]);
   if (run.review) return module.generateReviewQuestion(run.unit);
-  const unit = run.unit as NewCurriculumUnitId, position = order.indexOf(unit);
-  if (state?.settings.spiralReview && run.mission >= 3 && position > 0 && Math.random() < .2) return module.generateReviewQuestion(order[position - 1]);
+  const unit = run.unit as NewCurriculumUnitId;
+  if (run.mission === 8) return guardianQuestion(module, unit, run.index);
+  const position = order.indexOf(unit), completedEarlier = state ? order.slice(0, position).filter(previous => curriculumUnitComplete(state!, previous)) : [];
+  if (state?.settings.spiralReview && run.mission >= 3 && completedEarlier.length && Math.random() < .2) return module.generateReviewQuestion(completedEarlier[Math.floor(Math.random() * completedEarlier.length)]);
   return module.generateCurriculumQuestion(unit, run.mission);
 }
 
 async function startCurriculumMission(unit: NewCurriculumUnitId, mission: number) {
   if (!state || !canStartCurriculumMission(state, unit, mission)) return;
   const module = await loadCurriculum(), total = mission === 8 ? 6 : 4;
-  const run = { unit, mission, question: module.generateCurriculumQuestion(unit, mission), index: 0, total, wrong: 0, hints: 0, hintLevel: 0 } satisfies NonNullable<typeof curriculumRun>;
+  const run = { unit, mission, question: mission === 8 ? guardianQuestion(module, unit, 0) : module.generateCurriculumQuestion(unit, mission), index: 0, total, wrong: 0, hints: 0, hintLevel: 0 } satisfies NonNullable<typeof curriculumRun>;
   curriculumRun = run; renderCurriculumQuestion();
 }
 
@@ -338,8 +352,9 @@ async function startGraduationAdventure() {
 
 async function startCurriculumReview(unit: CurriculumUnitId) {
   if (!state) return;
-  const module = await loadCurriculum();
-  const run = { unit, mission: state.curriculum.wrongSkills.find(item => item.unit === unit)?.mission ?? 0, question: module.generateReviewQuestion(unit), index: 0, total: 1, wrong: 0, hints: 0, hintLevel: 0, review: true } satisfies NonNullable<typeof curriculumRun>;
+  const module = await loadCurriculum(), mistake = state.curriculum.wrongSkills.find(item => item.unit === unit), mission = mistake?.mission ?? 0;
+  const question = ['circle', 'fraction', 'measurement', 'pictograph'].includes(unit) ? module.generateCurriculumQuestion(unit as NewCurriculumUnitId, Math.min(7, mission)) : module.generateReviewQuestion(unit);
+  const run = { unit, mission, question, index: 0, total: 1, wrong: 0, hints: 0, hintLevel: 0, review: true } satisfies NonNullable<typeof curriculumRun>;
   curriculumRun = run; renderCurriculumQuestion();
 }
 
@@ -377,13 +392,16 @@ async function submitCurriculumAnswer(value: string) {
   if (!curriculumRun || !state) return;
   const module = await loadCurriculum(), run = curriculumRun, q = run.question;
   if (!module.answerCurriculumQuestion(q, value)) {
-    run.wrong++; sessionWrong++; state.learning.wrong++;
-    recordCurriculumAttempt(state, q.unit, false, run.mission, q.skill);
+    if (!run.missedCurrent) {
+      run.missedCurrent = true; run.wrong++; sessionWrong++; state.learning.wrong++;
+      recordCurriculumAttempt(state, q.unit, false, run.mission, q.skill);
+    }
     $('#curriculum-message').textContent = '괜찮아요! 그림과 힌트를 보고 다시 골라 볼까요?';
     document.querySelectorAll<HTMLButtonElement>('[data-curriculum-answer]').forEach(button => { if (button.dataset.curriculumAnswer === value) button.classList.add('wrong'); });
     audio.play('wrong'); persist(); return;
   }
-  sessionCorrect++; state.learning.correct++; recordCurriculumAttempt(state, q.unit, true, run.mission, q.skill);
+  sessionCorrect++;
+  if (!run.missedCurrent) { state.learning.correct++; recordCurriculumAttempt(state, q.unit, true, run.mission, q.skill); }
   document.querySelectorAll<HTMLButtonElement>('[data-curriculum-answer],[data-curriculum-number]').forEach(button => { button.disabled = true; if (button.dataset.curriculumAnswer === value) button.classList.add('correct'); });
   const input = document.querySelector<HTMLInputElement>('#curriculum-answer'); if (input) input.disabled = true;
   $('#curriculum-hint-button').hidden = true; $('#curriculum-message').textContent = '정답이에요! 그림 속 규칙을 잘 찾았어요.';
@@ -398,7 +416,7 @@ async function finishCurriculumQuestion() {
   if (sessionExpired) { curriculumRun = null; showSessionSummary(); return; }
   const run = curriculumRun, module = await loadCurriculum();
   if (run.index + 1 < run.total) {
-    run.index++; run.hintLevel = 0; run.question = nextCurriculumQuestion(module, run); renderCurriculumQuestion(); return;
+    run.index++; run.hintLevel = 0; run.missedCurrent = false; run.question = nextCurriculumQuestion(module, run); renderCurriculumQuestion(); return;
   }
   curriculumRun = null;
   if (run.review) {
@@ -464,7 +482,7 @@ function openNextGate() {
   switchStage(stage + 1, state.forest);
 }
 function startBattle(monster: number, arena: boolean, id: string) {
-  if (!state) return; const journey = journeyFor(state), operation = !arena && state.forest === 'multiplication' ? 'multiplication' : 'division', cleared = journey.maps.slice(1).filter(map => map.cleared).length, difficultyStage = arena ? Math.min(10, cleared + 1) : journey.stage; const huntId = id.startsWith('monster') ? Number(id.slice(7)) : -1; battle = { encounter: new Encounter(monster, arena, state.level, undefined, difficultyStage, state.settings.maxDividend, operation, state.settings.multiplicationRange), id, kind: id.startsWith('expMonster') ? 'expMonster' : 'normal', round: 1, goalRounds: monsterBattleRounds(monster, arena), score: 0, result: null, story: operation === 'multiplication' && multiplicationUsesStory(huntId) }; renderBattle();
+  if (!state) return; const journey = journeyFor(state), operation = !arena && state.forest === 'multiplication' ? 'multiplication' : 'division', cleared = journey.maps.slice(1).filter(map => map.cleared).length, difficultyStage = arena ? Math.min(10, cleared + 1) : journey.stage; const huntId = id.startsWith('monster') ? Number(id.slice(7)) : -1; battle = { encounter: new Encounter(monster, arena, state.level, undefined, difficultyStage, state.settings.maxDividend, operation, state.settings.multiplicationRange), id, kind: id.startsWith('expMonster') ? 'expMonster' : 'normal', round: 1, goalRounds: monsterBattleRounds(monster, arena), score: 0, result: null, story: multiplicationUsesStory(huntId) }; renderBattle();
 }
 function startMultiplicationGate() {
   if (!state) return; const gate = startMultiplicationFinal(state); if (!gate) return;
@@ -480,7 +498,11 @@ function startExpeditionGate() {
 }
 function renderBattle() {
   if (!battle || !state) return; const b = battle, e = b.encounter, m = MONSTERS[e.monster], q = e.question, reward = rewardFor(state, e.monster, e.arena), multiplication = q.operation === 'multiplication', symbol = multiplication ? '×' : '÷', operationName = multiplication ? '곱셈' : '나눗셈';
-  const story = b.story && multiplication ? `<p class="expedition-story">해바라기 씨앗이 한 봉지에 ${q.dividend}개씩 들어 있어요. ${q.divisor}봉지에는 모두 몇 개가 있을까요?</p>` : '';
+  const story = !b.story ? '' : multiplication
+    ? `<p class="expedition-story">해바라기 씨앗이 한 봉지에 ${q.dividend}개씩 들어 있어요. ${q.divisor}봉지에는 모두 몇 개가 있을까요?</p>`
+    : q.remainder
+      ? `<p class="expedition-story">베리 ${q.dividend}개를 한 바구니에 ${q.divisor}개씩 담아요. 가득 찬 바구니 수와 남는 베리를 찾아보세요.</p>`
+      : `<p class="expedition-story">베리 ${q.dividend}개를 친구 ${q.divisor}명에게 똑같이 나누어 주면 한 명이 몇 개씩 받을까요?</p>`;
   const linked = b.kind === 'multiplicationGate' && state.multiplicationFinal?.step === 1 ? `<div class="linked-equation">방금 푼 식: <b>${state.multiplicationFinal.left} × ${state.multiplicationFinal.right} = ${state.multiplicationFinal.left * state.multiplicationFinal.right}</b></div>` : '';
   const challenge = !e.arena && (b.goalRounds ?? 1) > 1;
   const questionMarkup = q.remainder
@@ -559,8 +581,8 @@ function submitAnswer() {
   const submitted = b.encounter.question.remainder ? `${input.value}R${remainderInput!.value}` : input.value;
   const outcome = b.encounter.answer(submitted);
   if (outcome === 'ignored') return;
-  if (outcome === 'wrong') { recordWrongAnswer(state, b.encounter.question); recordCurriculumAttempt(state, b.encounter.question.operation ?? 'division', false); sessionWrong++; audio.play('wrong'); persist(); $('#answer-message').textContent = '괜찮아요! 묶음을 살펴보고 다시 풀어 볼까요?'; input.value = ''; if (remainderInput) remainderInput.value = ''; showHint(); return; }
-  sessionCorrect++; recordCorrectAnswer(state, b.encounter.monster); recordCurriculumAttempt(state, b.encounter.question.operation ?? 'division', true); state.discoveries.outfits.includes(state.outfit) || state.discoveries.outfits.push(state.outfit); if (state.pet >= 0 && !state.discoveries.pets.includes(state.pet)) state.discoveries.pets.push(state.pet);
+  if (outcome === 'wrong') { if (!b.missedCurrent) { b.missedCurrent = true; recordWrongAnswer(state, b.encounter.question); recordCurriculumAttempt(state, b.encounter.question.operation ?? 'division', false); sessionWrong++; } audio.play('wrong'); persist(); $('#answer-message').textContent = '괜찮아요! 묶음을 살펴보고 다시 풀어 볼까요?'; input.value = ''; if (remainderInput) remainderInput.value = ''; showHint(); return; }
+  sessionCorrect++; recordCorrectAnswer(state, b.encounter.monster, !b.missedCurrent); if (!b.missedCurrent) recordCurriculumAttempt(state, b.encounter.question.operation ?? 'division', true); state.discoveries.outfits.includes(state.outfit) || state.discoveries.outfits.push(state.outfit); if (state.pet >= 0 && !state.discoveries.pets.includes(state.pet)) state.discoveries.pets.push(state.pet);
   if (!b.encounter.arena && !['multiplicationGate', 'expGate'].includes(b.kind) && b.round < (b.goalRounds ?? 1)) {
     audio.play('correct'); world.celebrate(); persist();
     $('#answer-message').textContent = '정답이에요! 다음 문제도 함께 풀어요.'; $('#monster-portrait').classList.add('defeated'); $('.number-pad').hidden = true; $('.battle-footer').hidden = true; $('#hint').hidden = true; $('#battle-result').hidden = false;
@@ -607,12 +629,12 @@ function nextBattle() {
   if (battle.kind === 'expGate') { battle = null; switchStage(0); openExpeditionBoard(); return; }
   if (!battle.encounter.arena) { battle = null; closeModal(); return; }
   if (battle.round === 5) { const score = battle.score; battle = null; openModal(title('오늘도 한 뼘 자랐어요', '대련을 마쳤어요!') + `<div class="arena-intro"><div class="arena-symbol">🏆</div><h3>${score}점</h3><p>다섯 친구와의 나눗셈 대련 성공!<br>나의 최고 기록은 ${state.best}점이에요.</p><button class="primary wide" data-close>마을로 돌아가기</button></div>`); return; }
-  const previous = battle.encounter.question, difficultyStage = battle.encounter.stage; battle.round++; battle.encounter = new Encounter(Math.floor(Math.random() * MONSTERS.length), true, state.level, previous, difficultyStage, state.settings.maxDividend); battle.result = null; battle.story = battle.round % 3 === 0; renderBattle();
+  const previous = battle.encounter.question, difficultyStage = battle.encounter.stage; battle.round++; battle.encounter = new Encounter(Math.floor(Math.random() * MONSTERS.length), true, state.level, previous, difficultyStage, state.settings.maxDividend); battle.result = null; battle.missedCurrent = false; battle.story = battle.round % 3 === 0; renderBattle();
 }
 function continueFriendBattle() {
   if (!battle || !state || !battle.encounter.solved || battle.round >= (battle.goalRounds ?? 1)) return;
   const previous = battle.encounter.question, operation = previous.operation ?? 'division'; battle.round++;
-  battle.encounter = new Encounter(battle.encounter.monster, false, state.level, previous, battle.encounter.stage, state.settings.maxDividend, operation, state.settings.multiplicationRange); battle.result = null; renderBattle();
+  battle.encounter = new Encounter(battle.encounter.monster, false, state.level, previous, battle.encounter.stage, state.settings.maxDividend, operation, state.settings.multiplicationRange); battle.result = null; battle.missedCurrent = false; renderBattle();
 }
 function exitBattle() { if (battle?.encounter.arena) toast(`대련 ${battle.score}점 · 받은 보상은 저장했어요.`); battle = null; persist(); if (sessionExpired) { showSessionSummary(); return; } closeModal(); }
 
