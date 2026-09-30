@@ -49,12 +49,39 @@ test('concept missions vary their representations instead of repeating one answe
     const graph = generateCurriculumQuestion('pictograph', 1).visual;
     if (graph.kind === 'pictograph') graphIcons.add(graph.icon);
   }
-  assert.deepEqual(circleSteps, new Set(['중심 정하기', '반지름만큼 벌리기', '중심에 고정하기']));
-  assert.deepEqual(fractionClasses, new Set(['진분수', '가분수', '자연수']));
+  assert.deepEqual(circleSteps, new Set(['중심 정하기', '반지름만큼 벌리기', '중심에 고정하기', '그대로 유지하기', '중심→벌리기→돌리기']));
+  assert.deepEqual(fractionClasses, new Set(['진분수', '가분수']));
   assert.deepEqual(fractionDirections, new Set(['to-mixed', 'to-improper']));
   assert.deepEqual(weightUnits, new Set(['g', 'kg', 't']));
   assert.deepEqual(capacityKinds, new Set(['number', 'choice']));
-  assert.equal(graphIcons.size, 3);
+  assert.equal(graphIcons.size, 8);
+});
+
+test('every non-arithmetic mission has enough distinct child-friendly situations', () => {
+  let seed = 123456;
+  const random = () => ((seed = (seed * 1664525 + 1013904223) >>> 0) / 4294967296);
+  const minimums = {
+    circle: [4, 4, 4, 20, 20, 5, 20, 20],
+    fraction: [30, 15, 30, 20, 30, 20, 30, 30],
+    measurement: [6, 6, 8, 30, 30, 30, 30, 25],
+    pictograph: [20, 30, 30, 30, 30, 30, 15, 30],
+  } as const;
+  for (const unit of NEW_CURRICULUM_UNITS) {
+    for (let mission = 0; mission < 8; mission++) {
+      const signatures = new Set<string>();
+      for (let sample = 0; sample < 120; sample++) {
+        const question = generateCurriculumQuestion(unit, mission, random);
+        signatures.add(`${question.prompt}|${question.detail ?? ''}|${question.answer}`);
+        assert.ok(!question.prompt.includes('undefined'));
+        assert.ok(!question.explanation.includes('undefined'));
+        if (question.choices) {
+          assert.equal(new Set(question.choices.map(choice => choice.value)).size, question.choices.length);
+          assert.ok(question.choices.some(choice => choice.value === question.answer));
+        }
+      }
+      assert.ok(signatures.size >= minimums[unit][mission], `${unit} mission ${mission + 1} only made ${signatures.size} situations`);
+    }
+  }
 });
 
 test('missions unlock in order, keep the best stars and never duplicate berry rewards', () => {
