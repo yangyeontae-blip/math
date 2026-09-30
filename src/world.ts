@@ -324,7 +324,7 @@ export class World {
     this.addEntity('arena', '신비 · 대련장', 0, -9, makeCharacter(3, 5, 3));
     this.addEntity('room', '나의 집 · 들어가기', 9, -4.5, this.gate(0xe5ad79));
     stageMonsters(0).forEach((m, i) => this.addEntity(`monster${i}`, MONSTERS[m.type].name, m.x, m.z, makeMonster(m.type)));
-    this.addEntity('journey', '모험의 문 · 10개의 사냥터', 10.5, 13.5, this.gate(0x9e78c9));
+    this.addEntity('journey', '수학 모험의 문 · 6개의 지역', 10.5, 13.5, this.gate(0x9e78c9));
     // Keep the walking areas clear; peripheral trees frame the miniature world.
     for (let i = 0; i < 48; i++) { const a = i * 2.39996, r = 17 + (i % 4) * 1.65; const x = Math.cos(a) * r, z = Math.sin(a) * r * .77; if ((x > 14 && z > 1) || Math.hypot(x - 10.5, z - 13.5) < 7 || Math.hypot(x - 18.5, z + 3.5) < 7 || (Math.abs(x) < 5 && z < -12)) continue; this.tree(x, z, .85 + (i % 3) * .16, i % 6 === 0); }
     stageTrees(0).forEach(({ x, z }, i) => { if (Math.hypot(x - 18.5, z + 3.5) >= 8) this.addChoppableTree(i, x, z, 1, i % 2 === 0); });
@@ -436,7 +436,7 @@ export class World {
   updateRoomFurniture(s: Save, render = true) {
     if (!this.inRoom || !this.furnitureRoot) return;
     for (const child of [...this.furnitureRoot.children]) { this.furnitureRoot.remove(child); this.disposeModel(child as T.Group); }
-    const spots = [[-4.8, -2.3], [-1.7, -2.3], [1.7, -2.3], [4.8, -2.3], [-4.8, 2], [-1.7, 2], [1.7, 2], [4.8, 2], [0, 0]] as const;
+    const spots = [[-5.2, -3.7], [-2.6, -3.7], [0, -3.7], [2.6, -3.7], [5.2, -3.7], [-5.2, 3.7], [-2.6, 3.7], [0, 3.7], [2.6, 3.7], [5.2, 3.7], [-4, 0], [-1.35, 0], [1.35, 0], [4, 0]] as const;
     for (const id of s.room.furniture) {
       const spot = spots[id]; if (!spot) continue;
       const [x, z] = spot, g = new T.Group(); g.position.set(x, 0, z); this.furnitureRoot.add(g);
@@ -448,7 +448,12 @@ export class World {
       else if (id === 5) { box(g, 0x906b50, 0, 1.05, 0, 1.25, 2.1, .55); for (const y of [.45, 1.1, 1.75]) { box(g, 0xc49a70, 0, y, .3, 1.3, .12, .65); for (let b = 0; b < 3; b++) box(g, [0xd88984, 0x83b6ae, 0xefd18c][b], -.4 + b * .4, y + .23, .3, .24, .35, .3); } }
       else if (id === 6) { cylinder(g, 0x9c795a, 0, .8, 0, .05, .07, 1.5, 7); ball(g, 0xffe699, 0, 1.65, 0, .3); }
       else if (id === 7) { cylinder(g, 0xb47659, 0, .32, 0, .42, .5, .6, 10); for (let b = 0; b < 3; b++) ball(g, 0xe84f70, -.2 + b * .2, .7, 0, .13); }
-      else { cylinder(g, 0xc9824b, 0, .34, 0, .44, .55, .62, 10); cylinder(g, 0x5d934b, 0, 1.05, 0, .05, .07, 1.2, 7); ball(g, 0x6e512f, 0, 1.7, 0, .18); for (let p = 0; p < 10; p++) ball(g, 0xf6cb42, Math.cos(p * Math.PI / 5) * .38, 1.7 + Math.sin(p * Math.PI / 5) * .38, 0, .15, .2, .08); }
+      else if (id === 8) { cylinder(g, 0xc9824b, 0, .34, 0, .44, .55, .62, 10); cylinder(g, 0x5d934b, 0, 1.05, 0, .05, .07, 1.2, 7); ball(g, 0x6e512f, 0, 1.7, 0, .18); for (let p = 0; p < 10; p++) ball(g, 0xf6cb42, Math.cos(p * Math.PI / 5) * .38, 1.7 + Math.sin(p * Math.PI / 5) * .38, 0, .15, .2, .08); }
+      else if (id === 9) { const ring = mesh(new T.TorusGeometry(.58, .07, 8, 28), 0xd9c6ff, 0, 1.05, 0, g); ring.rotation.x = Math.PI / 2; cylinder(g, 0xd4aa62, 0, .5, 0, .06, .08, 1.05, 7); for (const side of [-1, 1]) { const leg = cylinder(g, 0x8665a5, side * .25, 1.15, 0, .035, .05, 1.2, 6); leg.rotation.z = side * .23; } }
+      else if (id === 10) { cylinder(g, 0xf0bd70, 0, .28, 0, .72, .82, .5, 14); for (let p = 0; p < 6; p++) { const slice = mesh(new T.ConeGeometry(.32, .65, 3), p % 2 ? 0xffd8a8 : 0xf39cad, Math.cos(p * Math.PI / 3) * .36, .63, Math.sin(p * Math.PI / 3) * .36, g); slice.rotation.z = Math.PI; } }
+      else if (id === 11) { box(g, 0x8f6949, 0, .28, 0, 1.6, .16, .6); cylinder(g, 0x8f6949, 0, .86, 0, .06, .08, 1.1, 7); box(g, 0xd6b878, 0, 1.36, 0, .75, .13, .16); for (const side of [-1, 1]) { cylinder(g, 0x9bd6df, side * .5, .75, 0, .35, .25, .16, 12); box(g, 0xb5dbe1, side * .5, .9, 0, .55, .12, .55); } }
+      else if (id === 12) { box(g, 0x7f654f, 0, 1.2, 0, 1.8, 1.6, .18); box(g, 0xf8edca, 0, 1.2, .12, 1.55, 1.35, .06); for (let row = 0; row < 3; row++) for (let icon = 0; icon <= row; icon++) ball(g, [0xf38aa3, 0x83b6ae, 0xf0c65f][row], -.5 + icon * .38, 1.62 - row * .4, .18, .1); }
+      else { box(g, 0xd9b36d, 0, 1.25, 0, 1.7, 1.5, .16); box(g, 0xfff7dc, 0, 1.25, .1, 1.42, 1.22, .05); const ribbon = mesh(new T.TorusGeometry(.22, .055, 7, 18), 0xb58bd3, 0, 1.45, .17, g); ribbon.rotation.x = Math.PI / 2; for (let p = 0; p < 6; p++) ball(g, 0xf2c85b, Math.cos(p * Math.PI / 3) * .34, 1.45 + Math.sin(p * Math.PI / 3) * .34, .17, .08); }
     }
     if (render) this.renderOnce();
   }

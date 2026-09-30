@@ -23,23 +23,23 @@ test('new characters start with their matching hairstyle unlocked', () => {
 test('every question follows the curriculum; two-digit quotients begin at level 4', () => {
   for (const level of [1, 2, 3, 4, 10, 100]) {
     const pool = questionPool(level); assert.ok(pool.length > 0);
-    for (const q of pool) { assert.ok(q.dividend >= 10 && q.dividend <= (level < 4 ? 90 : level < 7 ? 120 : 180) && q.dividend % 10 === 0); assert.ok(q.divisor >= 2 && q.divisor <= 9); assert.equal(q.divisor * q.answer, q.dividend); if (level < 4) assert.ok(q.answer < 10); }
+    for (const q of pool) { assert.ok(q.dividend >= 10 && q.dividend <= (level < 4 ? 90 : level < 7 ? 120 : 180) && q.dividend % 10 === 0); assert.ok(q.divisor >= 2 && q.divisor <= 9); assert.equal(q.divisor * q.answer + (q.remainder ?? 0), q.dividend); if (level < 4) assert.ok(q.answer < 10); }
     if (level >= 4) assert.ok(pool.some(q => q.answer >= 10));
     if (level >= 7) assert.ok(pool.some(q => q.dividend > 90));
   }
 });
 test('division questions grow gradually harder across the ten hunt stages', () => {
-  let previousMax = 0;
-  STAGE_DIVISION_DIFFICULTY.forEach((rule, index) => {
-    const stage = index + 1, pool = questionPool(1, stage); assert.ok(pool.length >= 8);
-    for (const q of pool) { assert.equal(q.dividend % 10, 0); assert.ok(q.dividend <= rule.maxDividend); assert.ok(q.answer <= rule.maxAnswer); assert.equal(q.divisor * q.answer, q.dividend); }
-    const maxAnswer = Math.max(...pool.map(q => q.answer)); assert.ok(maxAnswer >= previousMax); previousMax = maxAnswer;
-    if (stage === 1) assert.ok(pool.every(q => q.answer < 10));
-    if (stage >= 2) assert.ok(pool.some(q => q.answer >= 10));
-    if (stage <= 4) assert.ok(pool.every(q => q.dividend < 100));
-    if (stage >= 5) assert.ok(pool.some(q => q.dividend >= 100));
-  });
-  assert.ok(questionPool(1, 10).some(q => q.answer >= 40));
+  for (let stage = 1; stage <= 10; stage++) {
+    const pool = questionPool(1, stage); assert.ok(pool.length >= 8);
+    for (const q of pool) { assert.equal(q.divisor * q.answer + (q.remainder ?? 0), q.dividend); assert.ok((q.remainder ?? 0) < q.divisor); }
+    if (stage <= 3) assert.ok(pool.every(q => q.dividend % 10 === 0 && (q.remainder ?? 0) === 0));
+    if (stage === 4) assert.ok(pool.every(q => q.dividend < 100 && (q.remainder ?? 0) === 0));
+    if (stage >= 5 && stage <= 6) assert.ok(pool.every(q => q.dividend >= 100 && (q.remainder ?? 0) === 0));
+    if (stage === 7) assert.ok(pool.every(q => q.dividend < 100 && (q.remainder ?? 0) > 0));
+    if (stage >= 8 && stage <= 9) assert.ok(pool.every(q => q.dividend >= 100 && (q.remainder ?? 0) > 0));
+    if (stage === 10) { assert.ok(pool.some(q => (q.remainder ?? 0) === 0)); assert.ok(pool.some(q => (q.remainder ?? 0) > 0)); }
+  }
+  assert.ok(questionPool(1, 10).some(q => q.answer >= 100));
 });
 test('all weapons and upgrades give the documented rewards for every monster', () => {
   const s = newSave('베리', 0);
@@ -105,7 +105,7 @@ test('trees give only 2 to 4 berries once and stronger weapons cut faster', () =
 test('version 2 saves migrate with untouched tree progress', () => {
   const old = structuredClone(newSave('예전', 0)) as unknown as Record<string, unknown>; old.version = 2;
   const journey = old.journey as { maps: Array<Record<string, unknown>> }; journey.maps.forEach(m => delete m.trees);
-  const migrated = validateSave(old); assert.equal(migrated.version, 9); assert.deepEqual(migrated.journey.maps[0].trees, []); assert.equal(migrated.ride, -1); assert.deepEqual(migrated.rides, {}); assert.equal(migrated.pet, -1); assert.deepEqual(migrated.hairstyles, { 0: true }); assert.equal(migrated.settings.maxDividend, 0); assert.equal(migrated.settings.multiplicationRange, 'stage'); assert.deepEqual(migrated.room, { furniture: [], inside: false }); assert.deepEqual(migrated.expedition, { completed: 0, selectedTitle: 0, active: null }); assert.equal(migrated.forest, 'division'); assert.equal(migrated.multiplicationJourney.stage, 0);
+  const migrated = validateSave(old); assert.equal(migrated.version, 10); assert.deepEqual(migrated.journey.maps[0].trees, []); assert.equal(migrated.ride, -1); assert.deepEqual(migrated.rides, {}); assert.equal(migrated.pet, -1); assert.deepEqual(migrated.hairstyles, { 0: true }); assert.equal(migrated.settings.maxDividend, 0); assert.equal(migrated.settings.multiplicationRange, 'stage'); assert.equal(migrated.settings.focusUnit, 'all'); assert.equal(migrated.settings.spiralReview, true); assert.deepEqual(migrated.room, { furniture: [], inside: false }); assert.deepEqual(migrated.expedition, { completed: 0, selectedTitle: 0, active: null }); assert.equal(migrated.forest, 'division'); assert.equal(migrated.multiplicationJourney.stage, 0); assert.equal(migrated.curriculum.units.circle.completedMissions.length, 0);
 });
 test('teacher curriculum ceilings and local learning records behave safely', () => {
   const s = newSave('수업', 0);
@@ -154,5 +154,5 @@ test('version 8 active potions become a safe five-minute time effect', () => {
   const old = structuredClone(newSave('옛물약', 0)) as unknown as Record<string, unknown>;
   old.version = 8; old.potions = { stock: [1, 0, 0], berryMultiplier: 2, berryUses: 3, xpMultiplier: 1, xpUses: 0 };
   const restored = validateSave(old), effect = potionEffects(restored);
-  assert.equal(restored.version, 9); assert.equal(effect.berryMultiplier, 2); assert.ok(effect.berrySeconds > 295 && effect.berrySeconds <= 300); assert.equal(effect.xpSeconds, 0);
+  assert.equal(restored.version, 10); assert.equal(effect.berryMultiplier, 2); assert.ok(effect.berrySeconds > 295 && effect.berrySeconds <= 300); assert.equal(effect.xpSeconds, 0);
 });
