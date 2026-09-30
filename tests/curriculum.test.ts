@@ -37,6 +37,26 @@ test('mixed review covers all six curriculum regions', () => {
   }
 });
 
+test('concept missions vary their representations instead of repeating one answer pattern', () => {
+  const circleSteps = new Set<string>(), fractionClasses = new Set<string>(), fractionDirections = new Set<string>();
+  const weightUnits = new Set<string>(), capacityKinds = new Set<string>(), graphIcons = new Set<string>();
+  for (let sample = 0; sample < 400; sample++) {
+    circleSteps.add(generateCurriculumQuestion('circle', 5).answer);
+    fractionClasses.add(generateCurriculumQuestion('fraction', 3).answer);
+    fractionDirections.add(generateCurriculumQuestion('fraction', 4).prompt.includes('대분수로') ? 'to-mixed' : 'to-improper');
+    weightUnits.add(generateCurriculumQuestion('measurement', 1).answer);
+    capacityKinds.add(generateCurriculumQuestion('measurement', 3).kind);
+    const graph = generateCurriculumQuestion('pictograph', 1).visual;
+    if (graph.kind === 'pictograph') graphIcons.add(graph.icon);
+  }
+  assert.deepEqual(circleSteps, new Set(['중심 정하기', '반지름만큼 벌리기', '중심에 고정하기']));
+  assert.deepEqual(fractionClasses, new Set(['진분수', '가분수', '자연수']));
+  assert.deepEqual(fractionDirections, new Set(['to-mixed', 'to-improper']));
+  assert.deepEqual(weightUnits, new Set(['g', 'kg', 't']));
+  assert.deepEqual(capacityKinds, new Set(['number', 'choice']));
+  assert.equal(graphIcons.size, 3);
+});
+
 test('missions unlock in order, keep the best stars and never duplicate berry rewards', () => {
   const save = newSave('단원', 0), unit = 'circle' as const;
   assert.equal(canStartCurriculumMission(save, unit, 0), true);

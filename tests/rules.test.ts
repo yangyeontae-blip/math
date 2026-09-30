@@ -32,14 +32,16 @@ test('division questions grow gradually harder across the ten hunt stages', () =
   for (let stage = 1; stage <= 10; stage++) {
     const pool = questionPool(1, stage); assert.ok(pool.length >= 8);
     for (const q of pool) { assert.equal(q.divisor * q.answer + (q.remainder ?? 0), q.dividend); assert.ok((q.remainder ?? 0) < q.divisor); }
-    if (stage <= 3) assert.ok(pool.every(q => q.dividend % 10 === 0 && (q.remainder ?? 0) === 0));
+    if (stage <= 2) assert.ok(pool.every(q => q.dividend % 10 === 0 && (q.remainder ?? 0) === 0));
+    if (stage === 3) assert.ok(pool.every(q => q.dividend < 100 && q.answer <= 20 && (q.remainder ?? 0) === 0));
     if (stage === 4) assert.ok(pool.every(q => q.dividend < 100 && (q.remainder ?? 0) === 0));
-    if (stage >= 5 && stage <= 6) assert.ok(pool.every(q => q.dividend >= 100 && (q.remainder ?? 0) === 0));
-    if (stage === 7) assert.ok(pool.every(q => q.dividend < 100 && (q.remainder ?? 0) > 0));
-    if (stage >= 8 && stage <= 9) assert.ok(pool.every(q => q.dividend >= 100 && (q.remainder ?? 0) > 0));
+    if (stage >= 5 && stage <= 6) assert.ok(pool.every(q => q.dividend >= 100 && q.answer <= (stage === 5 ? 99 : 150) && (q.remainder ?? 0) === 0));
+    if (stage === 7) assert.ok(pool.every(q => q.dividend < 100 && q.answer <= 30 && (q.remainder ?? 0) > 0));
+    if (stage >= 8 && stage <= 9) assert.ok(pool.every(q => q.dividend >= 100 && q.answer <= (stage === 8 ? 99 : 199) && (q.remainder ?? 0) > 0));
     if (stage === 10) { assert.ok(pool.some(q => (q.remainder ?? 0) === 0)); assert.ok(pool.some(q => (q.remainder ?? 0) > 0)); }
   }
   assert.ok(questionPool(1, 10).some(q => q.answer >= 100));
+  assert.ok(questionPool(1, 10).every(q => q.answer <= 250));
 });
 test('all weapons and upgrades give the documented rewards for every monster', () => {
   const s = newSave('베리', 0);
