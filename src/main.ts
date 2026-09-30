@@ -45,7 +45,7 @@ let battle: { encounter: Encounter; id: string; kind: 'normal' | 'expMonster' | 
 type CurriculumModule = typeof import('./curriculum');
 type CurriculumQuestion = import('./curriculum').CurriculumQuestion;
 let curriculumModulePromise: Promise<CurriculumModule> | null = null;
-let curriculumRun: { unit: CurriculumUnitId; mission: number; question: CurriculumQuestion; index: number; total: number; wrong: number; hints: number; hintLevel: number; missedCurrent?: boolean; graduation?: boolean; review?: boolean } | null = null;
+let curriculumRun: { unit: CurriculumUnitId; mission: number; question: CurriculumQuestion; index: number; total: number; wrong: number; hints: number; hintLevel: number; seenQuestions: Set<string>; missedCurrent?: boolean; graduation?: boolean; review?: boolean } | null = null;
 let storageError = false, sessionExpired = false, sessionElapsed = 0, sessionCorrect = 0, sessionWrong = 0;
 const OUTFIT_ICONS = ['🌿', '🌈', '🍃', '☁️', '🌸', '🌟', '🌙', '👑', '🍓', '🐥', '🐰', '🌰', '🐱', '🐑', '🐸', '🧚', '🌻', '🐝', '🍑', '✴️'];
 const CURRICULUM_REGIONS: { id: CurriculumUnitId; icon: string; name: string; short: string; className: string }[] = [
@@ -303,7 +303,8 @@ function curriculumQuestionVisual(question: CurriculumQuestion) {
   if (visual.kind === 'circle') {
     const line = visual.focus === 'radius' ? '<line x1="100" y1="76" x2="154" y2="76" />' : visual.focus === 'diameter' ? '<line x1="46" y1="76" x2="154" y2="76" />' : '';
     const compass = visual.focus === 'compass' ? '<path d="M78 26 L100 76 L126 27 M100 76 L136 92"/><circle cx="78" cy="26" r="5"/><circle cx="126" cy="27" r="5"/>' : '';
-    return `<div class="curriculum-visual circle-visual"><svg viewBox="0 0 200 150" role="img" aria-label="원의 중심, 반지름과 지름 그림"><circle class="circle-shape" cx="100" cy="76" r="54"/><g class="circle-line">${line}${compass}</g><circle class="circle-center" cx="100" cy="76" r="6"/><text x="100" y="137">반지름 ${visual.radius} cm</text></svg></div>`;
+    const caption = visual.focus === 'center' ? '빨간 점이 원의 중심이에요' : visual.focus === 'radius' ? `반지름 ${visual.radius} ${visual.unit ?? 'cm'}` : visual.focus === 'diameter' ? `지름 ${visual.radius * 2} ${visual.unit ?? 'cm'}` : '침을 중심에 고정하고 돌려요';
+    return `<div class="curriculum-visual circle-visual"><svg viewBox="0 0 200 150" role="img" aria-label="원의 중심, 반지름과 지름 그림"><circle class="circle-shape" cx="100" cy="76" r="54"/><g class="circle-line">${line}${compass}</g><circle class="circle-center" cx="100" cy="76" r="6"/><text x="100" y="137">${caption}</text></svg></div>`;
   }
   if (visual.kind === 'fraction') {
     const count = Math.max(visual.denominator, visual.numerator), groups = Math.ceil(count / visual.denominator);
@@ -325,28 +326,36 @@ function guardianQuestion(module: CurriculumModule, unit: NewCurriculumUnitId, i
   const blueprint = GUARDIAN_BLUEPRINTS[unit];
   return module.generateCurriculumQuestion(unit, blueprint[index % blueprint.length]);
 }
+function curriculumQuestionKey(question: CurriculumQuestion) { return `${question.unit}|${question.skill}|${question.prompt}|${question.detail ?? ''}|${question.answer}`; }
+function freshCurriculumQuestion(factory: () => CurriculumQuestion, seen: Set<string>) {
+  let question = factory();
+  for (let attempt = 0; attempt < 16 && seen.has(curriculumQuestionKey(question)); attempt++) question = factory();
+  seen.add(curriculumQuestionKey(question)); return question;
+}
 function nextCurriculumQuestion(module: CurriculumModule, run: NonNullable<typeof curriculumRun>) {
   const order: CurriculumUnitId[] = ['multiplication', 'division', 'circle', 'fraction', 'measurement', 'pictograph'];
-  if (run.graduation) return module.generateReviewQuestion(order[run.index % order.length]);
-  if (run.review) return module.generateReviewQuestion(run.unit);
+  if (run.graduation) return freshCurriculumQuestion(() => module.generateReviewQuestion(order[run.index % order.length]), run.seenQuestions);
+  if (run.review) return freshCurriculumQuestion(() => module.generateReviewQuestion(run.unit), run.seenQuestions);
   const unit = run.unit as NewCurriculumUnitId;
-  if (run.mission === 8) return guardianQuestion(module, unit, run.index);
+  if (run.mission === 8) return freshCurriculumQuestion(() => guardianQuestion(module, unit, run.index), run.seenQuestions);
   const position = order.indexOf(unit), completedEarlier = state ? order.slice(0, position).filter(previous => curriculumUnitComplete(state!, previous)) : [];
-  if (state?.settings.spiralReview && run.mission >= 3 && completedEarlier.length && Math.random() < .2) return module.generateReviewQuestion(completedEarlier[Math.floor(Math.random() * completedEarlier.length)]);
-  return module.generateCurriculumQuestion(unit, run.mission);
+  if (state?.settings.spiralReview && run.mission >= 3 && completedEarlier.length && Math.random() < .2) return freshCurriculumQuestion(() => module.generateReviewQuestion(completedEarlier[Math.floor(Math.random() * completedEarlier.length)]), run.seenQuestions);
+  return freshCurriculumQuestion(() => module.generateCurriculumQuestion(unit, run.mission), run.seenQuestions);
 }
 
 async function startCurriculumMission(unit: NewCurriculumUnitId, mission: number) {
   if (!state || !canStartCurriculumMission(state, unit, mission)) return;
   const module = await loadCurriculum(), total = mission === 8 ? 6 : 4;
-  const run = { unit, mission, question: mission === 8 ? guardianQuestion(module, unit, 0) : module.generateCurriculumQuestion(unit, mission), index: 0, total, wrong: 0, hints: 0, hintLevel: 0 } satisfies NonNullable<typeof curriculumRun>;
+  const question = mission === 8 ? guardianQuestion(module, unit, 0) : module.generateCurriculumQuestion(unit, mission);
+  const run = { unit, mission, question, index: 0, total, wrong: 0, hints: 0, hintLevel: 0, seenQuestions: new Set([curriculumQuestionKey(question)]) } satisfies NonNullable<typeof curriculumRun>;
   curriculumRun = run; renderCurriculumQuestion();
 }
 
 async function startGraduationAdventure() {
   if (!state || (!state.teacherMode && !curriculumGraduationAvailable(state))) return;
   const module = await loadCurriculum();
-  const run = { unit: 'multiplication' as CurriculumUnitId, mission: 0, question: module.generateReviewQuestion('multiplication'), index: 0, total: 6, wrong: 0, hints: 0, hintLevel: 0, graduation: true } satisfies NonNullable<typeof curriculumRun>;
+  const question = module.generateReviewQuestion('multiplication');
+  const run = { unit: 'multiplication' as CurriculumUnitId, mission: 0, question, index: 0, total: 6, wrong: 0, hints: 0, hintLevel: 0, seenQuestions: new Set([curriculumQuestionKey(question)]), graduation: true } satisfies NonNullable<typeof curriculumRun>;
   curriculumRun = run; renderCurriculumQuestion();
 }
 
@@ -354,7 +363,7 @@ async function startCurriculumReview(unit: CurriculumUnitId) {
   if (!state) return;
   const module = await loadCurriculum(), mistake = state.curriculum.wrongSkills.find(item => item.unit === unit), mission = mistake?.mission ?? 0;
   const question = ['circle', 'fraction', 'measurement', 'pictograph'].includes(unit) ? module.generateCurriculumQuestion(unit as NewCurriculumUnitId, Math.min(7, mission)) : module.generateReviewQuestion(unit);
-  const run = { unit, mission, question, index: 0, total: 1, wrong: 0, hints: 0, hintLevel: 0, review: true } satisfies NonNullable<typeof curriculumRun>;
+  const run = { unit, mission, question, index: 0, total: 1, wrong: 0, hints: 0, hintLevel: 0, seenQuestions: new Set([curriculumQuestionKey(question)]), review: true } satisfies NonNullable<typeof curriculumRun>;
   curriculumRun = run; renderCurriculumQuestion();
 }
 
