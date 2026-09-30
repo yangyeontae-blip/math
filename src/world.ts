@@ -234,29 +234,67 @@ function makeRide(id: number) {
 function makePet(id: number) {
   const g = new T.Group(), pet = PETS[id];
   const body = new T.Group(); g.add(body);
-  ball(body, pet.color, 0, .32, 0, .34, .29, .35); ball(body, pet.color, 0, .57, .18, .28, .27, .25);
-  ball(body, 0xffeee1, 0, .31, .31, .21, .19, .075); ball(body, 0xffd2bd, 0, .54, .405, .09, .065, .035);
-  for (const side of [-1, 1]) { ball(body, 0x35423e, side * .1, .61, .4, .035, .05, .02); ball(body, 0xf3a6b5, side * .19, .51, .38, .055, .03, .02); ball(body, pet.color, side * .2, .17, .12, .13, .12, .18); }
-  const tail = id === 0 ? ball(body, pet.color, -.34, .39, -.08, .13, .13, .18) : id === 1 ? ball(body, 0xfff9f3, 0, .39, -.34, .16, .16, .16) : id === 2 ? ball(body, pet.color, -.03, .31, -.36, .11, .11, .28) : id === 3 ? ball(body, 0xc5addb, 0, .3, -.37, .17, .2, .2) : ball(body, 0x75bd91, 0, .31, -.48, .18, .16, .28);
-  if (id === 2) { tail.rotation.z = .2; for (const side of [-1, 1]) { const whisker = box(body, 0x8e7569, side * .17, .49, .45, .14, .012, .012); whisker.rotation.z = side * .12; } }
-  if (id === 0) for (const side of [-1, 1]) { ball(body, 0xffd3a0, side * .2, .76, .1, .12); ball(body, 0xfff0d9, side * .18, .78, .18, .06, .075, .025); }
-  if (id === 1) for (const side of [-1, 1]) { const ear = ball(body, pet.color, side * .13, .92, .12, .09, .36, .09); ear.rotation.z = side * -.12; ball(body, 0xffcbd8, side * .13, .93, .19, .045, .25, .025); }
-  if (id === 2) for (const side of [-1, 1]) { const ear = mesh(new T.ConeGeometry(.1, .3, 5), pet.color, side * .16, .86, .13, body); ear.rotation.z = side * -.15; ball(body, 0xf5c3c5, side * .13, .82, .2, .045, .09, .025); }
-  if (id === 3) { for (const side of [-1, 1]) { ball(body, 0xf1d38b, side * .13, .62, .41, .08, .1, .025); const wing = ball(body, 0xc5addb, side * .32, .4, -.02, .2, .28, .08); wing.rotation.z = side * .35; wing.userData.petWing = side; } for (const side of [-1, 1]) { const tuft = mesh(new T.ConeGeometry(.07, .19, 5), 0xc5addb, side * .1, .83, .08, body); tuft.rotation.z = side * -.15; } }
-  if (id === 4) { for (const side of [-1, 1]) { const horn = mesh(new T.ConeGeometry(.08, .24, 5), 0xd5ef9a, side * .14, .86, .12, body); horn.rotation.z = side * -.12; } for (let i = 0; i < 4; i++) ball(body, 0xd5ef9a, 0, .42 + i * .09, -.35 - i * .13, .09 - i * .015); ball(body, 0xffe28a, 0, .76, .08, .11); }
-  if (id === 5) { for (const side of [-1, 1]) { const wing = mesh(new T.CircleGeometry(.22, 10), 0xfff2c5, side * .3, .47, -.04, body); wing.scale.y = 1.45; wing.rotation.z = side * .45; wing.userData.petWing = side; const antenna = cylinder(body, 0x4b4036, side * .09, .86, .12, .018, .025, .25, 5); antenna.rotation.z = side * -.26; } box(body, 0x4b4036, 0, .36, .05, .62, .08, .13); }
-  if (id === 6) { for (const side of [-1, 1]) { const ear = mesh(new T.ConeGeometry(.13, .38, 5), pet.color, side * .18, .88, .12, body); ear.rotation.z = side * -.18; } for (let i = 0; i < 7; i++) ball(body, i % 2 ? 0xf6cb45 : 0xe5a344, Math.cos(i * .9) * .28, .38 + Math.sin(i * .9) * .24, -.3, .13); }
-  // Each companion gets a small signature accessory so children can tell them apart at a glance.
-  if (id === 0) { ball(body, 0xe95e74, .28, .72, .18, .13, .12, .09); for (let i = 0; i < 3; i++) ball(body, 0xffe9a2, .24 + i * .04, .75 + (i % 2) * .05, .26, .018); }
-  if (id === 1) { ball(body, 0xffffff, -.31, .45, -.22, .2); ball(body, 0x8fcde4, .24, .44, .4, .075); ball(body, 0x8fcde4, -.24, .44, .4, .075); }
-  if (id === 2) { const fish = ball(body, 0x86d7d4, 0, .39, .44, .1, .055, .025); fish.rotation.z = .12; for (const side of [-1, 1]) { const paw = ball(body, 0xfff0df, side * .19, .18, .29, .075, .05, .04); paw.rotation.z = side * .2; } }
-  if (id === 3) { const moon = mesh(new T.TorusGeometry(.12, .035, 5, 14, Math.PI * 1.45), 0xffe789, .24, .82, .22, body); moon.rotation.z = -.4; for (let i = 0; i < 3; i++) ball(body, 0xe7d8ff, -.15 + i * .15, .9 + (i % 2) * .06, .06, .04); }
-  if (id === 4) { for (const side of [-1, 1]) { const wing = mesh(new T.CircleGeometry(.2, 10), 0xbff0d5, side * .29, .43, -.19, body); wing.scale.y = 1.35; wing.rotation.z = side * .48; wing.userData.petWing = side; } ball(body, 0xffdf77, 0, .9, .12, .08); }
-  if (id === 5) { for (let i = 0; i < 5; i++) ball(body, i % 2 ? 0xffffff : 0xffdf64, Math.cos(i * 1.26) * .18, .84 + Math.sin(i * 1.26) * .14, .08, .055); }
-  if (id === 6) { ball(body, 0x8c6744, 0, .84, .18, .13); for (let i = 0; i < 8; i++) ball(body, 0xf6cb45, Math.cos(i * Math.PI / 4) * .2, .84 + Math.sin(i * Math.PI / 4) * .19, .14, .06, .09, .04); }
-  // Original cozy-fantasy companion details: a tiny gem collar, travel pouch and glowing charm.
-  const collar = mesh(new T.TorusGeometry(.2, .025, 5, 16), id > 2 ? 0xbbeeff : 0xf4d478, 0, .48, .18, body); collar.rotation.x = Math.PI / 2;
-  box(body, 0x9b7653, -.3, .34, -.08, .18, .23, .1); const charm = mesh(new T.OctahedronGeometry(.065), id > 2 ? 0xbbeeff : 0xffd788, 0, .38, .43, body); charm.userData.petCharm = true;
+  const eye = (side: number, x: number, y: number, z: number, color = 0x35423e, scale = 1) => {
+    ball(body, color, side * x, y, z, .04 * scale, .058 * scale, .024);
+    ball(body, 0xffffff, side * (x - .012), y + .023 * scale, z + .018, .012 * scale, .016 * scale, .008);
+  };
+  const cheek = (side: number, x: number, y: number, z: number, color = 0xf3a6b5) => ball(body, color, side * x, y, z, .065, .032, .018);
+  const paw = (side: number, color: number, x = .21, y = .16, z = .22) => {
+    const foot = ball(body, color, side * x, y, z, .13, .1, .18); foot.userData.petPaw = side; return foot;
+  };
+  const tailRoot = new T.Group(); tailRoot.position.set(0, .34, -.2); tailRoot.userData.petTail = id * .7 + 1; body.add(tailRoot);
+
+  if (id === 0) { // 딸기 햄찌: 통통한 볼, 등 줄무늬, 딸기 배낭
+    ball(body, pet.color, 0, .33, 0, .38, .32, .39); ball(body, 0xe7b27d, 0, .59, .18, .3, .27, .27);
+    ball(body, 0xffeee1, 0, .33, .34, .24, .21, .08); ball(body, 0xffd2bd, 0, .56, .43, .075, .055, .032);
+    for (const side of [-1, 1]) { eye(side, .11, .63, .42); cheek(side, .22, .52, .4); paw(side, 0xffe8d5); ball(body, 0xffd3a0, side * .2, .79, .1, .12); ball(body, 0xfff0d9, side * .18, .79, .18, .06, .075, .025); }
+    for (let i = -1; i <= 1; i++) box(body, 0x9b714d, i * .095, .39, -.37, .045, .37, .025);
+    ball(tailRoot, 0xf0c092, -.27, .08, -.12, .12, .12, .16);
+    ball(body, 0xe95e74, .29, .68, .1, .15, .14, .1); for (let i = 0; i < 4; i++) ball(body, 0xffe9a2, .24 + (i % 2) * .08, .65 + Math.floor(i / 2) * .08, .2, .018);
+    for (const side of [-1, 1]) { const leaf = mesh(new T.CircleGeometry(.08, 8), 0x72ad67, .29 + side * .055, .82, .11, body); leaf.scale.y = 1.4; leaf.rotation.z = side * .6; }
+  } else if (id === 1) { // 구름 토끼콩: 긴 귀, 구름 털, 리본
+    ball(body, pet.color, 0, .34, 0, .33, .34, .37); ball(body, 0xf8f2f5, 0, .62, .18, .29, .28, .26);
+    for (let i = 0; i < 5; i++) ball(body, 0xffffff, -.2 + i * .1, .34 + (i % 2) * .08, -.31, .14);
+    ball(body, 0xfff7f2, 0, .51, .39, .16, .14, .055); ball(body, 0xf4b9c6, 0, .55, .435, .055, .04, .025);
+    for (const side of [-1, 1]) { eye(side, .11, .65, .4, 0x4e5264, 1.08); cheek(side, .21, .54, .38, 0xf2b6c6); paw(side, 0xffffff, .2, .15, .22); const ear = ball(body, pet.color, side * .13, 1.03, .12, .1, .42, .1); ear.rotation.z = side * -.12; ear.userData.petEar = side; const inner = ball(body, 0xffcbd8, side * .13, 1.04, .2, .046, .3, .025); inner.rotation.z = side * -.12; inner.userData.petEar = side; }
+    ball(tailRoot, 0xffffff, 0, .06, -.25, .19); ball(body, 0x8fcde4, -.1, .43, .4, .11, .08, .05); ball(body, 0x8fcde4, .1, .43, .4, .11, .08, .05); ball(body, 0xffe6a8, 0, .43, .43, .05);
+  } else if (id === 2) { // 숲냥이 모리: 줄무늬 꼬리, 흰 양말, 수염과 방울
+    ball(body, pet.color, 0, .34, -.02, .35, .31, .41); ball(body, pet.color, 0, .61, .19, .29, .27, .27);
+    ball(body, 0xfff0df, 0, .5, .4, .17, .14, .06); ball(body, 0xd98f90, 0, .54, .445, .052, .035, .024);
+    for (const side of [-1, 1]) { eye(side, .105, .66, .42, 0x35574a, 1.04); cheek(side, .21, .54, .39); paw(side, 0xfff0df); const ear = mesh(new T.ConeGeometry(.12, .32, 5), pet.color, side * .17, .91, .13, body); ear.rotation.z = side * -.15; ear.userData.petEar = side; const inner = mesh(new T.ConeGeometry(.055, .18, 5), 0xf5c3c5, side * .15, .88, .21, body); inner.rotation.z = side * -.15; inner.userData.petEar = side; for (const y of [.49, .56]) { const whisker = box(body, 0x8e7569, side * .24, y, .44, .2, .012, .012); whisker.rotation.z = side * (y < .52 ? .12 : -.12); } }
+    for (let i = 0; i < 5; i++) { const segment = ball(tailRoot, i % 2 ? 0x8a6654 : pet.color, .04, .03 + i * .035, -.18 - i * .13, .105 - i * .009, .1, .14); segment.rotation.x = -.08 * i; }
+    for (const side of [-1, 1]) box(body, 0x795c4e, side * .12, .78, .28, .045, .19, .025).rotation.z = side * -.22;
+    const collar = mesh(new T.TorusGeometry(.2, .024, 5, 16), 0x7cc5ac, 0, .47, .19, body); collar.rotation.x = Math.PI / 2; ball(body, 0xffd96a, 0, .39, .42, .065).userData.petCharm = true;
+  } else if (id === 3) { // 별부엉이 루루: 얼굴 원반, 겹날개, 달 장식
+    ball(body, pet.color, 0, .4, 0, .37, .39, .34); ball(body, 0xb7a4d1, 0, .65, .16, .34, .3, .27);
+    for (const side of [-1, 1]) { ball(body, 0xf1d38b, side * .135, .65, .38, .145, .165, .045); eye(side, .13, .68, .42, 0x3f3452, 1.15); const wing = new T.Group(); wing.position.set(side * .3, .39, -.01); wing.rotation.z = side * .35; wing.userData.petWing = side; body.add(wing); for (let i = 0; i < 3; i++) ball(wing, i === 2 ? 0x806aa4 : 0xa08cc1, side * i * .04, -.08 * i, -.03 * i, .18 - i * .018, .25 - i * .025, .07); const tuft = mesh(new T.ConeGeometry(.075, .22, 5), 0xc5addb, side * .12, .94, .08, body); tuft.rotation.z = side * -.18; tuft.userData.petEar = side; ball(body, 0x5d526c, side * .18, .13, .15, .085, .055, .12); }
+    const beak = mesh(new T.ConeGeometry(.065, .18, 5), 0xf2b85e, 0, .52, .45, body); beak.rotation.x = Math.PI / 2;
+    for (let row = 0; row < 2; row++) for (let i = -1; i <= 1; i++) ball(body, 0xe7d8ff, i * .11 + row * .055, .35 - row * .11, .32, .05, .075, .025);
+    ball(tailRoot, 0x806aa4, 0, .01, -.25, .18, .24, .17); const moon = mesh(new T.TorusGeometry(.13, .035, 5, 14, Math.PI * 1.45), 0xffe789, .26, .88, .22, body); moon.rotation.z = -.4;
+  } else if (id === 4) { // 아기용 베리링: 배 비늘, 작은 날개, 뿔과 긴 꼬리
+    ball(body, pet.color, 0, .34, -.02, .38, .32, .43); ball(body, 0x82cba0, 0, .63, .2, .3, .27, .29); ball(body, 0xcff0b7, 0, .32, .36, .19, .25, .055);
+    for (let i = 0; i < 3; i++) ball(body, 0xe5f4b2, 0, .25 + i * .13, .4, .12 - i * .012, .045, .02);
+    ball(body, 0xa4d7a8, 0, .57, .43, .16, .105, .08); ball(body, 0xffdf77, 0, .58, .49, .06, .04, .025);
+    for (const side of [-1, 1]) { eye(side, .11, .69, .43, 0x365b4a, 1.08); cheek(side, .22, .56, .4, 0xf0a8a3); paw(side, 0xa8dcae); const horn = mesh(new T.ConeGeometry(.075, .25, 5), 0xd5ef9a, side * .14, .94, .12, body); horn.rotation.z = side * -.12; horn.userData.petEar = side; const wing = new T.Group(); wing.position.set(side * .3, .43, -.16); wing.rotation.z = side * .5; wing.userData.petWing = side; body.add(wing); const upper = mesh(new T.CircleGeometry(.2, 10), 0xbff0d5, 0, .06, 0, wing); upper.scale.y = 1.35; const lower = mesh(new T.CircleGeometry(.15, 10), 0x9edab9, side * .08, -.13, .01, wing); lower.scale.y = 1.2; }
+    for (let i = 0; i < 5; i++) { ball(tailRoot, 0x75bd91, 0, .03 + i * .025, -.22 - i * .13, .15 - i * .015, .12 - i * .01, .16); if (i < 4) mesh(new T.ConeGeometry(.045, .13, 5), 0xd5ef9a, 0, .16, -.22 - i * .13, tailRoot); }
+  } else if (id === 5) { // 꿀벌 몽이: 줄무늬 몸, 네 장 날개, 꽃 왕관
+    ball(body, 0xf2c94c, 0, .38, -.05, .38, .31, .44); ball(body, 0xf6d95e, 0, .67, .21, .28, .25, .25);
+    for (const z of [-.28, -.04, .18]) box(body, 0x51463d, 0, .36, z, .7, .07, .12);
+    ball(body, 0xffe4a1, 0, .57, .42, .16, .12, .055); ball(body, 0x6f4a31, 0, .58, .465, .05, .035, .025);
+    for (const side of [-1, 1]) { eye(side, .105, .71, .42, 0x443a35, 1.08); cheek(side, .2, .58, .39, 0xf1a6a0); const antenna = cylinder(body, 0x4b4036, side * .1, .94, .12, .018, .025, .28, 5); antenna.rotation.z = side * -.28; antenna.userData.petEar = side; ball(body, 0x4b4036, side * .16, 1.05, .12, .05); for (let wingIndex = 0; wingIndex < 2; wingIndex++) { const wing = mesh(new T.CircleGeometry(wingIndex ? .16 : .23, 10), wingIndex ? 0xd9f3ed : 0xfff2c5, side * (.27 + wingIndex * .09), .53 - wingIndex * .18, -.09, body); wing.scale.y = wingIndex ? 1.25 : 1.5; wing.rotation.z = side * (.5 + wingIndex * .12); wing.userData.petWing = side; } for (let leg = 0; leg < 3; leg++) { const tinyLeg = cylinder(body, 0x5a4a3f, side * (.2 + leg * .04), .2 + leg * .06, .02 - leg * .11, .012, .015, .22, 5); tinyLeg.rotation.z = side * -.62; } }
+    const stinger = mesh(new T.ConeGeometry(.06, .2, 5), 0x51463d, 0, .34, -.48, body); stinger.rotation.x = -Math.PI / 2;
+    for (let i = 0; i < 5; i++) ball(body, i % 2 ? 0xffffff : 0xffdf64, Math.cos(i * 1.26) * .18, .91 + Math.sin(i * 1.26) * .14, .08, .055); ball(body, 0x9a6d42, 0, .91, .09, .06);
+  } else { // 해바라기 여우: 큰 꽃꼬리, 흰 가슴털, 검은 발끝
+    ball(body, pet.color, 0, .34, -.02, .37, .31, .42); ball(body, 0xedae68, 0, .65, .19, .3, .27, .29);
+    ball(body, 0xffedda, 0, .5, .41, .18, .14, .06); ball(body, 0x4d4138, 0, .54, .465, .055, .04, .025); ball(body, 0xffedda, 0, .3, .38, .16, .22, .05);
+    for (const side of [-1, 1]) { eye(side, .11, .7, .43, 0x44392f, 1.08); cheek(side, .22, .57, .4, 0xf2a3a0); paw(side, 0x55473c); const ear = mesh(new T.ConeGeometry(.14, .4, 5), pet.color, side * .18, .97, .12, body); ear.rotation.z = side * -.18; ear.userData.petEar = side; const inner = mesh(new T.ConeGeometry(.065, .23, 5), 0xf4b0a1, side * .16, .93, .2, body); inner.rotation.z = side * -.18; inner.userData.petEar = side; }
+    for (let i = 0; i < 6; i++) ball(tailRoot, i < 4 ? pet.color : 0xffedda, .08 * Math.sin(i * .55), .03 + i * .06, -.18 - i * .14, .2 - i * .012, .18, .2);
+    ball(body, 0x8c6744, .23, .88, .16, .12); for (let i = 0; i < 10; i++) ball(body, i % 2 ? 0xffdf55 : 0xf6bd3f, .23 + Math.cos(i * Math.PI / 5) * .18, .88 + Math.sin(i * Math.PI / 5) * .18, .14, .055, .09, .04);
+    for (let i = 0; i < 5; i++) ball(body, i % 2 ? 0xf6cb45 : 0xe5a344, Math.cos(i * 1.26) * .22, .38 + Math.sin(i * 1.26) * .19, -.37, .1, .13, .08);
+  }
+  // 작은 여행 가방과 빛나는 이름표는 모든 펫의 공통 모험 장비입니다.
+  if (id !== 2) { const collar = mesh(new T.TorusGeometry(.2, .024, 5, 16), id > 2 ? 0xbbeeff : 0xf4d478, 0, .48, .18, body); collar.rotation.x = Math.PI / 2; }
+  box(body, 0x9b7653, -.31, .34, -.09, .18, .23, .1); const charm = mesh(new T.OctahedronGeometry(.065), id > 2 ? 0xbbeeff : 0xffd788, 0, .38, .44, body); charm.userData.petCharm = true;
   g.position.set(-1.05, .02, -.7); g.userData.petModel = true; g.userData.petBody = body; return g;
 }
 
@@ -605,7 +643,13 @@ export class World {
       if (o.userData.ridePropeller) o.rotation.z += dt * 11;
       if (o.userData.rideGlow) { o.rotation.z += dt * .9; o.scale.setScalar(1 + Math.sin(this.time * 3.5) * .09); }
     }
-    if (this.petModel) this.petModel.traverse(o => { if (o.userData.petCharm) { o.rotation.y += dt * 3; const pulse = 1 + Math.sin(this.time * 6) * .12; o.scale.setScalar(pulse); } if (o.userData.petWing) o.rotation.z = Number(o.userData.petWing) * (.35 + Math.sin(this.time * 11) * .18); });
+    if (this.petModel) this.petModel.traverse(o => {
+      if (o.userData.petCharm) { o.rotation.y += dt * 3; const pulse = 1 + Math.sin(this.time * 6) * .12; o.scale.setScalar(pulse); }
+      if (o.userData.petWing) o.rotation.z = Number(o.userData.petWing) * (.38 + Math.sin(this.time * 11) * .2);
+      if (o.userData.petEar) o.rotation.z = Number(o.userData.petEar) * (-.14 + Math.sin(this.time * 2.8 + Number(o.userData.petEar)) * .035);
+      if (o.userData.petTail) o.rotation.y = Math.sin(this.time * 4.6 + Number(o.userData.petTail)) * .36;
+      if (o.userData.petPaw) o.rotation.z = Number(o.userData.petPaw) * (.08 + Math.sin(this.time * 8 + Number(o.userData.petPaw)) * .08);
+    });
     if (this.player.userData.sparkles) this.player.userData.sparkles.rotation.y += dt;
     for (let i = this.particles.length - 1; i >= 0; i--) { const q = this.particles[i]; q.life -= dt; q.v.y -= dt * 5; q.mesh.position.addScaledVector(q.v, dt); q.mesh.scale.setScalar(Math.max(0, q.life)); if (q.life <= 0) { this.scene.remove(q.mesh); this.particles.splice(i, 1); } }
     const target = this.active ? p : this.cameraTarget.set(0, 0, -1); this.follow.lerp(target, 1 - Math.exp(-dt * 3));
