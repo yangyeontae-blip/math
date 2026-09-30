@@ -21,20 +21,23 @@ test('all multiplication stage pools follow the fixed curriculum', () => {
       if (stage === 4) assert.equal(q.dividend % 10, 0);
       if (stage === 5) assert.equal(multiplicationHasCarrying(q.dividend, q.divisor), false);
       if (stage >= 6 && stage <= 8) assert.equal(multiplicationHasCarrying(q.dividend, q.divisor), true);
-      if (stage === 9) { assert.ok(q.dividend >= 100 && q.dividend <= 399); assert.ok(q.divisor >= 2 && q.divisor <= 9); }
-      if (stage === 10) { assert.ok(q.dividend >= 11 && q.dividend <= 99); assert.ok(q.divisor >= 11 && q.divisor <= 29); }
+      if (stage === 9) { assert.ok(q.dividend >= 100 && q.dividend <= 299); assert.ok(q.divisor >= 2 && q.divisor <= 6); }
+      if (stage === 10) { assert.ok(q.dividend >= 11 && q.dividend <= 49); assert.ok(q.divisor >= 11 && q.divisor <= 19); }
     }
   }
   const review = multiplicationQuestionPool(10, false, true);
   assert.ok(review.every(q => q.dividend <= 9 && q.divisor <= 9));
   assert.ok(multiplicationQuestionPool(10, true).every(q => q.dividend <= 9));
+  assert.equal(multiplicationHasCarrying(12, 3), false);
+  assert.equal(multiplicationHasCarrying(42, 3), true);
+  assert.equal(multiplicationHasCarrying(28, 3), true);
 });
 
 test('pickers and encounters accept four-digit multiplication answers', () => {
   for (let i = 0; i < 100; i++) assert.equal(pickMultiplicationQuestion(10).operation, 'multiplication');
   const encounter = new Encounter(0, false, 1, undefined, 10, 0, 'multiplication');
-  encounter.question = { dividend: 399, divisor: 9, answer: 3591, operation: 'multiplication' };
-  assert.equal(encounter.answer('359'), 'wrong'); assert.equal(encounter.answer('3591'), 'correct'); assert.equal(encounter.answer('3591'), 'ignored');
+  encounter.question = { dividend: 299, divisor: 6, answer: 1794, operation: 'multiplication' };
+  assert.equal(encounter.answer('179'), 'wrong'); assert.equal(encounter.answer('1794'), 'correct'); assert.equal(encounter.answer('1794'), 'ignored');
 });
 
 test('late stages mix about 30 percent review questions and every third monster tells a story', () => {

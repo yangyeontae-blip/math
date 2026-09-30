@@ -211,8 +211,8 @@ export function recordWrongAnswer(s: Save, q: Question) {
   if (!s.learning.wrongQuestions.some(item => `${item.operation ?? 'division'}:${item.dividend}/${item.divisor}/${item.remainder ?? 0}` === key)) s.learning.wrongQuestions.unshift({ ...q, operation: q.operation ?? 'division' });
   s.learning.wrongQuestions = s.learning.wrongQuestions.slice(0, 30);
 }
-export function recordCorrectAnswer(s: Save, monster: number) {
-  s.learning.correct++;
+export function recordCorrectAnswer(s: Save, monster: number, countLearning = true) {
+  if (countLearning) s.learning.correct++;
   if (!s.discoveries.monsters.includes(monster)) s.discoveries.monsters.push(monster);
 }
 export const STAGE_STORIES = ['새싹 슬라임과 인사하고 들판의 봄빛을 되찾아요.', '버섯 요정의 길 안내를 받아 오솔길을 밝혀요.', '벚꽃 언덕에 흩어진 꽃잎 축제를 도와요.', '호숫가 친구들과 반짝이는 물길을 지켜요.', '도토리 정령과 숲의 가을 잔치를 준비해요.', '구름 정원의 바람 종을 다시 울려요.', '수정숲의 별빛 조각을 모아 길을 비춰요.', '눈꽃 산책길에 따뜻한 발자국을 남겨요.', '옛터의 돌기둥에 숨은 이야기를 찾아요.', '꽃섬 친구들과 무지개 축제를 열어요.'] as const;
@@ -233,25 +233,40 @@ export function finishHunt(s: Save, id: number) {
 export function questionPool(level: number, stage = 0, maxDividend: 0 | 90 | 180 = 0): Question[] {
   const result: Question[] = [];
   const step = Math.min(10, Math.max(0, stage));
-  let minDividend = 10, dividendLimit = step === 0 ? (level < 4 ? 90 : level < 7 ? 120 : 180) : step <= 3 ? 90 : step === 4 ? 99 : step === 5 ? 300 : step === 6 ? 500 : step === 7 ? 99 : step === 8 ? 500 : step === 9 ? 700 : 999;
-  if (step >= 5 && step !== 7) minDividend = 100;
-  if (maxDividend === 90) { minDividend = 10; dividendLimit = 90; }
-  if (maxDividend === 180) { minDividend = Math.min(minDividend, 100); dividendLimit = 180; }
-  const multiplesOfTenOnly = step <= 3 && maxDividend !== 180;
+  const stageLimits = [0, 90, 90, 99, 99, 299, 499, 99, 299, 599, 999];
+  const stageMaxAnswers = [0, 9, 12, 20, 30, 99, 150, 30, 99, 199, 250];
+  let minDividend = step >= 5 && step !== 7 ? 100 : 10;
+  let dividendLimit = step === 0 ? (level < 4 ? 90 : level < 7 ? 120 : 180) : stageLimits[step];
+  if (maxDividend) {
+    dividendLimit = Math.min(dividendLimit, maxDividend);
+    if (minDividend > dividendLimit) minDividend = 10;
+  }
+  const multiplesOfTenOnly = step === 0 || step <= 2;
   const remainderOnly = step === 7 || step === 8 || step === 9;
-  const maxAnswer = step > 0 && step <= 3 ? STAGE_DIVISION_DIFFICULTY[step - 1].maxAnswer : step === 0 && level < 4 ? 9 : Number.POSITIVE_INFINITY;
+  const exactOnly = step === 0 || step <= 6;
+  const maxAnswer = step > 0 ? stageMaxAnswers[step] : level < 4 ? 9 : Number.POSITIVE_INFINITY;
   for (let n = minDividend; n <= dividendLimit; n++) {
     if (multiplesOfTenOnly && n % 10 !== 0) continue;
     for (let d = 2; d <= 9; d++) {
       const answer = Math.floor(n / d), remainder = n % d;
       if (!answer || answer > maxAnswer || (remainderOnly && remainder === 0)) continue;
-      if (step <= 6 && remainder !== 0) continue;
+      if (exactOnly && remainder !== 0) continue;
       result.push({ dividend: n, divisor: d, answer, remainder, operation: 'division' });
     }
   }
   return result;
 }
-export function multiplicationHasCarrying(left: number, right: number) { return left % 10 * right >= 10; }
+export function multiplicationCarryCount(left: number, right: number) {
+  let value = left, carry = 0, count = 0;
+  while (value > 0) {
+    const product = value % 10 * right + carry;
+    if (product >= 10) count++;
+    carry = Math.floor(product / 10);
+    value = Math.floor(value / 10);
+  }
+  return count;
+}
+export function multiplicationHasCarrying(left: number, right: number) { return multiplicationCarryCount(left, right) > 0; }
 function multiplicationRange(stage: number, review = false) {
   if (review) return { min: 2, max: 9, rightMin: 2, rightMax: 9, tables: true, carry: null as boolean | null };
   if (stage <= 1) return { min: 2, max: 5, rightMin: 2, rightMax: 5, tables: true, carry: null };
@@ -260,9 +275,10 @@ function multiplicationRange(stage: number, review = false) {
   if (stage === 4) return { min: 10, max: 90, rightMin: 2, rightMax: 9, tens: true, carry: null };
   if (stage === 5) return { min: 11, max: 49, rightMin: 2, rightMax: 4, carry: false };
   if (stage === 6) return { min: 11, max: 49, rightMin: 2, rightMax: 4, carry: true };
-  if (stage <= 8) return { min: 11, max: 79, rightMin: 2, rightMax: 6, carry: true };
-  if (stage === 9) return { min: 100, max: 399, rightMin: 2, rightMax: 9, carry: null };
-  return { min: 11, max: 99, rightMin: 11, rightMax: 29, carry: null };
+  if (stage === 7) return { min: 11, max: 59, rightMin: 2, rightMax: 5, carry: true };
+  if (stage === 8) return { min: 11, max: 79, rightMin: 2, rightMax: 6, carry: true };
+  if (stage === 9) return { min: 100, max: 299, rightMin: 2, rightMax: 6, carry: null };
+  return { min: 11, max: 49, rightMin: 11, rightMax: 19, carry: null };
 }
 export function multiplicationQuestionPool(stage = 1, tablesOnly = false, review = false): Question[] {
   const rule = multiplicationRange(tablesOnly ? 2 : Math.min(10, Math.max(1, stage)), review);
