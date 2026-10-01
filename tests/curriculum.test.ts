@@ -138,7 +138,7 @@ test('version 9 saves inherit an empty curriculum without losing previous progre
   old.version = 9; delete old.curriculum;
   const settings = old.settings as Record<string, unknown>; delete settings.focusUnit; delete settings.spiralReview;
   const restored = validateSave(old);
-  assert.equal(restored.version, 10);
+  assert.equal(restored.version, 11);
   assert.equal(restored.settings.focusUnit, 'all');
   assert.equal(restored.settings.spiralReview, true);
   assert.ok(NEW_CURRICULUM_UNITS.every(unit => restored.curriculum.units[unit].completedMissions.length === 0));
