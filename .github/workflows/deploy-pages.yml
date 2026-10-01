@@ -27,6 +27,8 @@ jobs:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - run: pnpm exec tsc --noEmit
+      - run: pnpm test
       - run: pnpm vite build --base=./
       - uses: actions/upload-pages-artifact@v5
         with:

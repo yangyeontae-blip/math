@@ -4,12 +4,37 @@ import worker from '../worker/index.js';
 
 class FakeDB {
   rows = [{ player_id: 'device-1234567890', nickname: '별이', completed: 7 }];
+  existing = null;
   writes = [];
   prepare(sql) {
     if (sql.includes('SELECT player_id')) return { all: async () => ({ results: this.rows }) };
+    if (sql.includes('WHERE player_id')) return { bind: () => ({ first: async () => this.existing }) };
     return { bind: (...values) => ({ run: async () => { this.writes.push(values); return { success: true }; } }) };
   }
 }
+
+const post = (body, ip = '1.1.1.1') => new Request('https://berry.example/api/rankings', { method: 'POST', headers: { 'content-type': 'application/json', 'cf-connecting-ip': ip }, body: JSON.stringify(body) });
+
+test('ranking worker clamps impossible jumps and rejects bad nicknames', async () => {
+  const db = new FakeDB();
+  let response = await worker.fetch(post({ playerId: 'device-1234567890', nickname: '장난꾸러기', completed: 99999 }, '2.2.2.2'), { DB: db });
+  assert.equal(response.status, 200); assert.equal((await response.json()).completed, 30); assert.equal(db.writes[0][2], 30);
+  db.existing = { completed: 10, updated_at: new Date().toISOString().replace('T', ' ').slice(0, 19) };
+  response = await worker.fetch(post({ playerId: 'device-1234567890', nickname: '장난꾸러기', completed: 500 }, '2.2.2.3'), { DB: db });
+  assert.equal(db.writes[1][2], 13);
+  db.existing = { completed: 10, updated_at: new Date(Date.now() - 2 * 3_600_000).toISOString().replace('T', ' ').slice(0, 19) };
+  await worker.fetch(post({ playerId: 'device-1234567890', nickname: '장난꾸러기', completed: 500 }, '2.2.2.4'), { DB: db });
+  assert.equal(db.writes[2][2], 25);
+  const before = db.writes.length;
+  response = await worker.fetch(post({ playerId: 'device-1234567890', nickname: '시 발', completed: 1 }, '2.2.2.5'), { DB: db });
+  assert.equal(response.status, 422); assert.equal(db.writes.length, before);
+});
+
+test('ranking worker rate limits repeated writes from one address', async () => {
+  const db = new FakeDB(); const statuses = [];
+  for (let i = 0; i < 12; i++) statuses.push((await worker.fetch(post({ playerId: 'device-1234567890', nickname: '별이', completed: 1 }, '9.9.9.9'), { DB: db })).status);
+  assert.deepEqual(statuses.slice(0, 10), Array(10).fill(200)); assert.deepEqual(statuses.slice(10), [429, 429]);
+});
 
 test('ranking worker reads top scores and marks this device without exposing ids', async () => {
   const db = new FakeDB();

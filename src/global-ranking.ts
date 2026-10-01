@@ -1,6 +1,9 @@
+import { isBlockedNickname } from './nickname';
+
 export type GlobalRank = { rank: number; nickname: string; completed: number; isMine: boolean };
 
-const API_ORIGIN = 'https://berry-forest-school.yangyeontae.chatgpt.site';
+// 랭킹 서버를 다른 곳으로 옮기면 빌드 때 VITE_RANKING_API=https://새-주소 로 지정해요(워커의 allowedOrigins에도 게임 주소를 넣어야 해요).
+const API_ORIGIN = (import.meta.env?.VITE_RANKING_API as string | undefined)?.replace(/\/+$/, '') || 'https://berry-forest-school.yangyeontae.chatgpt.site';
 const PLAYER_ID_KEY = 'berry-forest-global-player-id-v1';
 const SYNC_KEY = 'berry-forest-global-rank-synced-v1';
 
@@ -47,7 +50,7 @@ export async function loadGlobalRanks(playerId: string) {
 
 export async function syncGlobalRank(storage: Pick<Storage, 'getItem' | 'setItem'>, playerId: string, nickname: string, completed: number) {
   const signature = JSON.stringify([nickname.trim(), completed]);
-  if (completed > 0 && storage.getItem(SYNC_KEY) !== signature) {
+  if (completed > 0 && !isBlockedNickname(nickname) && storage.getItem(SYNC_KEY) !== signature) {
     await request('/api/rankings', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ playerId, nickname, completed }) });
     storage.setItem(SYNC_KEY, signature);
   }

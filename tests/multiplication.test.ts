@@ -1,3 +1,4 @@
+import { sha256Hex } from '../src/sha256';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
@@ -77,7 +78,7 @@ test('version 7 saves become division progress and teacher mode previews everyth
   const settings = old.settings as Record<string, unknown>; delete settings.multiplicationRange;
   const migrated = validateSave(old); assert.equal(migrated.version, 12); assert.equal(migrated.forest, 'division'); assert.equal(migrated.multiplicationJourney.maps[1].cleared, false);
   assert.deepEqual(migrated.potions, { stock: [0, 0, 0], berryMultiplier: 1, berryUntil: 0, xpMultiplier: 1, xpUntil: 0 });
-  applyTeacherCode(migrated, 'teacher');
+  applyTeacherCode(migrated, 'teacher', sha256Hex('teacher'));
   assert.equal(canEnter(migrated, 10, 'multiplication'), true); assert.equal(migrated.multiplicationCompleted, true); assert.equal(migrated.multiplicationRewardClaimed, true);
   assert.equal(Object.keys(migrated.weapons).length, WEAPONS.length); assert.equal(Object.keys(migrated.outfits).length, OUTFITS.length); assert.equal(Object.keys(migrated.rides).length, RIDES.length); assert.equal(Object.keys(migrated.pets).length, PETS.length); assert.equal(Object.keys(migrated.hairstyles).length, HAIRSTYLES.length); assert.equal(Object.keys(migrated.faces).length, FACES.length);
 });
