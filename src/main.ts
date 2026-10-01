@@ -891,7 +891,10 @@ setInterval(() => {
   persist();
 }, 1000); window.addEventListener('pagehide', persist); document.addEventListener('visibilitychange', () => { if (document.hidden) persist(); });
 
-if ((import.meta as unknown as { env?: { DEV?: boolean } }).env?.DEV) Object.assign(window, { __berry: { openArena, beginHuntBattle, openStageMap, openSettings, openDaily, openInventory, switchStage, getState: () => state } });
+if ((import.meta as unknown as { env?: { DEV?: boolean } }).env?.DEV) {
+  const devApi = { openArena, beginHuntBattle, openStageMap, openSettings, openDaily, openInventory, openShop, openPetShop, openGuide, openNotebook, openRoom, openCurriculumUnit, switchStage, refresh, getState: () => state };
+  Object.assign(window, { __berry: devApi }); void import('./dev-audit').then(module => module.installAudit(devApi as never));
+}
 
 // Optional browser agent access uses the same visible settings flow and state.
 const context = (document as Document & { modelContext?: { registerTool: (tool: unknown, options?: unknown) => Promise<void> | void } }).modelContext;

@@ -375,7 +375,7 @@ export class World {
     const touchDevice = matchMedia('(pointer: coarse)').matches;
     this.renderer = new T.WebGLRenderer({ antialias: !touchDevice, alpha: false, powerPreference: 'high-performance' }); this.renderer.setPixelRatio(Math.min(devicePixelRatio, touchDevice ? 1 : 1.25)); this.renderer.shadowMap.enabled = true; this.renderer.shadowMap.type = T.PCFSoftShadowMap; this.renderer.outputColorSpace = T.SRGBColorSpace; this.renderer.toneMapping = T.ACESFilmicToneMapping; this.renderer.toneMappingExposure = 1.35; container.append(this.renderer.domElement);
     this.camera = new T.OrthographicCamera(-18, 18, 14, -14, .1, 140);
-    this.scene.add(new T.HemisphereLight(0xf3fff0, 0x688451, 2.35)); this.sun = new T.DirectionalLight(0xffedcf, 2.8); this.sun.position.set(-15, 30, 15); this.sun.castShadow = true; this.sun.shadow.mapSize.set(1024, 1024); Object.assign(this.sun.shadow.camera, { left: -34, right: 34, top: 32, bottom: -30, far: 85 }); this.sun.shadow.normalBias = .06; this.scene.add(this.sun);
+    this.scene.add(new T.HemisphereLight(0xfff9e6, 0x74905a, 2.35)); this.sun = new T.DirectionalLight(0xffedcf, 2.8); this.sun.position.set(-15, 30, 15); this.sun.castShadow = true; this.sun.shadow.mapSize.set(1024, 1024); Object.assign(this.sun.shadow.camera, { left: -34, right: 34, top: 32, bottom: -30, far: 85 }); this.sun.shadow.normalBias = .06; this.scene.add(this.sun);
     const fill = new T.DirectionalLight(0xd8f3ff, .7); fill.position.set(18, 12, -14); this.scene.add(fill);
     this.labelLayer = document.createElement('div'); this.labelLayer.className = 'world-labels'; container.append(this.labelLayer);
     this.buildVillage(); this.setAvatar(0, 0, 0); this.player.position.set(0, 0, 8); this.scene.add(this.player);
