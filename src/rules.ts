@@ -517,7 +517,7 @@ export function usePotion(s: Save, id: number, now = Date.now()) {
   return `${potion.name}을(를) 사용했어요. ${potion.durationMinutes}분 동안 효과가 있어요!`;
 }
 /** 교사용 코드의 SHA-256. 코드 자체는 저장소에 두지 않아요(공개 저장소라 학생이 읽을 수 있어요). */
-export const TEACHER_CODE_HASH = '25145a1d15b7327594932f6263382b362f78a64a78fdb3495f64fd63551dea70';
+export const TEACHER_CODE_HASH = '1057a9604e04b274da5a4de0c8f4b4868d9b230989f8c8c6a28221143cc5a755';
 export function enableTeacherMode(s: Save, code: string, teacherHash = TEACHER_CODE_HASH): string {
   return applyTeacherCode(s, code, teacherHash);
 }

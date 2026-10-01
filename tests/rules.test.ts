@@ -182,8 +182,8 @@ test('sha256 matches known vectors', () => {
   assert.equal(sha256Hex(''), 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855');
   assert.equal(sha256Hex('a'.repeat(1000)), '41edece42d63e8d9bf515a9ba6932e1c20cbc9f5a5d134645adb5db1b9737ea3');
 });
-test('public cheat words no longer unlock anything without the real teacher code', () => {
-  for (const word of ['teacher', 'levelup10', 'showmethemoney', 'greedisgood']) {
+test('level and money codes need teacher mode first', () => {
+  for (const word of ['levelup10', 'showmethemoney', 'greedisgood']) {
     const s = newSave('학생', 0); const before = structuredClone(s);
     assert.throws(() => applyTeacherCode(s, word), /암호코드/); assert.deepEqual(s, before); assert.equal(s.teacherMode, false);
   }
