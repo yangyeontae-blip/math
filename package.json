@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite --host 127.0.0.1",
-    "build": "tsc --noEmit && vite build && node scripts/build-worker.mjs && node --check dist/server/index.js",
+    "build": "tsc --noEmit && vite build && node scripts/copy-legal.mjs && node scripts/build-worker.mjs && node --check dist/server/index.js",
     "test": "tsx --test tests/*.test.ts tests/*.test.mjs",
     "db:generate": "drizzle-kit generate"
   },
