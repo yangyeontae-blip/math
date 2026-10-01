@@ -54,3 +54,40 @@ test('ranking worker validates and writes an anonymous best score', async () => 
   const bad = await worker.fetch(new Request('https://berry.example/api/rankings', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ playerId: 'short', nickname: '<아이>', completed: -1 }) }), { DB: db });
   assert.equal(bad.status, 400); assert.equal(db.writes.length, 1);
 });
+
+class FakeBossDB {
+  rows = new Map();
+  prepare(sql) {
+    const rows = this.rows;
+    return { bind: (...v) => ({
+      first: async () => {
+        if (sql.includes('COUNT(*)')) { const mine = [...rows.values()].filter(r => r.class_code === v[0] && r.week === v[1]); return { members: mine.length, damage: mine.reduce((s, r) => s + r.damage, 0) }; }
+        return rows.get(v.join('|')) ?? null;
+      },
+      run: async () => { const key = v.slice(0, 3).join('|'), old = rows.get(key); rows.set(key, { class_code: v[0], week: v[1], player_id: v[2], damage: Math.max(v[3], old?.damage ?? 0), updated_at: new Date().toISOString().replace('T', ' ').slice(0, 19) }); return { success: true }; },
+    }) };
+  }
+}
+const bossPost = (body, ip) => new Request('https://berry.example/api/boss', { method: 'POST', headers: { 'content-type': 'application/json', 'cf-connecting-ip': ip }, body: JSON.stringify(body) });
+
+test('boss api pools damage per class and week, clamps jumps and hides nothing personal', async () => {
+  const db = new FakeBossDB();
+  let res = await worker.fetch(bossPost({ classCode: '3반', playerId: 'device-aaaaaaaaaaaa', damage: 40 }, '5.5.5.1'), { DB: db });
+  assert.equal(res.status, 200); let body = await res.json();
+  assert.equal(body.members, 1); assert.equal(body.damage, 40); assert.equal(body.maxHp, 300); assert.equal(body.defeated, false); assert.equal(body.mine, 40);
+  res = await worker.fetch(bossPost({ classCode: '3반', playerId: 'device-bbbbbbbbbbbb', damage: 99999 }, '5.5.5.2'), { DB: db }); body = await res.json();
+  assert.equal(body.members, 2); assert.equal(body.mine, 100); assert.equal(body.damage, 140); assert.equal(body.maxHp, 400);
+  res = await worker.fetch(new Request('https://berry.example/api/boss?class=3%EB%B0%98&player_id=device-aaaaaaaaaaaa', { headers: { origin: 'https://yangyeontae-blip.github.io' } }), { DB: db }); body = await res.json();
+  assert.equal(res.status, 200); assert.equal(body.mine, 40); assert.deepEqual(Object.keys(body).sort(), ['classCode', 'damage', 'defeated', 'maxHp', 'members', 'mine', 'week']);
+  const other = await (await worker.fetch(new Request('https://berry.example/api/boss?class=other'), { DB: db })).json(); assert.equal(other.members, 0); assert.equal(other.damage, 0);
+});
+
+test('boss api rejects bad input and reports a missing table as unavailable', async () => {
+  const db = new FakeBossDB();
+  for (const body of [{ classCode: 'a', playerId: 'device-aaaaaaaaaaaa', damage: 1 }, { classCode: '3반', playerId: 'short', damage: 1 }, { classCode: '3반', playerId: 'device-aaaaaaaaaaaa', damage: -1 }]) {
+    assert.equal((await worker.fetch(bossPost(body, '6.6.6.1'), { DB: db })).status, 400);
+  }
+  assert.equal((await worker.fetch(new Request('https://berry.example/api/boss?class=x'), { DB: db })).status, 400);
+  const broken = { prepare() { throw new Error('no such table: boss_progress'); } };
+  assert.equal((await worker.fetch(new Request('https://berry.example/api/boss?class=3%EB%B0%98'), { DB: broken })).status, 503);
+});
