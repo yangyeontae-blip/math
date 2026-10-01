@@ -1,5 +1,5 @@
 import * as T from 'three';
-import { CHARACTERS, MONSTERS, OUTFITS, PETS, RIDES, WEAPONS, PLAYER_MOVE_SPEED, petChaseSpeed, journeyFor, type ForestKind, type Save } from './rules';
+import { CHARACTERS, MONSTERS, OUTFITS, PETS, RIDES, WEAPONS, PLAYER_MOVE_SPEED, petChaseSpeed, riderHeight, journeyFor, type ForestKind, type Save } from './rules';
 import { STAGES, stageBerries, stageMonsters, stagePlatforms, stageTrees, stageSize, isVillagePond } from './stages';
 import { EXPEDITION_STAR_SPOTS, expeditionLayout } from './expedition';
 
@@ -221,12 +221,42 @@ function makeRide(id: number) {
     ball(g, 0xe4a24d, 0, .76, 0, .82, .52, .62); ball(g, 0xf1b967, 0, 1.12, .58, .43, .42, .43);
     for (let i = 0; i < 10; i++) ball(g, i % 2 ? 0xf4c947 : 0xe89b3e, Math.cos(i * .628) * .46, 1.14 + Math.sin(i * .628) * .46, .48, .14, .18, .1);
     for (const side of [-1, 1]) { const wing = mesh(new T.CircleGeometry(.52, 12), 0xffe6a0, side * .68, .95, -.08, g); wing.scale.y = 1.35; wing.rotation.z = side * -.55; wing.userData.rideWing = side; ball(g, 0x493b32, side * .14, 1.17, .95, .045, .06, .025); }
-  } else { // 꿀벌 하늘마차
+  } else if (id === 9) { // 꿀벌 하늘마차
     ball(g, 0xf0bd38, 0, .72, 0, .9, .48, .62); for (const z of [-.25, .1, .42]) box(g, 0x4f4338, 0, .72, z, .94, .1, .12);
     for (const side of [-1, 1]) { const wing = mesh(new T.CircleGeometry(.6, 12), 0xfff2c5, side * .7, 1.02, -.08, g); wing.scale.y = 1.4; wing.rotation.z = side * -.62; wing.userData.rideWing = side; ball(g, 0x3d3733, side * .16, 1.04, .74, .05, .065, .025); const antenna = cylinder(g, 0x4f4338, side * .16, 1.42, .5, .025, .03, .35, 6); antenna.rotation.z = side * -.3; }
+  } else if (id === 10) { // 반짝 킥보드: 낮은 발판, 긴 손잡이, 작은 바퀴 두 개
+    box(g, 0x67c7f2, 0, .2, 0, .42, .08, 1.15); box(g, 0xffffff, 0, .25, 0, .18, .02, .9);
+    for (const z of [-.5, .56]) { const wheel = cylinder(g, 0x4b4750, 0, .13, z, .13, .13, .1, 12); wheel.rotation.z = Math.PI / 2; ball(g, 0xffd56c, 0, .13, z, .04, .04, .06); }
+    const pole = cylinder(g, 0xe9eef2, 0, .58, .54, .026, .03, .86, 8); pole.rotation.x = -.12; box(g, 0x3f8fc2, 0, 1.0, .5, .56, .045, .045);
+    for (const side of [-1, 1]) ball(g, 0xff9a6c, side * .3, 1, .5, .055, .055, .09); ball(g, 0xfff1b0, 0, .88, .62, .06, .05, .03);
+  } else if (id === 11) { // 바람 자전거: 두 바퀴, 가는 프레임, 안장, 바구니
+    for (const z of [-.52, .52]) { const wheel = mesh(new T.TorusGeometry(.33, .035, 6, 20), 0x3c4a42, 0, .37, z, g); wheel.rotation.y = Math.PI / 2; ball(g, 0xdfe7e3, 0, .37, z, .05, .05, .05); }
+    box(g, 0x7ccf88, 0, .52, .06, .06, .06, .95); const down = box(g, 0x62b872, 0, .45, -.12, .05, .05, .62); down.rotation.x = .55;
+    box(g, 0x7ccf88, 0, .6, -.3, .05, .3, .05); box(g, 0x7ccf88, 0, .6, .5, .05, .46, .05).rotation.x = -.18;
+    box(g, 0x8d6046, 0, .79, -.3, .24, .07, .32); box(g, 0x3c4a42, 0, .86, .5, .56, .05, .05);
+    for (const side of [-1, 1]) ball(g, 0xffd978, side * .3, .86, .5, .05, .05, .08);
+    box(g, 0xe7c88c, 0, .66, .72, .34, .2, .22); ball(g, 0xff7f8e, 0, .8, .72, .08);
+  } else if (id === 12) { // 번개 오토바이: 굵은 바퀴, 연료통, 전조등, 배기관
+    for (const z of [-.66, .66]) { const wheel = cylinder(g, 0x2f2c33, 0, .36, z, .36, .36, .2, 14); wheel.rotation.z = Math.PI / 2; const hub = cylinder(g, 0xd7dadf, 0, .36, z, .17, .17, .24, 10); hub.rotation.z = Math.PI / 2; }
+    box(g, 0x3b3b44, 0, .52, .02, .34, .3, 1.0); ball(g, 0xe0524e, 0, .82, .2, .22, .17, .34); ball(g, 0xf06a63, 0, .86, .3, .12, .06, .18);
+    box(g, 0x2a2a31, 0, .76, -.32, .3, .1, .55); box(g, 0xe0524e, 0, .62, -.7, .28, .05, .3);
+    const fork = box(g, 0xc7ccd3, 0, .6, .56, .08, .62, .08); fork.rotation.x = -.35; cylinder(g, 0x2a2a31, 0, 1.0, .46, .03, .03, .78, 8).rotation.z = Math.PI / 2;
+    ball(g, 0xfff4b0, 0, .92, .72, .12, .12, .08); const exhaust = cylinder(g, 0xb8bdc6, .24, .3, -.4, .06, .08, .7, 8); exhaust.rotation.x = Math.PI / 2;
+    for (const side of [-1, 1]) ball(g, 0xffffff, side * .38, 1, .46, .05, .05, .08);
+  } else { // 황금별 스포츠카: 낮은 차체, 오픈 운전석, 황금 줄무늬, 날개, 네 바퀴
+    box(g, 0x2b3a67, 0, .34, 0, 1.2, .32, 2.2); box(g, 0x34477c, 0, .54, .78, 1.1, .16, .66); box(g, 0x34477c, 0, .54, -.88, 1.1, .16, .42);
+    for (const side of [-1, 1]) { box(g, 0x2b3a67, side * .56, .62, -.1, .08, .3, 1.1); box(g, 0xf3c43f, side * .6, .45, 0, .03, .05, 2.05); }
+    box(g, 0xf3c43f, 0, .64, .78, .16, .02, .66); box(g, 0xf3c43f, 0, .64, -.88, .16, .02, .42);
+    box(g, 0xefe3c4, 0, .5, -.28, .72, .2, .5); const glass = box(g, 0xbfe6ff, 0, .74, .86, 1.0, .2, .035); glass.rotation.x = -.5;
+    for (const side of [-1, 1]) box(g, 0xf3c43f, side * .5, .68, .86, .04, .22, .04); ball(g, 0xf3c43f, 0, .65, 1.02, .07, .07, .03);
+    box(g, 0xf3c43f, 0, .56, 1.1, .8, .06, .05); for (const side of [-1, 1]) ball(g, 0xfff4b0, side * .38, .54, 1.1, .1, .08, .05);
+    for (const side of [-1, 1]) ball(g, 0xff5f6d, side * .4, .56, -1.1, .09, .07, .04);
+    for (const side of [-1, 1]) for (const z of [-.7, .72]) { const wheel = cylinder(g, 0x2b2830, side * .62, .31, z, .31, .31, .24, 16); wheel.rotation.z = Math.PI / 2; const hub = cylinder(g, 0xf3c43f, side * .64, .31, z, .16, .16, .26, 10); hub.rotation.z = Math.PI / 2; }
+    box(g, 0x1f2a4c, 0, 1.0, -1.08, 1.1, .05, .3); for (const side of [-1, 1]) box(g, 0xf3c43f, side * .4, .84, -1.0, .05, .3, .05);
+    const wheelRing = mesh(new T.TorusGeometry(.17, .025, 6, 14), 0x1f1f25, 0, .86, .3, g); wheelRing.rotation.x = -.8; ball(g, 0xf3c43f, 0, .86, .3, .045, .045, .03);
   }
-  // 모든 탈것에 같은 모험 안장을 더해, 캐릭터가 자연스럽게 타고 있다는 느낌을 만듭니다.
-  if (id !== 5) { box(g, 0x8d6046, 0, .92, -.05, .5, .12, .42); ball(g, 0xffd978, 0, .98, .12, .09); }
+  // 모든 탈것에 같은 모험 안장을 더해, 캐릭터가 자연스럽게 타고 있다는 느낌을 만듭니다. (킥보드·자전거·오토바이·자동차는 자체 좌석이 있어요.)
+  if (id !== 5 && id < 10) { box(g, 0x8d6046, 0, .92, -.05, .5, .12, .42); ball(g, 0xffd978, 0, .98, .12, .09); }
   if (ride.flying) { const glow = mesh(new T.TorusGeometry(.42, .025, 5, 16), 0xffec9f, 0, .25, 0, g); glow.rotation.x = Math.PI / 2; glow.userData.rideGlow = true; }
   return g;
 }
@@ -291,7 +321,7 @@ function makePet(id: number) {
     for (let i = 0; i < 6; i++) ball(tailRoot, i < 4 ? pet.color : 0xffedda, .08 * Math.sin(i * .55), .03 + i * .06, -.18 - i * .14, .2 - i * .012, .18, .2);
     ball(body, 0x8c6744, .23, .88, .16, .12); for (let i = 0; i < 10; i++) ball(body, i % 2 ? 0xffdf55 : 0xf6bd3f, .23 + Math.cos(i * Math.PI / 5) * .18, .88 + Math.sin(i * Math.PI / 5) * .18, .14, .055, .09, .04);
     for (let i = 0; i < 5; i++) ball(body, i % 2 ? 0xf6cb45 : 0xe5a344, Math.cos(i * 1.26) * .22, .38 + Math.sin(i * 1.26) * .19, -.37, .1, .13, .08);
-  } else { // 도토리 다람쥐 콩이: 도토리 모자, 볼주머니, 크게 말린 복슬 꼬리, 도토리 안은 앞발
+  } else if (id === 7) { // 도토리 다람쥐 콩이: 도토리 모자, 볼주머니, 크게 말린 복슬 꼬리, 도토리 안은 앞발
     ball(body, pet.color, 0, .33, -.02, .36, .32, .4); ball(body, pet.color, 0, .62, .18, .29, .27, .27); ball(body, 0xffe9c9, 0, .3, .37, .2, .22, .05);
     ball(body, 0xffe9c9, 0, .5, .4, .16, .13, .06); ball(body, 0x4d3a2e, 0, .54, .445, .05, .036, .024);
     for (const side of [-1, 1]) {
@@ -302,10 +332,22 @@ function makePet(id: number) {
     ball(body, 0x8a5a36, 0, .93, .14, .24, .1, .24); ball(body, 0xc99562, 0, .86, .14, .2, .06, .2); cylinder(body, 0x6b4a2d, 0, 1.03, .14, .012, .018, .09, 5);
     ball(body, 0x9a6a3c, 0, .28, .44, .07, .09, .07);
     for (let i = 0; i < 6; i++) ball(tailRoot, i < 4 ? pet.color : 0xffe2b8, 0, .08 + i * .12, -.1 - Math.sin(i * .5) * .2, .2 - i * .005, .17, .2);
+  } else { // 이신비의 별: 반짝이는 금빛 별 몸통, 졸린 듯 귀여운 얼굴, 별가루와 빛 고리
+    const k = .6, cy = .6;
+    const outline = new T.Shape();
+    for (let i = 0; i < 10; i++) { const radius = (i % 2 ? .3 : .68) * k, angle = Math.PI / 2 + i * Math.PI / 5, x = Math.cos(angle) * radius, y = Math.sin(angle) * radius; if (i === 0) outline.moveTo(x, y); else outline.lineTo(x, y); }
+    outline.closePath();
+    mesh(new T.ExtrudeGeometry(outline, { depth: .2, bevelEnabled: true, bevelThickness: .05, bevelSize: .045, bevelSegments: 2 }), pet.color, 0, cy, -.1, body);
+    ball(body, 0xffe27a, 0, cy, 0, .2, .2, .13); ball(body, 0xfffbe0, -.13, cy + .24, .16, .06, .03, .015);
+    for (const side of [-1, 1]) { eye(side, .08, cy + .04, .17, 0x6b4a1f, .95); cheek(side, .16, cy - .07, .165, 0xff9f8a); }
+    ball(body, 0x8a5a24, 0, cy - .09, .175, .035, .018, .012);
+    mesh(new T.TorusGeometry(.62, .012, 6, 40), 0xfff3b0, 0, cy, -.2, body);
+    for (let i = 0; i < 6; i++) { const sparkle = ball(body, i % 2 ? 0xffffff : 0xfff0a8, Math.cos(i * 1.05 + .4) * .6, cy + Math.sin(i * 1.05 + .4) * .52, -.1, .035); sparkle.userData.petCharm = true; }
   }
-  // 작은 여행 가방과 빛나는 이름표는 모든 펫의 공통 모험 장비입니다.
-  if (id !== 2) { const collar = mesh(new T.TorusGeometry(.2, .024, 5, 16), id > 2 ? 0xbbeeff : 0xf4d478, 0, .48, .18, body); collar.rotation.x = Math.PI / 2; }
-  box(body, 0x9b7653, -.31, .34, -.09, .18, .23, .1); if (id !== 2) { const charm = mesh(new T.OctahedronGeometry(.065), id > 2 ? 0xbbeeff : 0xffd788, 0, .38, .44, body); charm.userData.petCharm = true; }
+  // 작은 여행 가방과 빛나는 이름표는 모든 펫의 공통 모험 장비입니다. (별 펫은 몸 자체가 장식이라 제외)
+  if (id !== 2 && id !== 8) { const collar = mesh(new T.TorusGeometry(.2, .024, 5, 16), id > 2 ? 0xbbeeff : 0xf4d478, 0, .48, .18, body); collar.rotation.x = Math.PI / 2; }
+  if (id !== 8) box(body, 0x9b7653, -.31, .34, -.09, .18, .23, .1);
+  if (id !== 2 && id !== 8) { const charm = mesh(new T.OctahedronGeometry(.065), id > 2 ? 0xbbeeff : 0xffd788, 0, .38, .44, body); charm.userData.petCharm = true; }
   g.position.set(-1.05, .02, -.7); g.userData.petModel = true; g.userData.petBody = body; return g;
 }
 
@@ -548,7 +590,7 @@ export class World {
     this.scene.remove(this.player); this.disposeModel(this.player); this.player = makeCharacter(character, outfit, weapon, outfitLevel, weaponLevel, hairstyle, face); this.player.position.copy(position); this.player.rotation.y = rotation; this.scene.add(this.player);
     if (this.petModel) { this.scene.remove(this.petModel); this.disposeModel(this.petModel); }
     this.rideIndex = ride; this.petIndex = pet; this.petModel = null; this.petTargetId = null; this.rideAnimated = [];
-    if (ride >= 0 && RIDES[ride]) { const body = this.player.userData.body as T.Group; body.position.y = RIDES[ride].flying ? 1.03 : .78; const rideModel = makeRide(ride); rideModel.traverse(o => { if (o.userData.rideWing || o.userData.ridePropeller || o.userData.rideGlow) this.rideAnimated.push(o); }); this.player.add(rideModel); }
+    if (ride >= 0 && RIDES[ride]) { const body = this.player.userData.body as T.Group; body.position.y = riderHeight(ride); const rideModel = makeRide(ride); rideModel.traverse(o => { if (o.userData.rideWing || o.userData.ridePropeller || o.userData.rideGlow) this.rideAnimated.push(o); }); this.player.add(rideModel); }
     if (pet >= 0 && PETS[pet]) { this.petModel = makePet(pet); this.scene.add(this.petModel); this.placePetNearPlayer(); }
   }
   private placePetNearPlayer() { if (this.petModel) this.petModel.position.set(this.player.position.x - 1.05, this.player.position.y + .02, this.player.position.z - .7); }
@@ -677,7 +719,7 @@ export class AvatarPreview {
   private replaceModel(model: T.Group, camera: [number, number, number], lookY: number) { this.scene.remove(this.model); this.model.traverse(x => { if (x instanceof T.Mesh && !sharedGeometries.has(x.geometry)) x.geometry.dispose(); }); this.model = model; this.model.rotation.y = -.18; this.camera.position.set(...camera); this.camera.lookAt(0, lookY, 0); this.scene.add(this.model); this.draw(); }
   show(c: number, o: number, w: number, ol = 0, wl = 0, hairstyle = 0, face = 0) { const model = makeCharacter(c, o, w, ol, wl, hairstyle, face); model.userData.previewKind = 'avatar'; this.replaceModel(model, [2.2, 1.9, 5.8], 1.1); }
   showPet(id: number) { const model = makePet(id); model.position.set(0, .08, 0); model.scale.setScalar(1.72); model.userData.previewKind = 'pet'; this.replaceModel(model, [2.1, 1.35, 4.15], .62); }
-  showRide(id: number, c: number, o: number, w: number, ol = 0, wl = 0, hairstyle = 0, face = 0) { const model = makeCharacter(c, o, w, ol, wl, hairstyle, face), body = model.userData.body as T.Group; body.position.y = RIDES[id].flying ? 1.03 : .78; model.add(makeRide(id)); model.userData.previewKind = 'ride'; this.replaceModel(model, [3.4, 2.35, 7.7], 1.15); }
+  showRide(id: number, c: number, o: number, w: number, ol = 0, wl = 0, hairstyle = 0, face = 0) { const model = makeCharacter(c, o, w, ol, wl, hairstyle, face), body = model.userData.body as T.Group; body.position.y = riderHeight(id); model.add(makeRide(id)); model.userData.previewKind = 'ride'; this.replaceModel(model, [3.4, 2.35, 7.7], 1.15); }
   private draw() { const w = this.element.clientWidth, h = this.element.clientHeight; if (!w || !h) return; if (w !== this.drawWidth || h !== this.drawHeight) { this.drawWidth = w; this.drawHeight = h; this.renderer.setSize(w, h); this.camera.aspect = w / h; this.camera.updateProjectionMatrix(); } this.renderer.render(this.scene, this.camera); }
   private animate = (time: number) => { this.animationFrame = requestAnimationFrame(this.animate); if (time - this.lastFrame < 33 || document.hidden || !this.element.isConnected) return; this.lastFrame = time; this.model.rotation.y = -.18 + Math.sin(time * .0007) * .16; const body = this.model.userData.body as T.Group | undefined; if (body) { body.userData.baseY ??= body.position.y; body.position.y = (body.userData.baseY as number) + Math.sin(time * .003) * .035; } const sparkles = this.model.userData.sparkles as T.Group | undefined; if (sparkles) sparkles.rotation.y += .025; this.model.traverse(o => { if (o.userData.petCharm) { o.rotation.y += .06; o.userData.baseScale ??= o.scale.clone(); o.scale.copy(o.userData.baseScale as T.Vector3).multiplyScalar(1 + Math.sin(time * .006) * .12); } if (o.userData.petWing) o.rotation.z = Number(o.userData.petWing) * (.4 + Math.sin(time * .011) * .14); if (o.userData.rideWing) o.rotation.z = Number(o.userData.rideWing) * (.52 + Math.sin(time * .009) * .11); if (o.userData.ridePropeller) o.rotation.z += .18; if (o.userData.rideGlow) o.rotation.z += .025; }); this.draw(); };
   dispose() { cancelAnimationFrame(this.animationFrame); this.resizeObserver.disconnect(); this.model.traverse(x => { if (x instanceof T.Mesh && !sharedGeometries.has(x.geometry)) x.geometry.dispose(); }); this.renderer.dispose(); this.renderer.domElement.remove(); }
