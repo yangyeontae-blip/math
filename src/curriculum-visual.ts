@@ -23,7 +23,8 @@ function fractionHtml(visual: Extract<CurriculumVisual, { kind: 'fraction' }>) {
   const { numerator, denominator, groups, compare } = visual;
   if (groups) {
     const boxes = Array.from({ length: denominator }, (_, id) => `<span class="frac-box${id < numerator ? ' on' : ''}">${'●'.repeat(groups)}</span>`).join('');
-    return `<div class="curriculum-visual fraction-visual"><div class="frac-boxes" style="--boxes:${denominator}">${boxes}</div><small>전체를 ${denominator}묶음으로 똑같이 나누었고, 색칠한 묶음은 ${numerator}개예요</small></div>`;
+    const columns = denominator <= 6 ? denominator : Math.ceil(denominator / 2);
+    return `<div class="curriculum-visual fraction-visual"><div class="frac-boxes" style="--boxes:${columns}">${boxes}</div><small>전체를 ${denominator}묶음으로 똑같이 나누었고, 색칠한 묶음은 ${numerator}개예요</small></div>`;
   }
   if (compare) return `<div class="curriculum-visual fraction-visual">${barGroup(numerator, denominator, `${numerator}/${denominator}`)}${barGroup(compare.numerator, compare.denominator, `${compare.numerator}/${compare.denominator}`)}<small>위아래 막대는 전체의 크기가 같아요</small></div>`;
   const wholes = Math.max(1, Math.ceil(numerator / denominator));
