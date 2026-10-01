@@ -1,5 +1,6 @@
 import './style.css';
 import './garden.css';
+import { curriculumVisualHtml } from './curriculum-visual';
 import { DAILY_MISSIONS, DAILY_STAMPS, DAILY_ALL_CLEAR_BONUS, claimDaily, dailyReady, dailyStampsShown, ensureDaily } from './daily';
 import type { World, AvatarPreview } from './world';
 import { newSave, validateSave, CHARACTERS, MONSTERS, OUTFITS, PETS, POTIONS, RIDES, WEAPONS, HAIRSTYLES, FACES, WEAPON_UPGRADES, OUTFIT_UPGRADES, Encounter, grantReward, rewardFor, potionEffects, buy, upgrade, buyRide, dismount, buyPet, unequipPet, buyLook, buyPotion, usePotion, applyTeacherCode, collectBerry, finishHunt, fellTree, treeDamage, canEnter, monsterBattleRounds, recordWrongAnswer, recordCorrectAnswer, STAGE_STORIES, journeyFor, multiplicationUsesStory, startMultiplicationFinal, answerMultiplicationFinal, questionAnswerText, curriculumUnitComplete, canStartCurriculumMission, recordCurriculumAttempt, completeCurriculumMission, curriculumGraduationAvailable, claimCurriculumGraduation, type CurriculumUnitId, type NewCurriculumUnitId, type ForestKind, type Save } from './rules';
@@ -313,26 +314,7 @@ async function openCurriculumUnit(unit: NewCurriculumUnitId) {
   document.querySelectorAll<HTMLButtonElement>('[data-mission]').forEach(button => button.onclick = () => void startCurriculumMission(unit, Number(button.dataset.mission)));
 }
 
-function curriculumQuestionVisual(question: CurriculumQuestion) {
-  const visual = question.visual;
-  if (visual.kind === 'circle') {
-    const line = visual.focus === 'radius' ? '<line x1="100" y1="76" x2="154" y2="76" />' : visual.focus === 'diameter' ? '<line x1="46" y1="76" x2="154" y2="76" />' : '';
-    const compass = visual.focus === 'compass' ? '<path d="M78 26 L100 76 L126 27 M100 76 L136 92"/><circle cx="78" cy="26" r="5"/><circle cx="126" cy="27" r="5"/>' : '';
-    const caption = visual.focus === 'center' ? '빨간 점이 원의 중심이에요' : visual.focus === 'radius' ? `반지름 ${visual.radius} ${visual.unit ?? 'cm'}` : visual.focus === 'diameter' ? `지름 ${visual.radius * 2} ${visual.unit ?? 'cm'}` : '침을 중심에 고정하고 돌려요';
-    return `<div class="curriculum-visual circle-visual"><svg viewBox="0 0 200 150" role="img" aria-label="원의 중심, 반지름과 지름 그림"><circle class="circle-shape" cx="100" cy="76" r="54"/><g class="circle-line">${line}${compass}</g><circle class="circle-center" cx="100" cy="76" r="6"/><text x="100" y="137">${caption}</text></svg></div>`;
-  }
-  if (visual.kind === 'fraction') {
-    const count = Math.max(visual.denominator, visual.numerator), groups = Math.ceil(count / visual.denominator);
-    return `<div class="curriculum-visual fraction-visual" aria-label="${visual.denominator}조각 중 ${visual.numerator}조각"><div style="--fraction-columns:${Math.min(visual.denominator, 8)}">${Array.from({ length: Math.max(count, visual.groups ? visual.denominator * Math.min(visual.groups, 3) : count) }, (_, id) => `<i class="${id < visual.numerator ? 'filled' : ''}">${id < visual.numerator ? '★' : ''}</i>`).join('')}</div><small>한 줄을 ${visual.denominator}칸씩 똑같이 나누었어요${groups > 1 ? ` · ${groups}덩이` : ''}</small></div>`;
-  }
-  if (visual.kind === 'measure') {
-    const icons = visual.measure === 'capacity' ? '🧪' : '📦';
-    return `<div class="curriculum-visual measure-visual"><span>${visual.values.map((value, index) => `<b>${icons}<small>${escape(visual.labels?.[index] ?? `${value} ${visual.unit}`)}</small></b>`).join('')}</span><em>${visual.measure === 'capacity' ? '들이' : '무게'}를 같은 단위로 살펴봐요</em></div>`;
-  }
-  if (visual.kind === 'pictograph') return `<div class="curriculum-visual pictograph-visual"><p><b>${visual.icon}</b> 하나 = ${visual.value}${escape(visual.unitLabel ?? '명')}</p>${visual.rows.map(row => `<div><strong>${escape(row.label)}</strong><span>${visual.icon.repeat(row.icons)}</span></div>`).join('')}</div>`;
-  if (visual.kind === 'array') return `<div class="curriculum-visual array-visual" style="--array-columns:${visual.columns}">${Array.from({ length: visual.rows * visual.columns }, () => '<i></i>').join('')}</div>`;
-  return `<div class="curriculum-visual groups-visual"><span>${Array.from({ length: Math.min(visual.divisor, 9) }, () => '<b>●●●</b>').join('')}</span><small>${visual.total}개를 ${visual.divisor}씩 묶으면 ${visual.remainder ? `${visual.remainder}개가 남아요` : '남는 것이 없어요'}</small></div>`;
-}
+function curriculumQuestionVisual(question: CurriculumQuestion) { return curriculumVisualHtml(question.visual); }
 
 const GUARDIAN_BLUEPRINTS: Record<NewCurriculumUnitId, number[]> = {
   circle: [0, 1, 3, 4, 5, 7], fraction: [0, 2, 3, 4, 5, 7], measurement: [0, 1, 3, 4, 5, 7], pictograph: [0, 1, 2, 4, 5, 7],

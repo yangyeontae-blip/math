@@ -2,8 +2,8 @@ import type { CurriculumUnitId, NewCurriculumUnitId } from './rules';
 
 export type CurriculumQuestionKind = 'number' | 'choice';
 export type CurriculumVisual =
-  | { kind: 'circle'; focus: 'center' | 'radius' | 'diameter' | 'compass'; radius: number; unit?: 'cm' | 'm' }
-  | { kind: 'fraction'; numerator: number; denominator: number; groups?: number }
+  | { kind: 'circle'; focus: 'center' | 'radius' | 'diameter' | 'compass' | 'given-radius' | 'given-diameter'; radius: number; unit?: 'cm' | 'm' }
+  | { kind: 'fraction'; numerator: number; denominator: number; groups?: number; compare?: { numerator: number; denominator: number } }
   | { kind: 'measure'; measure: 'capacity' | 'weight'; values: number[]; unit: 'mL' | 'L' | 'g' | 'kg' | 't'; labels?: string[] }
   | { kind: 'pictograph'; icon: string; value: number; unitLabel?: string; rows: { label: string; icons: number }[] }
   | { kind: 'array'; rows: number; columns: number }
@@ -83,91 +83,104 @@ const shuffle = <T>(items: T[], random: () => number) => items.map(value => ({ v
 const numberChoices = (answer: number, offsets: number[], suffix: string, random: () => number): CurriculumChoice[] => shuffle([answer, ...offsets.map(n => Math.max(0, answer + n))].filter((n, i, all) => all.indexOf(n) === i).slice(0, 4).map(n => ({ label: `${n}${suffix}`, value: String(n) })), random);
 const choiceQuestion = (base: Omit<CurriculumQuestion, 'kind' | 'answer' | 'choices'>, answer: string, choices: CurriculumChoice[]): CurriculumQuestion => ({ ...base, kind: 'choice', answer, choices });
 const numberQuestion = (base: Omit<CurriculumQuestion, 'kind' | 'answer'>, answer: number): CurriculumQuestion => ({ ...base, kind: 'number', answer: String(answer) });
+const withChoices = (answer: string, wrongs: string[], random: () => number): CurriculumChoice[] => shuffle([answer, ...wrongs].filter((value, index, all) => all.indexOf(value) === index).map(value => ({ label: value, value })), random);
+
+const CIRCLE_CM_SCENES = ['둥근 쿠키', '둥근 접시', '동전', '단추', '둥근 거울', '팽이'] as const;
+const CIRCLE_M_SCENES = ['꽃밭', '연못', '분수대', '원 모양 무대', '회전목마 바닥', '둥근 놀이터'] as const;
+const COMPASS_STEPS = [
+  { prompt: '컴퍼스로 원을 그릴 때 가장 먼저 할 일은 무엇일까요?', answer: '중심 정하기', wrongs: ['색칠부터 하기', '지름을 접기'], explanation: '먼저 중심을 정하고, 원하는 반지름만큼 컴퍼스를 벌려 원을 그려요.', hints: ['컴퍼스로 그리기 전에 원의 한가운데를 어디에 둘지 정해야 해요.', '컴퍼스의 뾰족한 침을 꽂을 자리가 원의 중심이 돼요.', '가장 먼저 “중심 정하기”를 해요.'] },
+  { prompt: '중심을 정한 다음에는 무엇을 해야 할까요?', answer: '반지름만큼 벌리기', wrongs: ['중심을 지우기', '종이를 접기'], explanation: '연필심과 뾰족한 침 사이를 원하는 반지름만큼 벌려요.', hints: ['중심을 정했으니 이제 원의 크기를 정할 차례예요.', '원의 크기는 중심에서 가장자리까지의 길이, 반지름으로 정해요.', '침과 연필심 사이를 “반지름만큼 벌려요”.'] },
+  { prompt: '원을 그리는 동안 컴퍼스의 뾰족한 침은 어떻게 해야 할까요?', answer: '중심에 고정하기', wrongs: ['계속 옮기기', '종이 밖에 놓기'], explanation: '뾰족한 침을 중심에 고정해야 같은 거리로 둥글게 그릴 수 있어요.', hints: ['원을 그리는 동안 움직이면 안 되는 쪽이 있어요.', '움직이는 쪽은 연필심이고, 가만히 있어야 하는 쪽은 침이에요.', '침은 “중심에 고정해요”.'] },
+  { prompt: '한 원을 그리는 동안 컴퍼스의 침과 연필심 사이 거리는 어떻게 해야 할까요?', answer: '그대로 유지하기', wrongs: ['점점 넓히기', '점점 좁히기'], explanation: '침과 연필심 사이 거리를 바꾸지 않아야 중심에서 같은 거리인 원이 그려져요.', hints: ['원 위의 모든 점은 중심에서 같은 거리에 있어요.', '그 거리가 바로 반지름이에요. 반지름이 달라지면 둥근 원이 되지 않아요.', '컴퍼스를 벌린 간격을 “그대로 유지해요”.'] },
+  { prompt: '컴퍼스로 원을 그리는 순서로 알맞은 것은 무엇일까요?', answer: '중심→벌리기→돌리기', wrongs: ['돌리기→중심→벌리기', '벌리기→침 옮기기→접기'], explanation: '중심을 정하고, 반지름만큼 벌리고, 침을 중심에 고정한 채 돌려요.', hints: ['먼저 할 일, 그다음 할 일, 마지막에 할 일을 차례대로 떠올려요.', '중심을 정하고, 벌리고, 마지막에 돌려요.', '알맞은 순서는 “중심→벌리기→돌리기”예요.'] },
+] as const;
 
 function circleQuestion(mission: number, random: () => number): CurriculumQuestion {
   if (mission === 8) return circleQuestion(randomInt(0, 7, random), random);
   const radius = randomInt(2, 9, random), diameter = radius * 2;
-  const focus = (mission === 0 ? 'center' : mission === 1 ? 'radius' : mission === 5 ? 'compass' : 'diameter') as 'center' | 'radius' | 'diameter' | 'compass';
-  const base = { unit: 'circle' as const, skill: CURRICULUM_MISSIONS.circle[mission].skill, visual: { kind: 'circle' as const, focus, radius, unit: 'cm' as const }, hints: ['원의 모든 가장자리는 한가운데 점에서 같은 거리만큼 떨어져 있어요.', '반지름은 중심에서 원 위까지, 지름은 중심을 지나 원의 양쪽 끝까지 이어요.', `반지름 ${radius} cm가 두 번 이어지면 지름은 ${diameter} cm예요.`] as [string, string, string] };
+  const base = (focus: 'center' | 'radius' | 'diameter' | 'compass' | 'given-radius' | 'given-diameter', unit: 'cm' | 'm' = 'cm') => ({ unit: 'circle' as const, skill: CURRICULUM_MISSIONS.circle[mission].skill, visual: { kind: 'circle' as const, focus, radius, unit } });
   if (mission === 0) {
     const situation = pick(['둥근 과녁의 한가운데 점', '수레바퀴가 빙글빙글 도는 한가운데 점', '둥근 연못의 정확한 한가운데 점', '원 모양 시계의 정가운데 점'], random);
-    return choiceQuestion({ ...base, prompt: `${situation}을 수학에서는 무엇이라고 할까요?`, explanation: '원의 가장자리까지 거리가 모두 같은 한가운데 점을 원의 중심이라고 해요.' }, '중심', ['중심', '반지름', '지름', '둘레'].map(value => ({ label: value, value })));
+    return choiceQuestion({ ...base('center'), prompt: `${situation}을 수학에서는 무엇이라고 할까요?`, hints: ['원의 가장자리 어디까지 재어도 거리가 똑같은 점을 찾아봐요.', '바퀴살이 모두 모이는 한가운데 점이에요.', '가장자리까지의 거리가 모두 같은 한가운데 점을 “중심”이라고 해요.'], explanation: '원의 가장자리까지 거리가 모두 같은 한가운데 점을 원의 중심이라고 해요.' }, '중심', withChoices('중심', ['반지름', '지름', '둘레'], random));
   }
   if (mission === 1) {
     const situation = pick(['자전거 바퀴의 중심에서 바퀴 끝까지 이은 살', '둥근 방패의 중심에서 가장자리까지 그은 선분', '피자 한가운데에서 테두리까지 곧게 이은 선분', '원의 중심과 원 위의 한 점을 이은 선분'], random);
-    return choiceQuestion({ ...base, prompt: `${situation}은 무엇일까요?`, explanation: '원의 중심에서 원 위의 한 점까지 이은 선분을 반지름이라고 해요.' }, '반지름', ['반지름', '지름', '둘레', '중심'].map(value => ({ label: value, value })));
+    return choiceQuestion({ ...base('radius'), prompt: `${situation}은 무엇일까요?`, hints: ['선분이 시작하는 곳이 원의 중심인지 살펴봐요.', '중심에서 시작해 원 위의 한 점에서 끝나는 선분이에요.', '중심과 원 위의 한 점을 이은 선분을 “반지름”이라고 해요.'], explanation: '원의 중심에서 원 위의 한 점까지 이은 선분을 반지름이라고 해요.' }, '반지름', withChoices('반지름', ['지름', '둘레', '중심'], random));
   }
   if (mission === 2) {
     const situation = pick(['원의 중심을 지나 양쪽 끝을 이은 선분', '둥근 북의 한쪽 끝에서 중심을 지나 반대쪽 끝까지 이은 선분', '시계의 중심을 지나 3과 9를 곧게 이은 선분', '원 안에서 중심을 지나도록 가장 길게 그은 선분'], random);
-    return choiceQuestion({ ...base, prompt: `${situation}은 무엇일까요?`, explanation: '원의 중심을 지나 원 위의 두 점을 이은 선분을 지름이라고 해요.' }, '지름', ['지름', '반지름', '중심', '둘레'].map(value => ({ label: value, value })));
+    return choiceQuestion({ ...base('diameter'), prompt: `${situation}은 무엇일까요?`, hints: ['선분이 원의 중심을 지나는지 살펴봐요.', '중심을 지나 원 위의 두 점을 이은 선분이에요.', '중심을 지나 양쪽 끝을 이은 선분을 “지름”이라고 해요.'], explanation: '원의 중심을 지나 원 위의 두 점을 이은 선분을 지름이라고 해요.' }, '지름', withChoices('지름', ['반지름', '중심', '둘레'], random));
   }
   if (mission === 3) {
-    const object = pick(['둥근 방패', '피자', '꽃밭', '시계'], random);
-    return numberQuestion({ ...base, prompt: `${object}의 반지름이 ${radius} cm예요. 중심을 지나 한쪽 끝에서 반대쪽 끝까지의 길이는 몇 cm일까요?`, explanation: `지름은 반지름의 2배이므로 ${radius} × 2 = ${diameter} cm예요.` }, diameter);
+    const object = pick(CIRCLE_CM_SCENES, random);
+    return numberQuestion({ ...base('given-radius'), prompt: `${object}의 반지름이 ${radius} cm예요. 중심을 지나 한쪽 끝에서 반대쪽 끝까지의 길이는 몇 cm일까요?`, hints: ['중심을 지나 양쪽 끝을 이은 선분은 지름이에요.', '지름은 반지름이 두 번 이어진 길이예요.', `${radius} × 2 를 계산해 보세요.`], explanation: `지름은 반지름의 2배이므로 ${radius} × 2 = ${diameter} cm예요.` }, diameter);
   }
   if (mission === 4) {
-    const object = pick(['둥근 접시', '수레바퀴', '원 모양 창문', '훌라후프'], random);
-    return numberQuestion({ ...base, prompt: `${object}의 지름이 ${diameter} cm예요. 중심에서 가장자리까지의 길이는 몇 cm일까요?`, explanation: `반지름은 지름의 절반이므로 ${diameter} ÷ 2 = ${radius} cm예요.` }, radius);
+    const object = pick(CIRCLE_CM_SCENES, random);
+    return numberQuestion({ ...base('given-diameter'), prompt: `${object}의 지름이 ${diameter} cm예요. 중심에서 가장자리까지의 길이는 몇 cm일까요?`, hints: ['중심에서 가장자리까지의 길이는 반지름이에요.', '반지름은 지름의 절반이에요. 지름을 똑같이 둘로 나눠요.', `${diameter} ÷ 2 를 계산해 보세요.`], explanation: `반지름은 지름의 절반이므로 ${diameter} ÷ 2 = ${radius} cm예요.` }, radius);
   }
   if (mission === 5) {
-    const compassStep = randomInt(0, 4, random);
-    if (compassStep === 0) return choiceQuestion({ ...base, prompt: '컴퍼스로 원을 그릴 때 가장 먼저 할 일은 무엇일까요?', explanation: '먼저 중심을 정하고, 원하는 반지름만큼 컴퍼스를 벌려 원을 그려요.' }, '중심 정하기', [{ label: '중심 정하기', value: '중심 정하기' }, { label: '색칠부터 하기', value: '색칠부터 하기' }, { label: '지름을 접기', value: '지름을 접기' }]);
-    if (compassStep === 1) return choiceQuestion({ ...base, prompt: '중심을 정한 다음에는 무엇을 해야 할까요?', explanation: '연필심과 뾰족한 침 사이를 원하는 반지름만큼 벌려요.' }, '반지름만큼 벌리기', [{ label: '반지름만큼 벌리기', value: '반지름만큼 벌리기' }, { label: '중심을 지우기', value: '중심을 지우기' }, { label: '종이를 접기', value: '종이를 접기' }]);
-    if (compassStep === 2) return choiceQuestion({ ...base, prompt: '원을 그리는 동안 컴퍼스의 뾰족한 침은 어떻게 해야 할까요?', explanation: '뾰족한 침을 중심에 고정해야 같은 거리로 둥글게 그릴 수 있어요.' }, '중심에 고정하기', [{ label: '중심에 고정하기', value: '중심에 고정하기' }, { label: '계속 옮기기', value: '계속 옮기기' }, { label: '종이 밖에 놓기', value: '종이 밖에 놓기' }]);
-    if (compassStep === 3) return choiceQuestion({ ...base, prompt: '한 원을 그리는 동안 컴퍼스의 침과 연필심 사이 거리는 어떻게 해야 할까요?', explanation: '침과 연필심 사이 거리를 바꾸지 않아야 중심에서 같은 거리인 원이 그려져요.' }, '그대로 유지하기', [{ label: '그대로 유지하기', value: '그대로 유지하기' }, { label: '점점 넓히기', value: '점점 넓히기' }, { label: '점점 좁히기', value: '점점 좁히기' }]);
-    return choiceQuestion({ ...base, prompt: '컴퍼스로 원을 그리는 순서로 알맞은 것은 무엇일까요?', explanation: '중심을 정하고, 반지름만큼 벌리고, 침을 중심에 고정한 채 돌려요.' }, '중심→벌리기→돌리기', [{ label: '중심→벌리기→돌리기', value: '중심→벌리기→돌리기' }, { label: '돌리기→중심→벌리기', value: '돌리기→중심→벌리기' }, { label: '벌리기→침 옮기기→접기', value: '벌리기→침 옮기기→접기' }]);
+    const step = pick(COMPASS_STEPS, random);
+    return choiceQuestion({ ...base('compass'), prompt: step.prompt, hints: [...step.hints] as [string, string, string], explanation: step.explanation }, step.answer, withChoices(step.answer, [...step.wrongs], random));
   }
   if (mission === 6) {
-    const scene = pick(['달빛 연못', '마을의 둥근 분수', '회전목마 바닥', '둥근 꽃밭'], random);
-    return numberQuestion({ ...base, visual: { ...base.visual, unit: 'm' }, prompt: `${scene}의 중심에서 가장자리까지가 ${radius} m예요. 가운데를 지나 반대편까지 곧게 건너면 몇 m일까요?`, explanation: `${radius} m가 두 번 이어지므로 지름은 ${diameter} m예요.` }, diameter);
+    const scene = pick(CIRCLE_M_SCENES, random);
+    return numberQuestion({ ...base('given-radius', 'm'), prompt: `${scene}의 중심에서 가장자리까지가 ${radius} m예요. 가운데를 지나 반대편까지 곧게 건너면 몇 m일까요?`, hints: ['가운데를 지나 반대편까지의 길이는 지름이에요.', '지름은 반지름이 두 번 이어진 길이예요.', `${radius} × 2 를 계산해 보세요.`], explanation: `${radius} m가 두 번 이어지므로 지름은 ${diameter} m예요.` }, diameter);
   }
-  const scene = pick(['수레바퀴', '둥근 창문', '커다란 벽시계', '원 모양 무대'], random);
-  return numberQuestion({ ...base, prompt: `${scene}의 한쪽 끝에서 중심을 지나 반대쪽 끝까지가 ${diameter} cm예요. 중심에서 가장자리까지는 몇 cm일까요?`, explanation: `지름을 똑같이 둘로 나누면 반지름 ${radius} cm가 돼요.` }, radius);
+  const scene = pick(CIRCLE_M_SCENES, random);
+  return numberQuestion({ ...base('given-diameter', 'm'), prompt: `${scene}의 한쪽 끝에서 중심을 지나 반대쪽 끝까지가 ${diameter} m예요. 중심에서 가장자리까지는 몇 m일까요?`, hints: ['중심에서 가장자리까지의 길이는 반지름이에요.', '지름을 똑같이 둘로 나누면 반지름이 돼요.', `${diameter} ÷ 2 를 계산해 보세요.`], explanation: `지름을 똑같이 둘로 나누면 반지름 ${radius} m가 돼요.` }, radius);
 }
+
+const FRACTION_DENOMINATORS = [2, 3, 4, 5, 6, 8, 10] as const;
+const COMPARE_DENOMINATORS = [3, 4, 5, 6, 8, 10] as const;
 
 function fractionQuestion(mission: number, random: () => number): CurriculumQuestion {
   if (mission === 8) return fractionQuestion(randomInt(0, 7, random), random);
-  const denominator = pick([2, 3, 4, 5, 6, 8, 10], random), numerator = randomInt(1, denominator - 1, random);
-  const base = { unit: 'fraction' as const, skill: CURRICULUM_MISSIONS.fraction[mission].skill, visual: { kind: 'fraction' as const, numerator, denominator }, hints: ['아래 수인 분모는 전체를 똑같이 나눈 조각 수예요.', '위 수인 분자는 그중에서 고르거나 색칠한 조각 수예요.', `전체 ${denominator}조각 중 ${numerator}조각이면 ${numerator}/${denominator}이에요.`] as [string, string, string] };
+  const denominator = pick(FRACTION_DENOMINATORS, random), numerator = randomInt(1, denominator - 1, random);
+  const base = { unit: 'fraction' as const, skill: CURRICULUM_MISSIONS.fraction[mission].skill, visual: { kind: 'fraction' as const, numerator, denominator } };
   if (mission === 0) {
     const answer = `${numerator}/${denominator}`;
     const object = pick(['케이크', '피자', '초콜릿 판', '색종이', '꽃밭'], random);
-    return choiceQuestion({ ...base, prompt: `${object} 전체를 ${denominator}부분으로 똑같이 나누고 그중 ${numerator}부분을 골랐어요. 알맞은 분수는 무엇일까요?`, explanation: `전체를 나눈 ${denominator}가 분모, 고른 ${numerator}가 분자이므로 ${answer}이에요.` }, answer, shuffle([{ label: answer, value: answer }, { label: `${denominator}/${numerator}`, value: `${denominator}/${numerator}` }, { label: `${numerator}/${denominator + 1}`, value: `${numerator}/${denominator + 1}` }], random));
+    return choiceQuestion({ ...base, prompt: `${object} 전체를 ${denominator}부분으로 똑같이 나누고 그중 ${numerator}부분을 골랐어요. 알맞은 분수는 무엇일까요?`, hints: ['전체를 몇 부분으로 똑같이 나누었는지 먼저 세어 봐요.', `전체를 똑같이 나눈 수 ${denominator}가 분모(아래 수), 고른 수 ${numerator}가 분자(위 수)예요.`, `분모 ${denominator}, 분자 ${numerator}이므로 ${answer}이에요.`], explanation: `전체를 나눈 ${denominator}가 분모, 고른 ${numerator}가 분자이므로 ${answer}이에요.` }, answer, withChoices(answer, [`${denominator}/${numerator}`, `${numerator}/${denominator + 1}`], random));
   }
   if (mission === 1) {
     const answer = `${denominator}분의 ${numerator}`;
-    return choiceQuestion({ ...base, prompt: `${numerator}/${denominator}을 바르게 읽은 것은 무엇일까요?`, explanation: `분모 ${denominator}을 먼저 읽고 분자 ${numerator}을 읽으므로 “${answer}”이에요.` }, answer, shuffle([{ label: answer, value: answer }, { label: `${numerator}분의 ${denominator}`, value: `${numerator}분의 ${denominator}` }, { label: `${denominator}분의 ${numerator + 1}`, value: `${denominator}분의 ${numerator + 1}` }], random));
+    return choiceQuestion({ ...base, prompt: `${numerator}/${denominator}을 바르게 읽은 것은 무엇일까요?`, hints: ['분수는 아래 수인 분모를 먼저 읽고 “분의”를 붙여요.', '분모를 읽은 다음에 위 수인 분자를 읽어요.', `${numerator}/${denominator}은 “${answer}”이라고 읽어요.`], explanation: `분모 ${denominator}을 먼저 읽고 분자 ${numerator}을 읽으므로 “${answer}”이에요.` }, answer, withChoices(answer, [`${numerator}분의 ${denominator}`, `${denominator}분의 ${numerator + 1}`], random));
   }
   if (mission === 2 || mission >= 6) {
-    const groups = randomInt(2, 5, random), total = denominator * groups, amount = numerator * groups;
+    const groups = randomInt(2, Math.min(5, Math.floor(30 / denominator)), random), total = denominator * groups, amount = numerator * groups;
     const objects = mission === 6 ? ['소풍 샌드위치', '컵케이크', '과일 꼬치', '주먹밥'] : mission === 7 ? ['별사탕', '구슬', '씨앗', '반짝 스티커'] : ['열매', '도토리', '꽃송이', '리본'];
     const object = pick(objects, random), askRemaining = mission >= 6 && random() < .35, answer = askRemaining ? total - amount : amount;
     const prompt = askRemaining
       ? `${object} ${total}개 중 ${numerator}/${denominator}을 나누어 주었어요. 남은 것은 몇 개일까요?`
       : `${object} ${total}개 중 ${numerator}/${denominator}만큼은 몇 개일까요?`;
     const explanation = `${total}개를 ${denominator}묶음으로 똑같이 나누면 한 묶음은 ${groups}개예요. ${numerator}묶음은 ${groups} × ${numerator} = ${amount}개${askRemaining ? `이고, ${total} - ${amount} = ${answer}개가 남아요.` : '예요.'}`;
-    return numberQuestion({ ...base, visual: { kind: 'fraction', numerator, denominator, groups }, prompt, explanation }, answer);
+    const hints: [string, string, string] = [`전체를 ${denominator}묶음으로 똑같이 나누어 봐요.`, `한 묶음은 ${total} ÷ ${denominator} = ${groups}개예요.`, askRemaining ? `${numerator}묶음은 ${groups} × ${numerator} = ${amount}개이고, 남은 것은 ${total} - ${amount}예요.` : `${numerator}묶음이니까 ${groups} × ${numerator} 를 계산해요.`];
+    return numberQuestion({ ...base, visual: { kind: 'fraction', numerator, denominator, groups }, prompt, hints, explanation }, answer);
   }
   if (mission === 3) {
-    const improper = random() < .55, shownNumerator = improper ? denominator + randomInt(0, denominator * 2, random) : numerator;
+    const improper = random() < .5, shownNumerator = improper ? denominator + randomInt(0, denominator * 2, random) : numerator;
     const answer = improper ? '가분수' : '진분수';
     const explanation = improper ? '분자가 분모와 같거나 크므로 가분수예요.' : '분자가 분모보다 작으므로 진분수예요.';
-    return choiceQuestion({ ...base, visual: { kind: 'fraction', numerator: shownNumerator, denominator }, prompt: `${shownNumerator}/${denominator}은 진분수일까요, 가분수일까요?`, hints: ['분자와 분모의 크기를 먼저 비교해요.', '분자가 분모보다 작으면 진분수예요.', '분자가 분모와 같거나 크면 가분수예요.'], explanation }, answer, ['진분수', '가분수'].map(value => ({ label: value, value })));
+    return choiceQuestion({ ...base, visual: { kind: 'fraction', numerator: shownNumerator, denominator }, prompt: `${shownNumerator}/${denominator}은 진분수일까요, 가분수일까요?`, hints: ['분자와 분모의 크기를 먼저 비교해요.', '분자가 분모보다 작으면 진분수예요.', '분자가 분모와 같거나 크면 가분수예요.'], explanation }, answer, withChoices(answer, [improper ? '진분수' : '가분수'], random));
   }
   if (mission === 4) {
     const whole = randomInt(1, 3, random), rest = randomInt(1, denominator - 1, random), improper = whole * denominator + rest, answer = `${whole} ${rest}/${denominator}`;
     const conversionHints: [string, string, string] = ['분자를 분모로 나누어 몇 덩이인지 찾아요.', `분모 ${denominator}짜리 한 덩이마다 ${denominator}조각이 필요해요.`, `${denominator} × ${whole} + ${rest} = ${improper}을 이용해 확인해요.`];
-    if (random() < .5) return choiceQuestion({ ...base, visual: { kind: 'fraction', numerator: improper, denominator }, prompt: `${improper}/${denominator}을 대분수로 나타내면 무엇일까요?`, hints: conversionHints, explanation: `${improper} = ${denominator} × ${whole} + ${rest}이므로 ${answer}이에요.` }, answer, shuffle([{ label: answer, value: answer }, { label: `${whole + 1} ${rest}/${denominator}`, value: `${whole + 1} ${rest}/${denominator}` }, { label: `${whole} ${denominator}/${rest}`, value: `${whole} ${denominator}/${rest}` }], random));
+    if (random() < .5) return choiceQuestion({ ...base, visual: { kind: 'fraction', numerator: improper, denominator }, prompt: `${improper}/${denominator}을 대분수로 나타내면 무엇일까요?`, hints: conversionHints, explanation: `${improper} = ${denominator} × ${whole} + ${rest}이므로 ${answer}이에요.` }, answer, withChoices(answer, [`${whole + 1} ${rest}/${denominator}`, `${whole} ${rest}/${denominator + 1}`, `${Math.max(1, whole - 1)} ${rest}/${denominator}`], random));
     const improperAnswer = `${improper}/${denominator}`;
-    return choiceQuestion({ ...base, visual: { kind: 'fraction', numerator: improper, denominator }, prompt: `${answer}을 가분수로 나타내면 무엇일까요?`, hints: conversionHints, explanation: `${denominator} × ${whole} + ${rest} = ${improper}이므로 ${improperAnswer}이에요.` }, improperAnswer, shuffle([{ label: improperAnswer, value: improperAnswer }, { label: `${whole + rest}/${denominator}`, value: `${whole + rest}/${denominator}` }, { label: `${improper + 1}/${denominator}`, value: `${improper + 1}/${denominator}` }], random));
+    return choiceQuestion({ ...base, visual: { kind: 'fraction', numerator: improper, denominator }, prompt: `${answer}을 가분수로 나타내면 무엇일까요?`, hints: conversionHints, explanation: `${denominator} × ${whole} + ${rest} = ${improper}이므로 ${improperAnswer}이에요.` }, improperAnswer, withChoices(improperAnswer, [`${whole + rest}/${denominator}`, `${improper + 1}/${denominator}`, `${improper}/${denominator + 1}`], random));
   }
   if (random() < .6) {
-    const other = numerator === denominator - 1 ? numerator - 1 : numerator + 1, answer = numerator > other ? `${numerator}/${denominator}` : `${other}/${denominator}`;
-    return choiceQuestion({ ...base, prompt: `${numerator}/${denominator}과 ${other}/${denominator} 중 더 큰 분수는 무엇일까요?`, explanation: `분모가 같으면 분자가 큰 분수가 더 커요. 따라서 ${answer}이 더 커요.` }, answer, [`${numerator}/${denominator}`, `${other}/${denominator}`, '두 분수는 같아요'].map(value => ({ label: value, value })));
+    const sharedDenominator = pick(COMPARE_DENOMINATORS, random), first = randomInt(1, sharedDenominator - 1, random);
+    let second = randomInt(1, sharedDenominator - 2, random); if (second >= first) second++;
+    const larger = Math.max(first, second), smaller = Math.min(first, second), answer = `${larger}/${sharedDenominator}`;
+    return choiceQuestion({ ...base, visual: { kind: 'fraction', numerator: first, denominator: sharedDenominator, compare: { numerator: second, denominator: sharedDenominator } }, prompt: `${first}/${sharedDenominator}과 ${second}/${sharedDenominator} 중 더 큰 분수는 무엇일까요?`, hints: ['두 분수의 분모가 같은지 먼저 살펴봐요.', '분모가 같으면 한 조각의 크기가 같으니, 조각 수인 분자를 비교해요.', `${larger}이 ${smaller}보다 크므로 ${answer}이 더 커요.`], explanation: `분모가 같으면 분자가 큰 분수가 더 커요. 따라서 ${answer}이 더 커요.` }, answer, withChoices(answer, [`${smaller}/${sharedDenominator}`], random));
   }
-  const otherDenominator = pick([2, 3, 4, 5, 6, 8, 10].filter(value => value !== denominator), random), sharedNumerator = randomInt(1, Math.min(denominator, otherDenominator) - 1, random);
-  const answer = denominator < otherDenominator ? `${sharedNumerator}/${denominator}` : `${sharedNumerator}/${otherDenominator}`;
-  return choiceQuestion({ ...base, visual: { kind: 'fraction', numerator: sharedNumerator, denominator }, prompt: `${sharedNumerator}/${denominator}과 ${sharedNumerator}/${otherDenominator} 중 더 큰 분수는 무엇일까요?`, hints: ['두 분수는 분자가 같아요.', '같은 수의 조각을 고를 때는 한 조각의 크기를 비교해요.', '분모가 작을수록 한 조각의 크기는 더 커요.'], explanation: `분자가 같을 때는 분모가 작은 분수가 더 커요. 따라서 ${answer}이 더 커요.` }, answer, [`${sharedNumerator}/${denominator}`, `${sharedNumerator}/${otherDenominator}`, '두 분수는 같아요'].map(value => ({ label: value, value })));
+  const firstDenominator = pick(COMPARE_DENOMINATORS, random), secondDenominator = pick(COMPARE_DENOMINATORS.filter(value => value !== firstDenominator), random);
+  const sharedNumerator = randomInt(1, Math.min(firstDenominator, secondDenominator) - 1, random), smallerDenominator = Math.min(firstDenominator, secondDenominator), largerDenominator = Math.max(firstDenominator, secondDenominator);
+  const answer = `${sharedNumerator}/${smallerDenominator}`;
+  return choiceQuestion({ ...base, visual: { kind: 'fraction', numerator: sharedNumerator, denominator: firstDenominator, compare: { numerator: sharedNumerator, denominator: secondDenominator } }, prompt: `${sharedNumerator}/${firstDenominator}과 ${sharedNumerator}/${secondDenominator} 중 더 큰 분수는 무엇일까요?`, hints: ['두 분수는 분자가 같아요. 분모를 살펴봐요.', '같은 개수의 조각을 고를 때는 한 조각의 크기를 비교해요. 분모가 작을수록 한 조각이 더 커요.', `분모 ${smallerDenominator}이 ${largerDenominator}보다 작으므로 ${answer}이 더 커요.`], explanation: `분자가 같을 때는 분모가 작은 분수가 더 커요. 따라서 ${answer}이 더 커요.` }, answer, withChoices(answer, [`${sharedNumerator}/${largerDenominator}`], random));
 }
 
 function measurementQuestion(mission: number, random: () => number): CurriculumQuestion {
