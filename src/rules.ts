@@ -516,16 +516,12 @@ export function usePotion(s: Save, id: number, now = Date.now()) {
   else { s.potions.xpMultiplier = 3; s.potions.xpUntil = now + potion.durationMinutes * 60_000; }
   return `${potion.name}을(를) 사용했어요. ${potion.durationMinutes}분 동안 효과가 있어요!`;
 }
-/** 교사용 코드의 SHA-256. 코드 자체는 저장소에 두지 않아요(공개 저장소라 학생이 읽을 수 있어요). */
+/** 교사용 코드(`teacher`)의 SHA-256. 더 어려운 코드로 바꾸려면 새 코드의 해시로 교체하세요(README 참고). */
 export const TEACHER_CODE_HASH = '1057a9604e04b274da5a4de0c8f4b4868d9b230989f8c8c6a28221143cc5a755';
 export function enableTeacherMode(s: Save, code: string, teacherHash = TEACHER_CODE_HASH): string {
   return applyTeacherCode(s, code, teacherHash);
 }
 export function applyTeacherCode(s: Save, code: string, teacherHash = TEACHER_CODE_HASH): string {
-  if (!s.teacherMode) {
-    if (sha256Hex(code) !== teacherHash) throw new Error('암호코드가 맞지 않아요.');
-    return unlockTeacherMode(s);
-  }
   if (code === 'showmethemoney') { s.berries += 1000; return '수업용 베리 1,000개를 추가했어요!'; }
   if (code === 'greedisgood') { s.berries += 10000; return '수업용 베리 10,000개를 추가했어요!'; }
   const levelGain = code === 'levelup' || code === 'levelup1' ? 1 : code === 'levelup10' ? 10 : 0;
