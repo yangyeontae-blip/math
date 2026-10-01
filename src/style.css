@@ -219,6 +219,9 @@ button:hover:not(:disabled){transform:translateY(-2px) scale(1.03)}button:active
 .quest-card:after{content:'📌';left:16px;right:auto;top:-12px;font-size:1.1rem;color:inherit}.player-card:after{content:'🍃'}
 .practice-skip{min-height:44px}.practice-skip input,.settings-list input[type=checkbox]{width:26px;height:26px}
 .quest-card .codex-open{min-height:40px;padding:9px 6px}
+.level-badge{width:auto;min-width:39px;padding:0 7px;white-space:nowrap}.level-badge:before{left:50%;transform:translateX(-50%)}
+.player-card>div{min-width:0}.player-card strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:calc(100% - 20px)}
+.frac-boxes{grid-template-columns:repeat(var(--boxes),minmax(0,1fr))}.frac-box{min-width:0;padding:4px 2px;font-size:.5rem;word-break:break-all}
 .level-badge{background:linear-gradient(145deg,#80d08e,#3f9a5d);box-shadow:inset 0 2px #ffffff66,0 3px 0 var(--leaf-shadow)}
 .wallet{background:linear-gradient(180deg,#fff6cf,#ffe39b)}.wallet b{color:#9a6a1f}
 .icon-button{background:linear-gradient(180deg,#fffdf4,#fbefd2);border:3px solid #fffef6;color:#7a6246;box-shadow:0 5px 0 var(--edge)}
