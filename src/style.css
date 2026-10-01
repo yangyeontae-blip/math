@@ -254,3 +254,9 @@ input[type=text],#nickname-input{border:3px solid #ecd9a8;border-radius:16px;bac
 .reward-banner{background:linear-gradient(180deg,#fff7d6,#ffe9ae);border:3px solid #fffef8;box-shadow:0 5px 0 #e3cf9f}
 dialog,#hud,.welcome-card,#toast{word-break:keep-all;overflow-wrap:break-word}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+
+/* Final cross-device audit: requested Korean type stack and 44px touch targets. */
+:root{font-family:'Jua','Gowun Dodum','Noto Sans KR',system-ui,sans-serif}
+.close{min-width:44px;width:44px;height:44px;min-height:44px}
+input:not([type=checkbox]):not([type=radio]),select,textarea{min-height:44px}
+@media(max-width:600px){.top-actions .icon-button{width:44px;min-height:44px}.inventory-tabs button{min-height:44px}.inventory-item button{min-height:44px}.teacher-input button{min-height:44px}}
