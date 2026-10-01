@@ -80,6 +80,20 @@ test('circle pictures never print the answer', () => {
   });
 });
 
+test('circle length pictures name the known and unknown measurements clearly', () => {
+  const radiusQuestion = generateCurriculumQuestion('circle', 3, seeded(101));
+  const diameterQuestion = generateCurriculumQuestion('circle', 4, seeded(202));
+  const radiusHtml = curriculumVisualHtml(radiusQuestion.visual);
+  const diameterHtml = curriculumVisualHtml(diameterQuestion.visual);
+
+  assert.match(radiusHtml, /반지름 \d+ cm/);
+  assert.ok(radiusHtml.includes('지름 ?'));
+  assert.match(diameterHtml, /지름 \d+ cm/);
+  assert.ok(diameterHtml.includes('반지름 ?'));
+  assert.ok(radiusHtml.includes('circle-dimension'));
+  assert.ok(diameterHtml.includes('circle-dimension'));
+});
+
 test('fraction questions are valid and their answers match an independent calculation', () => {
   const kinds = new Set<string>();
   each('fraction', question => {

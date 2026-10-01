@@ -4,13 +4,23 @@ const esc = (value: string | number) => String(value).replace(/[&<>"']/g, ch => 
 
 function circleHtml(visual: Extract<CurriculumVisual, { kind: 'circle' }>) {
   const unit = visual.unit ?? 'cm', focus = visual.focus;
-  let marks = '', labels = '', caption = '원 그림';
+  let marks = '', dimensions = '', labels = '', caption = '원 그림';
   if (focus === 'radius') marks = '<line x1="100" y1="76" x2="154" y2="76" />';
   else if (focus === 'diameter') marks = '<line x1="46" y1="76" x2="154" y2="76" />';
   else if (focus === 'compass') { marks = '<path d="M78 26 L100 76 L126 27 M100 76 L136 92"/><circle cx="78" cy="26" r="5"/><circle cx="126" cy="27" r="5"/>'; caption = '컴퍼스로 원을 그려요'; }
-  else if (focus === 'given-radius') { marks = '<line x1="100" y1="76" x2="154" y2="76" /><line class="dashed" x1="46" y1="76" x2="100" y2="76" />'; labels = `<text class="circle-label" x="127" y="62">${esc(visual.radius)} ${unit}</text><text class="circle-label" x="73" y="62">?</text>`; caption = '알려 준 길이만 적었어요'; }
-  else if (focus === 'given-diameter') { marks = '<line x1="46" y1="76" x2="154" y2="76" />'; labels = `<text class="circle-label" x="73" y="62">${esc(visual.radius * 2)} ${unit}</text><text class="circle-label" x="127" y="62">?</text>`; caption = '알려 준 길이만 적었어요'; }
-  return `<div class="curriculum-visual circle-visual"><svg viewBox="0 0 200 150" role="img" aria-label="원 그림"><circle class="circle-shape" cx="100" cy="76" r="54"/><g class="circle-line">${marks}</g><circle class="circle-center" cx="100" cy="76" r="6"/>${labels}<text x="100" y="137">${caption}</text></svg></div>`;
+  else if (focus === 'given-radius') {
+    marks = '<line class="dashed" x1="46" y1="76" x2="100" y2="76" /><line x1="100" y1="76" x2="154" y2="76" />';
+    dimensions = '<path d="M46 103 V111 M46 107 H154 M154 103 V111" />';
+    labels = `<text class="circle-known-label" x="127" y="61">반지름 ${esc(visual.radius)} ${unit}</text><text class="circle-question-label" x="100" y="123">지름 ?</text>`;
+    caption = '반지름은 중심에서 원 둘레까지예요';
+  }
+  else if (focus === 'given-diameter') {
+    marks = '<line x1="46" y1="76" x2="154" y2="76" />';
+    dimensions = '<path d="M100 101 V109 M100 105 H154 M154 101 V109" />';
+    labels = `<text class="circle-known-label" x="100" y="52">지름 ${esc(visual.radius * 2)} ${unit}</text><text class="circle-question-label" x="127" y="122">반지름 ?</text>`;
+    caption = '지름은 중심을 지나 원 끝에서 끝까지예요';
+  }
+  return `<div class="curriculum-visual circle-visual"><svg viewBox="0 0 200 150" role="img" aria-label="원 그림"><circle class="circle-shape" cx="100" cy="76" r="54"/><g class="circle-line">${marks}</g><g class="circle-dimension">${dimensions}</g><circle class="circle-center" cx="100" cy="76" r="6"/>${labels}<text class="circle-caption" x="100" y="143">${caption}</text></svg></div>`;
 }
 
 function barGroup(numerator: number, denominator: number, label?: string) {
