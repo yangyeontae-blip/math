@@ -1,5 +1,6 @@
 import { stageBerries, stageMonsters, stageTrees, stageSize, berryValue, clearBonus } from './stages';
 import { emptyExpedition, expeditionLayout, EXPEDITION_TITLES, type ExpeditionProgress } from './expedition';
+import { DAILY_MISSIONS, DATE_KEY, recordDaily, type DailyState } from './daily';
 export const WEAPONS = [
   { name: '새싹 나무검', price: 0, bonus: 0, multiplier: 1, treePower: 1, icon: '🌱', color: 0x96bf6a },
   { name: '도토리 망치', price: 80, bonus: 2, multiplier: 1.2, treePower: 2, icon: '🔨', color: 0xbf8c52 },
@@ -79,7 +80,8 @@ export const PETS = [
   { name: '별부엉이 루루', price: 2000, radius: 4.5, icon: '🦉', color: 0x9b83bd, desc: '밝은 눈으로 조금 먼 베리도 찾아요' },
   { name: '아기용 베리링', price: 3500, radius: 5.2, icon: '🐲', color: 0x75bd91, desc: '넓은 범위의 베리를 재빠르게 모아 줘요' },
   { name: '꿀벌 몽이', price: 4500, radius: 5.8, icon: '🐝', color: 0xf2c94c, desc: '꽃가루를 반짝이며 먼 베리까지 날아가요' },
-  { name: '해바라기 여우', price: 5500, radius: 6.4, icon: '🦊', color: 0xe8a15b, desc: '해바라기 꼬리를 흔들며 가장 넓게 찾아요' },
+  { name: '해바라기 여우', price: 5500, radius: 6.4, icon: '🦊', color: 0xe8a15b, desc: '해바라기 꼬리를 흔들며 넓게 찾아요' },
+  { name: '도토리 다람쥐 콩이', price: 6500, radius: 7, icon: '🐿️', color: 0xb97a4a, desc: '도토리 모자를 쓰고 가장 먼 베리까지 쪼르르 찾아요' },
 ] as const;
 export const HAIRSTYLES = [
   { name: '기본 머리', price: 0, icon: '🙂' }, { name: '몽실 양갈래', price: 100, icon: '🎀' },
@@ -124,6 +126,7 @@ export interface Save {
   discoveries: { monsters: number[]; pets: number[]; outfits: number[] };
   room: { furniture: number[]; inside: boolean };
   garden?: { rescued: number; flowers: number[] };
+  daily?: DailyState;
   expedition: ExpeditionProgress;
   forest: ForestKind;
   journey: Journey;
@@ -203,7 +206,7 @@ export function canEnter(s: Save, stage: number, forest: ForestKind = s.forest) 
 export function collectBerry(s: Save, id: number) {
   const journey = journeyFor(s), stage = journey.stage, map = journey.maps[stage];
   if (!Number.isInteger(id) || !stageBerries(stage)[id] || map.berries.includes(id)) return 0;
-  const value = berryValue(stage) + OUTFITS[s.outfit].berryBonus; map.berries.push(id); s.berries += value; s.tutorial.collected = true; return value;
+  const value = berryValue(stage) + OUTFITS[s.outfit].berryBonus; map.berries.push(id); s.berries += value; s.tutorial.collected = true; recordDaily(s, 'berry'); return value;
 }
 export function recordWrongAnswer(s: Save, q: Question) {
   s.learning.wrong++;
@@ -212,7 +215,7 @@ export function recordWrongAnswer(s: Save, q: Question) {
   s.learning.wrongQuestions = s.learning.wrongQuestions.slice(0, 30);
 }
 export function recordCorrectAnswer(s: Save, monster: number, countLearning = true) {
-  if (countLearning) s.learning.correct++;
+  if (countLearning) { s.learning.correct++; recordDaily(s, 'correct'); }
   if (!s.discoveries.monsters.includes(monster)) s.discoveries.monsters.push(monster);
 }
 export const STAGE_STORIES = ['새싹 슬라임과 인사하고 들판의 봄빛을 되찾아요.', '버섯 요정의 길 안내를 받아 오솔길을 밝혀요.', '벚꽃 언덕에 흩어진 꽃잎 축제를 도와요.', '호숫가 친구들과 반짝이는 물길을 지켜요.', '도토리 정령과 숲의 가을 잔치를 준비해요.', '구름 정원의 바람 종을 다시 울려요.', '수정숲의 별빛 조각을 모아 길을 비춰요.', '눈꽃 산책길에 따뜻한 발자국을 남겨요.', '옛터의 돌기둥에 숨은 이야기를 찾아요.', '꽃섬 친구들과 무지개 축제를 열어요.'] as const;
@@ -346,7 +349,7 @@ export function rewardFor(s: Save, monster: number, arena: boolean, now = Date.n
 export function grantReward(s: Save, monster: number, arena: boolean, now = Date.now()) {
   const reward = rewardFor(s, monster, arena, now); let levels = 0;
   const milestones: { level: number; berries: number }[] = [];
-  s.berries += reward.berries; s.xp += reward.xp; s.tutorial.battle = true;
+  s.berries += reward.berries; s.xp += reward.xp; s.tutorial.battle = true; recordDaily(s, 'monster');
   while (s.xp >= s.level * 40) {
     s.xp -= s.level * 40; s.level++; s.berries += 20; levels++;
     const gift = s.level === 30 ? 30_000 : s.level === 50 ? 50_000 : s.level === 100 ? 100_000 : 0;
@@ -546,6 +549,12 @@ export function validateSave(value: unknown): Save {
   if (s.curriculum.graduationClaimed && !s.teacherMode && !curriculumGraduationAvailable(s)) return fail();
   if (!s.discoveries || !s.room || typeof s.room.inside !== 'boolean' || !Array.isArray(s.room.furniture) || s.room.furniture.some(id => !integer(id, 0, 13)) || new Set(s.room.furniture).size !== s.room.furniture.length) return fail();
   if (s.room.inside && journeyFor(s).stage !== 0) return fail();
+  if (s.daily !== undefined) {
+    const d = s.daily;
+    if (!d || typeof d !== 'object' || typeof d.date !== 'string' || (d.date !== '' && !DATE_KEY.test(d.date)) || typeof d.lastStamp !== 'string' || (d.lastStamp !== '' && !DATE_KEY.test(d.lastStamp)) || !integer(d.streak, 0, 1e6) || typeof d.allClaimed !== 'boolean') return fail();
+    if (!Array.isArray(d.progress) || d.progress.length !== DAILY_MISSIONS.length || !Array.isArray(d.claimed) || d.claimed.length !== DAILY_MISSIONS.length) return fail();
+    if (DAILY_MISSIONS.some((m, i) => !integer(d.progress[i], 0, m.goal) || typeof d.claimed[i] !== 'boolean' || (d.claimed[i] && d.progress[i] < m.goal)) || d.allClaimed !== d.claimed.every(Boolean)) return fail();
+  }
   for (const [key, max] of [['monsters', MONSTERS.length], ['pets', PETS.length], ['outfits', OUTFITS.length]] as const) if (!Array.isArray(s.discoveries[key]) || s.discoveries[key].some(id => !integer(id, 0, max - 1))) return fail();
   return structuredClone(s);
 }

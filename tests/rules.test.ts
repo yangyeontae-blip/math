@@ -139,7 +139,7 @@ test('money codes add the exact berries and pet and beauty purchases stay safe',
   const s = newSave('꾸미기', 0); applyTeacherCode(s, 'showmethemoney'); assert.equal(s.berries, 1000); applyTeacherCode(s, 'greedisgood'); assert.equal(s.berries, 11000);
   const beforePet = s.berries; buyPet(s, 0); assert.equal(s.berries, beforePet - PETS[0].price); assert.equal(s.pet, 0); buyPet(s, 0); assert.equal(s.berries, beforePet - PETS[0].price);
   const beforeHair = s.berries; buyLook(s, 'hairstyle', 1); assert.equal(s.berries, beforeHair - HAIRSTYLES[1].price); assert.equal(s.hairstyle, 1); buyLook(s, 'hairstyle', 0); assert.equal(s.hairstyle, 0);
-  assert.throws(() => applyTeacherCode(s, 'SHOWMETHEMONEY')); assert.equal(RIDES.length, 10); assert.equal(PETS.length, 7);
+  assert.throws(() => applyTeacherCode(s, 'SHOWMETHEMONEY')); assert.equal(RIDES.length, 10); assert.equal(PETS.length, 8);
 });
 test('Junwoo potions last for their exact time and never overspend', () => {
   const s = newSave('물약', 0); s.berries = 1_000; const now = 1_800_000_000_000;
