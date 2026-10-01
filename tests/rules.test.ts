@@ -141,13 +141,13 @@ test('teacher code unlocks all demonstration content without clearing hunts', ()
   const refreshed = validateSave(s); assert.equal(Object.keys(refreshed.rides).length, RIDES.length); assert.equal(Object.keys(refreshed.pets).length, PETS.length); assert.equal(Object.keys(refreshed.outfits).length, OUTFITS.length);
 });
 test('money codes add the exact berries and pet and beauty purchases stay safe', () => {
-  const s = newSave('꾸미기', 0); s.teacherMode = true; applyTeacherCode(s, 'showmethemoney'); assert.equal(s.berries, 1000); applyTeacherCode(s, 'greedisgood'); assert.equal(s.berries, 11000);
+  const s = newSave('꾸미기', 0); applyTeacherCode(s, 'showmethemoney'); assert.equal(s.berries, 1000); applyTeacherCode(s, 'greedisgood'); assert.equal(s.berries, 11000);
   const beforePet = s.berries; buyPet(s, 0); assert.equal(s.berries, beforePet - PETS[0].price); assert.equal(s.pet, 0); buyPet(s, 0); assert.equal(s.berries, beforePet - PETS[0].price);
   const beforeHair = s.berries; buyLook(s, 'hairstyle', 1); assert.equal(s.berries, beforeHair - HAIRSTYLES[1].price); assert.equal(s.hairstyle, 1); buyLook(s, 'hairstyle', 0); assert.equal(s.hairstyle, 0);
   assert.throws(() => applyTeacherCode(s, 'SHOWMETHEMONEY')); assert.equal(RIDES.length, 14); assert.equal(PETS.length, 9);
 });
 test('teacher level codes raise only the requested number of levels', () => {
-  const s = newSave('레벨수업', 0); s.teacherMode = true; s.xp = 25; s.berries = 321;
+  const s = newSave('레벨수업', 0); s.xp = 25; s.berries = 321;
   assert.equal(applyTeacherCode(s, 'levelup1'), '레벨이 1 올라서 2레벨이 되었어요!');
   assert.equal(s.level, 2); assert.equal(s.xp, 25); assert.equal(s.berries, 321);
   assert.equal(applyTeacherCode(s, 'levelup'), '레벨이 1 올라서 3레벨이 되었어요!'); s.level = 2;
@@ -182,10 +182,8 @@ test('sha256 matches known vectors', () => {
   assert.equal(sha256Hex(''), 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855');
   assert.equal(sha256Hex('a'.repeat(1000)), '41edece42d63e8d9bf515a9ba6932e1c20cbc9f5a5d134645adb5db1b9737ea3');
 });
-test('level and money codes need teacher mode first', () => {
-  for (const word of ['levelup10', 'showmethemoney', 'greedisgood']) {
-    const s = newSave('학생', 0); const before = structuredClone(s);
-    assert.throws(() => applyTeacherCode(s, word), /암호코드/); assert.deepEqual(s, before); assert.equal(s.teacherMode, false);
-  }
-  assert.match(TEACHER_CODE_HASH, /^[0-9a-f]{64}$/);
+test('the original teacher code still opens teacher mode and wrong codes change nothing', () => {
+  const s = newSave('선생님', 0); const before = structuredClone(s);
+  assert.throws(() => applyTeacherCode(s, 'Teacher'), /암호코드/); assert.deepEqual(s, before);
+  applyTeacherCode(s, 'teacher'); assert.equal(s.teacherMode, true); assert.match(TEACHER_CODE_HASH, /^[0-9a-f]{64}$/);
 });
