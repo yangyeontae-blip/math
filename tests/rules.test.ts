@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { questionPool, newSave, validateSave, buy, upgrade, buyRide, dismount, buyPet, buyLook, buyPotion, usePotion, potionEffects, applyTeacherCode, enableTeacherMode, grantReward, rewardFor, Encounter, WEAPONS, OUTFITS, PETS, POTIONS, RIDES, HAIRSTYLES, FACES, MONSTERS, CHARACTERS, STAGE_DIVISION_DIFFICULTY, collectBerry, finishHunt, fellTree, treeDamage, canEnter, monsterBattleRounds, recordWrongAnswer, recordCorrectAnswer, PLAYER_MOVE_SPEED, petChaseSpeed } from '../src/rules.ts';
+import { questionPool, newSave, validateSave, buy, upgrade, buyRide, dismount, buyPet, buyLook, buyPotion, usePotion, potionEffects, applyTeacherCode, enableTeacherMode, grantReward, rewardFor, Encounter, WEAPONS, OUTFITS, PETS, POTIONS, RIDES, HAIRSTYLES, FACES, MONSTERS, CHARACTERS, STAGE_DIVISION_DIFFICULTY, collectBerry, finishHunt, fellTree, treeDamage, canEnter, monsterBattleRounds, recordWrongAnswer, recordCorrectAnswer, PLAYER_MOVE_SPEED, petChaseSpeed, riderHeight } from '../src/rules.ts';
 import { stageBerries, stageMonsters, stageTrees, clearBonus, berryValue, isVillagePond } from '../src/stages.ts';
 
 test('village pond never rescues a player on a hunt-stage path', () => {
@@ -120,8 +120,13 @@ test('teacher curriculum ceilings and local learning records behave safely', () 
   s.room.inside = true; assert.deepEqual(validateSave(JSON.parse(JSON.stringify(s))), s);
   const oldRoom = JSON.parse(JSON.stringify(s)); delete oldRoom.room.inside; assert.equal(validateSave(oldRoom).room.inside, false);
 });
-test('rides cost at least 1000 berries and flying starts at 5000 berries', () => {
-  assert.ok(RIDES.every(ride => ride.price >= 1000)); assert.ok(RIDES.filter(ride => ride.flying).every(ride => ride.price >= 5000));
+test('rides keep a clear price ladder: kickboard is cheapest, flying starts at 5000 and the sports car is the top ground ride', () => {
+  assert.ok(RIDES.every(ride => ride.price >= 300)); assert.ok(RIDES.filter(ride => ride.flying).every(ride => ride.price >= 5000));
+  const cheapest = RIDES.reduce((a, b) => (b.price < a.price ? b : a)), priciest = RIDES.reduce((a, b) => (b.price > a.price ? b : a));
+  assert.equal(cheapest.name, '반짝 킥보드'); assert.equal(priciest.name, '황금별 스포츠카'); assert.ok(RIDES.every(ride => ride.speed <= priciest.speed));
+  for (let id = 0; id < RIDES.length; id++) assert.ok(riderHeight(id) > 0 && riderHeight(id) <= 1.1);
+  assert.equal(riderHeight(0), .78); assert.equal(riderHeight(4), 1.03); assert.ok(riderHeight(10) < riderHeight(0));
+  assert.ok(PETS.every(pet => pet.price <= PETS[8].price) && PETS[8].name === '이신비의 별' && PETS[8].price >= 100000 && PETS.every(pet => pet.radius <= PETS[8].radius));
   const s = newSave('라이더', 0); assert.throws(() => buyRide(s, 0)); s.berries = 6000; const before = s.berries; buyRide(s, 0); assert.equal(s.berries, before - RIDES[0].price); assert.equal(s.ride, 0); assert.equal(s.rides[0], true);
   buyRide(s, 0); assert.equal(s.berries, before - RIDES[0].price); assert.equal(dismount(s), '라이딩에서 내려 천천히 걸어요.'); assert.equal(s.ride, -1);
 });
@@ -139,7 +144,17 @@ test('money codes add the exact berries and pet and beauty purchases stay safe',
   const s = newSave('꾸미기', 0); applyTeacherCode(s, 'showmethemoney'); assert.equal(s.berries, 1000); applyTeacherCode(s, 'greedisgood'); assert.equal(s.berries, 11000);
   const beforePet = s.berries; buyPet(s, 0); assert.equal(s.berries, beforePet - PETS[0].price); assert.equal(s.pet, 0); buyPet(s, 0); assert.equal(s.berries, beforePet - PETS[0].price);
   const beforeHair = s.berries; buyLook(s, 'hairstyle', 1); assert.equal(s.berries, beforeHair - HAIRSTYLES[1].price); assert.equal(s.hairstyle, 1); buyLook(s, 'hairstyle', 0); assert.equal(s.hairstyle, 0);
-  assert.throws(() => applyTeacherCode(s, 'SHOWMETHEMONEY')); assert.equal(RIDES.length, 10); assert.equal(PETS.length, 8);
+  assert.throws(() => applyTeacherCode(s, 'SHOWMETHEMONEY')); assert.equal(RIDES.length, 14); assert.equal(PETS.length, 9);
+});
+test('teacher level codes raise only the requested number of levels', () => {
+  const s = newSave('레벨수업', 0); s.xp = 25; s.berries = 321;
+  assert.equal(applyTeacherCode(s, 'levelup1'), '레벨이 1 올라서 2레벨이 되었어요!');
+  assert.equal(s.level, 2); assert.equal(s.xp, 25); assert.equal(s.berries, 321);
+  assert.equal(applyTeacherCode(s, 'levelup'), '레벨이 1 올라서 3레벨이 되었어요!'); s.level = 2;
+  assert.equal(applyTeacherCode(s, 'levelup10'), '레벨이 10 올라서 12레벨이 되었어요!');
+  assert.equal(s.level, 12); assert.equal(s.xp, 25); assert.equal(s.berries, 321);
+  assert.deepEqual(validateSave(JSON.parse(JSON.stringify(s))), s);
+  s.level = 99_995; const before = structuredClone(s); assert.throws(() => applyTeacherCode(s, 'levelup10')); assert.deepEqual(s, before);
 });
 test('Junwoo potions last for their exact time and never overspend', () => {
   const s = newSave('물약', 0); s.berries = 1_000; const now = 1_800_000_000_000;

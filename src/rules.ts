@@ -70,7 +70,12 @@ export const RIDES = [
   { name: '오로라 고래', price: 10000, speed: 3.25, flying: true, icon: '🐳', color: 0x65b9d8, desc: '오로라 물결을 헤치며 가장 빠르게 날아요' },
   { name: '해바라기 사자', price: 12000, speed: 3.45, flying: true, icon: '🦁', color: 0xe6aa43, desc: '꽃잎 갈기를 흔들며 햇살 길을 빠르게 날아요' },
   { name: '꿀벌 하늘마차', price: 15000, speed: 3.7, flying: true, icon: '🐝', color: 0xf3c43f, desc: '꿀빛 날개 네 장으로 가장 빠르게 날아가요' },
+  { name: '반짝 킥보드', price: 300, speed: 1.35, flying: false, icon: '🛴', color: 0x67c7f2, riderY: .26, desc: '발로 쓱쓱 밀며 달리는 가장 가벼운 첫 라이딩' },
+  { name: '바람 자전거', price: 700, speed: 1.5, flying: false, icon: '🚲', color: 0x7ccf88, riderY: .62, desc: '페달을 밟아 바람을 가르며 달려요' },
+  { name: '번개 오토바이', price: 6000, speed: 2.9, flying: false, icon: '🏍️', color: 0xe0524e, riderY: .66, desc: '부릉부릉! 땅 위를 아주 빠르게 달려요' },
+  { name: '황금별 스포츠카', price: 40000, speed: 4.5, flying: false, icon: '🚗', color: 0x2b3a67, riderY: .4, desc: '황금 장식이 반짝이는 최고급 자동차. 땅에서 가장 빨라요' },
 ] as const;
+export function riderHeight(id: number) { const ride = RIDES[id]; return 'riderY' in ride ? ride.riderY : ride.flying ? 1.03 : .78; }
 export const PLAYER_MOVE_SPEED = 8.45;
 export function petChaseSpeed(rideSpeed: number) { return Math.max(12, PLAYER_MOVE_SPEED * rideSpeed * 1.2); }
 export const PETS = [
@@ -81,7 +86,8 @@ export const PETS = [
   { name: '아기용 베리링', price: 3500, radius: 5.2, icon: '🐲', color: 0x75bd91, desc: '넓은 범위의 베리를 재빠르게 모아 줘요' },
   { name: '꿀벌 몽이', price: 4500, radius: 5.8, icon: '🐝', color: 0xf2c94c, desc: '꽃가루를 반짝이며 먼 베리까지 날아가요' },
   { name: '해바라기 여우', price: 5500, radius: 6.4, icon: '🦊', color: 0xe8a15b, desc: '해바라기 꼬리를 흔들며 넓게 찾아요' },
-  { name: '도토리 다람쥐 콩이', price: 6500, radius: 7, icon: '🐿️', color: 0xb97a4a, desc: '도토리 모자를 쓰고 가장 먼 베리까지 쪼르르 찾아요' },
+  { name: '도토리 다람쥐 콩이', price: 6500, radius: 7, icon: '🐿️', color: 0xb97a4a, desc: '도토리 모자를 쓰고 먼 베리까지 쪼르르 찾아요' },
+  { name: '이신비의 별', price: 150000, radius: 9, icon: '⭐', color: 0xffd54a, desc: '밤하늘에서 내려온 신비한 별. 반짝반짝 가장 먼 베리까지 찾아내요' },
 ] as const;
 export const HAIRSTYLES = [
   { name: '기본 머리', price: 0, icon: '🙂' }, { name: '몽실 양갈래', price: 100, icon: '🎀' },
@@ -417,6 +423,12 @@ export function enableTeacherMode(s: Save, code: string): string {
 export function applyTeacherCode(s: Save, code: string): string {
   if (code === 'showmethemoney') { s.berries += 1000; return '수업용 베리 1,000개를 추가했어요!'; }
   if (code === 'greedisgood') { s.berries += 10000; return '수업용 베리 10,000개를 추가했어요!'; }
+  const levelGain = code === 'levelup' || code === 'levelup1' ? 1 : code === 'levelup10' ? 10 : 0;
+  if (levelGain) {
+    if (s.level + levelGain > 100_000) throw new Error('레벨은 100,000까지 올릴 수 있어요.');
+    s.level += levelGain;
+    return `레벨이 ${levelGain} 올라서 ${s.level}레벨이 되었어요!`;
+  }
   if (code !== 'teacher') throw new Error('암호코드가 맞지 않아요.');
   s.teacherMode = true; s.berries = 1_000_000;
   WEAPONS.forEach((_, id) => { s.weapons[id] = 3; }); OUTFITS.forEach((_, id) => { s.outfits[id] = 2; }); RIDES.forEach((_, id) => { s.rides[id] = true; }); PETS.forEach((_, id) => { s.pets[id] = true; }); HAIRSTYLES.forEach((_, id) => { s.hairstyles[id] = true; }); FACES.forEach((_, id) => { s.faces[id] = true; });

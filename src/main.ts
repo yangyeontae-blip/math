@@ -674,7 +674,7 @@ function openInventory(tab: 'weapon' | 'outfit' | 'ride' | 'pet' = 'weapon', sel
     openModal(title('나의 인벤토리', '내가 모은 무기') + `${tabs}${summary}<div class="inventory-list">${cards}</div>`, 'inventory-modal');
     document.querySelectorAll<HTMLButtonElement>('[data-equip]').forEach(button => button.onclick = () => { s.weapon = Number(button.dataset.id); audio.play('buy'); syncAvatar(); refresh(); persist(); openInventory('weapon'); toast('새 무기를 장착했어요!'); });
   } else {
-    const ownedIds = tab === 'outfit' ? Object.keys(s.outfits).map(Number) : tab === 'pet' ? Object.keys(s.pets).map(Number) : RIDES.map((_, id) => id);
+    const ownedIds = tab === 'outfit' ? Object.keys(s.outfits).map(Number) : tab === 'pet' ? Object.keys(s.pets).map(Number) : RIDES.map((_, id) => id).sort((a, b) => RIDES[a].price - RIDES[b].price);
     const current = tab === 'outfit' ? s.outfit : tab === 'ride' ? s.ride : s.pet;
     const id = selectedId !== undefined && ownedIds.includes(selectedId) ? selectedId : current >= 0 && ownedIds.includes(current) ? current : ownedIds[0] ?? -1;
     if (id < 0) {
