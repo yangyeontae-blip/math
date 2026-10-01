@@ -147,6 +147,7 @@ export interface Save {
   daily?: DailyState;
   expedition: ExpeditionProgress;
   forest: ForestKind;
+  hub?: NewCurriculumUnitId;
   journey: Journey;
   multiplicationJourney: Journey;
   multiplicationFinal: MultiplicationFinal | null;
@@ -672,6 +673,7 @@ export function validateSave(value: unknown): Save {
   if (s.curriculum.graduationClaimed && !s.teacherMode && !curriculumGraduationAvailable(s)) return fail();
   if (!s.discoveries || !s.room || typeof s.room.inside !== 'boolean' || !Array.isArray(s.room.furniture) || s.room.furniture.some(id => !integer(id, 0, 13)) || new Set(s.room.furniture).size !== s.room.furniture.length) return fail();
   if (s.room.inside && journeyFor(s).stage !== 0) return fail();
+  if (s.hub !== undefined && (!NEW_CURRICULUM_UNITS.includes(s.hub) || journeyFor(s).stage !== 0)) return fail();
   if (s.daily !== undefined) {
     const d = s.daily;
     if (!d || typeof d !== 'object' || typeof d.date !== 'string' || (d.date !== '' && !DATE_KEY.test(d.date)) || typeof d.lastStamp !== 'string' || (d.lastStamp !== '' && !DATE_KEY.test(d.lastStamp)) || !integer(d.streak, 0, 1e6) || typeof d.allClaimed !== 'boolean') return fail();
