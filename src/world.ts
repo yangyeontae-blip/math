@@ -2,6 +2,7 @@ import * as T from 'three';
 import { CHARACTERS, MONSTERS, OUTFITS, PETS, RIDES, WEAPONS, PLAYER_MOVE_SPEED, petChaseSpeed, riderHeight, journeyFor, type ForestKind, type Save } from './rules';
 import { STAGES, stageBerries, stageMonsters, stagePlatforms, stageTrees, stageSize, isVillagePond } from './stages';
 import { EXPEDITION_STAR_SPOTS, expeditionLayout } from './expedition';
+import { VILLAGE_THEMES, villageThemeId, type VillageTheme } from './villages';
 
 type Entity = { id: string; name: string; x: number; z: number; mesh: T.Group; label: HTMLDivElement };
 const mat = (color: number, roughness = .86) => new T.MeshStandardMaterial({ color, roughness });
@@ -384,11 +385,12 @@ export class World {
     window.addEventListener('keyup', e => this.keys.delete(e.key.toLowerCase())); window.addEventListener('blur', () => this.clearInput());
     this.renderOnce();
   }
-  private buildVillage() {
-    box(this.scene, 0x8cbc65, 0, -.55, 0, 51, 1.1, 41); box(this.scene, 0x719d55, 0, -1.3, 0, 50, .5, 40);
+  private buildVillage(theme: VillageTheme = VILLAGE_THEMES.division) {
+    this.scene.background = new T.Color(theme.sky); this.scene.fog = new T.Fog(theme.sky, 58, 112);
+    box(this.scene, theme.ground, 0, -.55, 0, 51, 1.1, 41); box(this.scene, theme.groundDeep, 0, -1.3, 0, 50, .5, 40);
     // Main paths and circular village square.
-    box(this.scene, 0xe4ce9f, 0, .015, 2, 3.8, .055, 34); box(this.scene, 0xe4ce9f, 0, .02, -3.8, 25, .06, 3.8); box(this.scene, 0xe4ce9f, 6, .018, 9, 15, .05, 3);
-    cylinder(this.scene, 0xe9d6ad, 0, .04, 3, 4.3, 4.3, .07, 40);
+    box(this.scene, theme.path, 0, .015, 2, 3.8, .055, 34); box(this.scene, theme.path, 0, .02, -3.8, 25, .06, 3.8); box(this.scene, theme.path, 6, .018, 9, 15, .05, 3);
+    cylinder(this.scene, theme.square, 0, .04, 3, 4.3, 4.3, .07, 40);
     for (let i = 0; i < 10; i++) { const a = i * Math.PI / 5; cylinder(this.scene, 0xd0b98e, Math.cos(a) * 4.1, .085, 3 + Math.sin(a) * 4.1, .22, .22, .06, 8); }
     // Fountain and water with a clear boundary.
     cylinder(this.scene, 0xc8c9b0, -3.1, .32, 3, 1.05, 1.14, .65); cylinder(this.scene, 0x69c5cb, -3.1, .68, 3, .85, .85, .07); cylinder(this.scene, 0xf3e6c4, -3.1, 1, 3, .19, .27, .9); ball(this.scene, 0xb4e7e4, -3.1, 1.53, 3, .29);
@@ -424,11 +426,25 @@ export class World {
     stageMonsters(0).forEach((m, i) => this.addEntity(`monster${i}`, MONSTERS[m.type].name, m.x, m.z, makeMonster(m.type)));
     this.addEntity('journey', '수학 모험의 문 · 6개의 지역', 10.5, 13.5, this.gate(0x9e78c9));
     // Keep the walking areas clear; peripheral trees frame the miniature world.
-    for (let i = 0; i < 48; i++) { const a = i * 2.39996, r = 17 + (i % 4) * 1.65; const x = Math.cos(a) * r, z = Math.sin(a) * r * .77; if ((x > 14 && z > 1) || Math.hypot(x - 10.5, z - 13.5) < 7 || Math.hypot(x - 18.5, z + 3.5) < 7 || (Math.abs(x) < 5 && z < -12)) continue; this.tree(x, z, .85 + (i % 3) * .16, i % 6 === 0); }
-    stageTrees(0).forEach(({ x, z }, i) => { if (Math.hypot(x - 18.5, z + 3.5) >= 8) this.addChoppableTree(i, x, z, 1, i % 2 === 0); });
+    for (let i = 0; i < 48; i++) { const a = i * 2.39996, r = 17 + (i % 4) * 1.65; const x = Math.cos(a) * r, z = Math.sin(a) * r * .77; if ((x > 14 && z > 1) || Math.hypot(x - 10.5, z - 13.5) < 7 || Math.hypot(x - 18.5, z + 3.5) < 7 || (Math.abs(x) < 5 && z < -12)) continue; this.tree(x, z, .85 + (i % 3) * .16, theme.pinkTrees ? i % 3 === 0 : i % 6 === 0, theme.foliage); }
+    stageTrees(0).forEach(({ x, z }, i) => { if (Math.hypot(x - 18.5, z + 3.5) >= 8) this.addChoppableTree(i, x, z, 1, theme.pinkTrees || i % 2 === 0, theme.foliage); });
     for (let i = 0; i < 65; i++) { const x = Math.sin(i * 12.97) * 23, z = Math.cos(i * 4.67) * 18; if (Math.abs(x) < 3 || Math.hypot(x - 10.5, z - 13.5) < 7 || (z < -2 && z > -11) || (x > 5 && z > 2 && z < 14)) continue; for (let j = 0; j < 3; j++) { const fx = x + j * .14; cylinder(this.scene, 0x538c50, fx, .14, z, .025, .025, .3, 5); ball(this.scene, [0xffe8ae, 0xf4aec4, 0xeae3ff][i % 3], fx, .32, z, .1, .09, .1); } }
     for (const side of [-1, 1]) for (let i = 0; i < 7; i++) { const x = side * 22, z = -15 + i * 4.7; cylinder(this.scene, 0xd4bb88, x, .5, z, .08, .09, 1, 8); box(this.scene, 0xe7d3a3, x, .65, z + 2, .12, .11, 4.7); }
+    this.villageDecor(theme);
+    if (theme !== VILLAGE_THEMES.division) this.addEntity('unit', `${theme.name} 안내판 · 입장하기`, -10, 9.5, this.gate(theme.gate));
     this.addBerries();
+  }
+  // 숲마다 다른 분위기를 만드는 장식. 걷는 길과 상점 앞은 비워 둬요.
+  private villageDecor(theme: VillageTheme) {
+    const free = (x: number, z: number) => Math.abs(x) >= 3 && !(z < -2 && z > -11) && !(x > 5 && z > 2 && z < 14) && Math.hypot(x + 10, z - 9.5) > 3 && Math.hypot(x - 10.5, z - 13.5) > 6 && Math.hypot(x - 18.5, z + 3.5) > 6 && Math.abs(x) < 24 && Math.abs(z) < 19;
+    const spots = (count: number, a: number, b: number, make: (x: number, z: number, i: number) => void) => { let made = 0; for (let i = 0; made < count && i < count * 4; i++) { const x = Math.sin(i * a) * 23, z = Math.cos(i * b) * 18; if (!free(x, z)) continue; make(x, z, made++); } };
+    if (theme.deco === 'sunflower') spots(22, 4.31, 2.71, (x, z, i) => { cylinder(this.scene, 0x5d934b, x, .45, z, .04, .06, .85, 6); ball(this.scene, 0x6e512f, x, .93, z, .14); for (let p = 0; p < 8; p++) ball(this.scene, 0xf6cb42, x + Math.cos(p * Math.PI / 4) * .25, .93 + Math.sin(p * Math.PI / 4) * .25, z, .11, .15, .06); if (i % 4 === 0) { const bee = new T.Group(); bee.position.set(x + .45, 1.4, z); ball(bee, 0xf2c340, 0, 0, 0, .15, .11, .12); box(bee, 0x4b4036, 0, 0, .08, .3, .06, .08); this.scene.add(bee); this.butterflies.push(bee); } });
+    else if (theme.deco === 'apple') spots(26, 3.77, 2.39, (x, z, i) => { if (i % 5 === 0) { box(this.scene, 0xb98d58, x, .22, z, .9, .44, .7); for (let k = 0; k < 4; k++) ball(this.scene, 0xe0503f, x - .28 + k * .19, .5, z + (k % 2) * .12 - .06, .13); } else { ball(this.scene, 0xe0503f, x, .22, z, .2, .19, .2); ball(this.scene, 0x5d934b, x + .08, .42, z, .09, .04, .05); } });
+    else if (theme.deco === 'leaves') spots(70, 3.91, 2.17, (x, z, i) => { ball(this.scene, [0xd9822f, 0xc0592a, 0xe9b04a, 0x9a5a2a][i % 4], x, .05, z, .26, .025, .17); if (i % 9 === 0) for (let k = 0; k < 5; k++) ball(this.scene, [0xd9822f, 0xe9b04a][k % 2], x + Math.cos(k * 1.3) * .25, .1 + k * .04, z + Math.sin(k * 1.3) * .2, .26, .03, .17); });
+    else if (theme.deco === 'moon') spots(16, 3.37, 2.83, (x, z, i) => { const ring = mesh(new T.TorusGeometry(.7 + (i % 3) * .35, .05, 6, 32), [0xe9e2f8, 0xc9d6f2, 0xf3eaff][i % 3], x, .06, z, this.scene); ring.rotation.x = Math.PI / 2; if (i % 4 === 0) { cylinder(this.scene, 0x8c93b8, x, .7, z, .05, .07, 1.4, 6); ball(this.scene, 0xfff1b8, x, 1.55, z, .26); } });
+    else if (theme.deco === 'cake') spots(14, 3.13, 2.57, (x, z, i) => { cylinder(this.scene, [0xf6b7c8, 0xf9d9a8, 0xcde8c0][i % 3], x, .22, z, .62, .62, .44, 18); cylinder(this.scene, 0xfffaf0, x, .5, z, .5, .5, .14, 18); ball(this.scene, 0xe84a5f, x, .68, z, .1); if (i % 3 === 0) { cylinder(this.scene, 0xf4f0e8, x + 1.2, .5, z, .05, .05, 1, 6); ball(this.scene, [0xf6a7bc, 0xf5d37b][i % 2], x + 1.2, 1.1, z, .22); } });
+    else if (theme.deco === 'scales') spots(16, 3.51, 2.43, (x, z, i) => { if (i % 4 === 0) { box(this.scene, 0xcdbd95, x, .08, z, 1.3, .16, .6); cylinder(this.scene, 0x9a8a62, x, .7, z, .04, .05, 1.2, 6); box(this.scene, 0x9a8a62, x, 1.28, z, 1.5, .06, .06); for (const side of [-1, 1]) cylinder(this.scene, 0xe9d8a0, x + side * .68, 1.05, z, .3, .3, .05, 14); } else { cylinder(this.scene, [0x8fd3e0, 0xf3c4d8, 0xbfe6a8][i % 3], x, .3, z, .25, .3, .6, 10); cylinder(this.scene, 0xeaf6f6, x, .72, z, .1, .12, .24, 8); ball(this.scene, 0xc9a77a, x, .88, z, .08); } });
+    else if (theme.deco === 'stars') spots(20, 3.29, 2.61, (x, z, i) => { if (i % 5 === 0) { cylinder(this.scene, 0x7a7fa8, x, .55, z, .06, .09, 1.1, 6); cylinder(this.scene, 0x9fa6d2, x, 1.25, z, .22, .12, .75, 8).rotation.x = -.7; } else { const star = new T.Group(); star.position.set(x, 1.1 + (i % 3) * .3, z); mesh(new T.OctahedronGeometry(.28), [0xffe27a, 0xfff3b0, 0xf5c0ff][i % 3], 0, 0, 0, star); this.scene.add(star); this.butterflies.push(star); } });
   }
   private gate(color = 0x9e78c9) {
     const g = new T.Group(), glow = new T.MeshBasicMaterial({ color: 0xf7ddff, transparent: true, opacity: .65 });
@@ -497,7 +513,7 @@ export class World {
   loadStage(s: Save, fresh = false) {
     this.clearInput(); this.clearMap(); this.inRoom = false; s.room.inside = false; this.forest = s.forest; const journey = journeyFor(s); this.stage = journey.stage;
     this.scene.background = new T.Color(0xd0eade); this.scene.fog = new T.Fog(0xd0eade, 58, 112); this.platforms = stagePlatforms(this.stage);
-    if (this.stage === 0) this.buildVillage(); else this.buildHunt(this.stage);
+    if (this.stage === 0) this.buildVillage(VILLAGE_THEMES[villageThemeId(s)]); else this.buildHunt(this.stage);
     const map = journey.maps[this.stage], expedition = s.forest === 'division' && !!s.expedition.active && s.expedition.active.stage === this.stage;
     this.coins.forEach(c => c.mesh.visible = !expedition && !map.berries.includes(c.id));
     this.entities.forEach(e => { if (e.id.startsWith('monster')) e.mesh.visible = !expedition && !map.monsters.includes(Number(e.id.slice(7))); if (e.id.startsWith('tree')) e.mesh.visible = !expedition && !map.trees.includes(Number(e.id.slice(4))); });
