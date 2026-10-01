@@ -7,7 +7,7 @@ const SAMPLES = 400;
 function seeded(seed: number) { let state = seed; return () => ((state = (state * 1664525 + 1013904223) >>> 0) / 4294967296); }
 function each(unit: 'circle' | 'fraction', callback: (question: CurriculumQuestion, mission: number) => void) {
   const random = seeded(unit === 'circle' ? 7 : 11);
-  for (let mission = 0; mission < 9; mission++) for (let sample = 0; sample < SAMPLES; sample++) callback(generateCurriculumQuestion(unit, mission, random), mission);
+  for (let mission = 0; mission < 10; mission++) for (let sample = 0; sample < SAMPLES; sample++) callback(generateCurriculumQuestion(unit, mission, random), mission);
 }
 const count = (text: string, pattern: RegExp) => (text.match(pattern) ?? []).length;
 const num = (value: string) => Number(value);
@@ -35,6 +35,22 @@ test('every question has three different, non-empty hints', () => {
     assert.equal(new Set(question.hints).size, 3);
     question.hints.forEach(hint => assert.ok(hint.length > 4));
   });
+});
+
+test('first-semester activity regions render useful pictures and valid answers', () => {
+  for (const unit of ['plane', 'lengthTime', 'fractionDecimal'] as const) {
+    for (let mission = 0; mission < 10; mission++) {
+      for (let sample = 0; sample < 80; sample++) {
+        const question = generateCurriculumQuestion(unit, mission, seeded(mission * 1000 + sample + 31));
+        const html = curriculumVisualHtml(question.visual);
+        assert.ok(html.includes('curriculum-visual'));
+        assert.ok(!html.includes('undefined'));
+        assert.ok(question.answer.length > 0);
+        if (question.kind === 'choice') assert.equal(question.choices!.filter(choice => choice.value === question.answer).length, 1);
+        else assert.match(question.answer, /^\d{1,4}$/);
+      }
+    }
+  }
 });
 
 test('circle number questions use realistic units and double or halve correctly', () => {

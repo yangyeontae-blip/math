@@ -3,6 +3,9 @@ import type { CurriculumUnitId, NewCurriculumUnitId } from './rules';
 export type CurriculumQuestionKind = 'number' | 'choice';
 export type CurriculumVisual =
   | { kind: 'circle'; focus: 'center' | 'radius' | 'diameter' | 'compass' | 'given-radius' | 'given-diameter'; radius: number; unit?: 'cm' | 'm' }
+  | { kind: 'geometry'; shape: 'segment' | 'line' | 'ray' | 'angle' | 'right-angle' | 'right-triangle' | 'rectangle' | 'square'; label?: string }
+  | { kind: 'length-time'; measure: 'length' | 'time'; values: number[]; unit: 'mm' | 'cm' | 'm' | 'km' | '초' | '분' | '시간'; labels?: string[] }
+  | { kind: 'decimal'; tenths: number; compare?: number }
   | { kind: 'fraction'; numerator: number; denominator: number; groups?: number; compare?: { numerator: number; denominator: number } }
   | { kind: 'measure'; measure: 'capacity' | 'weight'; values: number[]; unit: 'mL' | 'L' | 'g' | 'kg' | 't'; labels?: string[] }
   | { kind: 'pictograph'; icon: string; value: number; unitLabel?: string; rows: { label: string; icons: number }[] }
@@ -31,6 +34,42 @@ export interface CurriculumMission {
 }
 
 export const CURRICULUM_MISSIONS: Record<NewCurriculumUnitId, CurriculumMission[]> = {
+  plane: [
+    { name: '두 점을 곧게 이어요', kind: 'concept', skill: '선분', description: '두 점을 곧게 이은 선분을 알아봐요.' },
+    { name: '끝없이 뻗는 길', kind: 'concept', skill: '직선과 반직선', description: '직선과 반직선의 다른 점을 찾아요.' },
+    { name: '두 선이 만나는 곳', kind: 'concept', skill: '각', description: '한 점에서 시작한 두 반직선으로 각을 만들어요.' },
+    { name: '네모난 모서리', kind: 'practice', skill: '직각', description: '종이 모서리처럼 반듯한 직각을 찾아요.' },
+    { name: '직각 세기', kind: 'practice', skill: '도형의 직각', description: '도형에 있는 직각의 수를 세어요.' },
+    { name: '직각삼각형 텐트', kind: 'practice', skill: '직각삼각형', description: '직각이 있는 삼각형을 구별해요.' },
+    { name: '직사각형 창문', kind: 'story', skill: '직사각형', description: '네 각이 모두 직각인 사각형을 찾아요.' },
+    { name: '정사각형 타일', kind: 'story', skill: '정사각형', description: '네 변의 길이가 같은 직사각형을 찾아요.' },
+    { name: '도형 마을 설계', kind: 'practice', skill: '평면도형 종합', description: '선분·각·여러 가지 사각형을 연결해요.' },
+    { name: '도형마을 수호자', kind: 'guardian', skill: '평면도형 종합', description: '평면도형의 성질을 모두 사용해요.' },
+  ],
+  lengthTime: [
+    { name: '밀리미터 자', kind: 'concept', skill: 'mm와 cm', description: '1 cm와 10 mm의 관계를 알아봐요.' },
+    { name: '킬로미터 표지판', kind: 'concept', skill: 'km와 m', description: '1 km와 1,000 m의 관계를 알아봐요.' },
+    { name: '알맞은 길이 단위', kind: 'concept', skill: '길이 어림', description: '물건과 거리에 알맞은 단위를 골라요.' },
+    { name: '리본 길이 합치기', kind: 'practice', skill: '길이의 덧셈', description: 'cm와 mm 길이를 더해요.' },
+    { name: '남은 산책길', kind: 'practice', skill: '길이의 뺄셈', description: 'km와 m 길이를 빼요.' },
+    { name: '똑딱똑딱 1분', kind: 'concept', skill: '초와 분', description: '1분은 60초임을 익혀요.' },
+    { name: '시계탑의 약속', kind: 'practice', skill: '시간과 분', description: '1시간은 60분임을 익혀요.' },
+    { name: '기차 여행 시간', kind: 'story', skill: '시간 계산', description: '시각 사이에 흐른 시간을 구해요.' },
+    { name: '마을 운동회 기록', kind: 'story', skill: '길이와 시간 종합', description: '길이와 시간 문제를 생활 속에서 풀어요.' },
+    { name: '시계마을 수호자', kind: 'guardian', skill: '길이와 시간 종합', description: '단위 관계와 계산을 모두 사용해요.' },
+  ],
+  fractionDecimal: [
+    { name: '똑같이 나눈 한 조각', kind: 'concept', skill: '분수의 뜻', description: '전체를 똑같이 나눈 한 부분을 알아봐요.' },
+    { name: '여러 조각을 분수로', kind: 'concept', skill: '분수 읽기', description: '색칠한 부분을 분수로 나타내요.' },
+    { name: '한 조각의 크기', kind: 'practice', skill: '단위분수', description: '분모가 커질수록 한 조각이 작아짐을 알아봐요.' },
+    { name: '분수 크기 겨루기', kind: 'practice', skill: '분수의 크기', description: '분모가 같은 분수의 크기를 비교해요.' },
+    { name: '열 칸 중 한 칸', kind: 'concept', skill: '소수의 뜻', description: '10분의 몇을 소수로 나타내요.' },
+    { name: '소수 바르게 읽기', kind: 'concept', skill: '소수 읽기', description: '0.1부터 0.9까지 읽고 써요.' },
+    { name: '분수와 소수 짝꿍', kind: 'practice', skill: '분수와 소수', description: '10분의 몇과 소수를 서로 바꾸어요.' },
+    { name: '어느 소수가 클까', kind: 'practice', skill: '소수의 크기', description: '소수의 크기를 비교해요.' },
+    { name: '주스병 눈금 이야기', kind: 'story', skill: '분수와 소수 종합', description: '생활 속 분수와 소수를 찾아요.' },
+    { name: '소수마을 수호자', kind: 'guardian', skill: '분수와 소수 종합', description: '분수와 소수의 뜻과 크기를 모두 사용해요.' },
+  ],
   circle: [
     { name: '달빛 한가운데', kind: 'concept', skill: '원의 중심', description: '원의 한가운데 점을 찾아요.' },
     { name: '중심에서 가장자리로', kind: 'concept', skill: '반지름', description: '중심과 원 위의 점을 이어요.' },
@@ -40,6 +79,7 @@ export const CURRICULUM_MISSIONS: Record<NewCurriculumUnitId, CurriculumMission[
     { name: '마법 컴퍼스', kind: 'practice', skill: '원 그리기', description: '컴퍼스로 원을 그리는 순서를 익혀요.' },
     { name: '달빛 연못 이야기', kind: 'story', skill: '원의 성질', description: '연못의 크기를 원의 성질로 알아봐요.' },
     { name: '수레바퀴 이야기', kind: 'story', skill: '반지름과 지름', description: '바퀴의 반지름과 지름을 찾아요.' },
+    { name: '달빛 원 축제', kind: 'story', skill: '원 종합', description: '생활 속 원의 성질을 다시 연결해요.' },
     { name: '원의 정원 수호자', kind: 'guardian', skill: '원 종합', description: '원의 중심·반지름·지름을 모두 사용해요.' },
   ],
   fraction: [
@@ -51,6 +91,7 @@ export const CURRICULUM_MISSIONS: Record<NewCurriculumUnitId, CurriculumMission[
     { name: '어느 쪽이 더 클까', kind: 'practice', skill: '분수의 크기', description: '분모가 같은 분수의 크기를 비교해요.' },
     { name: '소풍 케이크 이야기', kind: 'story', skill: '분수만큼', description: '친구들이 먹은 케이크 조각을 세어요.' },
     { name: '별사탕 상자 이야기', kind: 'story', skill: '분수만큼', description: '별사탕의 몇 분의 몇을 찾아요.' },
+    { name: '분수 케이크 축제', kind: 'story', skill: '분수 종합', description: '분수의 뜻과 크기를 생활 문제로 연결해요.' },
     { name: '분수섬 수호자', kind: 'guardian', skill: '분수 종합', description: '분수의 뜻과 크기를 모두 사용해요.' },
   ],
   measurement: [
@@ -62,6 +103,7 @@ export const CURRICULUM_MISSIONS: Record<NewCurriculumUnitId, CurriculumMission[
     { name: '합치고 덜어 내기', kind: 'practice', skill: '들이와 무게의 계산', description: '들이와 무게를 더하고 빼요.' },
     { name: '물약 가게 이야기', kind: 'story', skill: '들이 계산', description: '필요한 물약의 들이를 계산해요.' },
     { name: '숲 배달 이야기', kind: 'story', skill: '무게 계산', description: '배달할 짐의 무게를 계산해요.' },
+    { name: '물방울 배달 축제', kind: 'story', skill: '들이와 무게 종합', description: '들이와 무게를 생활 문제로 다시 풀어요.' },
     { name: '저울마을 수호자', kind: 'guardian', skill: '들이와 무게 종합', description: '단위·어림·계산을 모두 사용해요.' },
   ],
   pictograph: [
@@ -73,6 +115,7 @@ export const CURRICULUM_MISSIONS: Record<NewCurriculumUnitId, CurriculumMission[
     { name: '알맞은 그래프 고르기', kind: 'practice', skill: '자료 나타내기', description: '자료와 맞는 그림그래프를 골라요.' },
     { name: '좋아하는 과일 조사', kind: 'story', skill: '자료 해석', description: '친구들이 좋아하는 과일을 비교해요.' },
     { name: '숲 친구 발자국 조사', kind: 'story', skill: '자료 비교', description: '그림그래프에서 차이를 찾아요.' },
+    { name: '별빛 조사 발표회', kind: 'story', skill: '그림그래프 종합', description: '여러 그림그래프를 읽고 비교해요.' },
     { name: '관측소 수호자', kind: 'guardian', skill: '그림그래프 종합', description: '읽기·비교·완성을 모두 사용해요.' },
   ],
 };
@@ -96,7 +139,7 @@ const COMPASS_STEPS = [
 ] as const;
 
 function circleQuestion(mission: number, random: () => number): CurriculumQuestion {
-  if (mission === 8) return circleQuestion(randomInt(0, 7, random), random);
+  if (mission >= 8) return circleQuestion(randomInt(0, 7, random), random);
   const radius = randomInt(2, 9, random), diameter = radius * 2;
   const base = (focus: 'center' | 'radius' | 'diameter' | 'compass' | 'given-radius' | 'given-diameter', unit: 'cm' | 'm' = 'cm') => ({ unit: 'circle' as const, skill: CURRICULUM_MISSIONS.circle[mission].skill, visual: { kind: 'circle' as const, focus, radius, unit } });
   if (mission === 0) {
@@ -135,7 +178,7 @@ const FRACTION_DENOMINATORS = [2, 3, 4, 5, 6, 8, 10] as const;
 const COMPARE_DENOMINATORS = [3, 4, 5, 6, 8, 10] as const;
 
 function fractionQuestion(mission: number, random: () => number): CurriculumQuestion {
-  if (mission === 8) return fractionQuestion(randomInt(0, 7, random), random);
+  if (mission >= 8) return fractionQuestion(randomInt(0, 7, random), random);
   const denominator = pick(FRACTION_DENOMINATORS, random), numerator = randomInt(1, denominator - 1, random);
   const base = { unit: 'fraction' as const, skill: CURRICULUM_MISSIONS.fraction[mission].skill, visual: { kind: 'fraction' as const, numerator, denominator } };
   if (mission === 0) {
@@ -184,7 +227,7 @@ function fractionQuestion(mission: number, random: () => number): CurriculumQues
 }
 
 function measurementQuestion(mission: number, random: () => number): CurriculumQuestion {
-  if (mission === 8) return measurementQuestion(randomInt(0, 7, random), random);
+  if (mission >= 8) return measurementQuestion(randomInt(0, 7, random), random);
   const capacity = mission === 0 || mission === 3 || mission === 6 || (mission === 2 && random() < .5) || (mission === 5 && random() < .5);
   const base = { unit: 'measurement' as const, skill: CURRICULUM_MISSIONS.measurement[mission].skill, visual: { kind: 'measure' as const, measure: capacity ? 'capacity' as const : 'weight' as const, values: [1], unit: capacity ? 'L' as const : 'kg' as const }, hints: ['단위가 서로 같아야 더하거나 비교할 수 있어요.', '1 L는 1,000 mL이고 1 kg은 1,000 g이에요.', '큰 단위 하나를 작은 단위 1,000개로 바꾸어 생각해 보세요.'] as [string, string, string] };
   if (mission === 0) {
@@ -261,7 +304,7 @@ function measurementQuestion(mission: number, random: () => number): CurriculumQ
 }
 
 function pictographQuestion(mission: number, random: () => number): CurriculumQuestion {
-  if (mission === 8) return pictographQuestion(randomInt(0, 7, random), random);
+  if (mission >= 8) return pictographQuestion(randomInt(0, 7, random), random);
   const value = pick([2, 5, 10], random), iconsA = randomInt(2, 6, random), iconsB = randomInt(1, 5, random), iconsC = randomInt(1, 6, random);
   const theme = pick([
     { a: '딸기', b: '포도', c: '귤', icon: '●', unit: '명', subject: '좋아하는 과일' },
@@ -310,8 +353,97 @@ function pictographQuestion(mission: number, random: () => number): CurriculumQu
   return numberQuestion({ ...base, detail: theme.subject, prompt: `${pair[0]}와 ${pair[2]} 자료는 몇 ${theme.unit} 차이 날까요?`, explanation: `그림 수의 차이는 ${difference}개이고, 그림 하나가 ${value}${theme.unit}을 나타내므로 ${answer}${theme.unit} 차이 나요.` }, answer);
 }
 
+function planeQuestion(mission: number, random: () => number): CurriculumQuestion {
+  if (mission >= 8) return planeQuestion(randomInt(0, 7, random), random);
+  const skill = CURRICULUM_MISSIONS.plane[mission].skill;
+  const base = (shape: Extract<CurriculumVisual, { kind: 'geometry' }>['shape'], label?: string) => ({ unit: 'plane' as const, skill, visual: { kind: 'geometry' as const, shape, label } });
+  if (mission === 0) return choiceQuestion({ ...base('segment', '점 ㄱ과 점 ㄴ'), prompt: '두 점 ㄱ과 ㄴ을 곧게 이은 선을 무엇이라고 할까요?', hints: ['양쪽에 끝점이 있는지 살펴봐요.', '두 점 사이만 곧게 이은 선이에요.', '두 점을 곧게 이은 부분을 선분이라고 해요.'], explanation: '두 점을 곧게 이은 선의 한 부분을 선분이라고 해요.' }, '선분', withChoices('선분', ['직선', '반직선'], random));
+  if (mission === 1) {
+    const ray = random() < .5;
+    return choiceQuestion({ ...base(ray ? 'ray' : 'line'), prompt: ray ? '한 점에서 시작하여 한쪽으로 끝없이 뻗는 선은 무엇일까요?' : '양쪽으로 끝없이 곧게 뻗는 선은 무엇일까요?', hints: [ray ? '시작점은 있지만 다른 쪽 끝점은 없어요.' : '양쪽 모두 끝점이 없어요.', ray ? '한쪽 방향으로만 계속 뻗어요.' : '두 방향으로 계속 뻗어요.', ray ? '정답은 반직선이에요.' : '정답은 직선이에요.'], explanation: ray ? '한 점에서 시작해 한쪽으로 끝없이 뻗는 선은 반직선이에요.' : '양쪽으로 끝없이 곧게 뻗는 선은 직선이에요.' }, ray ? '반직선' : '직선', withChoices(ray ? '반직선' : '직선', ray ? ['직선', '선분'] : ['반직선', '선분'], random));
+  }
+  if (mission === 2) return choiceQuestion({ ...base('angle'), prompt: '한 점에서 시작한 두 반직선으로 이루어진 도형은 무엇일까요?', hints: ['두 선이 한 점에서 만나요.', '만나는 점은 꼭짓점이에요.', '한 점에서 시작한 두 반직선이 만드는 도형은 각이에요.'], explanation: '한 점에서 시작한 두 반직선으로 이루어진 도형을 각이라고 해요.' }, '각', withChoices('각', ['원', '선분'], random));
+  if (mission === 3) return choiceQuestion({ ...base('right-angle'), prompt: '종이의 반듯한 모서리처럼 생긴 각을 무엇이라고 할까요?', hints: ['정사각형의 모서리를 떠올려요.', '직각 표시가 있는지 살펴봐요.', '반듯하게 꺾인 각은 직각이에요.'], explanation: '종이 모서리처럼 반듯하게 꺾인 각을 직각이라고 해요.' }, '직각', withChoices('직각', ['예각', '선분'], random));
+  if (mission === 4) {
+    const shape = pick(['right-triangle', 'rectangle', 'square'] as const, random), answer = shape === 'right-triangle' ? 1 : 4;
+    return numberQuestion({ ...base(shape), prompt: '그림 속 도형에는 직각이 몇 개 있을까요?', hints: ['모서리마다 종이의 직각과 겹쳐 본다고 생각해요.', shape === 'right-triangle' ? '직각삼각형에는 직각이 하나 있어요.' : '네 모서리가 모두 반듯해요.', `직각은 ${answer}개예요.`], explanation: `그림에서 직각 표시에 맞는 모서리는 ${answer}개예요.` }, answer);
+  }
+  if (mission === 5) return choiceQuestion({ ...base('right-triangle'), prompt: '직각이 한 개 있는 삼각형의 이름은 무엇일까요?', hints: ['삼각형 안에 반듯한 모서리가 있어요.', '직각이 들어 있는 삼각형이에요.', '정답은 직각삼각형이에요.'], explanation: '직각이 한 개 있는 삼각형을 직각삼각형이라고 해요.' }, '직각삼각형', withChoices('직각삼각형', ['정사각형', '직사각형'], random));
+  if (mission === 6) return choiceQuestion({ ...base('rectangle'), prompt: '네 각이 모두 직각인 사각형은 무엇일까요?', hints: ['네 개의 모서리가 모두 반듯해요.', '마주 보는 두 변의 길이가 같아요.', '이 도형은 직사각형이에요.'], explanation: '네 각이 모두 직각인 사각형을 직사각형이라고 해요.' }, '직사각형', withChoices('직사각형', ['직각삼각형', '원'], random));
+  return choiceQuestion({ ...base('square'), prompt: '네 각이 모두 직각이고 네 변의 길이도 모두 같은 사각형은 무엇일까요?', hints: ['직사각형의 성질을 가지고 있어요.', '네 변의 길이가 모두 같다는 조건도 있어요.', '이 도형은 정사각형이에요.'], explanation: '네 각이 모두 직각이고 네 변의 길이가 모두 같은 사각형은 정사각형이에요.' }, '정사각형', withChoices('정사각형', ['직사각형', '직각삼각형'], random));
+}
+
+function lengthTimeQuestion(mission: number, random: () => number): CurriculumQuestion {
+  if (mission >= 8) return lengthTimeQuestion(randomInt(0, 7, random), random);
+  const skill = CURRICULUM_MISSIONS.lengthTime[mission].skill;
+  const visual = (measure: 'length' | 'time', values: number[], unit: Extract<CurriculumVisual, { kind: 'length-time' }>['unit'], labels?: string[]) => ({ kind: 'length-time' as const, measure, values, unit, labels });
+  const hints = (a: string, b: string, c: string): [string, string, string] => [a, b, c];
+  if (mission === 0) {
+    const cm = randomInt(1, 9, random), mm = randomInt(1, 9, random), answer = cm * 10 + mm;
+    return numberQuestion({ unit: 'lengthTime', skill, visual: visual('length', [cm, mm], 'mm', [`${cm} cm`, `${mm} mm`]), prompt: `${cm} cm ${mm} mm는 모두 몇 mm일까요?`, hints: hints('1 cm는 10 mm예요.', `${cm} cm는 ${cm * 10} mm예요.`, `${cm * 10} + ${mm} = ${answer} mm예요.`), explanation: `${cm} cm = ${cm * 10} mm이므로 모두 ${answer} mm예요.` }, answer);
+  }
+  if (mission === 1) {
+    const km = randomInt(1, 5, random), m = randomInt(1, 9, random) * 100, answer = km * 1000 + m;
+    return numberQuestion({ unit: 'lengthTime', skill, visual: visual('length', [km, m], 'm', [`${km} km`, `${m} m`]), prompt: `${km} km ${m} m는 모두 몇 m일까요?`, hints: hints('1 km는 1,000 m예요.', `${km} km는 ${km * 1000} m예요.`, `${km * 1000} + ${m} = ${answer} m예요.`), explanation: `${km} km를 m로 바꾸어 더하면 ${answer} m예요.` }, answer);
+  }
+  if (mission === 2) {
+    const examples = pick([
+      { item: '지우개의 두께', answer: 'mm', wrongs: ['m', 'km'] }, { item: '연필의 길이', answer: 'cm', wrongs: ['mm', 'km'] },
+      { item: '교실의 긴 쪽 길이', answer: 'm', wrongs: ['mm', 'km'] }, { item: '마을과 학교 사이 거리', answer: 'km', wrongs: ['mm', 'cm'] },
+    ], random);
+    return choiceQuestion({ unit: 'lengthTime', skill, visual: visual('length', [1], examples.answer as 'mm' | 'cm' | 'm' | 'km', [examples.item]), prompt: `${examples.item}를 나타내기에 가장 알맞은 단위는 무엇일까요?`, hints: hints('실제 크기나 거리를 떠올려요.', '아주 짧으면 mm, 손바닥만 하면 cm를 많이 써요.', '방 크기는 m, 먼 거리는 km를 사용해요.'), explanation: `${examples.item}에는 ${examples.answer}가 알맞아요.` }, examples.answer, withChoices(examples.answer, examples.wrongs, random));
+  }
+  if (mission === 3) {
+    const first = randomInt(12, 35, random), second = randomInt(5, 24, random), answer = first + second;
+    return numberQuestion({ unit: 'lengthTime', skill, visual: visual('length', [first, second], 'cm'), prompt: `${first} cm 리본과 ${second} cm 리본을 이어 붙이면 모두 몇 cm일까요?`, hints: hints('두 길이를 합해요.', `${first} + ${second}를 계산해요.`, `합은 ${answer} cm예요.`), explanation: `${first} + ${second} = ${answer}이므로 ${answer} cm예요.` }, answer);
+  }
+  if (mission === 4) {
+    const whole = randomInt(2, 6, random) * 1000, used = randomInt(2, 9, random) * 100, answer = whole - used;
+    return numberQuestion({ unit: 'lengthTime', skill, visual: visual('length', [whole, used], 'm'), prompt: `${whole} m 산책길에서 ${used} m를 걸었어요. 남은 길은 몇 m일까요?`, hints: hints('전체 길이에서 걸은 길이를 빼요.', `${whole} - ${used}를 계산해요.`, `남은 길은 ${answer} m예요.`), explanation: `${whole} - ${used} = ${answer}이므로 ${answer} m가 남아요.` }, answer);
+  }
+  if (mission === 5) {
+    const minutes = randomInt(1, 5, random), seconds = randomInt(1, 5, random) * 10, answer = minutes * 60 + seconds;
+    return numberQuestion({ unit: 'lengthTime', skill, visual: visual('time', [minutes, seconds], '초', [`${minutes}분`, `${seconds}초`]), prompt: `${minutes}분 ${seconds}초는 모두 몇 초일까요?`, hints: hints('1분은 60초예요.', `${minutes}분은 ${minutes * 60}초예요.`, `${minutes * 60} + ${seconds} = ${answer}초예요.`), explanation: `${minutes}분을 초로 바꾸어 더하면 ${answer}초예요.` }, answer);
+  }
+  if (mission === 6) {
+    const hours = randomInt(1, 4, random), minutes = randomInt(1, 5, random) * 10, answer = hours * 60 + minutes;
+    return numberQuestion({ unit: 'lengthTime', skill, visual: visual('time', [hours, minutes], '분', [`${hours}시간`, `${minutes}분`]), prompt: `${hours}시간 ${minutes}분은 모두 몇 분일까요?`, hints: hints('1시간은 60분이에요.', `${hours}시간은 ${hours * 60}분이에요.`, `${hours * 60} + ${minutes} = ${answer}분이에요.`), explanation: `${hours}시간을 분으로 바꾸어 더하면 ${answer}분이에요.` }, answer);
+  }
+  const start = randomInt(8, 10, random), startMinute = pick([0, 10, 20, 30], random), duration = pick([20, 30, 40, 50], random), endTotal = start * 60 + startMinute + duration, endHour = Math.floor(endTotal / 60), endMinute = endTotal % 60, answer = `${endHour}시 ${endMinute.toString().padStart(2, '0')}분`;
+  return choiceQuestion({ unit: 'lengthTime', skill, visual: visual('time', [start, startMinute, duration], '분', [`${start}시 ${startMinute.toString().padStart(2, '0')}분 출발`, `${duration}분 걸림`]), prompt: `${start}시 ${startMinute.toString().padStart(2, '0')}분에 출발해 ${duration}분 동안 갔어요. 도착 시각은 언제일까요?`, hints: hints('출발 시각의 분에 걸린 시간을 더해요.', '60분이 되면 1시간을 올려요.', `도착 시각은 ${answer}이에요.`), explanation: `출발 시각에 ${duration}분을 더하면 ${answer}이에요.` }, answer, withChoices(answer, [`${start}시 ${Math.max(0, startMinute - 10).toString().padStart(2, '0')}분`, `${endHour + 1}시 ${endMinute.toString().padStart(2, '0')}분`], random));
+}
+
+function fractionDecimalQuestion(mission: number, random: () => number): CurriculumQuestion {
+  if (mission >= 8) return fractionDecimalQuestion(randomInt(0, 7, random), random);
+  const skill = CURRICULUM_MISSIONS.fractionDecimal[mission].skill, denominator = pick([2, 3, 4, 5, 6, 8, 10], random), numerator = randomInt(1, denominator - 1, random);
+  const fractionVisual = (n = numerator, d = denominator) => ({ kind: 'fraction' as const, numerator: n, denominator: d });
+  const decimalVisual = (tenths: number, compare?: number) => ({ kind: 'decimal' as const, tenths, compare });
+  if (mission === 0) return choiceQuestion({ unit: 'fractionDecimal', skill, visual: fractionVisual(1, denominator), prompt: `전체를 ${denominator}부분으로 똑같이 나눈 것 중 한 부분을 나타낸 분수는 무엇일까요?`, hints: ['전체를 나눈 수가 분모예요.', '고른 부분은 1개예요.', `정답은 1/${denominator}이에요.`], explanation: `전체를 ${denominator}부분으로 나눈 한 부분은 1/${denominator}이에요.` }, `1/${denominator}`, withChoices(`1/${denominator}`, [`${denominator}/1`, `2/${denominator}`], random));
+  if (mission === 1) return choiceQuestion({ unit: 'fractionDecimal', skill, visual: fractionVisual(), prompt: `${denominator}칸 중 ${numerator}칸을 색칠했어요. 알맞은 분수는 무엇일까요?`, hints: ['전체 칸 수가 분모예요.', '색칠한 칸 수가 분자예요.', `정답은 ${numerator}/${denominator}이에요.`], explanation: `전체 ${denominator}칸 중 ${numerator}칸이므로 ${numerator}/${denominator}이에요.` }, `${numerator}/${denominator}`, withChoices(`${numerator}/${denominator}`, [`${denominator}/${numerator}`, `${Math.max(1, numerator - 1)}/${denominator}`], random));
+  if (mission === 2) {
+    const a = randomInt(2, 5, random), b = randomInt(6, 10, random), answer = `1/${a}`;
+    return choiceQuestion({ unit: 'fractionDecimal', skill, visual: { kind: 'fraction', numerator: 1, denominator: a, compare: { numerator: 1, denominator: b } }, prompt: `1/${a}과 1/${b} 중 더 큰 분수는 무엇일까요?`, hints: ['전체의 크기는 같아요.', '똑같이 나눈 조각 수가 적을수록 한 조각은 커요.', `${a}가 ${b}보다 작으므로 1/${a}이 더 커요.`], explanation: `같은 전체를 ${a}조각으로 나눈 한 조각이 ${b}조각으로 나눈 한 조각보다 커요.` }, answer, withChoices(answer, [`1/${b}`, '같아요'], random));
+  }
+  if (mission === 3) {
+    const d = pick([4, 5, 6, 8, 10], random), a = randomInt(1, d - 2, random), b = randomInt(a + 1, d - 1, random), answer = `${b}/${d}`;
+    return choiceQuestion({ unit: 'fractionDecimal', skill, visual: { kind: 'fraction', numerator: a, denominator: d, compare: { numerator: b, denominator: d } }, prompt: `${a}/${d}과 ${b}/${d} 중 더 큰 분수는 무엇일까요?`, hints: ['두 분수의 분모가 같아요.', '분모가 같으면 분자를 비교해요.', `${b}가 ${a}보다 크므로 ${answer}이 더 커요.`], explanation: `분모가 같을 때는 분자가 큰 분수가 더 커요.` }, answer, withChoices(answer, [`${a}/${d}`, '같아요'], random));
+  }
+  const tenths = randomInt(1, 9, random), decimal = `0.${tenths}`;
+  if (mission === 4) return choiceQuestion({ unit: 'fractionDecimal', skill, visual: decimalVisual(tenths), prompt: `전체를 10칸으로 나누어 ${tenths}칸을 색칠했어요. 소수로 나타내면 무엇일까요?`, hints: ['10분의 몇인지 먼저 생각해요.', `${tenths}/10은 소수 한 자리로 나타낼 수 있어요.`, `${tenths}/10 = ${decimal}이에요.`], explanation: `10분의 ${tenths}은 소수로 ${decimal}이에요.` }, decimal, withChoices(decimal, [`${tenths}.0`, `0.${Math.max(0, tenths - 1)}`], random));
+  if (mission === 5) {
+    const words = ['영', '일', '이', '삼', '사', '오', '육', '칠', '팔', '구']; const answer = `영 점 ${words[tenths]}`;
+    return choiceQuestion({ unit: 'fractionDecimal', skill, visual: decimalVisual(tenths), prompt: `${decimal}을 바르게 읽은 것은 무엇일까요?`, hints: ['소수점 앞의 0은 영이라고 읽어요.', '소수점은 점이라고 읽어요.', `${decimal}은 “${answer}”이라고 읽어요.`], explanation: `${decimal}은 “${answer}”이라고 읽어요.` }, answer, withChoices(answer, [`${tenths} 점 영`, `영 분의 ${tenths}`], random));
+  }
+  if (mission === 6) return choiceQuestion({ unit: 'fractionDecimal', skill, visual: decimalVisual(tenths), prompt: `${decimal}과 같은 크기의 분수는 무엇일까요?`, hints: ['소수 한 자리는 10분의 몇을 나타내요.', '소수점 오른쪽 숫자가 분자가 돼요.', `${decimal} = ${tenths}/10이에요.`], explanation: `${decimal}은 10분의 ${tenths}이므로 ${tenths}/10과 같아요.` }, `${tenths}/10`, withChoices(`${tenths}/10`, [`10/${tenths}`, `${Math.max(1, tenths - 1)}/10`], random));
+  const other = tenths === 9 ? randomInt(1, 8, random) : randomInt(tenths + 1, 9, random), answer = `0.${Math.max(tenths, other)}`;
+  return choiceQuestion({ unit: 'fractionDecimal', skill, visual: decimalVisual(tenths, other), prompt: `0.${tenths}과 0.${other} 중 더 큰 수는 무엇일까요?`, hints: ['두 수 모두 0과 1 사이예요.', '소수점 오른쪽 숫자를 비교해요.', `${Math.max(tenths, other)}가 더 크므로 ${answer}이 더 커요.`], explanation: `소수 한 자리끼리는 소수점 오른쪽 숫자가 큰 수가 더 커요.` }, answer, withChoices(answer, [`0.${Math.min(tenths, other)}`, '같아요'], random));
+}
+
 export function generateCurriculumQuestion(unit: NewCurriculumUnitId, mission: number, random: () => number = Math.random): CurriculumQuestion {
   if (!Number.isInteger(mission) || mission < 0 || mission >= CURRICULUM_MISSIONS[unit].length) throw new Error('없는 학습 임무예요.');
+  if (unit === 'plane') return planeQuestion(mission, random);
+  if (unit === 'lengthTime') return lengthTimeQuestion(mission, random);
+  if (unit === 'fractionDecimal') return fractionDecimalQuestion(mission, random);
   if (unit === 'circle') return circleQuestion(mission, random);
   if (unit === 'fraction') return fractionQuestion(mission, random);
   if (unit === 'measurement') return measurementQuestion(mission, random);

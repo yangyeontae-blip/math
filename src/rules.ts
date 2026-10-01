@@ -114,7 +114,7 @@ export const WEAPON_UPGRADES = [60, 120, 240];
 export const OUTFIT_UPGRADES = [50, 100];
 export type Operation = 'addition' | 'subtraction' | 'multiplication' | 'division';
 export type ForestKind = Operation;
-export type CurriculumUnitId = ForestKind | 'circle' | 'fraction' | 'measurement' | 'pictograph';
+export type CurriculumUnitId = ForestKind | 'plane' | 'lengthTime' | 'fractionDecimal' | 'circle' | 'fraction' | 'measurement' | 'pictograph';
 export type NewCurriculumUnitId = Exclude<CurriculumUnitId, ForestKind>;
 export type MultiplicationRange = 'stage' | 'tables';
 export type PracticeTier = 0 | 1 | 2;
@@ -134,7 +134,7 @@ export interface CurriculumUnitProgress { completedMissions: number[]; stars: nu
 export interface CurriculumMistake { unit: CurriculumUnitId; mission: number; skill: string }
 export interface CurriculumProgress { units: Record<CurriculumUnitId, CurriculumUnitProgress>; wrongSkills: CurriculumMistake[]; graduationClaimed: boolean }
 export interface Save {
-  version: 11; nickname: string; character: number; berries: number; level: number; xp: number;
+  version: 12; nickname: string; character: number; berries: number; level: number; xp: number;
   weapon: number; outfit: number; weapons: Record<string, number>; outfits: Record<string, number>;
   ride: number; rides: Record<string, boolean>; pet: number; pets: Record<string, boolean>;
   hairstyle: number; hairstyles: Record<string, boolean>; face: number; faces: Record<string, boolean>; teacherMode: boolean;
@@ -176,13 +176,13 @@ export const STAGE_DIVISION_DIFFICULTY = [
 export function newSave(nickname: string, character: number): Save {
   if (!nickname.trim() || [...nickname.trim()].length > 10 || !Number.isInteger(character) || character < 0 || character > 3) throw new Error('이름은 1~10자, 캐릭터는 4명 중 골라 주세요.');
   const hairstyle = CHARACTERS[character].style;
-  return { version: 11, nickname: nickname.trim(), character, berries: 0, level: 1, xp: 0, weapon: 0, outfit: 0, weapons: { 0: 0 }, outfits: { 0: 0 }, ride: -1, rides: {}, pet: -1, pets: {}, hairstyle, hairstyles: { 0: true, [hairstyle]: true }, face: 0, faces: { 0: true }, teacherMode: false, best: 0, position: { x: 0, z: 8 }, tutorial: { collected: false, battle: false, shop: false }, settings: { music: true, sound: true, lowQuality: false, maxDividend: 0, multiplicationRange: 'stage', sessionMinutes: 0, focusUnit: 'all', spiralReview: true, practice: { operation: 'auto', tier: 1, skipPicker: false } }, learning: { elapsedSeconds: 0, correct: 0, wrong: 0, wrongQuestions: [] }, discoveries: { monsters: [], pets: [], outfits: [0] }, room: { furniture: [], inside: false }, forest: 'division', journey: emptyJourney(), multiplicationJourney: emptyJourney(), multiplicationFinal: null, multiplicationCompleted: false, multiplicationRewardClaimed: false, additionJourney: emptyJourney(), subtractionJourney: emptyJourney(), additionCompleted: false, subtractionCompleted: false, curriculum: emptyCurriculumProgress(), potions: { stock: [0, 0, 0], berryMultiplier: 1, berryUntil: 0, xpMultiplier: 1, xpUntil: 0 }, garden: { rescued: 0, flowers: [-1, -1, -1] }, expedition: emptyExpedition() };
+  return { version: 12, nickname: nickname.trim(), character, berries: 0, level: 1, xp: 0, weapon: 0, outfit: 0, weapons: { 0: 0 }, outfits: { 0: 0 }, ride: -1, rides: {}, pet: -1, pets: {}, hairstyle, hairstyles: { 0: true, [hairstyle]: true }, face: 0, faces: { 0: true }, teacherMode: false, best: 0, position: { x: 0, z: 8 }, tutorial: { collected: false, battle: false, shop: false }, settings: { music: true, sound: true, lowQuality: false, maxDividend: 0, multiplicationRange: 'stage', sessionMinutes: 0, focusUnit: 'all', spiralReview: true, practice: { operation: 'auto', tier: 1, skipPicker: false } }, learning: { elapsedSeconds: 0, correct: 0, wrong: 0, wrongQuestions: [] }, discoveries: { monsters: [], pets: [], outfits: [0] }, room: { furniture: [], inside: false }, forest: 'division', journey: emptyJourney(), multiplicationJourney: emptyJourney(), multiplicationFinal: null, multiplicationCompleted: false, multiplicationRewardClaimed: false, additionJourney: emptyJourney(), subtractionJourney: emptyJourney(), additionCompleted: false, subtractionCompleted: false, curriculum: emptyCurriculumProgress(), potions: { stock: [0, 0, 0], berryMultiplier: 1, berryUntil: 0, xpMultiplier: 1, xpUntil: 0 }, garden: { rescued: 0, flowers: [-1, -1, -1] }, expedition: emptyExpedition() };
 }
-// 3-2 졸업 모험에 필요한 여섯 지역. 덧셈·뺄셈 숲은 2학년 복습 보너스라서 졸업 조건에 넣지 않아요.
-const CURRICULUM_UNITS: CurriculumUnitId[] = ['multiplication', 'division', 'circle', 'fraction', 'measurement', 'pictograph'];
-const ALL_UNITS: CurriculumUnitId[] = [...CURRICULUM_UNITS, 'addition', 'subtraction'];
-export const NEW_CURRICULUM_UNITS: NewCurriculumUnitId[] = ['circle', 'fraction', 'measurement', 'pictograph'];
-export function emptyCurriculumUnit(): CurriculumUnitProgress { return { completedMissions: [], stars: Array(9).fill(0), correct: 0, wrong: 0, hints: 0, rewardClaimed: false }; }
+// 3학년 한 해의 모든 모험 지역. 계산 숲 네 곳과 교구형 수학 지역 일곱 곳을 함께 완주해요.
+const CURRICULUM_UNITS: CurriculumUnitId[] = ['addition', 'subtraction', 'plane', 'multiplication', 'division', 'lengthTime', 'fractionDecimal', 'circle', 'fraction', 'measurement', 'pictograph'];
+const ALL_UNITS: CurriculumUnitId[] = [...CURRICULUM_UNITS];
+export const NEW_CURRICULUM_UNITS: NewCurriculumUnitId[] = ['plane', 'lengthTime', 'fractionDecimal', 'circle', 'fraction', 'measurement', 'pictograph'];
+export function emptyCurriculumUnit(): CurriculumUnitProgress { return { completedMissions: [], stars: Array(10).fill(0), correct: 0, wrong: 0, hints: 0, rewardClaimed: false }; }
 export function emptyCurriculumProgress(): CurriculumProgress {
   return { units: Object.fromEntries(ALL_UNITS.map(id => [id, emptyCurriculumUnit()])) as Record<CurriculumUnitId, CurriculumUnitProgress>, wrongSkills: [], graduationClaimed: false };
 }
@@ -191,11 +191,11 @@ export function curriculumUnitComplete(s: Save, unit: CurriculumUnitId) {
   if (unit === 'multiplication') return s.multiplicationCompleted;
   if (unit === 'addition') return s.additionCompleted;
   if (unit === 'subtraction') return s.subtractionCompleted;
-  return s.curriculum.units[unit].completedMissions.length === 9;
+  return s.curriculum.units[unit].completedMissions.length === 10;
 }
 export function canStartCurriculumMission(s: Save, unit: NewCurriculumUnitId, mission: number) {
   const progress = s.curriculum.units[unit];
-  return Number.isInteger(mission) && mission >= 0 && mission < 9 && (s.teacherMode || mission === 0 || progress.completedMissions.includes(mission - 1));
+  return Number.isInteger(mission) && mission >= 0 && mission < 10 && (s.teacherMode || mission === 0 || progress.completedMissions.includes(mission - 1));
 }
 export function recordCurriculumAttempt(s: Save, unit: CurriculumUnitId, correct: boolean, mission = 0, skill = '', usedHint = false) {
   const progress = s.curriculum.units[unit];
@@ -215,7 +215,7 @@ export function completeCurriculumMission(s: Save, unit: NewCurriculumUnitId, mi
   progress.stars[mission] = Math.max(progress.stars[mission], stars);
   let berries = 0;
   if (firstCompletion) { progress.completedMissions.push(mission); progress.completedMissions.sort((a, b) => a - b); berries += 30 + mission * 5; }
-  const unitCompleted = progress.completedMissions.length === 9;
+  const unitCompleted = progress.completedMissions.length === 10;
   const unitRewarded = unitCompleted && !progress.rewardClaimed;
   if (unitRewarded) { progress.rewardClaimed = true; berries += 300; }
   s.berries += berries;
@@ -223,7 +223,7 @@ export function completeCurriculumMission(s: Save, unit: NewCurriculumUnitId, mi
 }
 export function curriculumGraduationAvailable(s: Save) { return CURRICULUM_UNITS.every(unit => curriculumUnitComplete(s, unit)); }
 export function claimCurriculumGraduation(s: Save) {
-  if (!s.teacherMode && !curriculumGraduationAvailable(s)) throw new Error('여섯 수학 지역을 먼저 모두 통과해 주세요.');
+  if (!s.teacherMode && !curriculumGraduationAvailable(s)) throw new Error('3학년 수학 모험 지역을 먼저 모두 통과해 주세요.');
   if (s.curriculum.graduationClaimed) return 0;
   s.curriculum.graduationClaimed = true; s.berries += 1500; return 1500;
 }
@@ -590,6 +590,22 @@ export function validateSave(value: unknown): Save {
     if (curriculum?.units) for (const unit of ['addition', 'subtraction'] as const) curriculum.units[unit] ??= emptyCurriculumUnit();
     migrated.settings = { ...(migrated.settings as object), practice: { operation: 'auto', tier: 1, skipPicker: false } };
   }
+  if (migrated.version === 11) {
+    migrated.version = 12;
+    const curriculum = migrated.curriculum as Save['curriculum'] | undefined;
+    if (curriculum?.units) {
+      for (const unit of ['plane', 'lengthTime', 'fractionDecimal'] as const) curriculum.units[unit] ??= emptyCurriculumUnit();
+      for (const unit of ['addition', 'subtraction', 'multiplication', 'division', 'circle', 'fraction', 'measurement', 'pictograph'] as const) {
+        const progress = curriculum.units[unit];
+        if (!progress || progress.stars.length !== 9) continue;
+        const oldGuardianStar = progress.stars[8] ?? 0;
+        progress.stars.push(progress.rewardClaimed ? oldGuardianStar : 0);
+        if (['circle', 'fraction', 'measurement', 'pictograph'].includes(unit) && progress.rewardClaimed && progress.completedMissions.length === 9) progress.completedMissions.push(9);
+      }
+      // 기존 3-2 완주 선물은 그대로 보유하고, 새 3학년 전체 수료장은 다시 도전할 수 있어요.
+      curriculum.graduationClaimed = false;
+    }
+  }
   const s = migrated as unknown as Save;
   if (s.garden === undefined) s.garden = { rescued: 0, flowers: [-1, -1, -1] };
   if (s.potions === undefined) s.potions = { stock: s.teacherMode ? POTIONS.map(() => 9) : [0, 0, 0], berryMultiplier: 1, berryUntil: 0, xpMultiplier: 1, xpUntil: 0 };
@@ -605,7 +621,7 @@ export function validateSave(value: unknown): Save {
   }
   const integer = (v: unknown, min: number, max: number): v is number => typeof v === 'number' && Number.isSafeInteger(v) && v >= min && v <= max;
   if (!s.garden || !integer(s.garden.rescued, 0, 3) || !Array.isArray(s.garden.flowers) || s.garden.flowers.length !== 3 || s.garden.flowers.some(f => !integer(f, -1, 2)) || s.garden.flowers.filter(f => f >= 0).length > s.garden.rescued) return fail();
-  if (s.version !== 11 || !OPERATIONS.includes(s.forest) || typeof s.teacherMode !== 'boolean' || typeof s.nickname !== 'string' || !s.nickname.trim() || [...s.nickname].length > 10 || !integer(s.character, 0, 3) || !integer(s.berries, 0, 1e9) || !integer(s.level, 1, 100000) || !integer(s.xp, 0, s.level * 40 - 1) || !integer(s.best, 0, 1e9)) return fail();
+  if (s.version !== 12 || !OPERATIONS.includes(s.forest) || typeof s.teacherMode !== 'boolean' || typeof s.nickname !== 'string' || !s.nickname.trim() || [...s.nickname].length > 10 || !integer(s.character, 0, 3) || !integer(s.berries, 0, 1e9) || !integer(s.level, 1, 100000) || !integer(s.xp, 0, s.level * 40 - 1) || !integer(s.best, 0, 1e9)) return fail();
   if (!s.potions || !Array.isArray(s.potions.stock) || s.potions.stock.length !== POTIONS.length || s.potions.stock.some(n => !integer(n, 0, 99)) || ![1, 2, 3].includes(s.potions.berryMultiplier) || !integer(s.potions.berryUntil, 0, Number.MAX_SAFE_INTEGER) || ![1, 3].includes(s.potions.xpMultiplier) || !integer(s.potions.xpUntil, 0, Number.MAX_SAFE_INTEGER) || (s.potions.berryUntil === 0) !== (s.potions.berryMultiplier === 1) || (s.potions.xpUntil === 0) !== (s.potions.xpMultiplier === 1)) return fail();
   const expedition = s.expedition;
   if (!expedition || !integer(expedition.completed, 0, 1e8) || !integer(expedition.selectedTitle, 0, EXPEDITION_TITLES.length - 1) || expedition.completed < EXPEDITION_TITLES[expedition.selectedTitle].need) return fail();
@@ -665,13 +681,13 @@ export function validateSave(value: unknown): Save {
   if (!s.curriculum || typeof s.curriculum.graduationClaimed !== 'boolean' || !s.curriculum.units || !Array.isArray(s.curriculum.wrongSkills) || s.curriculum.wrongSkills.length > 30) return fail();
   for (const unit of ALL_UNITS) {
     const progress = s.curriculum.units[unit];
-    if (!progress || !Array.isArray(progress.completedMissions) || progress.completedMissions.some(id => !integer(id, 0, 8)) || new Set(progress.completedMissions).size !== progress.completedMissions.length || !Array.isArray(progress.stars) || progress.stars.length !== 9 || progress.stars.some(star => !integer(star, 0, 3)) || !integer(progress.correct, 0, 1e9) || !integer(progress.wrong, 0, 1e9) || !integer(progress.hints, 0, 1e9) || typeof progress.rewardClaimed !== 'boolean') return fail();
+    if (!progress || !Array.isArray(progress.completedMissions) || progress.completedMissions.some(id => !integer(id, 0, 9)) || new Set(progress.completedMissions).size !== progress.completedMissions.length || !Array.isArray(progress.stars) || progress.stars.length !== 10 || progress.stars.some(star => !integer(star, 0, 3)) || !integer(progress.correct, 0, 1e9) || !integer(progress.wrong, 0, 1e9) || !integer(progress.hints, 0, 1e9) || typeof progress.rewardClaimed !== 'boolean') return fail();
     if (progress.completedMissions.some(id => progress.stars[id] === 0) || progress.stars.some((star, id) => star > 0 && !progress.completedMissions.includes(id))) return fail();
-    if (progress.rewardClaimed && !OPERATIONS.includes(unit as Operation) && progress.completedMissions.length !== 9) return fail();
+    if (progress.rewardClaimed && !OPERATIONS.includes(unit as Operation) && progress.completedMissions.length !== 10) return fail();
   }
-  if (s.curriculum.wrongSkills.some(item => !item || !ALL_UNITS.includes(item.unit) || !integer(item.mission, 0, 8) || typeof item.skill !== 'string' || !item.skill || item.skill.length > 40)) return fail();
+  if (s.curriculum.wrongSkills.some(item => !item || !ALL_UNITS.includes(item.unit) || !integer(item.mission, 0, 9) || typeof item.skill !== 'string' || !item.skill || item.skill.length > 40)) return fail();
   if (s.curriculum.graduationClaimed && !s.teacherMode && !curriculumGraduationAvailable(s)) return fail();
-  if (!s.discoveries || !s.room || typeof s.room.inside !== 'boolean' || !Array.isArray(s.room.furniture) || s.room.furniture.some(id => !integer(id, 0, 13)) || new Set(s.room.furniture).size !== s.room.furniture.length) return fail();
+  if (!s.discoveries || !s.room || typeof s.room.inside !== 'boolean' || !Array.isArray(s.room.furniture) || s.room.furniture.some(id => !integer(id, 0, 16)) || new Set(s.room.furniture).size !== s.room.furniture.length) return fail();
   if (s.room.inside && journeyFor(s).stage !== 0) return fail();
   if (s.hub !== undefined && (!NEW_CURRICULUM_UNITS.includes(s.hub) || journeyFor(s).stage !== 0)) return fail();
   if (s.daily !== undefined) {

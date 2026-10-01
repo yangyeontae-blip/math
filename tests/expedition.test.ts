@@ -77,7 +77,7 @@ test('an active expedition and old version 6 saves survive loading', () => {
   const old = { ...finishedStory(), version: 6 } as Record<string, unknown>;
   delete old.expedition;
   const migrated = validateSave(old);
-  assert.equal(migrated.version, 11);
+  assert.equal(migrated.version, 12);
   assert.deepEqual(migrated.expedition, { completed: 0, selectedTitle: 0, active: null });
   assert.equal(migrated.journey.maps[10].cleared, true);
   const broken = structuredClone(s);

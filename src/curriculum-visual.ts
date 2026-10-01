@@ -31,8 +31,37 @@ function fractionHtml(visual: Extract<CurriculumVisual, { kind: 'fraction' }>) {
   return `<div class="curriculum-visual fraction-visual">${barGroup(numerator, denominator)}<small>막대 하나를 ${denominator}칸으로 똑같이 나누었어요${wholes > 1 ? ` · 막대 ${wholes}개` : ''}</small></div>`;
 }
 
+function geometryHtml(visual: Extract<CurriculumVisual, { kind: 'geometry' }>) {
+  const common = 'stroke="#507a68" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" fill="#dff1d5"';
+  const arrows = '<defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3 z" fill="#507a68"/></marker></defs>';
+  const drawings: Record<typeof visual.shape, string> = {
+    segment: '<line x1="48" y1="74" x2="152" y2="74"/><circle cx="48" cy="74" r="7"/><circle cx="152" cy="74" r="7"/>',
+    line: '<line x1="32" y1="74" x2="168" y2="74" marker-start="url(#arrow)" marker-end="url(#arrow)"/>',
+    ray: '<circle cx="48" cy="74" r="7"/><line x1="48" y1="74" x2="168" y2="74" marker-end="url(#arrow)"/>',
+    angle: '<path d="M48 112 L100 58 L160 112" fill="none"/><circle cx="100" cy="58" r="6"/>',
+    'right-angle': '<path d="M55 112 L55 48 L150 48" fill="none"/><path d="M55 72 L79 72 L79 48" fill="none" stroke="#e9827b"/>',
+    'right-triangle': '<path d="M48 112 L48 42 L160 112 Z"/><path d="M48 88 L72 88 L72 112" fill="none" stroke="#e9827b"/>',
+    rectangle: '<rect x="42" y="38" width="116" height="76" rx="3"/><path d="M42 62 L66 62 L66 38" fill="none" stroke="#e9827b"/>',
+    square: '<rect x="60" y="34" width="88" height="88" rx="3"/><path d="M60 58 L84 58 L84 34" fill="none" stroke="#e9827b"/>',
+  };
+  return `<div class="curriculum-visual geometry-visual"><svg viewBox="0 0 200 150" role="img" aria-label="${esc(visual.label ?? '평면도형 그림')}">${arrows}<g ${common}>${drawings[visual.shape]}</g><text x="100" y="142">${esc(visual.label ?? '도형의 성질을 살펴봐요')}</text></svg></div>`;
+}
+
+function lengthTimeHtml(visual: Extract<CurriculumVisual, { kind: 'length-time' }>) {
+  const icon = visual.measure === 'length' ? '📏' : '🕰️';
+  return `<div class="curriculum-visual length-time-visual"><div class="length-time-items">${visual.values.map((value, index) => `<b><span>${icon}</span><small>${esc(visual.labels?.[index] ?? `${value} ${visual.unit}`)}</small></b>`).join('')}</div><em>${visual.measure === 'length' ? '길이 단위를 맞추어 살펴봐요' : '시간 단위를 맞추어 살펴봐요'}</em></div>`;
+}
+
+function decimalHtml(visual: Extract<CurriculumVisual, { kind: 'decimal' }>) {
+  const bar = (tenths: number, label: string) => `<div><strong>${label}</strong><span>${Array.from({ length: 10 }, (_, id) => `<i class="${id < tenths ? 'on' : ''}"></i>`).join('')}</span></div>`;
+  return `<div class="curriculum-visual decimal-visual">${bar(visual.tenths, `0.${visual.tenths}`)}${visual.compare === undefined ? '' : bar(visual.compare, `0.${visual.compare}`)}<small>전체를 10칸으로 똑같이 나누어 살펴봐요</small></div>`;
+}
+
 export function curriculumVisualHtml(visual: CurriculumVisual): string {
   if (visual.kind === 'circle') return circleHtml(visual);
+  if (visual.kind === 'geometry') return geometryHtml(visual);
+  if (visual.kind === 'length-time') return lengthTimeHtml(visual);
+  if (visual.kind === 'decimal') return decimalHtml(visual);
   if (visual.kind === 'fraction') return fractionHtml(visual);
   if (visual.kind === 'measure') {
     const icons = visual.measure === 'capacity' ? '🧪' : '📦';
