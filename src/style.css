@@ -199,3 +199,55 @@ dialog{background:linear-gradient(155deg,#fffdf4 0%,#f6fae9 58%,#fff1e8 100%);bo
 .legal-notice section strong{display:block;margin:1px 0 5px}
 .legal-notice section p{margin:0;color:#66765f;font-size:.88rem;line-height:1.65}
 @media(max-width:480px){.legal-notice section{grid-template-columns:34px 1fr;gap:9px}.legal-notice section>span{width:34px;height:34px;font-size:1.15rem}}
+
+
+/* ===== 동물의 숲 느낌 레이어: 크림 종이, 잎사귀 초록, 나무 간판, 통통 튀는 버튼, 말풍선 =====
+   위의 규칙을 덮어쓰기만 하고 크기·위치는 건드리지 않아요. */
+:root{--ink:#5a4a3a;--ink-soft:#8a7863;--paper:#fffaee;--paper-2:#fff3d6;--leaf:#5fb36f;--leaf-deep:#3b8a57;--leaf-shadow:#2c6b43;--wood:#d9ad7c;--wood-deep:#b0824f;--pink:#f5a3b9;--sun:#ffd463;--edge:#dcc79d;--bounce:cubic-bezier(.34,1.56,.64,1);font-family:'Jua','Nunito','Gowun Dodum','Nanum Gothic','Malgun Gothic','Apple SD Gothic Neo','Noto Sans KR',system-ui,sans-serif;color:var(--ink)}
+button{transition:transform .22s var(--bounce),box-shadow .2s,background .2s,filter .2s}
+button:hover:not(:disabled){transform:translateY(-2px) scale(1.03)}button:active:not(:disabled){transform:translateY(2px) scale(.98)}
+.wide:hover:not(:disabled){transform:translateY(-2px) scale(1.01)}
+.primary{background:linear-gradient(180deg,#7fcc8d,#4aa266);color:#fffef0;border:3px solid #fffaee;border-radius:999px;box-shadow:0 5px 0 var(--leaf-shadow),0 10px 18px #2c6b4326;text-shadow:0 1px 0 #2c6b4366}
+.primary:active:not(:disabled){box-shadow:0 1px 0 var(--leaf-shadow),0 4px 8px #2c6b4326}
+.secondary{background:linear-gradient(180deg,#fffaf0,#f6ead0);color:#7a6246;border:3px solid #fffaee;border-radius:999px;box-shadow:0 4px 0 var(--edge),0 8px 14px #8a6a3a1c}
+.text-button{color:#6f8f4f}
+.number-pad button{background:linear-gradient(180deg,#fffaf0,#f4e8cb);color:#6a543c;border:3px solid #fffef6;border-radius:18px;box-shadow:0 4px 0 var(--edge)}
+.number-pad button.primary{background:linear-gradient(180deg,#7fcc8d,#4aa266);color:#fffef0;box-shadow:0 4px 0 var(--leaf-shadow)}
+.player-card,.wallet,.quest-card,.equipment-card,.location-pill{background:linear-gradient(180deg,#fffdf4,#fff3d8);border:4px solid #fffef8;border-radius:26px;box-shadow:0 6px 0 #d9bf8a55,0 14px 30px #6a4f2a1f}
+.brand-mini{background:linear-gradient(180deg,#e9c99b,#d6a874);border:4px solid #f6e2bd;color:#fff9e8;text-shadow:0 2px 0 #9a6f4780;border-radius:22px;box-shadow:0 6px 0 #a87b4c,0 14px 24px #4d36202a}
+.brand-mini:before{content:'🍃'}
+.quest-card:after{content:'📌';left:16px;right:auto;top:-12px;font-size:1.1rem;color:inherit}.player-card:after{content:'🍃'}
+.practice-skip{min-height:44px}.practice-skip input,.settings-list input[type=checkbox]{width:26px;height:26px}
+.quest-card .codex-open{min-height:40px;padding:9px 6px}
+.level-badge{background:linear-gradient(145deg,#80d08e,#3f9a5d);box-shadow:inset 0 2px #ffffff66,0 3px 0 var(--leaf-shadow)}
+.wallet{background:linear-gradient(180deg,#fff6cf,#ffe39b)}.wallet b{color:#9a6a1f}
+.icon-button{background:linear-gradient(180deg,#fffdf4,#fbefd2);border:3px solid #fffef6;color:#7a6246;box-shadow:0 5px 0 var(--edge)}
+.xp-track{background:#ecdcb8;height:8px}#xp-fill{background:linear-gradient(90deg,#ffd463,#ffb94d)}
+.quest.done{color:#3f8f5a}.location-pill span,.player-card small,.equipment-card small{color:var(--ink-soft)}
+.interaction{border:4px solid #fffef8;color:#6a543c;background:linear-gradient(180deg,#fffdf4,#ffe7b8)}
+.entity-label{background:linear-gradient(180deg,#fffdf4,#fff1cf);border:3px solid #fffef8;color:#6a543c;box-shadow:0 4px 0 #dcc79d99}
+.entity-label.near{background:linear-gradient(180deg,#7fcc8d,#4aa266);color:#fffef0;border-color:#fffef8}
+.monster-label{background:#f6ffe0e6}
+dialog{background:#fffaee radial-gradient(#f3e3bf 1.6px,transparent 1.7px) 0 0/20px 20px;border:5px solid #fffef8;border-radius:34px;box-shadow:0 0 0 4px #e8c98f,0 28px 80px #3a2a1a55;color:var(--ink)}
+dialog[open]{animation:ac-pop .34s var(--bounce)}
+@keyframes ac-pop{from{opacity:0;transform:translateY(16px) scale(.92)}}
+dialog::backdrop{background:#2f5b4a66;backdrop-filter:blur(4px)}
+.modal-heading{border-bottom:3px dotted #e8d2a2}
+.modal-heading .eyebrow{display:inline-block;padding:3px 11px;border-radius:999px;background:#ffe9a8;color:#a0702a;letter-spacing:.06em}
+.close{background:#ffe2d6;color:#c0675a;border:3px solid #fffef8;box-shadow:0 3px 0 #efc2b3}
+.note,.shop-explainer{color:var(--ink-soft)}.note{background:#fff0cf}
+#toast{background:#fffaee;border:4px solid #fffef8;border-radius:26px;box-shadow:0 6px 0 var(--edge),0 12px 30px #5a3f1e26;color:var(--ink)}
+#toast:after{content:'';position:absolute;left:50%;bottom:-13px;transform:translateX(-50%);border:9px solid transparent;border-top-color:#fffaee;border-bottom:0}
+.stage-card,.item-card,.inventory-item,.curriculum-mission,.forest-card,.daily-row{border-width:3px;border-radius:22px;box-shadow:0 5px 0 #d9c79f66}
+.inventory-tabs button{border:3px solid #fffef6;border-radius:18px;background:#fbefd2;color:#7a6246;box-shadow:0 4px 0 var(--edge)}.inventory-tabs button.active{background:linear-gradient(180deg,#7fcc8d,#4aa266);color:#fff;box-shadow:0 4px 0 var(--leaf-shadow)}
+.practice-picker{border:3px dashed #e3cf9f;background:#fff7e0}.practice-title{color:#8a6c3f}
+.practice-chip{background:linear-gradient(180deg,#fffaf0,#f7ebcf);border:3px solid #fffef6;color:#7a6246;border-radius:999px;box-shadow:0 4px 0 var(--edge)}
+.practice-chip.selected{background:linear-gradient(180deg,#c8efc9,#9fdca4);color:#2f6b45;box-shadow:0 4px 0 #7bbf84}
+.practice-note{background:#ffeab8;color:#7a5d2c}
+.welcome-card{background:#fffaee;border:5px solid #fffef8;border-radius:38px;box-shadow:0 0 0 4px #e8c98f,0 26px 70px #3a2a1a40}
+.welcome-card h1{color:#4a9a63;text-shadow:0 3px 0 #fffef8,0 5px 0 #cfe9c8}.welcome-card h1 span{color:#d8884e}
+.character-choice{border:3px solid #fffef6;border-radius:999px;background:#fbefd2;box-shadow:0 3px 0 var(--edge)}.character-choice.selected{background:#c8efc9;border-color:#fffef6;box-shadow:0 3px 0 #7bbf84}
+input[type=text],#nickname-input{border:3px solid #ecd9a8;border-radius:16px;background:#fffdf4}
+.reward-banner{background:linear-gradient(180deg,#fff7d6,#ffe9ae);border:3px solid #fffef8;box-shadow:0 5px 0 #e3cf9f}
+dialog,#hud,.welcome-card,#toast{word-break:keep-all;overflow-wrap:break-word}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
