@@ -12,6 +12,7 @@ import { EXPEDITION_TITLES, expeditionBerryReward, expeditionLayout, expeditionU
 import { parseLocalRanks, updateLocalRanks } from './ranking';
 import { getGlobalPlayerId, loadGlobalRanks, syncGlobalRank, type GlobalRank } from './global-ranking';
 import { markBackup, shouldRemindBackup } from './backup';
+import { adaptiveEnabled, adaptiveRecord, setAdaptive, startLevel, type AdaptiveLevel } from './adaptive';
 import { buildReport, reportHtml } from './report';
 import { addBossDamage, bossOfWeek, claimBossReward, readBoss, setClassCode, syncBoss, type BossSummary } from './boss';
 import { speak, speechSupported, stopSpeech, autoReadEnabled, setAutoRead } from './speech';
@@ -291,23 +292,41 @@ const PRACTICE_TIER_TEXT: Record<Operation, readonly [string, string, string]> =
   division: ['몇십을 똑같이 나눠요', '두 자리 수를 똑같이 나눠요', '나머지가 있는 나눗셈'],
 };
 function practiceNote(choice: Save['settings']['practice']) {
-  return choice.operation === 'auto' ? '자동: 지금 있는 숲의 단계에 맞춰 문제가 나와요.' : `${OPERATION_INFO[choice.operation].name} · ${PRACTICE_TIER_NAMES[choice.tier]} — ${PRACTICE_TIER_TEXT[choice.operation][choice.tier]}`;
+  if (choice.operation === 'auto') return '자동: 지금 있는 숲의 단계에 맞춰 문제가 나와요.';
+  if (adaptiveEnabled()) return `${OPERATION_INFO[choice.operation].name} · ✨ 자동 조절 — 연속 3번 맞히면 한 단계 어려워지고, 2번 틀리면 한 단계 쉬워져요. ${PRACTICE_TIER_NAMES[choice.tier]}부터 시작해요.`;
+  return `${OPERATION_INFO[choice.operation].name} · ${PRACTICE_TIER_NAMES[choice.tier]} — ${PRACTICE_TIER_TEXT[choice.operation][choice.tier]}`;
+}
+// 자동 조절 중인 계산별 현재 단계(이번 접속 동안만 기억해요). 켜져 있지 않으면 고른 단계를 그대로 써요.
+const adaptiveLevels = new Map<Operation, AdaptiveLevel>();
+function practiceFor(practice?: { operation: Operation; tier: PracticeTier }) {
+  if (!practice || !adaptiveEnabled()) return practice;
+  const level = adaptiveLevels.get(practice.operation) ?? startLevel(practice.tier); adaptiveLevels.set(practice.operation, level);
+  return { operation: practice.operation, tier: level.tier };
+}
+function recordAdaptive(correct: boolean) {
+  if (!battle?.practice || !adaptiveEnabled()) return;
+  const before = adaptiveLevels.get(battle.practice.operation) ?? startLevel(battle.practice.tier), after = adaptiveRecord(before, correct);
+  adaptiveLevels.set(battle.practice.operation, after);
+  if (after.tier > before.tier) toast('✨ 잘하고 있어요! 조금 더 어려운 문제로 올라가 볼까요?');
+  else if (after.tier < before.tier) toast('🌿 천천히 해도 괜찮아요. 한 단계 쉬운 문제로 바꿨어요.');
 }
 function practicePickerHtml() {
   const choice = state!.settings.practice, ops: [string, string, string][] = [['auto', '🎲', '자동'], ...OPERATIONS.map(op => [op, OPERATION_INFO[op].icon, OPERATION_INFO[op].name] as [string, string, string])];
-  return `<div class="practice-picker"><p class="practice-title">어떤 계산을 연습할까요?</p><div class="practice-chips" role="radiogroup" aria-label="연습할 계산">${ops.map(([id, icon, name]) => `<button type="button" class="practice-chip ${choice.operation === id ? 'selected' : ''}" data-practice-op="${id}" role="radio" aria-checked="${choice.operation === id}"><span aria-hidden="true">${icon}</span>${name}</button>`).join('')}</div><div class="practice-tiers" ${choice.operation === 'auto' ? 'hidden' : ''}><p class="practice-title">난이도는요?</p><div class="practice-chips" role="radiogroup" aria-label="난이도">${PRACTICE_TIER_NAMES.map((name, tier) => `<button type="button" class="practice-chip tier ${choice.tier === tier ? 'selected' : ''}" data-practice-tier="${tier}" role="radio" aria-checked="${choice.tier === tier}">${['🌱', '🌿', '🌳'][tier]} ${name}</button>`).join('')}</div></div><p class="practice-note" id="practice-note">${practiceNote(choice)}</p></div>`;
+  return `<div class="practice-picker"><p class="practice-title">어떤 계산을 연습할까요?</p><div class="practice-chips" role="radiogroup" aria-label="연습할 계산">${ops.map(([id, icon, name]) => `<button type="button" class="practice-chip ${choice.operation === id ? 'selected' : ''}" data-practice-op="${id}" role="radio" aria-checked="${choice.operation === id}"><span aria-hidden="true">${icon}</span>${name}</button>`).join('')}</div><div class="practice-tiers" ${choice.operation === 'auto' ? 'hidden' : ''}><p class="practice-title">난이도는요?</p><div class="practice-chips" role="radiogroup" aria-label="난이도">${PRACTICE_TIER_NAMES.map((name, tier) => `<button type="button" class="practice-chip tier ${!adaptiveEnabled() && choice.tier === tier ? 'selected' : ''}" data-practice-tier="${tier}" role="radio" aria-checked="${!adaptiveEnabled() && choice.tier === tier}">${['🌱', '🌿', '🌳'][tier]} ${name}</button>`).join('')}<button type="button" class="practice-chip tier ${adaptiveEnabled() ? 'selected' : ''}" data-practice-adaptive role="radio" aria-checked="${adaptiveEnabled()}">✨ 자동</button></div></div><p class="practice-note" id="practice-note">${practiceNote(choice)}</p></div>`;
 }
 function bindPracticePicker(root: ParentNode) {
   if (!state) return;
   const sync = () => {
     const choice = state!.settings.practice;
     root.querySelectorAll<HTMLButtonElement>('[data-practice-op]').forEach(button => { const on = button.dataset.practiceOp === choice.operation; button.classList.toggle('selected', on); button.setAttribute('aria-checked', String(on)); });
-    root.querySelectorAll<HTMLButtonElement>('[data-practice-tier]').forEach(button => { const on = Number(button.dataset.practiceTier) === choice.tier; button.classList.toggle('selected', on); button.setAttribute('aria-checked', String(on)); });
+    root.querySelectorAll<HTMLButtonElement>('[data-practice-tier]').forEach(button => { const on = !adaptiveEnabled() && Number(button.dataset.practiceTier) === choice.tier; button.classList.toggle('selected', on); button.setAttribute('aria-checked', String(on)); });
+    root.querySelectorAll<HTMLButtonElement>('[data-practice-adaptive]').forEach(button => { button.classList.toggle('selected', adaptiveEnabled()); button.setAttribute('aria-checked', String(adaptiveEnabled())); });
     const tiers = root.querySelector<HTMLElement>('.practice-tiers'); if (tiers) tiers.hidden = choice.operation === 'auto';
     const note = root.querySelector<HTMLElement>('#practice-note'); if (note) note.textContent = practiceNote(choice);
   };
   root.querySelectorAll<HTMLButtonElement>('[data-practice-op]').forEach(button => button.onclick = () => { state!.settings.practice.operation = button.dataset.practiceOp as Operation | 'auto'; sync(); persist(); });
-  root.querySelectorAll<HTMLButtonElement>('[data-practice-tier]').forEach(button => button.onclick = () => { state!.settings.practice.tier = Number(button.dataset.practiceTier) as PracticeTier; sync(); persist(); });
+  root.querySelectorAll<HTMLButtonElement>('[data-practice-tier]').forEach(button => button.onclick = () => { setAdaptive(false); adaptiveLevels.clear(); state!.settings.practice.tier = Number(button.dataset.practiceTier) as PracticeTier; sync(); persist(); });
+  root.querySelectorAll<HTMLButtonElement>('[data-practice-adaptive]').forEach(button => button.onclick = () => { setAdaptive(true); adaptiveLevels.clear(); sync(); });
 }
 function beginHuntBattle(monster: number, id: string) {
   if (!state) return;
@@ -574,7 +593,7 @@ function openNextGate() {
   switchStage(stage + 1, state.forest);
 }
 function startBattle(monster: number, arena: boolean, id: string) {
-  if (!state) return; const choice = state.settings.practice, practice = choice.operation === 'auto' || id.startsWith('expMonster') ? undefined : { operation: choice.operation, tier: choice.tier }, journey = arena ? state.journey : journeyFor(state), operation: Operation = arena ? 'division' : state.forest, cleared = journey.maps.slice(1).filter(map => map.cleared).length, difficultyStage = arena ? Math.min(10, cleared + 1) : journey.stage; const huntId = id.startsWith('monster') ? Number(id.slice(7)) : -1; battle = { encounter: new Encounter(monster, arena, state.level, undefined, difficultyStage, state.settings.maxDividend, operation, state.settings.multiplicationRange, practice), id, practice, kind: id.startsWith('expMonster') ? 'expMonster' : 'normal', round: 1, goalRounds: monsterBattleRounds(monster, arena), score: 0, result: null, story: multiplicationUsesStory(huntId) }; renderBattle();
+  if (!state) return; const choice = state.settings.practice, practice = choice.operation === 'auto' || id.startsWith('expMonster') ? undefined : { operation: choice.operation, tier: choice.tier }, journey = arena ? state.journey : journeyFor(state), operation: Operation = arena ? 'division' : state.forest, cleared = journey.maps.slice(1).filter(map => map.cleared).length, difficultyStage = arena ? Math.min(10, cleared + 1) : journey.stage; const huntId = id.startsWith('monster') ? Number(id.slice(7)) : -1; battle = { encounter: new Encounter(monster, arena, state.level, undefined, difficultyStage, state.settings.maxDividend, operation, state.settings.multiplicationRange, practiceFor(practice)), id, practice, kind: id.startsWith('expMonster') ? 'expMonster' : 'normal', round: 1, goalRounds: monsterBattleRounds(monster, arena), score: 0, result: null, story: multiplicationUsesStory(huntId) }; renderBattle();
 }
 function startMultiplicationGate() {
   if (!state) return; const gate = startMultiplicationFinal(state); if (!gate) return;
@@ -685,8 +704,8 @@ function submitAnswer() {
   const submitted = b.encounter.question.remainder ? `${input.value}R${remainderInput!.value}` : input.value;
   const outcome = b.encounter.answer(submitted);
   if (outcome === 'ignored') return;
-  if (outcome === 'wrong') { if (!b.missedCurrent) { b.missedCurrent = true; recordWrongAnswer(state, b.encounter.question); recordCurriculumAttempt(state, b.encounter.question.operation ?? 'division', false); sessionWrong++; } audio.play('wrong'); persist(); $('#answer-message').textContent = '괜찮아요! 묶음을 살펴보고 다시 풀어 볼까요?'; input.value = ''; if (remainderInput) remainderInput.value = ''; showHint(); return; }
-  sessionCorrect++; recordCorrectAnswer(state, b.encounter.monster, !b.missedCurrent); if (!b.missedCurrent) { recordCurriculumAttempt(state, b.encounter.question.operation ?? 'division', true); addBossDamage(localStorage); } state.discoveries.outfits.includes(state.outfit) || state.discoveries.outfits.push(state.outfit); if (state.pet >= 0 && !state.discoveries.pets.includes(state.pet)) state.discoveries.pets.push(state.pet);
+  if (outcome === 'wrong') { if (!b.missedCurrent) { b.missedCurrent = true; recordAdaptive(false); recordWrongAnswer(state, b.encounter.question); recordCurriculumAttempt(state, b.encounter.question.operation ?? 'division', false); sessionWrong++; } audio.play('wrong'); persist(); $('#answer-message').textContent = '괜찮아요! 묶음을 살펴보고 다시 풀어 볼까요?'; input.value = ''; if (remainderInput) remainderInput.value = ''; showHint(); return; }
+  sessionCorrect++; recordCorrectAnswer(state, b.encounter.monster, !b.missedCurrent); if (!b.missedCurrent) { recordCurriculumAttempt(state, b.encounter.question.operation ?? 'division', true); addBossDamage(localStorage); recordAdaptive(true); } state.discoveries.outfits.includes(state.outfit) || state.discoveries.outfits.push(state.outfit); if (state.pet >= 0 && !state.discoveries.pets.includes(state.pet)) state.discoveries.pets.push(state.pet);
   if (!b.encounter.arena && !['multiplicationGate', 'expGate'].includes(b.kind) && b.round < (b.goalRounds ?? 1)) {
     audio.play('correct'); world.celebrate(); persist();
     $('#answer-message').textContent = '정답이에요! 다음 문제도 함께 풀어요.'; $('#monster-portrait').classList.add('defeated'); $('.number-pad').hidden = true; $('.battle-footer').hidden = true; $('#hint').hidden = true; $('#battle-result').hidden = false;
@@ -733,12 +752,12 @@ function nextBattle() {
   if (battle.kind === 'expGate') { battle = null; switchStage(0); openExpeditionBoard(); return; }
   if (!battle.encounter.arena) { battle = null; closeModal(); return; }
   if (battle.round === 5) { const score = battle.score; battle = null; openModal(title('오늘도 한 뼘 자랐어요', '대련을 마쳤어요!') + `<div class="arena-intro"><div class="arena-symbol">🏆</div><h3>${score}점</h3><p>다섯 친구와의 수학 대련 성공!<br>나의 최고 기록은 ${state.best}점이에요.</p><button class="primary wide" data-close>마을로 돌아가기</button></div>`); return; }
-  const previous = battle.encounter.question, difficultyStage = battle.encounter.stage; battle.round++; battle.encounter = new Encounter(Math.floor(Math.random() * MONSTERS.length), true, state.level, previous, difficultyStage, state.settings.maxDividend, 'division', state.settings.multiplicationRange, battle.practice); battle.result = null; battle.missedCurrent = false; battle.story = battle.round % 3 === 0; renderBattle();
+  const previous = battle.encounter.question, difficultyStage = battle.encounter.stage; battle.round++; battle.encounter = new Encounter(Math.floor(Math.random() * MONSTERS.length), true, state.level, previous, difficultyStage, state.settings.maxDividend, 'division', state.settings.multiplicationRange, practiceFor(battle.practice)); battle.result = null; battle.missedCurrent = false; battle.story = battle.round % 3 === 0; renderBattle();
 }
 function continueFriendBattle() {
   if (!battle || !state || !battle.encounter.solved || battle.round >= (battle.goalRounds ?? 1)) return;
   const previous = battle.encounter.question, operation = previous.operation ?? 'division'; battle.round++;
-  battle.encounter = new Encounter(battle.encounter.monster, false, state.level, previous, battle.encounter.stage, state.settings.maxDividend, operation, state.settings.multiplicationRange, battle.practice); battle.result = null; battle.missedCurrent = false; renderBattle();
+  battle.encounter = new Encounter(battle.encounter.monster, false, state.level, previous, battle.encounter.stage, state.settings.maxDividend, operation, state.settings.multiplicationRange, practiceFor(battle.practice)); battle.result = null; battle.missedCurrent = false; renderBattle();
 }
 function exitBattle() { if (battle?.encounter.arena) toast(`대련 ${battle.score}점 · 받은 보상은 저장했어요.`); battle = null; persist(); if (sessionExpired) { showSessionSummary(); return; } closeModal(); }
 
