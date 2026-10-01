@@ -4,7 +4,7 @@ import { curriculumVisualHtml } from './curriculum-visual';
 import { VILLAGE_THEMES, villageThemeId } from './villages';
 import { DAILY_MISSIONS, DAILY_STAMPS, DAILY_ALL_CLEAR_BONUS, claimDaily, dailyReady, dailyStampsShown, ensureDaily } from './daily';
 import type { World, AvatarPreview } from './world';
-import { newSave, validateSave, CHARACTERS, MONSTERS, OUTFITS, PETS, POTIONS, RIDES, WEAPONS, HAIRSTYLES, FACES, WEAPON_UPGRADES, OUTFIT_UPGRADES, Encounter, grantReward, rewardFor, potionEffects, buy, upgrade, buyRide, dismount, buyPet, unequipPet, buyLook, buyPotion, usePotion, applyTeacherCode, collectBerry, finishHunt, fellTree, treeDamage, canEnter, monsterBattleRounds, recordWrongAnswer, recordCorrectAnswer, STAGE_STORIES, journeyFor, multiplicationUsesStory, startMultiplicationFinal, answerMultiplicationFinal, questionAnswerText, curriculumUnitComplete, canStartCurriculumMission, recordCurriculumAttempt, completeCurriculumMission, curriculumGraduationAvailable, claimCurriculumGraduation, OPERATIONS, OPERATION_INFO, PRACTICE_TIER_NAMES, type CurriculumUnitId, type NewCurriculumUnitId, type ForestKind, type Operation, type PracticeTier, type Save } from './rules';
+import { newSave, validateSave, CHARACTERS, MONSTERS, OUTFITS, PETS, POTIONS, RIDES, WEAPONS, HAIRSTYLES, FACES, WEAPON_UPGRADES, OUTFIT_UPGRADES, Encounter, grantReward, rewardFor, potionEffects, buy, upgrade, buyRide, dismount, buyPet, unequipPet, buyLook, buyPotion, usePotion, applyTeacherCode, collectBerry, finishHunt, fellTree, treeDamage, canEnter, monsterBattleRounds, recordWrongAnswer, recordCorrectAnswer, STAGE_STORIES, journeyFor, multiplicationUsesStory, startMultiplicationFinal, answerMultiplicationFinal, questionAnswerText, curriculumUnitComplete, canStartCurriculumMission, recordCurriculumAttempt, completeCurriculumMission, curriculumGraduationAvailable, claimCurriculumGraduation, OPERATIONS, NEW_CURRICULUM_UNITS, OPERATION_INFO, PRACTICE_TIER_NAMES, type CurriculumUnitId, type NewCurriculumUnitId, type ForestKind, type Operation, type PracticeTier, type Save } from './rules';
 import { STAGES, stageMonsters, stageBerries, berryValue, clearBonus } from './stages';
 import { Sound } from './audio';
 import { RESCUES, FLOWERS, gardenOf, rescueSheep, plantFlower } from './garden';
@@ -53,25 +53,32 @@ let curriculumModulePromise: Promise<CurriculumModule> | null = null;
 let curriculumRun: { unit: CurriculumUnitId; mission: number; question: CurriculumQuestion; index: number; total: number; wrong: number; hints: number; hintLevel: number; seenQuestions: Set<string>; missedCurrent?: boolean; graduation?: boolean; review?: boolean } | null = null;
 let storageError = false, sessionExpired = false, sessionElapsed = 0, sessionCorrect = 0, sessionWrong = 0;
 const OUTFIT_ICONS = ['🌿', '🌈', '🍃', '☁️', '🌸', '🌟', '🌙', '👑', '🍓', '🐥', '🐰', '🌰', '🐱', '🐑', '🐸', '🧚', '🌻', '🐝', '🍑', '✴️'];
-const CURRICULUM_REGIONS: { id: CurriculumUnitId; icon: string; name: string; short: string; className: string }[] = [
+type CurriculumRegion = { id: CurriculumUnitId; icon: string; name: string; short: string; className: string; semester: '1학기' | '2학기' | '공통' };
+const GRADE3_SEMESTER1: CurriculumRegion[] = [
+  { id: 'addition', icon: '🍎', name: '사과 덧셈숲', short: '세 자리 수의 덧셈과 받아올림', className: 'addition', semester: '1학기' },
+  { id: 'subtraction', icon: '🍂', name: '낙엽 뺄셈숲', short: '세 자리 수의 뺄셈과 받아내림', className: 'subtraction', semester: '1학기' },
+  { id: 'plane', icon: '📐', name: '반듯반듯 도형마을', short: '선분·직선·각·직각과 여러 가지 도형', className: 'plane', semester: '1학기' },
+  { id: 'division', icon: '🌿', name: '베리 나눗셈숲', short: '똑같이 나누기와 곱셈으로 몫 찾기', className: 'division', semester: '공통' },
+  { id: 'multiplication', icon: '🌻', name: '해바라기 곱셈숲', short: '곱셈의 원리부터 여러 자리 곱셈까지', className: 'multiplication', semester: '공통' },
+  { id: 'lengthTime', icon: '🕰️', name: '똑딱 길이시간마을', short: 'mm·km와 초, 시간의 계산', className: 'length-time', semester: '1학기' },
+  { id: 'fractionDecimal', icon: '🔟', name: '열칸 분수소수마을', short: '분수와 소수의 뜻과 크기 비교', className: 'fraction-decimal', semester: '1학기' },
+];
+const GRADE3_SEMESTER2: CurriculumRegion[] = [
   { id: 'multiplication', icon: '🌻', name: '해바라기 곱셈숲', short: '세 자리 수×한 자리 수와 두 자리 수×두 자리 수', className: 'multiplication' },
   { id: 'division', icon: '🌿', name: '베리 나눗셈숲', short: '두·세 자리 수를 나누고 나머지 찾기', className: 'division' },
   { id: 'circle', icon: '🌙', name: '달빛 원의 정원', short: '중심·반지름·지름과 컴퍼스', className: 'circle' },
   { id: 'fraction', icon: '🍰', name: '조각케이크 분수섬', short: '분수만큼, 대분수와 크기 비교', className: 'fraction' },
   { id: 'measurement', icon: '⚖️', name: '물방울 저울마을', short: 'L·mL와 kg·g·t, 어림과 계산', className: 'measurement' },
   { id: 'pictograph', icon: '🔭', name: '별빛 그림그래프 관측소', short: '자료를 그림그래프로 읽고 나타내기', className: 'pictograph' },
-];
-const BONUS_FORESTS: { id: CurriculumUnitId; icon: string; name: string; short: string; className: string }[] = [
-  { id: 'addition', icon: '🍎', name: '사과 덧셈숲', short: '2학년 복습 · 받아올림과 세 자리 수', className: 'addition' },
-  { id: 'subtraction', icon: '🍂', name: '낙엽 뺄셈숲', short: '2학년 복습 · 받아내림과 세 자리 수', className: 'subtraction' },
-];
+].map(region => ({ ...region, semester: region.id === 'multiplication' || region.id === 'division' ? '공통' : '2학기' } as CurriculumRegion));
+const CURRICULUM_REGIONS: CurriculumRegion[] = [...new Map([...GRADE3_SEMESTER1, ...GRADE3_SEMESTER2].map(region => [region.id, region])).values()];
 const FOREST_INFO: Record<ForestKind, { name: string; icon: string; op: string; title: string; intro: string; stages: (step: number) => string }> = {
   division: { name: '나눗셈의 숲', icon: '🌿', op: '나눗셈', title: '베리 나눗셈 지도', intro: '몇십 나눗셈에서 시작해 세 자리 수와 나머지까지 배워요.', stages: step => divisionStageLabel(step) },
   multiplication: { name: '곱셈의 숲', icon: '🌻', op: '곱셈', title: '해바라기 곱셈 지도', intro: '구구단부터 세 자리 수×한 자리 수와 두 자리 수×두 자리 수까지 차근차근 만나요.', stages: step => multiplicationStageLabel(step) },
-  addition: { name: '덧셈의 숲', icon: '🍎', op: '덧셈', title: '사과 덧셈 지도', intro: '한 자리 수 덧셈에서 시작해 받아올림과 세 자리 수까지 2학년 덧셈을 복습해요.', stages: step => ['한 자리 수끼리 · 합이 10 이하', '한 자리 수끼리 · 받아올림', '두 자리 + 한 자리 · 받아올림 없음', '두 자리 + 한 자리 · 받아올림', '두 자리 + 두 자리 · 받아올림 없음', '두 자리 + 두 자리 · 받아올림', '두 자리 + 두 자리 · 합이 100 이상', '세 자리 + 두 자리 · 받아올림 없음', '세 자리 + 두 자리 · 받아올림', '세 자리 + 세 자리'][step - 1] },
-  subtraction: { name: '뺄셈의 숲', icon: '🍂', op: '뺄셈', title: '낙엽 뺄셈 지도', intro: '한 자리 수 뺄셈에서 시작해 받아내림과 세 자리 수까지 2학년 뺄셈을 복습해요.', stages: step => ['한 자리 수끼리 빼기', '10 몇 − 한 자리 · 받아내림', '두 자리 − 한 자리 · 받아내림 없음', '두 자리 − 한 자리 · 받아내림', '두 자리 − 두 자리 · 받아내림 없음', '두 자리 − 두 자리 · 받아내림', '100 몇 − 두 자리', '세 자리 − 두 자리 · 받아내림 없음', '세 자리 − 두 자리 · 받아내림', '세 자리 − 세 자리'][step - 1] },
+  addition: { name: '덧셈의 숲', icon: '🍎', op: '덧셈', title: '사과 덧셈 지도', intro: '기초 덧셈에서 시작해 3학년 1학기의 세 자리 수 덧셈까지 배워요.', stages: step => ['덧셈 준비 · 받아올림 없음', '덧셈 준비 · 받아올림', '두 자리 + 한 자리', '두 자리 + 한 자리 · 받아올림', '두 자리 + 두 자리', '두 자리 + 두 자리 · 받아올림', '합이 100 이상인 덧셈', '세 자리 + 두 자리', '세 자리 + 두 자리 · 받아올림', '세 자리 + 세 자리 종합'][step - 1] },
+  subtraction: { name: '뺄셈의 숲', icon: '🍂', op: '뺄셈', title: '낙엽 뺄셈 지도', intro: '기초 뺄셈에서 시작해 3학년 1학기의 세 자리 수 뺄셈까지 배워요.', stages: step => ['뺄셈 준비 · 받아내림 없음', '뺄셈 준비 · 받아내림', '두 자리 − 한 자리', '두 자리 − 한 자리 · 받아내림', '두 자리 − 두 자리', '두 자리 − 두 자리 · 받아내림', '100 몇 − 두 자리', '세 자리 − 두 자리', '세 자리 − 두 자리 · 받아내림', '세 자리 − 세 자리 종합'][step - 1] },
 };
-const curriculumName = (unit: CurriculumUnitId) => [...CURRICULUM_REGIONS, ...BONUS_FORESTS].find(region => region.id === unit)?.name ?? unit;
+const curriculumName = (unit: CurriculumUnitId) => CURRICULUM_REGIONS.find(region => region.id === unit)?.name ?? unit;
 const loadCurriculum = () => curriculumModulePromise ??= import('./curriculum');
 try { const raw = localStorage.getItem(STORAGE); if (raw) saved = validateSave(JSON.parse(raw)); } catch { storageError = true; }
 
@@ -101,7 +108,7 @@ function persist() {
 }
 function refresh() {
   if (!state) return; const s = state, journey = journeyFor(s), forestName = FOREST_INFO[s.forest].name;
-  const activeTitle = s.curriculum.graduationClaimed ? '3-2 수학 탐험가' : s.expedition.selectedTitle ? EXPEDITION_TITLES[s.expedition.selectedTitle].name : s.multiplicationCompleted ? '곱셈숲 탐험가' : '';
+  const activeTitle = s.curriculum.graduationClaimed ? '3학년 수학 탐험가' : s.expedition.selectedTitle ? EXPEDITION_TITLES[s.expedition.selectedTitle].name : s.multiplicationCompleted ? '곱셈숲 탐험가' : '';
   $('#level').textContent = `${s.level}`; $('#nickname').textContent = `${s.nickname}${activeTitle ? ` · ${activeTitle}` : ''}${s.teacherMode ? ' · 선생님' : ''}`; $('#berries').textContent = s.berries.toLocaleString();
   $('#xp-fill').style.width = `${s.xp / (s.level * 40) * 100}%`; $('#xp-text').textContent = `경험치 ${s.xp} / ${s.level * 40}`;
   $('#weapon-name').textContent = `${WEAPONS[s.weapon].icon} ${WEAPONS[s.weapon].name} +${s.weapons[s.weapon]} · ${OUTFITS[s.outfit].name}`;
@@ -202,7 +209,7 @@ async function showStartPreview(index: number) {
 }
 function showStart() {
   if (world!) { world.setActive(false); } startPreviewRequest++; startPreview?.dispose(); startPreview = null; $('#hud').hidden = true; $('#start-screen').hidden = false;
-  $('#start-screen').innerHTML = `<section class="welcome-card"><div class="logo-mark">✿</div><span class="eyebrow">작은 모험, 자라는 생각</span><h1>베리숲<br><span>모험학교</span></h1><p class="intro">베리를 줍고 3학년 2학기 수학을 배우며,<br>나만의 모습으로 여섯 지역을 여행해요.</p><div id="start-avatar" class="start-avatar"></div><div class="character-picker" role="group" aria-label="캐릭터 선택">${CHARACTERS.map((c, i) => `<button class="character-choice ${i === selected ? 'selected' : ''}" data-character="${i}" aria-pressed="${i === selected}"><span class="character-dot" style="--hair:#${c.hair.toString(16)};--skin:#${c.skin.toString(16)}">${['✿', '●', '☾', '✦'][i]}</span>${c.name}</button>`).join('')}</div><p id="character-desc" class="subtle">${CHARACTERS[selected].desc} · 능력은 모두 같아요</p><label class="name-label" for="nickname-input">모험가의 이름</label><input id="nickname-input" maxlength="10" placeholder="닉네임을 적어 주세요" autocomplete="off"><p id="start-error" class="error" role="alert"></p><button class="primary start-button" id="new-game">${saved ? '새 모험 시작' : '숲으로 출발하기'} <span>→</span></button>${saved ? `<button class="secondary wide" id="continue">${escape(saved.nickname)} · Lv.${saved.level} 이어하기</button>` : ''}<button class="text-button" id="start-import">저장 파일 불러오기</button><small class="save-note">이 기기와 브라우저에 모험이 저장돼요</small><button class="legal-link" id="start-legal">© ${COPYRIGHT_YEAR} ${COPYRIGHT_OWNER} · 저작권과 이용 안내</button></section><div class="start-world-caption"><span>❋</span> 오늘도, 새로운 모험이 기다려요</div>`;
+  $('#start-screen').innerHTML = `<section class="welcome-card"><div class="logo-mark">✿</div><span class="eyebrow">작은 모험, 자라는 생각</span><h1>베리숲<br><span>모험학교</span></h1><p class="intro">베리를 줍고 3학년 한 해의 수학을 배우며,<br>1·2학기 모험 지역을 자유롭게 여행해요.</p><div id="start-avatar" class="start-avatar"></div><div class="character-picker" role="group" aria-label="캐릭터 선택">${CHARACTERS.map((c, i) => `<button class="character-choice ${i === selected ? 'selected' : ''}" data-character="${i}" aria-pressed="${i === selected}"><span class="character-dot" style="--hair:#${c.hair.toString(16)};--skin:#${c.skin.toString(16)}">${['✿', '●', '☾', '✦'][i]}</span>${c.name}</button>`).join('')}</div><p id="character-desc" class="subtle">${CHARACTERS[selected].desc} · 능력은 모두 같아요</p><label class="name-label" for="nickname-input">모험가의 이름</label><input id="nickname-input" maxlength="10" placeholder="닉네임을 적어 주세요" autocomplete="off"><p id="start-error" class="error" role="alert"></p><button class="primary start-button" id="new-game">${saved ? '새 모험 시작' : '숲으로 출발하기'} <span>→</span></button>${saved ? `<button class="secondary wide" id="continue">${escape(saved.nickname)} · Lv.${saved.level} 이어하기</button>` : ''}<button class="text-button" id="start-import">저장 파일 불러오기</button><small class="save-note">이 기기와 브라우저에 모험이 저장돼요</small><button class="legal-link" id="start-legal">© ${COPYRIGHT_YEAR} ${COPYRIGHT_OWNER} · 저작권과 이용 안내</button></section><div class="start-world-caption"><span>❋</span> 오늘도, 새로운 모험이 기다려요</div>`;
   void showStartPreview(selected);
   document.querySelectorAll<HTMLButtonElement>('[data-character]').forEach(b => b.onclick = () => { selected = Number(b.dataset.character); document.querySelectorAll<HTMLButtonElement>('[data-character]').forEach(x => { x.classList.toggle('selected', x === b); x.setAttribute('aria-pressed', String(x === b)); }); $('#character-desc').textContent = `${CHARACTERS[selected].desc} · 능력은 모두 같아요`; void showStartPreview(selected); });
   $('#new-game').onclick = () => {
@@ -237,10 +244,10 @@ function learningInsight(s: Save) {
   const strong = attempted.length ? [...attempted].sort((a, b) => b.rate - a.rate)[0].name : '처음 만난 문제를 차분히 살펴보는 힘';
   const needs = attempted.filter(item => item.rate < .8).sort((a, b) => a.rate - b.rate)[0];
   const next = CURRICULUM_REGIONS.find(region => !curriculumUnitComplete(s, region.id));
-  return { strong, review: needs?.name ?? '아직 꼭 다시 연습해야 할 단원이 없어요', recommend: next ? `${next.name}의 다음 열린 임무` : '3-2 졸업 모험 다시 도전하기' };
+  return { strong, review: needs?.name ?? '아직 꼭 다시 연습해야 할 단원이 없어요', recommend: next ? `${next.name}의 다음 열린 단계` : '3학년 졸업 모험 다시 도전하기' };
 }
 function openGuide() {
-  openModal(title('마을 대장 · 연태쌤', '베리숲에 온 걸 환영해요!') + `<div class="guide-content"><p>나는 연태쌤이야. 모험의 문에서 <strong>3학년 2학기 수학 여섯 지역</strong>을 골라 보렴. 곱셈·나눗셈 숲은 직접 달리고, 원·분수·들이와 무게·그림그래프 지역은 짧은 임무로 만날 수 있단다.</p><ol><li><b>🍓 스테이지 베리</b><span>한 번 모은 베리는 같은 사냥터에서 다시 나타나지 않아. 다른 숲과 새 단계에는 새로운 베리가 있어!</span></li><li><b>🌳 베리나무</b><span>나무 가까이에서 F 또는 나무 베기를 눌러 보렴. 다 베면 2~4베리가 나오고, 좋은 무기일수록 빨라!</span></li><li><b>🗺 여섯 수학 지역</b><span>곱셈, 나눗셈, 원, 분수, 들이와 무게, 그림그래프를 그림과 이야기로 배워요.</span></li><li><b>✨ 마을 상점과 인벤토리</b><span>강지후의 무기, 오지후의 옷, 나현이의 라이딩, 윤준의 펫을 모아 봐. 가영이에게는 헤어와 성형을 바꿀 수 있어.</span></li></ol><p class="note">키보드는 WASD·방향키 이동, Space 점프, E 대화, F 나무 베기예요.<br>휴대폰과 태블릿은 화면 아래 조이스틱과 버튼을 사용해요.</p><button class="primary wide" data-close>좋아, 모험을 떠나자!</button></div>`);
+  openModal(title('마을 대장 · 연태쌤', '베리숲에 온 걸 환영해요!') + `<div class="guide-content"><p>나는 연태쌤이야. 모험의 문에서 <strong>3학년 1·2학기 수학 지역</strong>을 골라 보렴. 모든 지역에는 차근차근 열리는 10개의 모험 단계가 있단다.</p><ol><li><b>🍓 스테이지 베리</b><span>한 번 모은 베리는 같은 사냥터에서 다시 나타나지 않아. 다른 숲과 새 단계에는 새로운 베리가 있어!</span></li><li><b>🌳 베리나무</b><span>나무 가까이에서 F 또는 나무 베기를 눌러 보렴. 다 베면 2~4베리가 나오고, 좋은 무기일수록 빨라!</span></li><li><b>🗺 3학년 전체 수학</b><span>계산, 도형, 길이와 시간, 분수와 소수, 원, 측정, 그림그래프를 그림과 이야기로 배워요.</span></li><li><b>✨ 마을 상점과 인벤토리</b><span>강지후의 무기, 오지후의 옷, 나현이의 라이딩, 윤준의 펫을 모아 봐. 가영이에게는 헤어와 성형을 바꿀 수 있어.</span></li></ol><p class="note">키보드는 WASD·방향키 이동, Space 점프, E 대화, F 나무 베기예요.<br>휴대폰과 태블릿은 화면 아래 조이스틱과 버튼을 사용해요.</p><button class="primary wide" data-close>좋아, 모험을 떠나자!</button></div>`);
 }
 async function loadWorld() {
   if (world!) return;
@@ -305,15 +312,15 @@ function openStageMap(forest?: ForestKind) {
   if (!state) return; const s = state;
   if (!forest) {
     const isForest = (unit: CurriculumUnitId) => OPERATIONS.includes(unit as Operation);
-    const progress = (unit: CurriculumUnitId) => isForest(unit) ? `${journeyFor(s, unit as ForestKind).maps.slice(1).filter(m => m.cleared).length} / 10단계` : `${s.curriculum.units[unit].completedMissions.length} / 9임무`;
-    const card = (region: { id: CurriculumUnitId; icon: string; name: string; short: string; className: string }) => {
+    const progress = (unit: CurriculumUnitId) => isForest(unit) ? `${journeyFor(s, unit as ForestKind).maps.slice(1).filter(m => m.cleared).length} / 10단계` : `${s.curriculum.units[unit].completedMissions.length} / 10단계`;
+    const card = (region: CurriculumRegion) => {
       const complete = curriculumUnitComplete(s, region.id), focus = s.settings.focusUnit === region.id;
       const action = isForest(region.id) ? `data-forest="${region.id}"` : `data-curriculum-unit="${region.id}"`;
       return `<button class="forest-card curriculum-region ${region.className} ${complete ? 'complete' : ''} ${focus ? 'focus-unit' : ''}" ${action}><span>${region.icon}</span><strong>${region.name}</strong><small>${region.short}</small><b>${complete ? '✓ 단원 완료' : progress(region.id)}${focus ? ' · 오늘의 단원' : ''}</b></button>`;
     };
-    const cards = CURRICULUM_REGIONS.map(card).join(''), bonusCards = BONUS_FORESTS.map(card).join('');
+    const firstCards = GRADE3_SEMESTER1.map(card).join(''), secondCards = GRADE3_SEMESTER2.map(card).join('');
     const graduateReady = curriculumGraduationAvailable(s) || s.teacherMode;
-    openModal(title('연태쌤의 수학 모험 지도', '3학년 2학기 여섯 지역') + `<p class="shop-explainer">베리·레벨·장비는 함께 사용하고, 각 단원의 학습 기록은 따로 저장돼요. 별 3개를 못 받아도 다음 임무가 열려요.</p><div class="curriculum-overview">${cards}</div><h3 class="title-heading">🌟 2학년 복습 숲 (보너스)</h3><div class="curriculum-overview bonus-forests">${bonusCards}</div>${graduateReady ? `<button id="graduation-start" class="primary wide graduation-entry">🎓 ${s.curriculum.graduationClaimed ? '3-2 졸업 모험 다시 하기' : '3-2 졸업 모험 시작하기'}</button>` : '<p class="graduation-lock">🔒 여섯 지역을 모두 통과하면 3-2 졸업 모험이 열려요.</p>'}${expeditionUnlocked(s) ? '<button id="map-expedition" class="secondary wide">✦ 나눗셈 숲 별빛 재탐험과 칭호</button>' : ''}`);
+    openModal(title('연태쌤의 수학 모험 지도', '3학년 수학 · 1학기와 2학기') + `<p class="shop-explainer">모든 지역은 10단계예요. 베리·레벨·장비는 함께 사용하고, 학습 기록은 지역별로 따로 저장돼요.</p><h3 class="semester-heading">🌱 3학년 1학기 모험</h3><div class="curriculum-overview">${firstCards}</div><h3 class="semester-heading">🍁 3학년 2학기 모험</h3><div class="curriculum-overview">${secondCards}</div>${graduateReady ? `<button id="graduation-start" class="primary wide graduation-entry">🎓 ${s.curriculum.graduationClaimed ? '3학년 졸업 모험 다시 하기' : '3학년 졸업 모험 시작하기'}</button>` : '<p class="graduation-lock">🔒 모든 수학 지역을 통과하면 3학년 졸업 모험이 열려요.</p>'}${expeditionUnlocked(s) ? '<button id="map-expedition" class="secondary wide">✦ 나눗셈 숲 별빛 재탐험과 칭호</button>' : ''}`);
     document.querySelectorAll<HTMLButtonElement>('[data-forest]').forEach(button => button.onclick = () => openStageMap(button.dataset.forest as ForestKind));
     document.querySelectorAll<HTMLButtonElement>('[data-curriculum-unit]').forEach(button => button.onclick = () => void openCurriculumUnit(button.dataset.curriculumUnit as NewCurriculumUnitId));
     const graduation = document.querySelector<HTMLButtonElement>('#graduation-start'); if (graduation) graduation.onclick = () => void startGraduationAdventure();
@@ -343,6 +350,7 @@ function divisionStageLabel(stage: number) {
 }
 
 const CURRICULUM_GIFTS: Record<NewCurriculumUnitId, string> = {
+  plane: '📐 반듯반듯 도형 액자', lengthTime: '🕰️ 똑딱 숲시계', fractionDecimal: '🔟 열칸 무지개 러그',
   circle: '🌙 달빛 컴퍼스 장식', fraction: '🍰 조각케이크 쿠션', measurement: '⚖️ 물방울 저울', pictograph: '📊 별빛 그래프판',
 };
 function curriculumStars(stars: number) { return `${'★'.repeat(stars)}${'☆'.repeat(3 - stars)}`; }
@@ -355,9 +363,9 @@ async function openCurriculumUnit(unit: NewCurriculumUnitId) {
   const cards = missions.map((mission, id) => {
     const unlocked = canStartCurriculumMission(state!, unit, id), complete = progress.completedMissions.includes(id), stars = progress.stars[id];
     const type = mission.kind === 'concept' ? '개념 체험' : mission.kind === 'practice' ? '연습 임무' : mission.kind === 'story' ? '이야기 임무' : '단원 수호자';
-    return `<button class="curriculum-mission ${complete ? 'complete' : ''}" data-mission="${id}" ${unlocked ? '' : 'disabled'}><span class="mission-number">${complete ? '✓' : unlocked ? id + 1 : '🔒'}</span><span><small>${type} · ${mission.skill}</small><strong>${mission.name}</strong><em>${mission.description}</em></span><b>${complete ? curriculumStars(stars) : unlocked ? '시작하기' : '앞 임무 먼저'}</b></button>`;
+    return `<button class="stage-card curriculum-stage-card ${complete ? 'cleared' : ''}" data-mission="${id}" ${unlocked ? '' : 'disabled'}><span class="stage-number">${complete ? '✓' : unlocked ? id + 1 : '🔒'}</span><strong>${mission.name}</strong><small>${type} · ${mission.skill}</small><small>${mission.description}</small><b>${complete ? curriculumStars(stars) : unlocked ? '시작하기' : '앞 단계 먼저'}</b></button>`;
   }).join('');
-  openModal(title(`${region.icon} 3학년 2학기 수학`, region.name) + `<div class="map-nav"><button id="curriculum-back" class="text-button">← 여섯 지역으로 돌아가기</button><button id="curriculum-village" class="secondary">🏡 ${VILLAGE_THEMES[unit].name} 가기</button></div><div class="unit-progress"><span>${region.icon}</span><div><strong>${progress.completedMissions.length} / 9 임무 완료</strong><small>별은 도전 기록일 뿐, 다음 임무를 막지 않아요.</small></div><b>${curriculumStars(progress.stars.reduce((sum, n) => sum + n, 0) ? Math.min(3, Math.round(progress.stars.reduce((sum, n) => sum + n, 0) / Math.max(1, progress.completedMissions.length))) : 0)}</b></div><div class="curriculum-missions">${cards}</div>${progress.rewardClaimed ? `<p class="unit-gift">🎁 단원 완주 선물: ${CURRICULUM_GIFTS[unit]}을 내 방에서 사용할 수 있어요.</p>` : ''}`, `curriculum-modal ${unit}-region`);
+  openModal(title(`${region.icon} 3학년 수학 · 10단계 지도`, region.name) + `<div class="map-nav"><button id="curriculum-back" class="text-button">← 3학년 수학 지도로 돌아가기</button><button id="curriculum-village" class="secondary">🏡 ${VILLAGE_THEMES[unit].name} 가기</button></div><div class="unit-progress"><span>${region.icon}</span><div><strong>${progress.completedMissions.length} / 10단계 완료</strong><small>앞 단계를 통과하면 다음 길이 열려요. 별은 도전 기록이에요.</small></div><b>${curriculumStars(progress.stars.reduce((sum, n) => sum + n, 0) ? Math.min(3, Math.round(progress.stars.reduce((sum, n) => sum + n, 0) / Math.max(1, progress.completedMissions.length))) : 0)}</b></div><div class="stage-grid curriculum-stage-map">${cards}</div>${progress.rewardClaimed ? `<p class="unit-gift">🎁 지역 완주 선물: ${CURRICULUM_GIFTS[unit]}을 내 방에서 사용할 수 있어요.</p>` : ''}`, `curriculum-modal ${unit}-region`);
   $('#curriculum-back').onclick = () => openStageMap();
   $('#curriculum-village').onclick = () => switchStage(0, state!.forest, unit);
   document.querySelectorAll<HTMLButtonElement>('[data-mission]').forEach(button => button.onclick = () => void startCurriculumMission(unit, Number(button.dataset.mission)));
@@ -366,6 +374,7 @@ async function openCurriculumUnit(unit: NewCurriculumUnitId) {
 function curriculumQuestionVisual(question: CurriculumQuestion) { return curriculumVisualHtml(question.visual); }
 
 const GUARDIAN_BLUEPRINTS: Record<NewCurriculumUnitId, number[]> = {
+  plane: [0, 1, 2, 3, 5, 7], lengthTime: [0, 1, 2, 4, 5, 7], fractionDecimal: [0, 1, 2, 4, 6, 7],
   circle: [0, 1, 3, 4, 5, 7], fraction: [0, 2, 3, 4, 5, 7], measurement: [0, 1, 3, 4, 5, 7], pictograph: [0, 1, 2, 4, 5, 7],
 };
 function guardianQuestion(module: CurriculumModule, unit: NewCurriculumUnitId, index: number) {
@@ -379,11 +388,11 @@ function freshCurriculumQuestion(factory: () => CurriculumQuestion, seen: Set<st
   seen.add(curriculumQuestionKey(question)); return question;
 }
 function nextCurriculumQuestion(module: CurriculumModule, run: NonNullable<typeof curriculumRun>) {
-  const order: CurriculumUnitId[] = ['multiplication', 'division', 'circle', 'fraction', 'measurement', 'pictograph'];
+  const order: CurriculumUnitId[] = ['addition', 'subtraction', 'plane', 'multiplication', 'division', 'lengthTime', 'fractionDecimal', 'circle', 'fraction', 'measurement', 'pictograph'];
   if (run.graduation) return freshCurriculumQuestion(() => module.generateReviewQuestion(order[run.index % order.length]), run.seenQuestions);
   if (run.review) return freshCurriculumQuestion(() => module.generateReviewQuestion(run.unit), run.seenQuestions);
   const unit = run.unit as NewCurriculumUnitId;
-  if (run.mission === 8) return freshCurriculumQuestion(() => guardianQuestion(module, unit, run.index), run.seenQuestions);
+  if (run.mission === 9) return freshCurriculumQuestion(() => guardianQuestion(module, unit, run.index), run.seenQuestions);
   const position = order.indexOf(unit), completedEarlier = state ? order.slice(0, position).filter(previous => curriculumUnitComplete(state!, previous)) : [];
   if (state?.settings.spiralReview && run.mission >= 3 && completedEarlier.length && Math.random() < .2) return freshCurriculumQuestion(() => module.generateReviewQuestion(completedEarlier[Math.floor(Math.random() * completedEarlier.length)]), run.seenQuestions);
   return freshCurriculumQuestion(() => module.generateCurriculumQuestion(unit, run.mission), run.seenQuestions);
@@ -391,8 +400,8 @@ function nextCurriculumQuestion(module: CurriculumModule, run: NonNullable<typeo
 
 async function startCurriculumMission(unit: NewCurriculumUnitId, mission: number) {
   if (!state || !canStartCurriculumMission(state, unit, mission)) return;
-  const module = await loadCurriculum(), total = mission === 8 ? 6 : 4;
-  const question = mission === 8 ? guardianQuestion(module, unit, 0) : module.generateCurriculumQuestion(unit, mission);
+  const module = await loadCurriculum(), total = mission === 9 ? 6 : 4;
+  const question = mission === 9 ? guardianQuestion(module, unit, 0) : module.generateCurriculumQuestion(unit, mission);
   const run = { unit, mission, question, index: 0, total, wrong: 0, hints: 0, hintLevel: 0, seenQuestions: new Set([curriculumQuestionKey(question)]) } satisfies NonNullable<typeof curriculumRun>;
   curriculumRun = run; renderCurriculumQuestion();
 }
@@ -400,22 +409,22 @@ async function startCurriculumMission(unit: NewCurriculumUnitId, mission: number
 async function startGraduationAdventure() {
   if (!state || (!state.teacherMode && !curriculumGraduationAvailable(state))) return;
   const module = await loadCurriculum();
-  const question = module.generateReviewQuestion('multiplication');
-  const run = { unit: 'multiplication' as CurriculumUnitId, mission: 0, question, index: 0, total: 6, wrong: 0, hints: 0, hintLevel: 0, seenQuestions: new Set([curriculumQuestionKey(question)]), graduation: true } satisfies NonNullable<typeof curriculumRun>;
+  const question = module.generateReviewQuestion('addition');
+  const run = { unit: 'addition' as CurriculumUnitId, mission: 0, question, index: 0, total: 11, wrong: 0, hints: 0, hintLevel: 0, seenQuestions: new Set([curriculumQuestionKey(question)]), graduation: true } satisfies NonNullable<typeof curriculumRun>;
   curriculumRun = run; renderCurriculumQuestion();
 }
 
 async function startCurriculumReview(unit: CurriculumUnitId) {
   if (!state) return;
   const module = await loadCurriculum(), mistake = state.curriculum.wrongSkills.find(item => item.unit === unit), mission = mistake?.mission ?? 0;
-  const question = ['circle', 'fraction', 'measurement', 'pictograph'].includes(unit) ? module.generateCurriculumQuestion(unit as NewCurriculumUnitId, Math.min(7, mission)) : module.generateReviewQuestion(unit);
+  const question = NEW_CURRICULUM_UNITS.includes(unit as NewCurriculumUnitId) ? module.generateCurriculumQuestion(unit as NewCurriculumUnitId, Math.min(8, mission)) : module.generateReviewQuestion(unit);
   const run = { unit, mission, question, index: 0, total: 1, wrong: 0, hints: 0, hintLevel: 0, seenQuestions: new Set([curriculumQuestionKey(question)]), review: true } satisfies NonNullable<typeof curriculumRun>;
   curriculumRun = run; renderCurriculumQuestion();
 }
 
 function renderCurriculumQuestion() {
   if (!curriculumRun || !state) return;
-  const run = curriculumRun, q = run.question, region = CURRICULUM_REGIONS.find(item => item.id === q.unit)!, missionName = run.graduation ? '3-2 졸업 모험' : run.review ? '다시 연습하기' : curriculumName(run.unit);
+  const run = curriculumRun, q = run.question, region = CURRICULUM_REGIONS.find(item => item.id === q.unit)!, missionName = run.graduation ? '3학년 졸업 모험' : run.review ? '다시 연습하기' : curriculumName(run.unit);
   const answers = q.kind === 'choice'
     ? `<div class="curriculum-answers">${q.choices!.map(choice => `<button data-curriculum-answer="${escape(choice.value)}">${escape(choice.label)}</button>`).join('')}</div>`
     : `<div class="curriculum-number"><input id="curriculum-answer" inputmode="numeric" maxlength="4" readonly aria-label="답"><div class="number-pad">${[1, 2, 3, 4, 5, 6, 7, 8, 9, '지우기', 0, '확인'].map(n => `<button data-curriculum-number="${n}" class="${n === '확인' ? 'primary' : ''}">${n}</button>`).join('')}</div></div>`;
@@ -480,7 +489,7 @@ async function finishCurriculumQuestion() {
   }
   if (run.graduation) {
     const reward = claimCurriculumGraduation(state); persist(); refresh(); world.celebrate(); audio.play('level');
-    openModal(title('연태쌤의 졸업 편지', '3학년 2학기 수학 탐험가!') + `<div class="arena-intro graduation-success"><div class="arena-symbol">🎓</div><p>곱셈, 나눗셈, 원, 분수, 들이와 무게, 그림그래프를 모두 연결했어요.</p><p><b>「3-2 수학 탐험가」 칭호</b>와 수료장을 받았어요.${reward ? `<br>완주 선물 🍓 ${reward.toLocaleString()}베리도 받았어요!` : '<br>완주 선물은 처음 한 번만 받아요.'}</p><button class="primary wide" data-close>마을로 돌아가기</button></div>`); return;
+    openModal(title('연태쌤의 졸업 편지', '3학년 수학 탐험가!') + `<div class="arena-intro graduation-success"><div class="arena-symbol">🎓</div><p>1학기와 2학기의 계산, 도형, 측정, 분수, 자료 단원을 모두 연결했어요.</p><p><b>「3학년 수학 탐험가」 칭호</b>와 수료장을 받았어요.${reward ? `<br>완주 선물 🍓 ${reward.toLocaleString()}베리도 받았어요!` : '<br>완주 선물은 처음 한 번만 받아요.'}</p><button class="primary wide" data-close>마을로 돌아가기</button></div>`); return;
   }
   const stars = run.wrong === 0 && run.hints === 0 ? 3 : run.wrong <= 1 && run.hints <= 2 ? 2 : 1;
   const complete = completeCurriculumMission(state, run.unit as NewCurriculumUnitId, run.mission, stars), gift = complete.unitRewarded ? CURRICULUM_GIFTS[run.unit as NewCurriculumUnitId] : '';
@@ -533,7 +542,7 @@ function openNextGate() {
   if (state.forest === 'division' && state.expedition.active?.stage === stage) { if (!canFinishExpedition(state)) { const active = state.expedition.active; toast(`표식 ${3 - active.stars.length}개와 대련 ${2 - active.monsters.length}번을 더 마쳐요.`); return; } startExpeditionGate(); return; }
   if (!map.cleared) { toast(`사냥터 친구 ${total - map.monsters.length}명을 더 만나야 해요.`); return; }
   if (stage === 10 && state.forest === 'multiplication') { if (state.multiplicationCompleted) { openModal(title('해바라기 편지', '곱셈의 숲을 모두 밝혔어요!') + '<div class="arena-intro"><div class="arena-symbol">🌻</div><p>이미 곱셈숲 탐험가 칭호와 구구단 해바라기 화분을 받았어요.<br>방 꾸미기에서 화분을 눌러 놓아 보세요!</p><button class="primary wide" data-close>숲에서 더 놀기</button></div>'); } else startMultiplicationGate(); return; }
-  if (stage === 10 && (state.forest === 'addition' || state.forest === 'subtraction')) { const info = FOREST_INFO[state.forest]; openModal(title('연태쌤의 축하', `${info.name}을 모두 통과했어요!`) + `<div class="arena-intro"><div class="arena-symbol">${info.icon}</div><p>2학년 ${info.op}을 차근차근 다시 익혔어요.<br>정말 대단해요! 더 연습하고 싶으면 대련에서 난이도를 골라 보세요.</p><button class="primary wide" data-close>숲에서 더 놀기</button></div>`); return; }
+  if (stage === 10 && (state.forest === 'addition' || state.forest === 'subtraction')) { const info = FOREST_INFO[state.forest]; openModal(title('연태쌤의 축하', `${info.name}을 모두 통과했어요!`) + `<div class="arena-intro"><div class="arena-symbol">${info.icon}</div><p>3학년 1학기 ${info.op}을 세 자리 수까지 차근차근 익혔어요.<br>정말 대단해요! 더 연습하고 싶으면 대련에서 난이도를 골라 보세요.</p><button class="primary wide" data-close>숲에서 더 놀기</button></div>`); return; }
   if (stage === 10) { openModal(title('연태쌤의 축하', '열 개의 사냥터를 모두 통과했어요!') + `<div class="arena-intro"><div class="arena-symbol">🌈</div><p>베리숲의 모든 길을 걸으며 나눗셈 친구들을 만났어요.<br>대단해요! 다음 업데이트도 기대해 주세요.<br>이제 별빛 재탐험도 시작할 수 있어요!</p><button id="celebrate-expedition" class="primary wide">✦ 별빛 재탐험 시작하기</button><button class="secondary wide" data-close>숲에서 더 놀기</button></div>`); $('#celebrate-expedition').onclick = openExpeditionBoard; return; }
   switchStage(stage + 1, state.forest);
 }
@@ -770,17 +779,24 @@ function openInventory(tab: 'weapon' | 'outfit' | 'ride' | 'pet' = 'weapon', sel
   document.querySelectorAll<HTMLButtonElement>('[data-inventory-tab]').forEach(button => button.onclick = () => openInventory(button.dataset.inventoryTab as 'weapon' | 'outfit' | 'ride' | 'pet'));
 }
 
-const FURNITURE = ['🍄 버섯 의자', '🪴 새싹 화분', '🧸 곰 인형', '🪟 둥근 창문', '🛏 구름 침대', '📚 모험 책장', '🕯 별빛 조명', '🧺 베리 바구니', '🌻 구구단 해바라기 화분', '🌙 달빛 컴퍼스 장식', '🍰 조각케이크 쿠션', '⚖️ 물방울 저울', '📊 별빛 그래프판', '🎓 3-2 수학 수료장'];
+const FURNITURE = ['🍄 버섯 의자', '🪴 새싹 화분', '🧸 곰 인형', '🪟 둥근 창문', '🛏 구름 침대', '📚 모험 책장', '🕯 별빛 조명', '🧺 베리 바구니', '🌻 구구단 해바라기 화분', '🌙 달빛 컴퍼스 장식', '🍰 조각케이크 쿠션', '⚖️ 물방울 저울', '📊 별빛 그래프판', '🎓 3학년 수학 수료장', '📐 반듯반듯 도형 액자', '🕰️ 똑딱 숲시계', '🔟 열칸 무지개 러그'];
 function furnitureUnlocked(s: Save, id: number) {
   if (id === 8) return s.teacherMode || s.multiplicationCompleted;
   if (id >= 9 && id <= 12) return s.teacherMode || s.curriculum.units[(['circle', 'fraction', 'measurement', 'pictograph'] as NewCurriculumUnitId[])[id - 9]].rewardClaimed;
   if (id === 13) return s.teacherMode || s.curriculum.graduationClaimed;
+  if (id >= 14 && id <= 16) return s.teacherMode || s.curriculum.units[(['plane', 'lengthTime', 'fractionDecimal'] as NewCurriculumUnitId[])[id - 14]].rewardClaimed;
   const progress = s.discoveries.monsters.length + s.discoveries.pets.length + s.journey.maps.slice(1).filter(m => m.cleared).length + s.multiplicationJourney.maps.slice(1).filter(m => m.cleared).length; return id < Math.min(8, progress);
 }
 function openRoom() {
   if (!state) return;
   const placed = state.room.furniture, unlockedFurniture = FURNITURE.filter((_, id) => furnitureUnlocked(state!, id)).length;
-  openModal(title('나만의 작은 방', '모험가의 포근한 집') + `<p class="shop-explainer">가구를 누르면 왼쪽의 진짜 3D 방에 바로 놓여요. 한 번 더 누르면 치워져요. 놓은 가구는 자동 저장돼요.</p><p class="room-status">지금 방에 놓인 가구 ${placed.length}개 · 발견한 가구 ${unlockedFurniture}개</p><div class="item-grid room-items">${FURNITURE.map((item, id) => { const unlocked = furnitureUnlocked(state!, id); const lockedText = id === 8 ? '곱셈의 숲 10단계와 햇살문을 통과하면 받아요' : id >= 9 && id <= 12 ? `${curriculumName((['circle', 'fraction', 'measurement', 'pictograph'] as NewCurriculumUnitId[])[id - 9])}을 완주하면 받아요` : id === 13 ? '여섯 지역과 졸업 모험을 통과하면 받아요' : '친구를 더 만나면 열려요'; return `<button class="item-card ${placed.includes(id) ? 'selected' : ''}" data-furniture="${id}" ${unlocked ? '' : 'disabled'}><span class="item-swatch">${item.split(' ')[0]}</span><strong>${item.split(' ').slice(1).join(' ')}</strong><small>${placed.includes(id) ? '방에 놓였어요 · 다시 누르면 치워요' : unlocked ? '발견했어요 · 누르면 방에 놓여요' : lockedText}</small></button>`; }).join('')}</div><button class="primary wide" data-close>3D 방 둘러보기</button>`, 'room-modal');
+  const rewardUnits: Partial<Record<number, NewCurriculumUnitId>> = { 9: 'circle', 10: 'fraction', 11: 'measurement', 12: 'pictograph', 14: 'plane', 15: 'lengthTime', 16: 'fractionDecimal' };
+  const furnitureCards = FURNITURE.map((item, id) => {
+    const unlocked = furnitureUnlocked(state!, id), rewardUnit = rewardUnits[id];
+    const lockedText = id === 8 ? '곱셈의 숲 10단계와 햇살문을 통과하면 받아요' : id === 13 ? '모든 3학년 수학 지역과 졸업 모험을 통과하면 받아요' : rewardUnit ? `${curriculumName(rewardUnit)}을 완주하면 받아요` : '친구를 더 만나면 열려요';
+    return `<button class="item-card ${placed.includes(id) ? 'selected' : ''}" data-furniture="${id}" ${unlocked ? '' : 'disabled'}><span class="item-swatch">${item.split(' ')[0]}</span><strong>${item.split(' ').slice(1).join(' ')}</strong><small>${placed.includes(id) ? '방에 놓였어요 · 다시 누르면 치워요' : unlocked ? '발견했어요 · 누르면 방에 놓여요' : lockedText}</small></button>`;
+  }).join('');
+  openModal(title('나만의 작은 방', '모험가의 포근한 집') + `<p class="shop-explainer">가구를 누르면 왼쪽의 진짜 3D 방에 바로 놓여요. 한 번 더 누르면 치워져요. 놓은 가구는 자동 저장돼요.</p><p class="room-status">지금 방에 놓인 가구 ${placed.length}개 · 발견한 가구 ${unlockedFurniture}개</p><div class="item-grid room-items">${furnitureCards}</div><button class="primary wide" data-close>3D 방 둘러보기</button>`, 'room-modal');
   document.querySelectorAll<HTMLButtonElement>('[data-furniture]').forEach(button => button.onclick = () => { const id = Number(button.dataset.furniture); if (!furnitureUnlocked(state!, id)) return; const list = state!.room.furniture; const removing = list.includes(id); state!.room.furniture = removing ? list.filter(x => x !== id) : [...list, id]; world.updateRoomFurniture(state!); persist(); openRoom(); toast(`${FURNITURE[id]} ${removing ? '치웠어요' : '방에 놓았어요'}!`); });
 }
 function openNotebook() {
