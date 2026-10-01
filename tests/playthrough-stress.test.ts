@@ -3,11 +3,11 @@ import assert from 'node:assert/strict';
 import { newSave, validateSave, Encounter, collectBerry, finishHunt, canEnter, recordWrongAnswer, recordCorrectAnswer, journeyFor, questionAnswerText, startMultiplicationFinal, answerMultiplicationFinal, type ForestKind } from '../src/rules.ts';
 import { stageBerries, stageMonsters } from '../src/stages.ts';
 
-test('300 complete two-forest journeys keep saves and repeated rewards safe', () => {
-  for (let run = 0; run < 300; run++) {
+test('200 complete four-forest journeys keep saves and repeated rewards safe', () => {
+  for (let run = 0; run < 200; run++) {
     let save = newSave(`모험${run}`, run % 4);
     let expectedCorrect = 0;
-    for (const forest of ['division', 'multiplication'] as ForestKind[]) {
+    for (const forest of ['division', 'multiplication', 'addition', 'subtraction'] as ForestKind[]) {
       save.forest = forest;
       for (let stage = 1; stage <= 10; stage++) {
         assert.equal(canEnter(save, stage, forest), true);
@@ -40,6 +40,7 @@ test('300 complete two-forest journeys keep saves and repeated rewards safe', ()
       if (forest === 'multiplication') { const gate = startMultiplicationFinal(save)!; answerMultiplicationFinal(save, gate.left * gate.right); assert.equal(answerMultiplicationFinal(save, gate.left).complete, true); }
     }
     assert.equal(save.journey.maps[10].cleared, true); assert.equal(save.multiplicationJourney.maps[10].cleared, true); assert.equal(save.multiplicationCompleted, true);
+    assert.equal(save.additionJourney.maps[10].cleared, true); assert.equal(save.subtractionJourney.maps[10].cleared, true); assert.equal(save.additionCompleted, true); assert.equal(save.subtractionCompleted, true);
     assert.equal(save.learning.correct, expectedCorrect);
     assert.ok(save.berries > 0);
   }

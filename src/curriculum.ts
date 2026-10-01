@@ -328,6 +328,14 @@ export function generateReviewQuestion(unit: CurriculumUnitId, random: () => num
     const choices = shuffle([answer, `${quotient + 1}R${remainder}`, `${quotient}R${(remainder + 1) % divisor}`].map(value => ({ label: value.replace('R0', '').replace('R', ' · 나머지 '), value })), random);
     return choiceQuestion({ unit, skill: '나눗셈 복습', prompt: `${dividend} ÷ ${divisor}의 몫과 나머지를 찾아요.`, visual: { kind: 'groups', total: dividend, divisor, remainder }, hints: [`${divisor}씩 ${quotient}묶음을 만들 수 있어요.`, `${divisor} × ${quotient} = ${divisor * quotient}이에요.`, `${dividend} - ${divisor * quotient} = ${remainder}이므로 나머지는 ${remainder}예요.`], explanation: `${dividend} = ${divisor} × ${quotient} + ${remainder}이므로 몫은 ${quotient}, 나머지는 ${remainder}예요.` }, answer, choices);
   }
+  if (unit === 'addition') {
+    const left = randomInt(12, 70, random), right = randomInt(11, 99 - left, random), answer = left + right, tens = Math.floor(right / 10) * 10, ones = right % 10;
+    return numberQuestion({ unit, skill: '덧셈 복습', prompt: `${left} + ${right}은 얼마일까요?`, visual: { kind: 'array', rows: 2, columns: 10 }, hints: [`${right}를 ${tens}과 ${ones}으로 나누어 생각해요.`, `${left} + ${tens} = ${left + tens}이에요.`, `${left + tens} + ${ones} = ${answer}이에요.`], explanation: `${left} + ${right} = ${answer}이에요.` }, answer);
+  }
+  if (unit === 'subtraction') {
+    const left = randomInt(31, 99, random), right = randomInt(11, left - 10, random), answer = left - right, tens = Math.floor(right / 10) * 10, ones = right % 10;
+    return numberQuestion({ unit, skill: '뺄셈 복습', prompt: `${left} - ${right}은 얼마일까요?`, visual: { kind: 'array', rows: 2, columns: 10 }, hints: [`${right}를 ${tens}과 ${ones}으로 나누어 차례로 빼요.`, `${left} - ${tens} = ${left - tens}이에요.`, `${left - tens} - ${ones} = ${answer}이에요.`], explanation: `${left} - ${right} = ${answer}이에요.` }, answer);
+  }
   return generateCurriculumQuestion(unit, randomInt(0, 7, random), random);
 }
 

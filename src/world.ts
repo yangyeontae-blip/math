@@ -351,6 +351,13 @@ function makePet(id: number) {
   g.position.set(-1.05, .02, -.7); g.userData.petModel = true; g.userData.petBody = body; return g;
 }
 
+const FOREST_PALETTES: Partial<Record<ForestKind, { sky: number; ground: number; accent: number; foliage: number }>> = {
+  multiplication: { sky: 0xffe7b8, ground: 0xe7d99b, accent: 0xf2bd72, foliage: 0x8dbb65 },
+  addition: { sky: 0xfdf0c8, ground: 0xdbe8a4, accent: 0xea9a86, foliage: 0x7dbd5d },
+  subtraction: { sky: 0xf8dcc0, ground: 0xe6c993, accent: 0xd9894a, foliage: 0xd98a44 },
+};
+const FOREST_GATES: Record<ForestKind, number> = { division: 0xc087d2, multiplication: 0xe5a743, addition: 0xe86f68, subtraction: 0xd98a44 };
+
 export class World {
   scene = new T.Scene(); renderer: T.WebGLRenderer; camera: T.OrthographicCamera;
   player = new T.Group(); private entities: Entity[] = []; private coins: { mesh: T.Group; id: number; y: number }[] = []; private stars: { mesh: T.Group; id: number; y: number; label: HTMLDivElement }[] = [];
@@ -466,17 +473,19 @@ export class World {
     if (gate) { gate.name = '별빛 원정 출구'; gate.label.textContent = gate.name; }
   }
   private buildHunt(stage: number) {
-    const base = STAGES[stage - 1], spec = this.forest === 'multiplication' ? { ...base, sky: 0xffe7b8, ground: 0xe7d99b, accent: 0xf2bd72, foliage: 0x8dbb65 } : base, size = stageSize(stage); this.platforms = stagePlatforms(stage); this.scene.background = new T.Color(spec.sky); this.scene.fog = new T.Fog(spec.sky, 55, 120);
+    const base = STAGES[stage - 1], palette = FOREST_PALETTES[this.forest], spec = palette ? { ...base, ...palette } : base, size = stageSize(stage); this.platforms = stagePlatforms(stage); this.scene.background = new T.Color(spec.sky); this.scene.fog = new T.Fog(spec.sky, 55, 120);
     box(this.scene, spec.ground, 0, -.55, 0, size.x * 2, 1.1, size.z * 2); box(this.scene, 0x708f71, 0, -1.3, 0, size.x * 2 - 1, .5, size.z * 2 - 1);
     box(this.scene, spec.accent, 0, .02, 0, 3.8, .06, size.z * 2 - 5); for (const z of [14, 0, -15]) box(this.scene, spec.accent, 0, .025, z, size.x * 2 - 10, .06, 2.6);
     this.platforms.forEach(p => { box(this.scene, 0xa8a88c, p.x, p.h / 2, p.z, p.w, p.h, p.d); box(this.scene, spec.accent, p.x, p.h + .02, p.z, p.w + .05, .08, p.d + .05); });
-    this.addEntity('village', '베리숲 마을로 돌아가기', 0, size.z - 5, this.gate(0x6eb7a1)); this.addEntity('next', stage === 10 ? (this.forest === 'multiplication' ? '구구단 햇살문' : '마지막 축하문') : `다음 길 · ${STAGES[stage].name}`, 0, -size.z + 5, this.gate(this.forest === 'multiplication' ? 0xe5a743 : 0xc087d2));
+    this.addEntity('village', '베리숲 마을로 돌아가기', 0, size.z - 5, this.gate(0x6eb7a1)); this.addEntity('next', stage === 10 ? (this.forest === 'multiplication' ? '구구단 햇살문' : this.forest === 'division' ? '마지막 축하문' : '완주 축하문') : `다음 길 · ${STAGES[stage].name}`, 0, -size.z + 5, this.gate(FOREST_GATES[this.forest]));
     stageMonsters(stage).forEach((m, i) => this.addEntity(`monster${i}`, `${MONSTERS[m.type].name} · ${i + 1}`, m.x, m.z, makeMonster(m.type)));
     for (let i = 0; i < 55; i++) { const x = Math.sin(i * 2.399 + stage) * (size.x - 4), z = Math.cos(i * 1.73 + stage) * (size.z - 4); if (Math.abs(x) < 4 || [14, 0, -15].some(v => Math.abs(z - v) < 2.5)) continue; this.tree(x, z, .8 + i % 3 * .2, spec.theme === 'blossom', spec.foliage); }
     stageTrees(stage).forEach(({ x, z }, i) => this.addChoppableTree(i, x, z, .92 + (i % 3) * .08, spec.theme === 'blossom', spec.foliage));
     for (const z of [20, 6, -9, -23]) { box(this.scene, 0xb98d58, -3.4, .65, z, .12, 1.25, .12); box(this.scene, 0xe6ca8f, -2.8, 1.05, z, 1.35, .56, .12); ball(this.scene, 0xffe98d, -3.35, 1.36, z, .1); }
     for (let i = 0; i < 30; i++) { const x = Math.sin(i * 5.7 + stage) * (size.x - 7), z = Math.cos(i * 3.3 + stage) * (size.z - 8); cylinder(this.scene, 0x5c9a59, x, .12, z, .025, .025, .24, 5); ball(this.scene, [0xffb3c7, 0xffdf82, 0xc5b2ef, 0xa9dfe1][i % 4], x, .29, z, .1, .08, .1); }
     if (this.forest === 'multiplication') for (let i = 0; i < 18; i++) { const x = Math.sin(i * 4.31 + stage) * (size.x - 7), z = Math.cos(i * 2.71 + stage) * (size.z - 8); cylinder(this.scene, 0x5d934b, x, .45, z, .04, .06, .85, 6); ball(this.scene, 0x6e512f, x, .93, z, .14); for (let p = 0; p < 8; p++) ball(this.scene, 0xf6cb42, x + Math.cos(p * Math.PI / 4) * .25, .93 + Math.sin(p * Math.PI / 4) * .25, z, .11, .15, .06); if (i % 3 === 0) { const bee = new T.Group(); bee.position.set(x + .45, 1.4, z); ball(bee, 0xf2c340, 0, 0, 0, .15, .11, .12); box(bee, 0x4b4036, 0, 0, .08, .3, .06, .08); this.scene.add(bee); this.butterflies.push(bee); } }
+    if (this.forest === 'addition') for (let i = 0; i < 24; i++) { const x = Math.sin(i * 4.31 + stage) * (size.x - 7), z = Math.cos(i * 2.71 + stage) * (size.z - 8); ball(this.scene, 0xe0503f, x, .22, z, .2, .19, .2); ball(this.scene, 0x5d934b, x + .08, .42, z, .09, .04, .05); }
+    if (this.forest === 'subtraction') for (let i = 0; i < 46; i++) { const x = Math.sin(i * 3.91 + stage) * (size.x - 6), z = Math.cos(i * 2.17 + stage) * (size.z - 7); ball(this.scene, [0xd9822f, 0xc0592a, 0xe9b04a, 0x9a5a2a][i % 4], x, .05, z, .26, .025, .17); }
     for (let i = 0; i < 14; i++) { const g = new T.Group(); g.position.set((i % 2 ? 1 : -1) * (size.x - 5), 0, size.z - 7 - Math.floor(i / 2) * 8); this.scene.add(g); if (spec.theme === 'crystal') { for (let j = 0; j < 3; j++) { const m = mesh(new T.OctahedronGeometry(.65), [0x9bade6, 0xc3a0df, 0x9bd6d4][j], j * .55 - .55, 1.3, 0, g); m.scale.y = 2 + j * .3; } } else if (spec.theme === 'mushroom') { cylinder(g, 0xf4e4cb, 0, .9, 0, .4, .6, 1.8); ball(g, 0xda8e9a, 0, 2, 0, 1.8, .65, 1.5); } else { for (let j = 0; j < 5; j++) ball(g, spec.foliage, Math.cos(j * 1.26), .7, Math.sin(j * 1.26), .4, .14, .4); } }
     this.addBerries();
   }
