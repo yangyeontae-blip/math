@@ -35,7 +35,7 @@ export function parseGlobalRanks(value: unknown): GlobalRank[] {
   }).slice(0, 50);
 }
 
-async function request(path: string, init?: RequestInit) {
+export async function request(path: string, init?: RequestInit) {
   const controller = new AbortController(), timeout = setTimeout(() => controller.abort(), 8000);
   try {
     const response = await fetch(apiUrl(path), { ...init, signal: controller.signal });

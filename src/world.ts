@@ -369,7 +369,7 @@ export class World {
   private swingUntil = 0; private rideIndex = -1; private petIndex = -1; private petModel: T.Group | null = null; private petTargetId: number | null = null; private animationRunning = false;
   private rideAnimated: T.Object3D[] = []; private butterflies: T.Object3D[] = []; private furnitureRoot: T.Group | null = null;
   private tempProjection = new T.Vector3(); private tempTarget = new T.Vector3(); private tempWorld = new T.Vector3(); private cameraTarget = new T.Vector3();
-  active = false; paused = true; inRoom = false; onCollect = (_id: number) => {}; onStar = (_id: number) => {}; onInteract = (_id: string) => {}; onAttack = (_id: string | null) => {}; onNear = (_name: string | null, _id: string | null) => {}; onJump = () => {}; onRescue = () => {};
+  active = false; paused = true; inRoom = false; onCollect = (_id: number) => {}; onStar = (_id: number) => {}; onInteract = (_id: string) => {}; onAttack = (_id: string | null) => {}; onNear = (_name: string | null, _id: string | null) => {}; onJump = () => {}; onRescue = () => {}; onStageLoaded = (_stage: number) => {};
   constructor(private container: HTMLElement) {
     this.scene.background = new T.Color(0xd0eade); this.scene.fog = new T.Fog(0xd0eade, 58, 112);
     const touchDevice = matchMedia('(pointer: coarse)').matches;
@@ -522,6 +522,7 @@ export class World {
     this.entities.forEach(e => { if (e.id.startsWith('monster')) e.mesh.visible = !expedition && !map.monsters.includes(Number(e.id.slice(7))); if (e.id.startsWith('tree')) e.mesh.visible = !expedition && !map.trees.includes(Number(e.id.slice(4))); });
     if (expedition) this.addExpeditionObjects(s);
     const spawn = this.stage === 0 ? { x: 0, z: 8 } : { x: 0, z: stageSize(this.stage).z - 9 }; const p = fresh ? spawn : s.position; this.player.position.set(p.x, 0, p.z); this.placePetNearPlayer(); this.lastSafe.copy(this.player.position); this.follow.copy(this.player.position);
+    this.onStageLoaded(this.stage);
   }
   enterRoom(s: Save, preservePosition = false) {
     const roomPosition = preservePosition ? this.player.position.clone() : new T.Vector3(0, 0, 2.7);
@@ -611,6 +612,24 @@ export class World {
     ball(g, foliage ?? (pink ? 0xe6a2ad : 0x63a56b), 0, 2.55, 0, 1.55, 1.5, 1.38); ball(g, foliage ?? (pink ? 0xf1b8bb : 0x88bd77), -.5, 3.35, 0, 1.12, 1.12, 1); ball(g, foliage ?? (pink ? 0xf5c9c7 : 0xa0cd7e), .5, 3.25, .45, .8, .83, .8);
     g.userData.hp = 7; this.addEntity(`tree${id}`, '베리나무 · 베기', x, z, g); this.colliders.push({ x, z, r: .5, id: `tree${id}` });
   }
+  // 틀린 개념을 다시 만나는 "그림자 몬스터". 마을에만 최대 3마리가 나타나고, 다시 풀면 사라져요.
+  setShadows(shadows: { id: string; name: string; type: number }[]) {
+    const keep: Entity[] = [];
+    for (const e of this.entities) { if (e.id.startsWith('shadow')) { this.scene.remove(e.mesh); this.disposeShadow(e.mesh); e.label.remove(); } else keep.push(e); }
+    this.entities = keep;
+    if (this.selectedId?.startsWith('shadow')) { this.selectedId = null; this.onNear(null, null); }
+    if (this.inRoom || this.stage !== 0) return;
+    const spots = [[-6.5, 7.5], [3.5, 10.5], [-12, 2.5]] as const, dark = new T.Color(0x3b2f5c);
+    shadows.slice(0, spots.length).forEach((shadow, i) => {
+      const model = makeMonster(shadow.type);
+      // 재질은 색마다 공유되므로, 복제해서 칠해야 다른 몬스터가 같이 어두워지지 않아요.
+      model.traverse(o => { if (o instanceof T.Mesh) { const m = (o.material as T.MeshStandardMaterial).clone(); m.color.lerp(dark, .72); m.transparent = true; m.opacity = .82; o.material = m; o.userData.ownMaterial = true; } });
+      this.addEntity(shadow.id, shadow.name, spots[i][0], spots[i][1], model);
+      this.entities[this.entities.length - 1].label.classList.add('monster-label');
+    });
+    this.renderOnce();
+  }
+  private disposeShadow(g: T.Group) { g.traverse(o => { if (o instanceof T.Mesh && o.userData.ownMaterial) (o.material as T.Material).dispose(); }); }
   private addEntity(id: string, name: string, x: number, z: number, model: T.Group) {
     model.position.set(x, 0, z); this.scene.add(model);
     const label = document.createElement('div'); label.className = `entity-label ${id.startsWith('monster') ? 'monster-label' : ''}`; label.textContent = name; this.labelLayer.append(label);

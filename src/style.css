@@ -276,3 +276,26 @@ input:not([type=checkbox]):not([type=radio]),select,textarea{min-height:44px}
 .circle-visual text.circle-known-label{fill:#b04f58;font-size:12px}
 .circle-visual text.circle-question-label{fill:#416e91;font-size:13px}
 .circle-visual text.circle-caption{fill:#66736b;font-size:10px}
+
+/* 학습 리포트: 화면 미리보기와 인쇄 */
+.report-preview{max-height:52vh;overflow:auto;margin:10px 0;padding:12px;border-radius:14px;background:#fff;border:1px solid #e5d9c3}
+.report-sheet{font-size:.85rem;line-height:1.5;color:#3c3a33}
+.report-sheet h1{margin:0 0 4px;font-size:1.15rem}.report-sheet h2{margin:14px 0 6px;font-size:.95rem}
+.report-meta{margin:0 0 10px}.report-note,.report-sheet .muted{color:#7a7468;font-size:.8rem}
+.report-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.report-summary div{padding:8px;border-radius:10px;background:#f6f0e2;text-align:center}.report-summary small{display:block;font-size:.75rem;color:#7a7468}.report-summary b{font-size:1.2rem}
+.report-sheet table{width:100%;border-collapse:collapse;font-size:.8rem}.report-sheet th,.report-sheet td{padding:5px 6px;border-bottom:1px solid #e5d9c3;text-align:left}
+.report-columns{display:grid;grid-template-columns:1fr 1fr;gap:12px}.report-sheet ul{margin:0;padding-left:18px}
+#print-report{display:none}
+@media print{
+  body>*:not(#print-report){display:none!important}
+  #print-report{display:block!important;position:static;padding:0;background:#fff;color:#000}
+  #print-report .report-sheet{font-size:11pt}
+  @page{margin:14mm}
+}
+
+/* 우리 반 협동 보스 */
+.boss-card{padding:14px;border-radius:18px;background:linear-gradient(160deg,#f3ecff,#fff4e0);text-align:center}
+.boss-card h3{margin:4px 0 8px}.boss-icon{font-size:3rem;line-height:1}
+.boss-hp{height:16px;border-radius:99px;background:#e3d6ee;overflow:hidden;margin:8px 0}.boss-hp i{display:block;height:100%;background:linear-gradient(90deg,#e8648a,#f2a65a);transition:width .4s}
+.boss-win{font-weight:700;color:#2f7d5b}.boss-mine{font-size:.85rem;color:#6b6358}
+.boss-code{display:grid;gap:6px;margin:12px 0 4px}.boss-code span{display:grid;gap:2px}.boss-code input{padding:10px 12px;border-radius:12px;border:2px solid #d9c9b0;font:inherit}
