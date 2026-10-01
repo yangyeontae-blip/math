@@ -11,6 +11,7 @@ import { RESCUES, FLOWERS, gardenOf, rescueSheep, plantFlower } from './garden';
 import { EXPEDITION_TITLES, expeditionBerryReward, expeditionLayout, expeditionUnlocked, startExpedition, collectExpeditionStar, defeatExpeditionMonster, canFinishExpedition, finishExpedition, selectExpeditionTitle } from './expedition';
 import { parseLocalRanks, updateLocalRanks } from './ranking';
 import { getGlobalPlayerId, loadGlobalRanks, syncGlobalRank, type GlobalRank } from './global-ranking';
+import { markBackup, shouldRemindBackup } from './backup';
 
 const $ = <T extends HTMLElement = HTMLElement>(selector: string) => document.querySelector<T>(selector)!;
 const root = $('#game');
@@ -230,6 +231,7 @@ async function begin(s: Save, fresh: boolean) {
   closeModal(); startPreviewRequest++; startPreview?.dispose(); startPreview = null; state = s; preview?.dispose(); preview = null; $('#start-screen').hidden = true; $('#hud').hidden = false;
   world.restore(s); world.setActive(true); audio.music = s.settings.music; audio.effects = s.settings.sound; audio.start(); refresh(); persist();
   if (fresh) openGuide(); else toast(`${s.nickname}, 다시 만나 반가워요!`);
+  if (!fresh && shouldRemindBackup(localStorage, s.level)) setTimeout(() => toast('💾 설정(⚙)에서 저장 파일을 내려받아 두면 기기를 바꿔도 모험을 지킬 수 있어요.'), 3500);
 }
 function showSessionSummary() {
   if (!state) return; sessionExpired = false; world.setPaused(true); world.clearInput(); persist();
@@ -845,7 +847,7 @@ function openBeauty(kind: 'hairstyle' | 'face' = 'hairstyle', selectedId?: numbe
 }
 
 function exportSave() {
-  if (state) persist(); const s = state ?? saved; if (!s) return; const url = URL.createObjectURL(new Blob([JSON.stringify(s, null, 2)], { type: 'application/json' })); const a = document.createElement('a'); a.href = url; a.download = '베리숲-모험저장.json'; a.click(); setTimeout(() => URL.revokeObjectURL(url), 1000); toast('모험 저장 파일을 내려받았어요.');
+  if (state) persist(); const s = state ?? saved; if (!s) return; const url = URL.createObjectURL(new Blob([JSON.stringify(s, null, 2)], { type: 'application/json' })); const a = document.createElement('a'); a.href = url; a.download = '베리숲-모험저장.json'; a.click(); setTimeout(() => URL.revokeObjectURL(url), 1000); markBackup(localStorage); toast('모험 저장 파일을 내려받았어요.');
 }
 function confirmAction(heading: string, description: string, action: () => void, backup = false) {
   openModal(title('모험 기록', heading) + `<p>${description}</p>${backup ? '<button class="secondary wide" id="backup">현재 모험 내려받기</button>' : ''}<div class="confirm-row"><button class="secondary" data-close>취소</button><button class="primary" id="confirm-action">확인</button></div>`);
@@ -906,6 +908,10 @@ setInterval(() => {
   if (state && potionStatus) { const effect = potionEffects(state); potionStatus.innerHTML = `지금 효과<br>${effect.berrySeconds ? `🍓 베리 ${effect.berryMultiplier}배 · ${buffTime(effect.berrySeconds)} 남음` : '🍓 베리 효과 없음'}<br>${effect.xpSeconds ? `🧪 경험치 ${effect.xpMultiplier}배 · ${buffTime(effect.xpSeconds)} 남음` : '🧪 경험치 효과 없음'}`; }
   persist();
 }, 1000); window.addEventListener('pagehide', persist); document.addEventListener('visibilitychange', () => { if (document.hidden) persist(); });
+if (import.meta.env.PROD && 'serviceWorker' in navigator && window.isSecureContext) {
+  const registerWorker = () => { navigator.serviceWorker.register('./sw.js').catch(() => { /* 오프라인 기능만 빠지고 게임은 그대로 동작해요 */ }); };
+  if (document.readyState === 'complete') registerWorker(); else window.addEventListener('load', registerWorker);
+}
 
 if ((import.meta as unknown as { env?: { DEV?: boolean } }).env?.DEV) {
   const devApi = { openArena, beginHuntBattle, openStageMap, openSettings, openDaily, openInventory, openShop, openPetShop, openGuide, openNotebook, openRoom, openCurriculumUnit, switchStage, refresh, getState: () => state };

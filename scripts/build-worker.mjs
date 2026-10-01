@@ -11,7 +11,11 @@ const types = {
   '.js': 'text/javascript; charset=utf-8',
   '.json': 'application/json; charset=utf-8',
   '.svg': 'image/svg+xml; charset=utf-8',
+  '.webmanifest': 'application/manifest+json; charset=utf-8',
+  '.png': 'image/png',
+  '.jpg': 'image/jpeg',
 };
+const textTypes = new Set(['.css', '.html', '.js', '.json', '.svg', '.webmanifest']);
 
 async function files(directory) {
   const found = [];
@@ -27,7 +31,8 @@ async function files(directory) {
 const manifest = {};
 for (const file of await files(dist)) {
   const pathname = `/${relative(dist, file).split(sep).join('/')}`;
-  manifest[pathname] = { body: await readFile(file, 'utf8'), type: types[extname(file)] ?? 'application/octet-stream' };
+  const extension = extname(file), text = textTypes.has(extension);
+  manifest[pathname] = { body: await readFile(file, text ? 'utf8' : 'base64'), type: types[extension] ?? 'application/octet-stream', ...(text ? {} : { base64: true }) };
 }
 
 const template = await readFile(workerSource, 'utf8');

@@ -1,6 +1,7 @@
 import { stageBerries, stageMonsters, stageTrees, stageSize, berryValue, clearBonus } from './stages';
 import { emptyExpedition, expeditionLayout, EXPEDITION_TITLES, type ExpeditionProgress } from './expedition';
 import { DAILY_MISSIONS, DATE_KEY, recordDaily, type DailyState } from './daily';
+import { sha256Hex } from './sha256';
 export const WEAPONS = [
   { name: '새싹 나무검', price: 0, bonus: 0, multiplier: 1, treePower: 1, icon: '🌱', color: 0x96bf6a },
   { name: '도토리 망치', price: 80, bonus: 2, multiplier: 1.2, treePower: 2, icon: '🔨', color: 0xbf8c52 },
@@ -515,10 +516,16 @@ export function usePotion(s: Save, id: number, now = Date.now()) {
   else { s.potions.xpMultiplier = 3; s.potions.xpUntil = now + potion.durationMinutes * 60_000; }
   return `${potion.name}을(를) 사용했어요. ${potion.durationMinutes}분 동안 효과가 있어요!`;
 }
-export function enableTeacherMode(s: Save, code: string): string {
-  return applyTeacherCode(s, code);
+/** 교사용 코드의 SHA-256. 코드 자체는 저장소에 두지 않아요(공개 저장소라 학생이 읽을 수 있어요). */
+export const TEACHER_CODE_HASH = '25145a1d15b7327594932f6263382b362f78a64a78fdb3495f64fd63551dea70';
+export function enableTeacherMode(s: Save, code: string, teacherHash = TEACHER_CODE_HASH): string {
+  return applyTeacherCode(s, code, teacherHash);
 }
-export function applyTeacherCode(s: Save, code: string): string {
+export function applyTeacherCode(s: Save, code: string, teacherHash = TEACHER_CODE_HASH): string {
+  if (!s.teacherMode) {
+    if (sha256Hex(code) !== teacherHash) throw new Error('암호코드가 맞지 않아요.');
+    return unlockTeacherMode(s);
+  }
   if (code === 'showmethemoney') { s.berries += 1000; return '수업용 베리 1,000개를 추가했어요!'; }
   if (code === 'greedisgood') { s.berries += 10000; return '수업용 베리 10,000개를 추가했어요!'; }
   const levelGain = code === 'levelup' || code === 'levelup1' ? 1 : code === 'levelup10' ? 10 : 0;
@@ -527,7 +534,10 @@ export function applyTeacherCode(s: Save, code: string): string {
     s.level += levelGain;
     return `레벨이 ${levelGain} 올라서 ${s.level}레벨이 되었어요!`;
   }
-  if (code !== 'teacher') throw new Error('암호코드가 맞지 않아요.');
+  if (sha256Hex(code) !== teacherHash) throw new Error('암호코드가 맞지 않아요.');
+  return unlockTeacherMode(s);
+}
+function unlockTeacherMode(s: Save): string {
   s.teacherMode = true; s.berries = 1_000_000;
   WEAPONS.forEach((_, id) => { s.weapons[id] = 3; }); OUTFITS.forEach((_, id) => { s.outfits[id] = 2; }); RIDES.forEach((_, id) => { s.rides[id] = true; }); PETS.forEach((_, id) => { s.pets[id] = true; }); HAIRSTYLES.forEach((_, id) => { s.hairstyles[id] = true; }); FACES.forEach((_, id) => { s.faces[id] = true; });
   s.potions.stock = POTIONS.map(() => 9);

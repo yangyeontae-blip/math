@@ -135,19 +135,19 @@ test('pet chase speed stays ahead of every ride so mounted berries can be reache
   for (const ride of RIDES) assert.ok(petChaseSpeed(ride.speed) > PLAYER_MOVE_SPEED * ride.speed);
 });
 test('teacher code unlocks all demonstration content without clearing hunts', () => {
-  const s = newSave('선생님', 0); assert.throws(() => enableTeacherMode(s, 'Teacher')); enableTeacherMode(s, 'teacher');
+  const s = newSave('선생님', 0); assert.throws(() => enableTeacherMode(s, 'Teacher', TEST_TEACHER_HASH), /암호코드/); enableTeacherMode(s, 'teacher', TEST_TEACHER_HASH);
   assert.equal(s.teacherMode, true); assert.equal(s.berries, 1_000_000); assert.equal(Object.keys(s.weapons).length, WEAPONS.length); assert.equal(Object.keys(s.outfits).length, OUTFITS.length); assert.equal(Object.keys(s.rides).length, RIDES.length); assert.equal(Object.keys(s.pets).length, PETS.length); assert.equal(Object.keys(s.hairstyles).length, HAIRSTYLES.length); assert.equal(Object.keys(s.faces).length, FACES.length); assert.equal(canEnter(s, 10), true); assert.equal(s.journey.maps[10].monsters.length, 0);
   delete s.rides[RIDES.length - 1]; delete s.pets[PETS.length - 1]; delete s.outfits[OUTFITS.length - 1];
   const refreshed = validateSave(s); assert.equal(Object.keys(refreshed.rides).length, RIDES.length); assert.equal(Object.keys(refreshed.pets).length, PETS.length); assert.equal(Object.keys(refreshed.outfits).length, OUTFITS.length);
 });
 test('money codes add the exact berries and pet and beauty purchases stay safe', () => {
-  const s = newSave('꾸미기', 0); applyTeacherCode(s, 'showmethemoney'); assert.equal(s.berries, 1000); applyTeacherCode(s, 'greedisgood'); assert.equal(s.berries, 11000);
+  const s = newSave('꾸미기', 0); s.teacherMode = true; applyTeacherCode(s, 'showmethemoney'); assert.equal(s.berries, 1000); applyTeacherCode(s, 'greedisgood'); assert.equal(s.berries, 11000);
   const beforePet = s.berries; buyPet(s, 0); assert.equal(s.berries, beforePet - PETS[0].price); assert.equal(s.pet, 0); buyPet(s, 0); assert.equal(s.berries, beforePet - PETS[0].price);
   const beforeHair = s.berries; buyLook(s, 'hairstyle', 1); assert.equal(s.berries, beforeHair - HAIRSTYLES[1].price); assert.equal(s.hairstyle, 1); buyLook(s, 'hairstyle', 0); assert.equal(s.hairstyle, 0);
   assert.throws(() => applyTeacherCode(s, 'SHOWMETHEMONEY')); assert.equal(RIDES.length, 14); assert.equal(PETS.length, 9);
 });
 test('teacher level codes raise only the requested number of levels', () => {
-  const s = newSave('레벨수업', 0); s.xp = 25; s.berries = 321;
+  const s = newSave('레벨수업', 0); s.teacherMode = true; s.xp = 25; s.berries = 321;
   assert.equal(applyTeacherCode(s, 'levelup1'), '레벨이 1 올라서 2레벨이 되었어요!');
   assert.equal(s.level, 2); assert.equal(s.xp, 25); assert.equal(s.berries, 321);
   assert.equal(applyTeacherCode(s, 'levelup'), '레벨이 1 올라서 3레벨이 되었어요!'); s.level = 2;
@@ -172,4 +172,20 @@ test('version 8 active potions become a safe five-minute time effect', () => {
   old.version = 8; old.potions = { stock: [1, 0, 0], berryMultiplier: 2, berryUses: 3, xpMultiplier: 1, xpUses: 0 };
   const restored = validateSave(old), effect = potionEffects(restored);
   assert.equal(restored.version, 12); assert.equal(effect.berryMultiplier, 2); assert.ok(effect.berrySeconds > 295 && effect.berrySeconds <= 300); assert.equal(effect.xpSeconds, 0);
+});
+
+import { sha256Hex } from '../src/sha256';
+import { TEACHER_CODE_HASH } from '../src/rules';
+const TEST_TEACHER_HASH = sha256Hex('teacher');
+test('sha256 matches known vectors', () => {
+  assert.equal(sha256Hex('abc'), 'ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad');
+  assert.equal(sha256Hex(''), 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855');
+  assert.equal(sha256Hex('a'.repeat(1000)), '41edece42d63e8d9bf515a9ba6932e1c20cbc9f5a5d134645adb5db1b9737ea3');
+});
+test('public cheat words no longer unlock anything without the real teacher code', () => {
+  for (const word of ['teacher', 'levelup10', 'showmethemoney', 'greedisgood']) {
+    const s = newSave('학생', 0); const before = structuredClone(s);
+    assert.throws(() => applyTeacherCode(s, word), /암호코드/); assert.deepEqual(s, before); assert.equal(s.teacherMode, false);
+  }
+  assert.match(TEACHER_CODE_HASH, /^[0-9a-f]{64}$/);
 });
