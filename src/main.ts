@@ -3,7 +3,7 @@ import './garden.css';
 import { curriculumVisualHtml } from './curriculum-visual';
 import { VILLAGE_THEMES, villageThemeId } from './villages';
 import { DAILY_MISSIONS, DAILY_STAMPS, DAILY_ALL_CLEAR_BONUS, claimDaily, dailyReady, dailyStampsShown, ensureDaily } from './daily';
-import type { World, AvatarPreview } from './world';
+import type { World, AvatarPreview, GuideKind } from './world';
 import { type CurriculumMistake, newSave, validateSave, CHARACTERS, MONSTERS, OUTFITS, PETS, POTIONS, RIDES, WEAPONS, HAIRSTYLES, FACES, WEAPON_UPGRADES, OUTFIT_UPGRADES, Encounter, grantReward, rewardFor, potionEffects, buy, upgrade, buyRide, dismount, buyPet, unequipPet, buyLook, buyPotion, usePotion, applyTeacherCode, collectBerry, finishHunt, fellTree, treeDamage, canEnter, monsterBattleRounds, recordWrongAnswer, recordCorrectAnswer, STAGE_STORIES, journeyFor, multiplicationUsesStory, startMultiplicationFinal, answerMultiplicationFinal, questionAnswerText, curriculumUnitComplete, canStartCurriculumMission, recordCurriculumAttempt, completeCurriculumMission, curriculumGraduationAvailable, claimCurriculumGraduation, OPERATIONS, NEW_CURRICULUM_UNITS, OPERATION_INFO, PRACTICE_TIER_NAMES, type CurriculumUnitId, type NewCurriculumUnitId, type ForestKind, type Operation, type PracticeTier, type Save } from './rules';
 import { STAGES, stageMonsters, stageBerries, berryValue, clearBonus } from './stages';
 import { Sound } from './audio';
@@ -129,15 +129,19 @@ function refresh() {
   $('#weapon-effect').textContent = equipmentEffectText(s);
   const expedition = s.forest === 'division' ? s.expedition.active : null;
   $('.location-pill').innerHTML = world?.inRoom ? '⌂ 나의 집 <span>가구를 눌러 꾸며요</span>' : journey.stage ? `${s.forest === 'division' ? '❋' : FOREST_INFO[s.forest].icon} ${journey.stage}단계 사냥터 <span>${expedition?.stage === journey.stage ? '✦ 별빛 재탐험' : `${forestName} · ${STAGES[journey.stage - 1].name}`}</span>` : `${VILLAGE_THEMES[villageThemeId(s)].icon} ${VILLAGE_THEMES[villageThemeId(s)].name} <span>${VILLAGE_THEMES[villageThemeId(s)].blurb}</span>`;
-  const tasks = [[s.tutorial.collected, '길 위의 베리 줍기'], [s.tutorial.battle, '계산으로 몬스터 만나기'], [s.tutorial.shop, '강지후·오지후 상점 구경']];
+  const tasks: [boolean, string, GuideKind][] = [[s.tutorial.collected, '길 위의 베리 줍기', 'berry'], [s.tutorial.battle, '계산으로 몬스터 만나기', 'monster'], [s.tutorial.shop, '강지후·오지후 상점 구경', 'shop']];
   const expeditionHere = expedition?.stage === journey.stage && !world?.inRoom;
   const stage = journey.stage, map = journey.maps[stage];
-  const goals: [boolean, string][] = expeditionHere
-    ? [[expedition.stars.length === 3, `별빛 표식 ${expedition.stars.length} / 3`], [expedition.monsters.length === 2, `별빛 대련 ${expedition.monsters.length} / 2`], [false, '출구에서 이야기 문제 풀기']]
+  const goals: [boolean, string, GuideKind | null][] = expeditionHere
+    ? [[expedition.stars.length === 3, `별빛 표식 ${expedition.stars.length} / 3`, 'star'], [expedition.monsters.length === 2, `별빛 대련 ${expedition.monsters.length} / 2`, 'expMonster'], [false, '출구에서 이야기 문제 풀기', canFinishExpedition(s) ? 'next' : null]]
     : stage && !world?.inRoom
-      ? [[map.cleared, `${FOREST_INFO[s.forest].op} 대련 ${map.monsters.length} / ${stageMonsters(stage).length}`], [map.berries.length === stageBerries(stage).length, `숲 베리 ${map.berries.length} / ${stageBerries(stage).length}`], [map.cleared, map.cleared ? (stage === 10 && s.forest === 'multiplication' ? '출구의 구구단 햇살문 풀기' : '출구에서 다음 숲으로 가기') : STAGE_STORIES[stage - 1]]]
-      : tasks as [boolean, string][];
-  $('#quest-list').innerHTML = goals.map(([done, label]) => `<div class="quest ${done ? 'done' : ''}"><span>${done ? '✓' : '○'}</span>${label}</div>`).join('');
+      ? [[map.cleared, `${FOREST_INFO[s.forest].op} 대련 ${map.monsters.length} / ${stageMonsters(stage).length}`, 'monster'], [map.berries.length === stageBerries(stage).length, `숲 베리 ${map.berries.length} / ${stageBerries(stage).length}`, 'berry'], [false, map.cleared ? (stage === 10 && s.forest === 'multiplication' ? '출구의 구구단 햇살문 풀기' : '출구에서 다음 숲으로 가기') : STAGE_STORIES[stage - 1], map.cleared ? 'next' : null]]
+      : world?.inRoom ? [[false, '방의 문으로 나가 마을로 돌아가기', 'roomExit']] : tasks.every(task => task[0]) ? [[false, `모험의 문에서 ${forestName} 고르기`, 'journey']] : tasks;
+  $('#quest-list').innerHTML = goals.map(([done, label, guide]) => `<div class="quest ${done ? 'done' : ''}"><span>${done ? '✓' : '○'}</span><span>${label}</span>${done || !guide ? '' : `<button class="quest-guide" data-guide="${guide}" aria-label="${escape(label)} 위치 안내">안내</button>`}</div>`).join('');
+  document.querySelectorAll<HTMLButtonElement>('[data-guide]').forEach(button => button.onclick = () => {
+    const name = world.guideTo(button.dataset.guide as GuideKind);
+    toast(name ? `🧭 ${name} 방향을 알려줄게요!` : '지금 안내할 대상을 찾지 못했어요. 목표를 다시 확인해 주세요.');
+  });
   $('#quest-title').textContent = expeditionHere ? `✦ ${journey.stage}단계 별빛 원정` : journey.stage ? `${forestName} ${journey.stage}단계 · ${STAGES[journey.stage - 1].name}` : tasks.every(t => t[0]) ? `모험의 문에서 ${forestName}을 골라요!` : '숲과 친해지는 세 가지 방법';
   expeditionButton.hidden = s.forest !== 'division' || !expeditionUnlocked(s);
   audio.music = s.settings.music; audio.effects = s.settings.sound;
@@ -498,7 +502,7 @@ async function submitCurriculumAnswer(value: string) {
       run.missedCurrent = true; run.wrong++; sessionWrong++; state.learning.wrong++;
       recordCurriculumAttempt(state, q.unit, false, run.mission, q.skill);
     }
-    $('#curriculum-message').textContent = '괜찮아요! 그림과 힌트를 보고 다시 골라 볼까요?';
+    $('#curriculum-message').textContent = module.curriculumWrongFeedback(q, value);
     document.querySelectorAll<HTMLButtonElement>('[data-curriculum-answer]').forEach(button => { if (button.dataset.curriculumAnswer === value) button.classList.add('wrong'); });
     audio.play('wrong'); persist(); return;
   }

@@ -26,6 +26,43 @@ export interface CurriculumQuestion {
   explanation: string;
 }
 
+function fractionParts(value: string) {
+  const match = value.match(/^(\d+)\/(\d+)$/);
+  return match ? [Number(match[1]), Number(match[2])] as const : null;
+}
+
+/** 선택한 오답과 문제 그림을 함께 살펴보고, 정답을 바로 밝히지 않는 짧은 피드백을 만듭니다. */
+export function curriculumWrongFeedback(question: CurriculumQuestion, submitted: string) {
+  const chosen = question.choices?.find(choice => choice.value === submitted)?.label ?? submitted;
+  if (question.kind === 'number') {
+    const entered = Number(submitted), answer = Number(question.answer);
+    const size = Number.isFinite(entered) && Number.isFinite(answer) && entered !== answer
+      ? `입력한 ${submitted}은 답보다 ${entered > answer ? '커요' : '작아요'}. `
+      : `입력한 ${submitted}을 다시 살펴봐요. `;
+    if (question.visual.kind === 'array') return `${size}가로와 세로의 수를 곱했는지 확인해 봐요. ${question.hints[0]}`;
+    if (question.visual.kind === 'groups') return `${size}전체를 ${question.visual.divisor}개씩 묶고 남는 수까지 세어 봐요.`;
+    if (question.visual.kind === 'fraction') return `${size}전체 조각 수와 색칠한 조각 수를 그림에서 다시 세어 봐요.`;
+    if (question.visual.kind === 'pictograph') return `${size}그림 한 개가 ${question.visual.value}${question.visual.unitLabel ?? ''}을 나타내는지 확인해 봐요.`;
+    if (question.visual.kind === 'length-time' || question.visual.kind === 'measure') return `${size}먼저 단위를 같게 바꾸었는지 확인해 봐요. ${question.hints[0]}`;
+    if (question.visual.kind === 'circle') return `${size}반지름과 지름의 관계를 그림에서 다시 찾아봐요.`;
+    return `${size}${question.hints[0]}`;
+  }
+
+  const selectedFraction = fractionParts(submitted), answerFraction = fractionParts(question.answer);
+  if (selectedFraction && answerFraction) {
+    if (selectedFraction[0] === answerFraction[1] && selectedFraction[1] === answerFraction[0]) return `${chosen}을 골랐어요. 분자와 분모의 자리를 바꾸지 않았는지 봐요. 전체 조각 수는 아래에, 고른 조각 수는 위에 써요.`;
+    if (selectedFraction[1] === answerFraction[1]) return `${chosen}을 골랐어요. 분모는 같지만 고른 조각 수가 맞는지 그림에서 다시 세어 봐요.`;
+    return `${chosen}을 골랐어요. 전체를 몇 조각으로 나눴는지 먼저 세어 분모를 확인해 봐요.`;
+  }
+  if (question.visual.kind === 'pictograph') return `${chosen}을 골랐어요. 각 줄의 ${question.visual.icon} 수를 다시 세고, 그림 한 개의 값 ${question.visual.value}${question.visual.unitLabel ?? ''}을 적용해 봐요.`;
+  if (question.visual.kind === 'measure') return `${chosen}을 골랐어요. 물건의 실제 크기를 떠올리고 ${question.visual.measure === 'capacity' ? 'mL와 L' : 'g, kg, t'} 중 알맞은 단위를 골라 봐요.`;
+  if (question.visual.kind === 'length-time') return `${chosen}을 골랐어요. ${question.visual.measure === 'time' ? '60초와 1분, 60분과 1시간' : '길이 단위 사이의 관계'}를 먼저 확인해 봐요.`;
+  if (question.visual.kind === 'circle') return `${chosen}을 골랐어요. 선분이 원의 중심을 지나는지, 양 끝이 어디에 닿는지 그림에서 확인해 봐요.`;
+  if (question.visual.kind === 'geometry') return `${chosen}을 골랐어요. 선의 끝점과 도형의 모서리를 하나씩 짚어 보며 특징을 비교해 봐요.`;
+  if (question.visual.kind === 'decimal') return `${chosen}을 골랐어요. 열 칸 중 색칠한 칸 수와 소수점 오른쪽 숫자를 연결해 봐요.`;
+  return `${chosen}을 골랐어요. ${question.hints[0]}`;
+}
+
 export interface CurriculumMission {
   name: string;
   kind: 'concept' | 'practice' | 'story' | 'guardian';
