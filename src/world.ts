@@ -367,7 +367,7 @@ export class World {
   private keys = new Set<string>(); private stick = { x: 0, z: 0 }; private clock = new T.Clock(); private time = 0; private vy = 0; private grounded = true;
   private particles: { mesh: T.Mesh; v: T.Vector3; life: number }[] = []; private lastSafe = new T.Vector3(0, 0, 8); private follow = new T.Vector3(0, 0, 1);
   private sun: T.DirectionalLight; private labelLayer: HTMLDivElement; private selectedId: string | null = null;
-  private guideTarget: { object: T.Object3D; name: string } | null = null; private guideElement: HTMLDivElement;
+  private guideTarget: { object: T.Object3D; name: string; arrivalDistance: number } | null = null; private guideElement: HTMLDivElement;
   private swingUntil = 0; private rideIndex = -1; private petIndex = -1; private petModel: T.Group | null = null; private petTargetId: number | null = null; private animationRunning = false;
   private rideAnimated: T.Object3D[] = []; private butterflies: T.Object3D[] = []; private furnitureRoot: T.Group | null = null;
   private tempProjection = new T.Vector3(); private tempTarget = new T.Vector3(); private tempWorld = new T.Vector3(); private cameraTarget = new T.Vector3();
@@ -661,11 +661,11 @@ export class World {
   clearInput() { this.keys.clear(); this.stick = { x: 0, z: 0 }; }
   guideTo(kind: GuideKind) {
     const entityMatch = (entity: Entity) => kind === 'monster' ? entity.id.startsWith('monster') : kind === 'expMonster' ? entity.id.startsWith('expMonster') : kind === 'shop' ? ['weapon', 'outfit', 'ride', 'pet', 'potion', 'beauty'].includes(entity.id) : entity.id === kind;
-    const candidates: { object: T.Object3D; name: string }[] = kind === 'berry'
-      ? this.coins.filter(coin => coin.mesh.visible).map(coin => ({ object: coin.mesh, name: '길 위의 베리' }))
+    const candidates: { object: T.Object3D; name: string; arrivalDistance: number }[] = kind === 'berry'
+      ? this.coins.filter(coin => coin.mesh.visible).map(coin => ({ object: coin.mesh, name: '길 위의 베리', arrivalDistance: .9 }))
       : kind === 'star'
-        ? this.stars.filter(star => star.mesh.visible).map(star => ({ object: star.mesh, name: '별빛 표식' }))
-        : this.entities.filter(entity => entity.mesh.visible && entityMatch(entity)).map(entity => ({ object: entity.mesh, name: entity.name }));
+        ? this.stars.filter(star => star.mesh.visible).map(star => ({ object: star.mesh, name: '별빛 표식', arrivalDistance: 1.2 }))
+        : this.entities.filter(entity => entity.mesh.visible && entityMatch(entity)).map(entity => ({ object: entity.mesh, name: entity.name, arrivalDistance: 2.6 }));
     candidates.sort((a, b) => a.object.position.distanceToSquared(this.player.position) - b.object.position.distanceToSquared(this.player.position));
     this.guideTarget = candidates[0] ?? null;
     if (!this.guideTarget) { this.clearGuide(); return null; }
@@ -781,7 +781,7 @@ export class World {
     if (!target || !target.object.visible) { if (target) this.clearGuide(); return; }
     target.object.getWorldPosition(this.tempWorld);
     const distance = Math.hypot(this.player.position.x - this.tempWorld.x, this.player.position.z - this.tempWorld.z);
-    if (distance < 2.6) { this.clearGuide(); return; }
+    if (distance < target.arrivalDistance) { this.clearGuide(); return; }
     const projected = this.tempProjection.copy(this.tempWorld).project(this.camera), width = this.container.clientWidth, height = this.container.clientHeight;
     const rawX = (projected.x * .5 + .5) * width, rawY = (-projected.y * .5 + .5) * height;
     const x = Math.min(width - 64, Math.max(64, rawX)), y = Math.min(height - 92, Math.max(78, rawY));
