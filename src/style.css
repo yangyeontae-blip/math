@@ -299,3 +299,9 @@ input:not([type=checkbox]):not([type=radio]),select,textarea{min-height:44px}
 .boss-hp{height:16px;border-radius:99px;background:#e3d6ee;overflow:hidden;margin:8px 0}.boss-hp i{display:block;height:100%;background:linear-gradient(90deg,#e8648a,#f2a65a);transition:width .4s}
 .boss-win{font-weight:700;color:#2f7d5b}.boss-mine{font-size:.85rem;color:#6b6358}
 .boss-code{display:grid;gap:6px;margin:12px 0 4px}.boss-code span{display:grid;gap:2px}.boss-code input{padding:10px 12px;border-radius:12px;border:2px solid #d9c9b0;font:inherit}
+
+/* 목표 길찾기 */
+.quest{align-items:center}.quest>span:nth-child(2){flex:1}.quest-guide{flex:0 0 auto;min-height:32px;padding:5px 9px;border:1px solid #c8d9ac;border-radius:12px;background:#f7f5d8;color:#477052;font-size:.72rem;font-weight:900;pointer-events:auto}
+.navigation-guide{position:absolute;left:0;top:0;z-index:12;display:flex;align-items:center;gap:8px;max-width:210px;padding:9px 12px;border:2px solid #fff;border-radius:17px;background:#285e48e8;color:#fffde7;box-shadow:0 6px 18px #173f2b42;pointer-events:none;white-space:nowrap}
+.navigation-guide>span{display:grid;place-items:center;width:25px;height:25px;border-radius:50%;background:#ffe69b;color:#32624d;font-size:1.1rem;transform-origin:center}.navigation-guide b,.navigation-guide small{display:block;max-width:150px;overflow:hidden;text-overflow:ellipsis}.navigation-guide b{font-size:.78rem}.navigation-guide small{margin-top:1px;color:#dbedc5;font-size:.68rem}
+@media(pointer:coarse),(max-width:800px){.quest-guide{min-width:44px;min-height:44px;padding:5px}.navigation-guide{max-width:180px;padding:7px 10px}.navigation-guide b{max-width:125px}}
