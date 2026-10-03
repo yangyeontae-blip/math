@@ -1,6 +1,7 @@
 import './style.css';
 import './garden.css';
 import { curriculumVisualHtml } from './curriculum-visual';
+import { curriculumActivityHtml } from './curriculum-activity';
 import { VILLAGE_THEMES, villageThemeId } from './villages';
 import { DAILY_MISSIONS, DAILY_STAMPS, DAILY_ALL_CLEAR_BONUS, claimDaily, dailyReady, dailyStampsShown, ensureDaily } from './daily';
 import type { World, AvatarPreview, GuideKind } from './world';
@@ -466,14 +467,40 @@ function renderCurriculumQuestion() {
   const answers = q.kind === 'choice'
     ? `<div class="curriculum-answers">${q.choices!.map(choice => `<button data-curriculum-answer="${escape(choice.value)}">${escape(choice.label)}</button>`).join('')}</div>`
     : `<div class="curriculum-number"><input id="curriculum-answer" inputmode="numeric" maxlength="4" readonly aria-label="답"><div class="number-pad">${[1, 2, 3, 4, 5, 6, 7, 8, 9, '지우기', 0, '확인'].map(n => `<button data-curriculum-number="${n}" class="${n === '확인' ? 'primary' : ''}">${n}</button>`).join('')}</div></div>`;
-  openModal(title(`${region.icon} ${missionName} · ${run.index + 1}/${run.total}`, q.skill) + `<div class="curriculum-question-card"><div class="curriculum-step"><span>${run.index + 1}</span>${Array.from({ length: run.total }, (_, id) => `<i class="${id < run.index ? 'done' : id === run.index ? 'now' : ''}"></i>`).join('')}</div>${curriculumQuestionVisual(q)}${q.detail ? `<p class="question-detail">${escape(q.detail)}</p>` : ''}<h3>${escape(q.prompt)}</h3>${answers}<p id="curriculum-message" class="answer-message" role="status">천천히 보고 답을 골라요. 틀려도 잃는 것은 없어요.</p><div id="curriculum-hint" class="curriculum-hint" hidden></div>${speechSupported() ? '<button id="curriculum-read" class="text-button wide" aria-label="문제 읽어주기">🔊 문제 읽어주기</button>' : ''}<button id="curriculum-hint-button" class="text-button wide">💡 단계별 힌트 보기</button><button class="text-button wide" data-close>잠깐 쉬기</button><div id="curriculum-result" hidden></div></div>`, 'curriculum-play-modal');
+  const activity = curriculumActivityHtml(q);
+  openModal(title(`${region.icon} ${missionName} · ${run.index + 1}/${run.total}`, q.skill) + `<div class="curriculum-question-card"><div class="curriculum-step"><span>${run.index + 1}</span>${Array.from({ length: run.total }, (_, id) => `<i class="${id < run.index ? 'done' : id === run.index ? 'now' : ''}"></i>`).join('')}</div>${activity || curriculumQuestionVisual(q)}${q.detail ? `<p class="question-detail">${escape(q.detail)}</p>` : ''}<h3>${escape(q.prompt)}</h3>${answers}<p id="curriculum-message" class="answer-message" role="status">${activity ? '활동판을 직접 움직여 답을 만들어 보세요. 틀려도 잃는 것은 없어요.' : '천천히 보고 답을 골라요. 틀려도 잃는 것은 없어요.'}</p><div id="curriculum-hint" class="curriculum-hint" hidden></div>${speechSupported() ? '<button id="curriculum-read" class="text-button wide" aria-label="문제 읽어주기">🔊 문제 읽어주기</button>' : ''}<button id="curriculum-hint-button" class="text-button wide">💡 단계별 힌트 보기</button><button class="text-button wide" data-close>잠깐 쉬기</button><div id="curriculum-result" hidden></div></div>`, 'curriculum-play-modal');
   document.querySelectorAll<HTMLButtonElement>('[data-curriculum-answer]').forEach(button => button.onclick = () => submitCurriculumAnswer(button.dataset.curriculumAnswer!));
   document.querySelectorAll<HTMLButtonElement>('[data-curriculum-number]').forEach(button => button.onclick = () => enterCurriculumNumber(button.dataset.curriculumNumber!));
+  setupCurriculumActivity();
   $('#curriculum-hint-button').onclick = showCurriculumHint;
   const readText = () => [q.prompt, q.detail, q.kind === 'choice' ? `보기. ${q.choices!.map(choice => choice.label).join('. ')}` : ''].filter(Boolean).join('. ');
   const readButton = document.querySelector<HTMLButtonElement>('#curriculum-read');
   if (readButton) readButton.onclick = () => { readButton.textContent = '🔊 읽는 중…'; if (!speak(readText(), () => { readButton.textContent = '🔊 문제 읽어주기'; })) readButton.textContent = '🔊 문제 읽어주기'; };
   if (readButton && autoReadEnabled()) readButton.click();
+}
+
+function setupCurriculumActivity() {
+  const pizza = document.querySelector<HTMLElement>('[data-math-activity="pizza"]');
+  if (pizza) {
+    const denominator = Number(pizza.dataset.denominator), selected = new Set<number>();
+    const count = pizza.querySelector<HTMLElement>('[data-pizza-count]')!, submit = pizza.querySelector<HTMLButtonElement>('[data-pizza-submit]')!;
+    pizza.querySelectorAll<HTMLButtonElement>('[data-pizza-slice]').forEach(button => button.onclick = () => {
+      const id = Number(button.dataset.pizzaSlice);
+      if (selected.has(id)) selected.delete(id); else selected.add(id);
+      button.classList.toggle('selected', selected.has(id)); button.setAttribute('aria-pressed', String(selected.has(id)));
+      count.textContent = String(selected.size); submit.disabled = selected.size === 0;
+    });
+    submit.onclick = () => void submitCurriculumAnswer(`${selected.size}/${denominator}`);
+  }
+  const circle = document.querySelector<HTMLElement>('[data-math-activity="circle"]');
+  if (circle) {
+    const max = Number(circle.dataset.circleMax), unit = circle.dataset.circleUnit ?? 'cm'; let value = 0;
+    const output = circle.querySelector<HTMLOutputElement>('[data-circle-value]')!, tape = circle.querySelector<HTMLElement>('[data-circle-tape]')!, submit = circle.querySelector<HTMLButtonElement>('[data-circle-submit]')!;
+    const render = () => { output.value = `${value} ${unit}`; output.textContent = output.value; tape.style.width = `${value / max * 100}%`; submit.disabled = value === 0; };
+    circle.querySelectorAll<HTMLButtonElement>('[data-circle-adjust]').forEach(button => button.onclick = () => { value = Math.max(0, Math.min(max, value + Number(button.dataset.circleAdjust))); render(); });
+    submit.onclick = () => { const input = document.querySelector<HTMLInputElement>('#curriculum-answer'); if (input) input.value = String(value); void submitCurriculumAnswer(String(value)); };
+    render();
+  }
 }
 
 function enterCurriculumNumber(key: string) {
@@ -508,7 +535,7 @@ async function submitCurriculumAnswer(value: string) {
   }
   sessionCorrect++;
   if (!run.missedCurrent) { state.learning.correct++; recordCurriculumAttempt(state, q.unit, true, run.mission, q.skill); if (!run.review) addBossDamage(localStorage); }
-  document.querySelectorAll<HTMLButtonElement>('[data-curriculum-answer],[data-curriculum-number]').forEach(button => { button.disabled = true; if (button.dataset.curriculumAnswer === value) button.classList.add('correct'); });
+  document.querySelectorAll<HTMLButtonElement>('[data-curriculum-answer],[data-curriculum-number],[data-pizza-slice],[data-pizza-submit],[data-circle-adjust],[data-circle-submit]').forEach(button => { button.disabled = true; if (button.dataset.curriculumAnswer === value) button.classList.add('correct'); });
   const input = document.querySelector<HTMLInputElement>('#curriculum-answer'); if (input) input.disabled = true;
   $('#curriculum-hint-button').hidden = true; $('#curriculum-message').textContent = '정답이에요! 그림 속 규칙을 잘 찾았어요.';
   const result = $('#curriculum-result'); result.hidden = false;
