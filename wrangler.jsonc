@@ -1,0 +1,14 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "berry-forest",
+  "main": "dist/server/index.js",
+  "compatibility_date": "2026-10-01",
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "berry-forest-db",
+      "database_id": "2e220418-2db9-4ac3-8664-65f5773f38e5"
+    }
+  ],
+  "previews": {}
+}
