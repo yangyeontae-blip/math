@@ -1,7 +1,8 @@
 import * as T from 'three';
-import { CHARACTERS, MONSTERS, OUTFITS, PETS, RIDES, WEAPONS, PLAYER_MOVE_SPEED, petChaseSpeed, journeyFor, type ForestKind, type Save } from './rules';
+import { CHARACTERS, MONSTERS, OUTFITS, PETS, RIDES, WEAPONS, PLAYER_MOVE_SPEED, petChaseSpeed, riderHeight, journeyFor, type ForestKind, type Save } from './rules';
 import { STAGES, stageBerries, stageMonsters, stagePlatforms, stageTrees, stageSize, isVillagePond } from './stages';
 import { EXPEDITION_STAR_SPOTS, expeditionLayout } from './expedition';
+import { VILLAGE_THEMES, villageThemeId, type VillageTheme } from './villages';
 
 type Entity = { id: string; name: string; x: number; z: number; mesh: T.Group; label: HTMLDivElement };
 const mat = (color: number, roughness = .86) => new T.MeshStandardMaterial({ color, roughness });
@@ -221,12 +222,42 @@ function makeRide(id: number) {
     ball(g, 0xe4a24d, 0, .76, 0, .82, .52, .62); ball(g, 0xf1b967, 0, 1.12, .58, .43, .42, .43);
     for (let i = 0; i < 10; i++) ball(g, i % 2 ? 0xf4c947 : 0xe89b3e, Math.cos(i * .628) * .46, 1.14 + Math.sin(i * .628) * .46, .48, .14, .18, .1);
     for (const side of [-1, 1]) { const wing = mesh(new T.CircleGeometry(.52, 12), 0xffe6a0, side * .68, .95, -.08, g); wing.scale.y = 1.35; wing.rotation.z = side * -.55; wing.userData.rideWing = side; ball(g, 0x493b32, side * .14, 1.17, .95, .045, .06, .025); }
-  } else { // 꿀벌 하늘마차
+  } else if (id === 9) { // 꿀벌 하늘마차
     ball(g, 0xf0bd38, 0, .72, 0, .9, .48, .62); for (const z of [-.25, .1, .42]) box(g, 0x4f4338, 0, .72, z, .94, .1, .12);
     for (const side of [-1, 1]) { const wing = mesh(new T.CircleGeometry(.6, 12), 0xfff2c5, side * .7, 1.02, -.08, g); wing.scale.y = 1.4; wing.rotation.z = side * -.62; wing.userData.rideWing = side; ball(g, 0x3d3733, side * .16, 1.04, .74, .05, .065, .025); const antenna = cylinder(g, 0x4f4338, side * .16, 1.42, .5, .025, .03, .35, 6); antenna.rotation.z = side * -.3; }
+  } else if (id === 10) { // 반짝 킥보드: 낮은 발판, 긴 손잡이, 작은 바퀴 두 개
+    box(g, 0x67c7f2, 0, .2, 0, .42, .08, 1.15); box(g, 0xffffff, 0, .25, 0, .18, .02, .9);
+    for (const z of [-.5, .56]) { const wheel = cylinder(g, 0x4b4750, 0, .13, z, .13, .13, .1, 12); wheel.rotation.z = Math.PI / 2; ball(g, 0xffd56c, 0, .13, z, .04, .04, .06); }
+    const pole = cylinder(g, 0xe9eef2, 0, .58, .54, .026, .03, .86, 8); pole.rotation.x = -.12; box(g, 0x3f8fc2, 0, 1.0, .5, .56, .045, .045);
+    for (const side of [-1, 1]) ball(g, 0xff9a6c, side * .3, 1, .5, .055, .055, .09); ball(g, 0xfff1b0, 0, .88, .62, .06, .05, .03);
+  } else if (id === 11) { // 바람 자전거: 두 바퀴, 가는 프레임, 안장, 바구니
+    for (const z of [-.52, .52]) { const wheel = mesh(new T.TorusGeometry(.33, .035, 6, 20), 0x3c4a42, 0, .37, z, g); wheel.rotation.y = Math.PI / 2; ball(g, 0xdfe7e3, 0, .37, z, .05, .05, .05); }
+    box(g, 0x7ccf88, 0, .52, .06, .06, .06, .95); const down = box(g, 0x62b872, 0, .45, -.12, .05, .05, .62); down.rotation.x = .55;
+    box(g, 0x7ccf88, 0, .6, -.3, .05, .3, .05); box(g, 0x7ccf88, 0, .6, .5, .05, .46, .05).rotation.x = -.18;
+    box(g, 0x8d6046, 0, .79, -.3, .24, .07, .32); box(g, 0x3c4a42, 0, .86, .5, .56, .05, .05);
+    for (const side of [-1, 1]) ball(g, 0xffd978, side * .3, .86, .5, .05, .05, .08);
+    box(g, 0xe7c88c, 0, .66, .72, .34, .2, .22); ball(g, 0xff7f8e, 0, .8, .72, .08);
+  } else if (id === 12) { // 번개 오토바이: 굵은 바퀴, 연료통, 전조등, 배기관
+    for (const z of [-.66, .66]) { const wheel = cylinder(g, 0x2f2c33, 0, .36, z, .36, .36, .2, 14); wheel.rotation.z = Math.PI / 2; const hub = cylinder(g, 0xd7dadf, 0, .36, z, .17, .17, .24, 10); hub.rotation.z = Math.PI / 2; }
+    box(g, 0x3b3b44, 0, .52, .02, .34, .3, 1.0); ball(g, 0xe0524e, 0, .82, .2, .22, .17, .34); ball(g, 0xf06a63, 0, .86, .3, .12, .06, .18);
+    box(g, 0x2a2a31, 0, .76, -.32, .3, .1, .55); box(g, 0xe0524e, 0, .62, -.7, .28, .05, .3);
+    const fork = box(g, 0xc7ccd3, 0, .6, .56, .08, .62, .08); fork.rotation.x = -.35; cylinder(g, 0x2a2a31, 0, 1.0, .46, .03, .03, .78, 8).rotation.z = Math.PI / 2;
+    ball(g, 0xfff4b0, 0, .92, .72, .12, .12, .08); const exhaust = cylinder(g, 0xb8bdc6, .24, .3, -.4, .06, .08, .7, 8); exhaust.rotation.x = Math.PI / 2;
+    for (const side of [-1, 1]) ball(g, 0xffffff, side * .38, 1, .46, .05, .05, .08);
+  } else { // 황금별 스포츠카: 낮은 차체, 오픈 운전석, 황금 줄무늬, 날개, 네 바퀴
+    box(g, 0x2b3a67, 0, .34, 0, 1.2, .32, 2.2); box(g, 0x34477c, 0, .54, .78, 1.1, .16, .66); box(g, 0x34477c, 0, .54, -.88, 1.1, .16, .42);
+    for (const side of [-1, 1]) { box(g, 0x2b3a67, side * .56, .62, -.1, .08, .3, 1.1); box(g, 0xf3c43f, side * .6, .45, 0, .03, .05, 2.05); }
+    box(g, 0xf3c43f, 0, .64, .78, .16, .02, .66); box(g, 0xf3c43f, 0, .64, -.88, .16, .02, .42);
+    box(g, 0xefe3c4, 0, .5, -.28, .72, .2, .5); const glass = box(g, 0xbfe6ff, 0, .74, .86, 1.0, .2, .035); glass.rotation.x = -.5;
+    for (const side of [-1, 1]) box(g, 0xf3c43f, side * .5, .68, .86, .04, .22, .04); ball(g, 0xf3c43f, 0, .65, 1.02, .07, .07, .03);
+    box(g, 0xf3c43f, 0, .56, 1.1, .8, .06, .05); for (const side of [-1, 1]) ball(g, 0xfff4b0, side * .38, .54, 1.1, .1, .08, .05);
+    for (const side of [-1, 1]) ball(g, 0xff5f6d, side * .4, .56, -1.1, .09, .07, .04);
+    for (const side of [-1, 1]) for (const z of [-.7, .72]) { const wheel = cylinder(g, 0x2b2830, side * .62, .31, z, .31, .31, .24, 16); wheel.rotation.z = Math.PI / 2; const hub = cylinder(g, 0xf3c43f, side * .64, .31, z, .16, .16, .26, 10); hub.rotation.z = Math.PI / 2; }
+    box(g, 0x1f2a4c, 0, 1.0, -1.08, 1.1, .05, .3); for (const side of [-1, 1]) box(g, 0xf3c43f, side * .4, .84, -1.0, .05, .3, .05);
+    const wheelRing = mesh(new T.TorusGeometry(.17, .025, 6, 14), 0x1f1f25, 0, .86, .3, g); wheelRing.rotation.x = -.8; ball(g, 0xf3c43f, 0, .86, .3, .045, .045, .03);
   }
-  // 모든 탈것에 같은 모험 안장을 더해, 캐릭터가 자연스럽게 타고 있다는 느낌을 만듭니다.
-  if (id !== 5) { box(g, 0x8d6046, 0, .92, -.05, .5, .12, .42); ball(g, 0xffd978, 0, .98, .12, .09); }
+  // 모든 탈것에 같은 모험 안장을 더해, 캐릭터가 자연스럽게 타고 있다는 느낌을 만듭니다. (킥보드·자전거·오토바이·자동차는 자체 좌석이 있어요.)
+  if (id !== 5 && id < 10) { box(g, 0x8d6046, 0, .92, -.05, .5, .12, .42); ball(g, 0xffd978, 0, .98, .12, .09); }
   if (ride.flying) { const glow = mesh(new T.TorusGeometry(.42, .025, 5, 16), 0xffec9f, 0, .25, 0, g); glow.rotation.x = Math.PI / 2; glow.userData.rideGlow = true; }
   return g;
 }
@@ -284,19 +315,49 @@ function makePet(id: number) {
     for (const side of [-1, 1]) { eye(side, .105, .71, .42, 0x443a35, 1.08); cheek(side, .2, .58, .39, 0xf1a6a0); const antenna = cylinder(body, 0x4b4036, side * .1, .94, .12, .018, .025, .28, 5); antenna.rotation.z = side * -.28; antenna.userData.petEar = side; ball(body, 0x4b4036, side * .16, 1.05, .12, .05); for (let wingIndex = 0; wingIndex < 2; wingIndex++) { const wing = mesh(new T.CircleGeometry(wingIndex ? .16 : .23, 10), wingIndex ? 0xd9f3ed : 0xfff2c5, side * (.27 + wingIndex * .09), .53 - wingIndex * .18, -.09, body); wing.scale.y = wingIndex ? 1.25 : 1.5; wing.rotation.z = side * (.5 + wingIndex * .12); wing.userData.petWing = side; } for (let leg = 0; leg < 3; leg++) { const tinyLeg = cylinder(body, 0x5a4a3f, side * (.2 + leg * .04), .2 + leg * .06, .02 - leg * .11, .012, .015, .22, 5); tinyLeg.rotation.z = side * -.62; } }
     const stinger = mesh(new T.ConeGeometry(.06, .2, 5), 0x51463d, 0, .34, -.48, body); stinger.rotation.x = -Math.PI / 2;
     for (let i = 0; i < 5; i++) ball(body, i % 2 ? 0xffffff : 0xffdf64, Math.cos(i * 1.26) * .18, .91 + Math.sin(i * 1.26) * .14, .08, .055); ball(body, 0x9a6d42, 0, .91, .09, .06);
-  } else { // 해바라기 여우: 큰 꽃꼬리, 흰 가슴털, 검은 발끝
+  } else if (id === 6) { // 해바라기 여우: 큰 꽃꼬리, 흰 가슴털, 검은 발끝
     ball(body, pet.color, 0, .34, -.02, .37, .31, .42); ball(body, 0xedae68, 0, .65, .19, .3, .27, .29);
     ball(body, 0xffedda, 0, .5, .41, .18, .14, .06); ball(body, 0x4d4138, 0, .54, .465, .055, .04, .025); ball(body, 0xffedda, 0, .3, .38, .16, .22, .05);
     for (const side of [-1, 1]) { eye(side, .11, .7, .43, 0x44392f, 1.08); cheek(side, .22, .57, .4, 0xf2a3a0); paw(side, 0x55473c); const ear = mesh(new T.ConeGeometry(.14, .4, 5), pet.color, side * .18, .97, .12, body); ear.rotation.z = side * -.18; ear.userData.petEar = side; const inner = mesh(new T.ConeGeometry(.065, .23, 5), 0xf4b0a1, side * .16, .93, .2, body); inner.rotation.z = side * -.18; inner.userData.petEar = side; }
     for (let i = 0; i < 6; i++) ball(tailRoot, i < 4 ? pet.color : 0xffedda, .08 * Math.sin(i * .55), .03 + i * .06, -.18 - i * .14, .2 - i * .012, .18, .2);
     ball(body, 0x8c6744, .23, .88, .16, .12); for (let i = 0; i < 10; i++) ball(body, i % 2 ? 0xffdf55 : 0xf6bd3f, .23 + Math.cos(i * Math.PI / 5) * .18, .88 + Math.sin(i * Math.PI / 5) * .18, .14, .055, .09, .04);
     for (let i = 0; i < 5; i++) ball(body, i % 2 ? 0xf6cb45 : 0xe5a344, Math.cos(i * 1.26) * .22, .38 + Math.sin(i * 1.26) * .19, -.37, .1, .13, .08);
+  } else if (id === 7) { // 도토리 다람쥐 콩이: 도토리 모자, 볼주머니, 크게 말린 복슬 꼬리, 도토리 안은 앞발
+    ball(body, pet.color, 0, .33, -.02, .36, .32, .4); ball(body, pet.color, 0, .62, .18, .29, .27, .27); ball(body, 0xffe9c9, 0, .3, .37, .2, .22, .05);
+    ball(body, 0xffe9c9, 0, .5, .4, .16, .13, .06); ball(body, 0x4d3a2e, 0, .54, .445, .05, .036, .024);
+    for (const side of [-1, 1]) {
+      eye(side, .105, .67, .41, 0x3d2f27, 1.08); cheek(side, .22, .55, .38, 0xf2a3a0); ball(body, 0xe0a56e, side * .2, .5, .3, .1, .09, .09); paw(side, 0xffe9c9, .15, .27, .38);
+      const ear = mesh(new T.ConeGeometry(.095, .26, 5), pet.color, side * .2, .91, .08, body); ear.rotation.z = side * -.2; ear.userData.petEar = side;
+      const tuft = mesh(new T.ConeGeometry(.03, .1, 5), 0x7a4a2b, side * .21, 1.06, .08, body); tuft.rotation.z = side * -.2; tuft.userData.petEar = side;
+    }
+    ball(body, 0x8a5a36, 0, .93, .14, .24, .1, .24); ball(body, 0xc99562, 0, .86, .14, .2, .06, .2); cylinder(body, 0x6b4a2d, 0, 1.03, .14, .012, .018, .09, 5);
+    ball(body, 0x9a6a3c, 0, .28, .44, .07, .09, .07);
+    for (let i = 0; i < 6; i++) ball(tailRoot, i < 4 ? pet.color : 0xffe2b8, 0, .08 + i * .12, -.1 - Math.sin(i * .5) * .2, .2 - i * .005, .17, .2);
+  } else { // 이신비의 별: 반짝이는 금빛 별 몸통, 졸린 듯 귀여운 얼굴, 별가루와 빛 고리
+    const k = .6, cy = .6;
+    const outline = new T.Shape();
+    for (let i = 0; i < 10; i++) { const radius = (i % 2 ? .3 : .68) * k, angle = Math.PI / 2 + i * Math.PI / 5, x = Math.cos(angle) * radius, y = Math.sin(angle) * radius; if (i === 0) outline.moveTo(x, y); else outline.lineTo(x, y); }
+    outline.closePath();
+    mesh(new T.ExtrudeGeometry(outline, { depth: .2, bevelEnabled: true, bevelThickness: .05, bevelSize: .045, bevelSegments: 2 }), pet.color, 0, cy, -.1, body);
+    ball(body, 0xffe27a, 0, cy, 0, .2, .2, .13); ball(body, 0xfffbe0, -.13, cy + .24, .16, .06, .03, .015);
+    for (const side of [-1, 1]) { eye(side, .08, cy + .04, .17, 0x6b4a1f, .95); cheek(side, .16, cy - .07, .165, 0xff9f8a); }
+    ball(body, 0x8a5a24, 0, cy - .09, .175, .035, .018, .012);
+    mesh(new T.TorusGeometry(.62, .012, 6, 40), 0xfff3b0, 0, cy, -.2, body);
+    for (let i = 0; i < 6; i++) { const sparkle = ball(body, i % 2 ? 0xffffff : 0xfff0a8, Math.cos(i * 1.05 + .4) * .6, cy + Math.sin(i * 1.05 + .4) * .52, -.1, .035); sparkle.userData.petCharm = true; }
   }
-  // 작은 여행 가방과 빛나는 이름표는 모든 펫의 공통 모험 장비입니다.
-  if (id !== 2) { const collar = mesh(new T.TorusGeometry(.2, .024, 5, 16), id > 2 ? 0xbbeeff : 0xf4d478, 0, .48, .18, body); collar.rotation.x = Math.PI / 2; }
-  box(body, 0x9b7653, -.31, .34, -.09, .18, .23, .1); const charm = mesh(new T.OctahedronGeometry(.065), id > 2 ? 0xbbeeff : 0xffd788, 0, .38, .44, body); charm.userData.petCharm = true;
+  // 작은 여행 가방과 빛나는 이름표는 모든 펫의 공통 모험 장비입니다. (별 펫은 몸 자체가 장식이라 제외)
+  if (id !== 2 && id !== 8) { const collar = mesh(new T.TorusGeometry(.2, .024, 5, 16), id > 2 ? 0xbbeeff : 0xf4d478, 0, .48, .18, body); collar.rotation.x = Math.PI / 2; }
+  if (id !== 8) box(body, 0x9b7653, -.31, .34, -.09, .18, .23, .1);
+  if (id !== 2 && id !== 8) { const charm = mesh(new T.OctahedronGeometry(.065), id > 2 ? 0xbbeeff : 0xffd788, 0, .38, .44, body); charm.userData.petCharm = true; }
   g.position.set(-1.05, .02, -.7); g.userData.petModel = true; g.userData.petBody = body; return g;
 }
+
+const FOREST_PALETTES: Partial<Record<ForestKind, { sky: number; ground: number; accent: number; foliage: number }>> = {
+  multiplication: { sky: 0xffe7b8, ground: 0xe7d99b, accent: 0xf2bd72, foliage: 0x8dbb65 },
+  addition: { sky: 0xfdf0c8, ground: 0xdbe8a4, accent: 0xea9a86, foliage: 0x7dbd5d },
+  subtraction: { sky: 0xf8dcc0, ground: 0xe6c993, accent: 0xd9894a, foliage: 0xd98a44 },
+};
+const FOREST_GATES: Record<ForestKind, number> = { division: 0xc087d2, multiplication: 0xe5a743, addition: 0xe86f68, subtraction: 0xd98a44 };
 
 export class World {
   scene = new T.Scene(); renderer: T.WebGLRenderer; camera: T.OrthographicCamera;
@@ -314,7 +375,7 @@ export class World {
     const touchDevice = matchMedia('(pointer: coarse)').matches;
     this.renderer = new T.WebGLRenderer({ antialias: !touchDevice, alpha: false, powerPreference: 'high-performance' }); this.renderer.setPixelRatio(Math.min(devicePixelRatio, touchDevice ? 1 : 1.25)); this.renderer.shadowMap.enabled = true; this.renderer.shadowMap.type = T.PCFSoftShadowMap; this.renderer.outputColorSpace = T.SRGBColorSpace; this.renderer.toneMapping = T.ACESFilmicToneMapping; this.renderer.toneMappingExposure = 1.35; container.append(this.renderer.domElement);
     this.camera = new T.OrthographicCamera(-18, 18, 14, -14, .1, 140);
-    this.scene.add(new T.HemisphereLight(0xf3fff0, 0x688451, 2.35)); this.sun = new T.DirectionalLight(0xffedcf, 2.8); this.sun.position.set(-15, 30, 15); this.sun.castShadow = true; this.sun.shadow.mapSize.set(1024, 1024); Object.assign(this.sun.shadow.camera, { left: -34, right: 34, top: 32, bottom: -30, far: 85 }); this.sun.shadow.normalBias = .06; this.scene.add(this.sun);
+    this.scene.add(new T.HemisphereLight(0xfff9e6, 0x74905a, 2.35)); this.sun = new T.DirectionalLight(0xffedcf, 2.8); this.sun.position.set(-15, 30, 15); this.sun.castShadow = true; this.sun.shadow.mapSize.set(1024, 1024); Object.assign(this.sun.shadow.camera, { left: -34, right: 34, top: 32, bottom: -30, far: 85 }); this.sun.shadow.normalBias = .06; this.scene.add(this.sun);
     const fill = new T.DirectionalLight(0xd8f3ff, .7); fill.position.set(18, 12, -14); this.scene.add(fill);
     this.labelLayer = document.createElement('div'); this.labelLayer.className = 'world-labels'; container.append(this.labelLayer);
     this.buildVillage(); this.setAvatar(0, 0, 0); this.player.position.set(0, 0, 8); this.scene.add(this.player);
@@ -324,11 +385,12 @@ export class World {
     window.addEventListener('keyup', e => this.keys.delete(e.key.toLowerCase())); window.addEventListener('blur', () => this.clearInput());
     this.renderOnce();
   }
-  private buildVillage() {
-    box(this.scene, 0x8cbc65, 0, -.55, 0, 51, 1.1, 41); box(this.scene, 0x719d55, 0, -1.3, 0, 50, .5, 40);
+  private buildVillage(theme: VillageTheme = VILLAGE_THEMES.division) {
+    this.scene.background = new T.Color(theme.sky); this.scene.fog = new T.Fog(theme.sky, 58, 112);
+    box(this.scene, theme.ground, 0, -.55, 0, 51, 1.1, 41); box(this.scene, theme.groundDeep, 0, -1.3, 0, 50, .5, 40);
     // Main paths and circular village square.
-    box(this.scene, 0xe4ce9f, 0, .015, 2, 3.8, .055, 34); box(this.scene, 0xe4ce9f, 0, .02, -3.8, 25, .06, 3.8); box(this.scene, 0xe4ce9f, 6, .018, 9, 15, .05, 3);
-    cylinder(this.scene, 0xe9d6ad, 0, .04, 3, 4.3, 4.3, .07, 40);
+    box(this.scene, theme.path, 0, .015, 2, 3.8, .055, 34); box(this.scene, theme.path, 0, .02, -3.8, 25, .06, 3.8); box(this.scene, theme.path, 6, .018, 9, 15, .05, 3);
+    cylinder(this.scene, theme.square, 0, .04, 3, 4.3, 4.3, .07, 40);
     for (let i = 0; i < 10; i++) { const a = i * Math.PI / 5; cylinder(this.scene, 0xd0b98e, Math.cos(a) * 4.1, .085, 3 + Math.sin(a) * 4.1, .22, .22, .06, 8); }
     // Fountain and water with a clear boundary.
     cylinder(this.scene, 0xc8c9b0, -3.1, .32, 3, 1.05, 1.14, .65); cylinder(this.scene, 0x69c5cb, -3.1, .68, 3, .85, .85, .07); cylinder(this.scene, 0xf3e6c4, -3.1, 1, 3, .19, .27, .9); ball(this.scene, 0xb4e7e4, -3.1, 1.53, 3, .29);
@@ -362,13 +424,30 @@ export class World {
     this.addEntity('arena', '신비 · 대련장', 0, -9, makeCharacter(3, 5, 3));
     this.addEntity('room', '나의 집 · 들어가기', 9, -4.5, this.gate(0xe5ad79));
     stageMonsters(0).forEach((m, i) => this.addEntity(`monster${i}`, MONSTERS[m.type].name, m.x, m.z, makeMonster(m.type)));
-    this.addEntity('journey', '수학 모험의 문 · 6개의 지역', 10.5, 13.5, this.gate(0x9e78c9));
+    this.addEntity('journey', '수학 모험의 문 · 3학년 전체 지도', 10.5, 13.5, this.gate(0x9e78c9));
     // Keep the walking areas clear; peripheral trees frame the miniature world.
-    for (let i = 0; i < 48; i++) { const a = i * 2.39996, r = 17 + (i % 4) * 1.65; const x = Math.cos(a) * r, z = Math.sin(a) * r * .77; if ((x > 14 && z > 1) || Math.hypot(x - 10.5, z - 13.5) < 7 || Math.hypot(x - 18.5, z + 3.5) < 7 || (Math.abs(x) < 5 && z < -12)) continue; this.tree(x, z, .85 + (i % 3) * .16, i % 6 === 0); }
-    stageTrees(0).forEach(({ x, z }, i) => { if (Math.hypot(x - 18.5, z + 3.5) >= 8) this.addChoppableTree(i, x, z, 1, i % 2 === 0); });
+    for (let i = 0; i < 48; i++) { const a = i * 2.39996, r = 17 + (i % 4) * 1.65; const x = Math.cos(a) * r, z = Math.sin(a) * r * .77; if ((x > 14 && z > 1) || Math.hypot(x - 10.5, z - 13.5) < 7 || Math.hypot(x - 18.5, z + 3.5) < 7 || (Math.abs(x) < 5 && z < -12)) continue; this.tree(x, z, .85 + (i % 3) * .16, theme.pinkTrees ? i % 3 === 0 : i % 6 === 0, theme.foliage); }
+    stageTrees(0).forEach(({ x, z }, i) => { if (Math.hypot(x - 18.5, z + 3.5) >= 8) this.addChoppableTree(i, x, z, 1, theme.pinkTrees || i % 2 === 0, theme.foliage); });
     for (let i = 0; i < 65; i++) { const x = Math.sin(i * 12.97) * 23, z = Math.cos(i * 4.67) * 18; if (Math.abs(x) < 3 || Math.hypot(x - 10.5, z - 13.5) < 7 || (z < -2 && z > -11) || (x > 5 && z > 2 && z < 14)) continue; for (let j = 0; j < 3; j++) { const fx = x + j * .14; cylinder(this.scene, 0x538c50, fx, .14, z, .025, .025, .3, 5); ball(this.scene, [0xffe8ae, 0xf4aec4, 0xeae3ff][i % 3], fx, .32, z, .1, .09, .1); } }
     for (const side of [-1, 1]) for (let i = 0; i < 7; i++) { const x = side * 22, z = -15 + i * 4.7; cylinder(this.scene, 0xd4bb88, x, .5, z, .08, .09, 1, 8); box(this.scene, 0xe7d3a3, x, .65, z + 2, .12, .11, 4.7); }
+    this.villageDecor(theme);
+    if (theme !== VILLAGE_THEMES.division) this.addEntity('unit', `${theme.name} 안내판 · 입장하기`, -10, 9.5, this.gate(theme.gate));
     this.addBerries();
+  }
+  // 숲마다 다른 분위기를 만드는 장식. 걷는 길과 상점 앞은 비워 둬요.
+  private villageDecor(theme: VillageTheme) {
+    const free = (x: number, z: number) => Math.abs(x) >= 3 && !(z < -2 && z > -11) && !(x > 5 && z > 2 && z < 14) && Math.hypot(x + 10, z - 9.5) > 3 && Math.hypot(x - 10.5, z - 13.5) > 6 && Math.hypot(x - 18.5, z + 3.5) > 6 && Math.abs(x) < 24 && Math.abs(z) < 19;
+    const spots = (count: number, a: number, b: number, make: (x: number, z: number, i: number) => void) => { let made = 0; for (let i = 0; made < count && i < count * 4; i++) { const x = Math.sin(i * a) * 23, z = Math.cos(i * b) * 18; if (!free(x, z)) continue; make(x, z, made++); } };
+    if (theme.deco === 'sunflower') spots(22, 4.31, 2.71, (x, z, i) => { cylinder(this.scene, 0x5d934b, x, .45, z, .04, .06, .85, 6); ball(this.scene, 0x6e512f, x, .93, z, .14); for (let p = 0; p < 8; p++) ball(this.scene, 0xf6cb42, x + Math.cos(p * Math.PI / 4) * .25, .93 + Math.sin(p * Math.PI / 4) * .25, z, .11, .15, .06); if (i % 4 === 0) { const bee = new T.Group(); bee.position.set(x + .45, 1.4, z); ball(bee, 0xf2c340, 0, 0, 0, .15, .11, .12); box(bee, 0x4b4036, 0, 0, .08, .3, .06, .08); this.scene.add(bee); this.butterflies.push(bee); } });
+    else if (theme.deco === 'apple') spots(26, 3.77, 2.39, (x, z, i) => { if (i % 5 === 0) { box(this.scene, 0xb98d58, x, .22, z, .9, .44, .7); for (let k = 0; k < 4; k++) ball(this.scene, 0xe0503f, x - .28 + k * .19, .5, z + (k % 2) * .12 - .06, .13); } else { ball(this.scene, 0xe0503f, x, .22, z, .2, .19, .2); ball(this.scene, 0x5d934b, x + .08, .42, z, .09, .04, .05); } });
+    else if (theme.deco === 'leaves') spots(70, 3.91, 2.17, (x, z, i) => { ball(this.scene, [0xd9822f, 0xc0592a, 0xe9b04a, 0x9a5a2a][i % 4], x, .05, z, .26, .025, .17); if (i % 9 === 0) for (let k = 0; k < 5; k++) ball(this.scene, [0xd9822f, 0xe9b04a][k % 2], x + Math.cos(k * 1.3) * .25, .1 + k * .04, z + Math.sin(k * 1.3) * .2, .26, .03, .17); });
+    else if (theme.deco === 'shapes') spots(20, 3.63, 2.51, (x, z, i) => { const colors = [0x62b4d6, 0xf0a36a, 0xe67f92]; if (i % 3 === 0) box(this.scene, colors[i % 3], x, .32, z, .62, .62, .22); else if (i % 3 === 1) cylinder(this.scene, colors[i % 3], x, .3, z, .34, .34, .6, 3); else cylinder(this.scene, colors[i % 3], x, .3, z, .32, .32, .6, 16); });
+    else if (theme.deco === 'clock') spots(16, 3.47, 2.29, (x, z, i) => { cylinder(this.scene, 0x9b7654, x, .6, z, .08, .1, 1.2, 7); const face = cylinder(this.scene, 0xfff3cf, x, 1.45, z, .5, .5, .12, 24); face.rotation.x = Math.PI / 2; box(this.scene, 0x6b665d, x, 1.46, z + .08, .04, .35, .04); box(this.scene, 0xd47d69, x + .12, 1.46, z + .09, .25, .04, .04); if (i % 4 === 0) box(this.scene, 0xe2c38f, x + .9, .12, z, 1.2, .24, .28); });
+    else if (theme.deco === 'decimal') spots(20, 3.23, 2.73, (x, z, i) => { for (let cell = 0; cell < 10; cell++) box(this.scene, cell < (i % 9) + 1 ? 0xb98ade : 0xffefd9, x - .72 + cell * .16, .08, z, .14, .1, .32); if (i % 4 === 0) ball(this.scene, 0xffcf6e, x, .62, z, .22); });
+    else if (theme.deco === 'moon') spots(16, 3.37, 2.83, (x, z, i) => { const ring = mesh(new T.TorusGeometry(.7 + (i % 3) * .35, .05, 6, 32), [0xe9e2f8, 0xc9d6f2, 0xf3eaff][i % 3], x, .06, z, this.scene); ring.rotation.x = Math.PI / 2; if (i % 4 === 0) { cylinder(this.scene, 0x8c93b8, x, .7, z, .05, .07, 1.4, 6); ball(this.scene, 0xfff1b8, x, 1.55, z, .26); } });
+    else if (theme.deco === 'cake') spots(14, 3.13, 2.57, (x, z, i) => { cylinder(this.scene, [0xf6b7c8, 0xf9d9a8, 0xcde8c0][i % 3], x, .22, z, .62, .62, .44, 18); cylinder(this.scene, 0xfffaf0, x, .5, z, .5, .5, .14, 18); ball(this.scene, 0xe84a5f, x, .68, z, .1); if (i % 3 === 0) { cylinder(this.scene, 0xf4f0e8, x + 1.2, .5, z, .05, .05, 1, 6); ball(this.scene, [0xf6a7bc, 0xf5d37b][i % 2], x + 1.2, 1.1, z, .22); } });
+    else if (theme.deco === 'scales') spots(16, 3.51, 2.43, (x, z, i) => { if (i % 4 === 0) { box(this.scene, 0xcdbd95, x, .08, z, 1.3, .16, .6); cylinder(this.scene, 0x9a8a62, x, .7, z, .04, .05, 1.2, 6); box(this.scene, 0x9a8a62, x, 1.28, z, 1.5, .06, .06); for (const side of [-1, 1]) cylinder(this.scene, 0xe9d8a0, x + side * .68, 1.05, z, .3, .3, .05, 14); } else { cylinder(this.scene, [0x8fd3e0, 0xf3c4d8, 0xbfe6a8][i % 3], x, .3, z, .25, .3, .6, 10); cylinder(this.scene, 0xeaf6f6, x, .72, z, .1, .12, .24, 8); ball(this.scene, 0xc9a77a, x, .88, z, .08); } });
+    else if (theme.deco === 'stars') spots(20, 3.29, 2.61, (x, z, i) => { if (i % 5 === 0) { cylinder(this.scene, 0x7a7fa8, x, .55, z, .06, .09, 1.1, 6); cylinder(this.scene, 0x9fa6d2, x, 1.25, z, .22, .12, .75, 8).rotation.x = -.7; } else { const star = new T.Group(); star.position.set(x, 1.1 + (i % 3) * .3, z); mesh(new T.OctahedronGeometry(.28), [0xffe27a, 0xfff3b0, 0xf5c0ff][i % 3], 0, 0, 0, star); this.scene.add(star); this.butterflies.push(star); } });
   }
   private gate(color = 0x9e78c9) {
     const g = new T.Group(), glow = new T.MeshBasicMaterial({ color: 0xf7ddff, transparent: true, opacity: .65 });
@@ -413,17 +492,19 @@ export class World {
     if (gate) { gate.name = '별빛 원정 출구'; gate.label.textContent = gate.name; }
   }
   private buildHunt(stage: number) {
-    const base = STAGES[stage - 1], spec = this.forest === 'multiplication' ? { ...base, sky: 0xffe7b8, ground: 0xe7d99b, accent: 0xf2bd72, foliage: 0x8dbb65 } : base, size = stageSize(stage); this.platforms = stagePlatforms(stage); this.scene.background = new T.Color(spec.sky); this.scene.fog = new T.Fog(spec.sky, 55, 120);
+    const base = STAGES[stage - 1], palette = FOREST_PALETTES[this.forest], spec = palette ? { ...base, ...palette } : base, size = stageSize(stage); this.platforms = stagePlatforms(stage); this.scene.background = new T.Color(spec.sky); this.scene.fog = new T.Fog(spec.sky, 55, 120);
     box(this.scene, spec.ground, 0, -.55, 0, size.x * 2, 1.1, size.z * 2); box(this.scene, 0x708f71, 0, -1.3, 0, size.x * 2 - 1, .5, size.z * 2 - 1);
     box(this.scene, spec.accent, 0, .02, 0, 3.8, .06, size.z * 2 - 5); for (const z of [14, 0, -15]) box(this.scene, spec.accent, 0, .025, z, size.x * 2 - 10, .06, 2.6);
     this.platforms.forEach(p => { box(this.scene, 0xa8a88c, p.x, p.h / 2, p.z, p.w, p.h, p.d); box(this.scene, spec.accent, p.x, p.h + .02, p.z, p.w + .05, .08, p.d + .05); });
-    this.addEntity('village', '베리숲 마을로 돌아가기', 0, size.z - 5, this.gate(0x6eb7a1)); this.addEntity('next', stage === 10 ? (this.forest === 'multiplication' ? '구구단 햇살문' : '마지막 축하문') : `다음 길 · ${STAGES[stage].name}`, 0, -size.z + 5, this.gate(this.forest === 'multiplication' ? 0xe5a743 : 0xc087d2));
+    this.addEntity('village', '베리숲 마을로 돌아가기', 0, size.z - 5, this.gate(0x6eb7a1)); this.addEntity('next', stage === 10 ? (this.forest === 'multiplication' ? '구구단 햇살문' : this.forest === 'division' ? '마지막 축하문' : '완주 축하문') : `다음 길 · ${STAGES[stage].name}`, 0, -size.z + 5, this.gate(FOREST_GATES[this.forest]));
     stageMonsters(stage).forEach((m, i) => this.addEntity(`monster${i}`, `${MONSTERS[m.type].name} · ${i + 1}`, m.x, m.z, makeMonster(m.type)));
     for (let i = 0; i < 55; i++) { const x = Math.sin(i * 2.399 + stage) * (size.x - 4), z = Math.cos(i * 1.73 + stage) * (size.z - 4); if (Math.abs(x) < 4 || [14, 0, -15].some(v => Math.abs(z - v) < 2.5)) continue; this.tree(x, z, .8 + i % 3 * .2, spec.theme === 'blossom', spec.foliage); }
     stageTrees(stage).forEach(({ x, z }, i) => this.addChoppableTree(i, x, z, .92 + (i % 3) * .08, spec.theme === 'blossom', spec.foliage));
     for (const z of [20, 6, -9, -23]) { box(this.scene, 0xb98d58, -3.4, .65, z, .12, 1.25, .12); box(this.scene, 0xe6ca8f, -2.8, 1.05, z, 1.35, .56, .12); ball(this.scene, 0xffe98d, -3.35, 1.36, z, .1); }
     for (let i = 0; i < 30; i++) { const x = Math.sin(i * 5.7 + stage) * (size.x - 7), z = Math.cos(i * 3.3 + stage) * (size.z - 8); cylinder(this.scene, 0x5c9a59, x, .12, z, .025, .025, .24, 5); ball(this.scene, [0xffb3c7, 0xffdf82, 0xc5b2ef, 0xa9dfe1][i % 4], x, .29, z, .1, .08, .1); }
     if (this.forest === 'multiplication') for (let i = 0; i < 18; i++) { const x = Math.sin(i * 4.31 + stage) * (size.x - 7), z = Math.cos(i * 2.71 + stage) * (size.z - 8); cylinder(this.scene, 0x5d934b, x, .45, z, .04, .06, .85, 6); ball(this.scene, 0x6e512f, x, .93, z, .14); for (let p = 0; p < 8; p++) ball(this.scene, 0xf6cb42, x + Math.cos(p * Math.PI / 4) * .25, .93 + Math.sin(p * Math.PI / 4) * .25, z, .11, .15, .06); if (i % 3 === 0) { const bee = new T.Group(); bee.position.set(x + .45, 1.4, z); ball(bee, 0xf2c340, 0, 0, 0, .15, .11, .12); box(bee, 0x4b4036, 0, 0, .08, .3, .06, .08); this.scene.add(bee); this.butterflies.push(bee); } }
+    if (this.forest === 'addition') for (let i = 0; i < 24; i++) { const x = Math.sin(i * 4.31 + stage) * (size.x - 7), z = Math.cos(i * 2.71 + stage) * (size.z - 8); ball(this.scene, 0xe0503f, x, .22, z, .2, .19, .2); ball(this.scene, 0x5d934b, x + .08, .42, z, .09, .04, .05); }
+    if (this.forest === 'subtraction') for (let i = 0; i < 46; i++) { const x = Math.sin(i * 3.91 + stage) * (size.x - 6), z = Math.cos(i * 2.17 + stage) * (size.z - 7); ball(this.scene, [0xd9822f, 0xc0592a, 0xe9b04a, 0x9a5a2a][i % 4], x, .05, z, .26, .025, .17); }
     for (let i = 0; i < 14; i++) { const g = new T.Group(); g.position.set((i % 2 ? 1 : -1) * (size.x - 5), 0, size.z - 7 - Math.floor(i / 2) * 8); this.scene.add(g); if (spec.theme === 'crystal') { for (let j = 0; j < 3; j++) { const m = mesh(new T.OctahedronGeometry(.65), [0x9bade6, 0xc3a0df, 0x9bd6d4][j], j * .55 - .55, 1.3, 0, g); m.scale.y = 2 + j * .3; } } else if (spec.theme === 'mushroom') { cylinder(g, 0xf4e4cb, 0, .9, 0, .4, .6, 1.8); ball(g, 0xda8e9a, 0, 2, 0, 1.8, .65, 1.5); } else { for (let j = 0; j < 5; j++) ball(g, spec.foliage, Math.cos(j * 1.26), .7, Math.sin(j * 1.26), .4, .14, .4); } }
     this.addBerries();
   }
@@ -435,7 +516,7 @@ export class World {
   loadStage(s: Save, fresh = false) {
     this.clearInput(); this.clearMap(); this.inRoom = false; s.room.inside = false; this.forest = s.forest; const journey = journeyFor(s); this.stage = journey.stage;
     this.scene.background = new T.Color(0xd0eade); this.scene.fog = new T.Fog(0xd0eade, 58, 112); this.platforms = stagePlatforms(this.stage);
-    if (this.stage === 0) this.buildVillage(); else this.buildHunt(this.stage);
+    if (this.stage === 0) this.buildVillage(VILLAGE_THEMES[villageThemeId(s)]); else this.buildHunt(this.stage);
     const map = journey.maps[this.stage], expedition = s.forest === 'division' && !!s.expedition.active && s.expedition.active.stage === this.stage;
     this.coins.forEach(c => c.mesh.visible = !expedition && !map.berries.includes(c.id));
     this.entities.forEach(e => { if (e.id.startsWith('monster')) e.mesh.visible = !expedition && !map.monsters.includes(Number(e.id.slice(7))); if (e.id.startsWith('tree')) e.mesh.visible = !expedition && !map.trees.includes(Number(e.id.slice(4))); });
@@ -474,7 +555,7 @@ export class World {
   updateRoomFurniture(s: Save, render = true) {
     if (!this.inRoom || !this.furnitureRoot) return;
     for (const child of [...this.furnitureRoot.children]) { this.furnitureRoot.remove(child); this.disposeModel(child as T.Group); }
-    const spots = [[-5.2, -3.7], [-2.6, -3.7], [0, -3.7], [2.6, -3.7], [5.2, -3.7], [-5.2, 3.7], [-2.6, 3.7], [0, 3.7], [2.6, 3.7], [5.2, 3.7], [-4, 0], [-1.35, 0], [1.35, 0], [4, 0]] as const;
+    const spots = [[-5.2, -3.7], [-2.6, -3.7], [0, -3.7], [2.6, -3.7], [5.2, -3.7], [-5.2, 3.7], [-2.6, 3.7], [0, 3.7], [2.6, 3.7], [5.2, 3.7], [-4, 0], [-1.35, 0], [1.35, 0], [4, 0], [-5.1, -1.7], [5.1, -1.7], [0, 2.15]] as const;
     for (const id of s.room.furniture) {
       const spot = spots[id]; if (!spot) continue;
       const [x, z] = spot, g = new T.Group(); g.position.set(x, 0, z); this.furnitureRoot.add(g);
@@ -491,7 +572,10 @@ export class World {
       else if (id === 10) { cylinder(g, 0xf0bd70, 0, .28, 0, .72, .82, .5, 14); for (let p = 0; p < 6; p++) { const slice = mesh(new T.ConeGeometry(.32, .65, 3), p % 2 ? 0xffd8a8 : 0xf39cad, Math.cos(p * Math.PI / 3) * .36, .63, Math.sin(p * Math.PI / 3) * .36, g); slice.rotation.z = Math.PI; } }
       else if (id === 11) { box(g, 0x8f6949, 0, .28, 0, 1.6, .16, .6); cylinder(g, 0x8f6949, 0, .86, 0, .06, .08, 1.1, 7); box(g, 0xd6b878, 0, 1.36, 0, .75, .13, .16); for (const side of [-1, 1]) { cylinder(g, 0x9bd6df, side * .5, .75, 0, .35, .25, .16, 12); box(g, 0xb5dbe1, side * .5, .9, 0, .55, .12, .55); } }
       else if (id === 12) { box(g, 0x7f654f, 0, 1.2, 0, 1.8, 1.6, .18); box(g, 0xf8edca, 0, 1.2, .12, 1.55, 1.35, .06); for (let row = 0; row < 3; row++) for (let icon = 0; icon <= row; icon++) ball(g, [0xf38aa3, 0x83b6ae, 0xf0c65f][row], -.5 + icon * .38, 1.62 - row * .4, .18, .1); }
-      else { box(g, 0xd9b36d, 0, 1.25, 0, 1.7, 1.5, .16); box(g, 0xfff7dc, 0, 1.25, .1, 1.42, 1.22, .05); const ribbon = mesh(new T.TorusGeometry(.22, .055, 7, 18), 0xb58bd3, 0, 1.45, .17, g); ribbon.rotation.x = Math.PI / 2; for (let p = 0; p < 6; p++) ball(g, 0xf2c85b, Math.cos(p * Math.PI / 3) * .34, 1.45 + Math.sin(p * Math.PI / 3) * .34, .17, .08); }
+      else if (id === 13) { box(g, 0xd9b36d, 0, 1.25, 0, 1.7, 1.5, .16); box(g, 0xfff7dc, 0, 1.25, .1, 1.42, 1.22, .05); const ribbon = mesh(new T.TorusGeometry(.22, .055, 7, 18), 0xb58bd3, 0, 1.45, .17, g); ribbon.rotation.x = Math.PI / 2; for (let p = 0; p < 6; p++) ball(g, 0xf2c85b, Math.cos(p * Math.PI / 3) * .34, 1.45 + Math.sin(p * Math.PI / 3) * .34, .17, .08); }
+      else if (id === 14) { box(g, 0xa57959, 0, 1.3, 0, 1.65, 1.55, .16); box(g, 0xf8efd0, 0, 1.3, .1, 1.38, 1.28, .05); const triangle = mesh(new T.ConeGeometry(.42, .7, 3), 0xe98983, -.38, 1.35, .18, g); triangle.rotation.z = Math.PI; box(g, 0x75a9a0, .38, 1.35, .18, .62, .62, .08); }
+      else if (id === 15) { cylinder(g, 0x9a704d, 0, .72, 0, .34, .42, 1.35, 10); const face = cylinder(g, 0xf5db8c, 0, 1.62, .08, .72, .72, .16, 18); face.rotation.x = Math.PI / 2; box(g, 0x5f7058, 0, 1.72, .22, .06, .48, .05); const hand = box(g, 0xd66f70, .12, 1.58, .23, .35, .05, .04); hand.rotation.z = -.65; }
+      else { cylinder(g, 0xa6c879, 0, .04, 0, 1.5, 1.5, .08, 18); for (let p = 0; p < 10; p++) ball(g, [0xf19aa1, 0xf4cd6a, 0x80bca8, 0xa98ac7, 0xf0a86e][p % 5], Math.cos(p * Math.PI / 5) * .95, .13, Math.sin(p * Math.PI / 5) * .95, .15, .08, .15); }
     }
     if (render) this.renderOnce();
   }
@@ -537,7 +621,7 @@ export class World {
     this.scene.remove(this.player); this.disposeModel(this.player); this.player = makeCharacter(character, outfit, weapon, outfitLevel, weaponLevel, hairstyle, face); this.player.position.copy(position); this.player.rotation.y = rotation; this.scene.add(this.player);
     if (this.petModel) { this.scene.remove(this.petModel); this.disposeModel(this.petModel); }
     this.rideIndex = ride; this.petIndex = pet; this.petModel = null; this.petTargetId = null; this.rideAnimated = [];
-    if (ride >= 0 && RIDES[ride]) { const body = this.player.userData.body as T.Group; body.position.y = RIDES[ride].flying ? 1.03 : .78; const rideModel = makeRide(ride); rideModel.traverse(o => { if (o.userData.rideWing || o.userData.ridePropeller || o.userData.rideGlow) this.rideAnimated.push(o); }); this.player.add(rideModel); }
+    if (ride >= 0 && RIDES[ride]) { const body = this.player.userData.body as T.Group; body.position.y = riderHeight(ride); const rideModel = makeRide(ride); rideModel.traverse(o => { if (o.userData.rideWing || o.userData.ridePropeller || o.userData.rideGlow) this.rideAnimated.push(o); }); this.player.add(rideModel); }
     if (pet >= 0 && PETS[pet]) { this.petModel = makePet(pet); this.scene.add(this.petModel); this.placePetNearPlayer(); }
   }
   private placePetNearPlayer() { if (this.petModel) this.petModel.position.set(this.player.position.x - 1.05, this.player.position.y + .02, this.player.position.z - .7); }
@@ -644,7 +728,7 @@ export class World {
       if (o.userData.rideGlow) { o.rotation.z += dt * .9; o.scale.setScalar(1 + Math.sin(this.time * 3.5) * .09); }
     }
     if (this.petModel) this.petModel.traverse(o => {
-      if (o.userData.petCharm) { o.rotation.y += dt * 3; const pulse = 1 + Math.sin(this.time * 6) * .12; o.scale.setScalar(pulse); }
+      if (o.userData.petCharm) { o.rotation.y += dt * 3; const pulse = 1 + Math.sin(this.time * 6) * .12; o.userData.baseScale ??= o.scale.clone(); o.scale.copy(o.userData.baseScale as T.Vector3).multiplyScalar(pulse); }
       if (o.userData.petWing) o.rotation.z = Number(o.userData.petWing) * (.38 + Math.sin(this.time * 11) * .2);
       if (o.userData.petEar) o.rotation.z = Number(o.userData.petEar) * (-.14 + Math.sin(this.time * 2.8 + Number(o.userData.petEar)) * .035);
       if (o.userData.petTail) o.rotation.y = Math.sin(this.time * 4.6 + Number(o.userData.petTail)) * .36;
@@ -660,18 +744,16 @@ export class World {
 export class AvatarPreview {
   private scene = new T.Scene(); private camera = new T.PerspectiveCamera(30, 1, .1, 20); private renderer: T.WebGLRenderer; private model = new T.Group(); private resizeObserver: ResizeObserver; private animationFrame = 0; private lastFrame = 0; private drawWidth = 0; private drawHeight = 0;
   constructor(private element: HTMLElement) {
-    const touchDevice = matchMedia('(pointer: coarse)').matches;
-    this.renderer = new T.WebGLRenderer({ alpha: true, antialias: !touchDevice }); this.renderer.setPixelRatio(Math.min(devicePixelRatio, touchDevice ? 1 : 1.25)); this.renderer.setClearColor(0x000000, 0); this.renderer.toneMapping = T.ACESFilmicToneMapping; this.renderer.toneMappingExposure = 1.4; element.append(this.renderer.domElement); this.scene.add(new T.HemisphereLight(0xffffff, 0xa6ba93, 3)); const light = new T.DirectionalLight(0xffedcd, 3); light.position.set(-3, 4, 5); this.scene.add(light); this.camera.position.set(2.2, 1.9, 5.8); this.camera.lookAt(0, 1.1, 0);
+    this.renderer = new T.WebGLRenderer({ alpha: true, antialias: true }); this.renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5)); this.renderer.setClearColor(0x000000, 0); this.renderer.toneMapping = T.ACESFilmicToneMapping; this.renderer.toneMappingExposure = 1.4; element.append(this.renderer.domElement); this.scene.add(new T.HemisphereLight(0xffffff, 0xa6ba93, 3)); const light = new T.DirectionalLight(0xffedcd, 3); light.position.set(-3, 4, 5); this.scene.add(light); this.camera.position.set(2.2, 1.9, 5.8); this.camera.lookAt(0, 1.1, 0);
     this.resizeObserver = new ResizeObserver(() => this.draw()); this.resizeObserver.observe(element); this.animate(performance.now());
   }
-  attach(element: HTMLElement) { if (this.element === element) return; this.resizeObserver.unobserve(this.element); this.element = element; element.append(this.renderer.domElement); this.resizeObserver.observe(element); this.drawWidth = this.drawHeight = 0; this.draw(); }
   private replaceModel(model: T.Group, camera: [number, number, number], lookY: number) { this.scene.remove(this.model); this.model.traverse(x => { if (x instanceof T.Mesh && !sharedGeometries.has(x.geometry)) x.geometry.dispose(); }); this.model = model; this.model.rotation.y = -.18; this.camera.position.set(...camera); this.camera.lookAt(0, lookY, 0); this.scene.add(this.model); this.draw(); }
   show(c: number, o: number, w: number, ol = 0, wl = 0, hairstyle = 0, face = 0) { const model = makeCharacter(c, o, w, ol, wl, hairstyle, face); model.userData.previewKind = 'avatar'; this.replaceModel(model, [2.2, 1.9, 5.8], 1.1); }
   showPet(id: number) { const model = makePet(id); model.position.set(0, .08, 0); model.scale.setScalar(1.72); model.userData.previewKind = 'pet'; this.replaceModel(model, [2.1, 1.35, 4.15], .62); }
-  showRide(id: number, c: number, o: number, w: number, ol = 0, wl = 0, hairstyle = 0, face = 0) { const model = makeCharacter(c, o, w, ol, wl, hairstyle, face), body = model.userData.body as T.Group; body.position.y = RIDES[id].flying ? 1.03 : .78; model.add(makeRide(id)); model.userData.previewKind = 'ride'; this.replaceModel(model, [3.4, 2.35, 7.7], 1.15); }
+  showRide(id: number, c: number, o: number, w: number, ol = 0, wl = 0, hairstyle = 0, face = 0) { const model = makeCharacter(c, o, w, ol, wl, hairstyle, face), body = model.userData.body as T.Group; body.position.y = riderHeight(id); model.add(makeRide(id)); model.userData.previewKind = 'ride'; this.replaceModel(model, [3.4, 2.35, 7.7], 1.15); }
   private draw() { const w = this.element.clientWidth, h = this.element.clientHeight; if (!w || !h) return; if (w !== this.drawWidth || h !== this.drawHeight) { this.drawWidth = w; this.drawHeight = h; this.renderer.setSize(w, h); this.camera.aspect = w / h; this.camera.updateProjectionMatrix(); } this.renderer.render(this.scene, this.camera); }
-  private animate = (time: number) => { this.animationFrame = requestAnimationFrame(this.animate); if (time - this.lastFrame < 33 || document.hidden || !this.element.isConnected) return; this.lastFrame = time; this.model.rotation.y = -.18 + Math.sin(time * .0007) * .16; const body = this.model.userData.body as T.Group | undefined; if (body) body.position.y = Math.sin(time * .003) * .035; const sparkles = this.model.userData.sparkles as T.Group | undefined; if (sparkles) sparkles.rotation.y += .025; this.model.traverse(o => { if (o.userData.petCharm) { o.rotation.y += .06; o.scale.setScalar(1 + Math.sin(time * .006) * .12); } if (o.userData.petWing) o.rotation.z = Number(o.userData.petWing) * (.4 + Math.sin(time * .011) * .14); if (o.userData.rideWing) o.rotation.z = Number(o.userData.rideWing) * (.52 + Math.sin(time * .009) * .11); if (o.userData.ridePropeller) o.rotation.z += .18; if (o.userData.rideGlow) o.rotation.z += .025; }); this.draw(); };
-  dispose() { cancelAnimationFrame(this.animationFrame); this.resizeObserver.disconnect(); this.model.traverse(x => { if (x instanceof T.Mesh && !sharedGeometries.has(x.geometry)) x.geometry.dispose(); }); this.renderer.dispose(); this.renderer.forceContextLoss(); this.renderer.domElement.remove(); }
+  private animate = (time: number) => { this.animationFrame = requestAnimationFrame(this.animate); if (time - this.lastFrame < 33 || document.hidden || !this.element.isConnected) return; this.lastFrame = time; this.model.rotation.y = -.18 + Math.sin(time * .0007) * .16; const body = this.model.userData.body as T.Group | undefined; if (body) { body.userData.baseY ??= body.position.y; body.position.y = (body.userData.baseY as number) + Math.sin(time * .003) * .035; } const sparkles = this.model.userData.sparkles as T.Group | undefined; if (sparkles) sparkles.rotation.y += .025; this.model.traverse(o => { if (o.userData.petCharm) { o.rotation.y += .06; o.userData.baseScale ??= o.scale.clone(); o.scale.copy(o.userData.baseScale as T.Vector3).multiplyScalar(1 + Math.sin(time * .006) * .12); } if (o.userData.petWing) o.rotation.z = Number(o.userData.petWing) * (.4 + Math.sin(time * .011) * .14); if (o.userData.rideWing) o.rotation.z = Number(o.userData.rideWing) * (.52 + Math.sin(time * .009) * .11); if (o.userData.ridePropeller) o.rotation.z += .18; if (o.userData.rideGlow) o.rotation.z += .025; }); this.draw(); };
+  dispose() { cancelAnimationFrame(this.animationFrame); this.resizeObserver.disconnect(); this.model.traverse(x => { if (x instanceof T.Mesh && !sharedGeometries.has(x.geometry)) x.geometry.dispose(); }); this.renderer.dispose(); this.renderer.domElement.remove(); }
 }
 
 /** Render the four selection portraits from the same 3D character models using one temporary WebGL context. */
