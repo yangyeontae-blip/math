@@ -25,6 +25,28 @@ test('grade question generators always include an answer that can be submitted',
   }
 });
 
+test('2022 curriculum topics and questions are genuinely grade-specific', () => {
+  const expected = new Map<SchoolGrade, string[]>([
+    [1, ['9와 50 수마을', '시계와 규칙길', '모양과 위치섬']],
+    [2, ['천과 만 수마을', '길이 재기마을', '표와 그래프 관측소']],
+    [4, ['큰 수 별마을', '각도와 삼각형길', '소수와 어림마을']],
+    [5, ['약수와 배수마을', '합동과 대칭정원', '평균과 가능성관측소']],
+    [6, ['분수 나눗셈마을', '비와 비율마을', '원의 넓이정원']],
+  ]);
+  for (const [grade, names] of expected) {
+    const regions = gradeRegions(grade)!;
+    const visibleNames = [...regions.first, ...regions.second].map(region => region.name);
+    for (const name of names) assert.ok(visibleNames.includes(name), `${grade}학년: ${name}`);
+  }
+  for (let mission = 0; mission < 10; mission++) {
+    assert.doesNotMatch(generateGradeQuestion(1, 'fraction', mission, () => .42).prompt, /분수|분모|분자/);
+    assert.doesNotMatch(generateGradeQuestion(2, 'fraction', mission, () => .42).prompt, /분수|분모|분자/);
+  }
+  assert.match(generateGradeQuestion(4, 'measurement', 0, () => .42).prompt, /반올림/);
+  assert.match(generateGradeQuestion(5, 'measurement', 0, () => .42).prompt, /평행사변형/);
+  assert.match(generateGradeQuestion(6, 'circle', 0, () => .42).prompt, /원의 넓이/);
+});
+
 test('grade is saved and old version-12 saves continue as grade 3', () => {
   for (const grade of [1,2,3,4,5,6] as SchoolGrade[]) assert.equal(validateSave(newSave('숲이', 0, grade)).grade, grade);
   const old = newSave('옛숲', 0, 3) as unknown as Record<string, unknown>;
