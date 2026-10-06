@@ -1,4 +1,4 @@
-import { bankGen, choiceQ, dots, j, mix, numberQ, pick, ri, shuffle, type BankItem, type GradeGen } from './grade-helpers';
+import { bankGen, choiceQ, dots, j, mix, numberQ, pick, ri, shuffle, type BankItem, type GradeGen, ye } from './grade-helpers';
 import type { NewCurriculumUnitId } from './rules';
 
 export type VariantMap = Partial<Record<NewCurriculumUnitId, Record<number, GradeGen[]>>>;
@@ -46,14 +46,14 @@ export const VARIANTS_G1: VariantMap = {
     2: [bankGen('lengthTime', '하루의 때', [
       { q: '“아침밥을 먹어요”는 하루 중 언제 일어나는 일일까요?', a: '아침', w: ['낮', '저녁', '밤'] }, { q: '“해가 떠오르고 새가 지저귀어요”는 하루 중 언제일까요?', a: '아침', w: ['낮', '저녁', '밤'] },
       { q: '“해가 높이 떠서 놀이터에서 놀아요”는 하루 중 언제일까요?', a: '낮', w: ['아침', '저녁', '밤'] }, { q: '“점심밥을 먹어요”는 하루 중 언제일까요?', a: '낮', w: ['아침', '저녁', '밤'] },
-      { q: '“노을이 붉게 물들어요”는 하루 중 언제일까요?', a: '저녁', w: ['아침', '낮', '밤'] }, { q: '“집에 돌아와 저녁밥을 먹어요”는 하루 중 언제일까요?', a: '저녁', w: ['아침', '낮', '밤'] },
+      { q: '“노을이 붉게 물들어요”는 하루 중 언제일까요?', a: '저녁', w: ['아침', '낮', '밤'] }, { q: '“해가 지고 하늘이 붉어져요”는 하루 중 언제일까요?', a: '저녁', w: ['아침', '낮', '밤'] },
       { q: '“별이 반짝이고 모두 잠들어요”는 하루 중 언제일까요?', a: '밤', w: ['아침', '낮', '저녁'] }, { q: '“잠옷으로 갈아입고 이불을 덮어요”는 하루 중 언제일까요?', a: '밤', w: ['아침', '낮', '저녁'] },
       { q: '“세수를 하고 학교에 갈 준비를 해요”는 하루 중 언제일까요?', a: '아침', w: ['낮', '저녁', '밤'] }, { q: '“달이 하늘에 떠 있어요”는 하루 중 언제일까요?', a: '밤', w: ['아침', '낮', '저녁'] },
     ], { kind: 'length-time', measure: 'time', values: [1], unit: '시간', labels: ['하루'] })],
     3: [
-      (r) => { const s = ri(14, 25, r), st = ri(1, 3, r), seq = [s, s - st, s - 2 * st, s - 3 * st]; return numberQ('lengthTime', '수 규칙', `${seq.join(', ')}, □ 에서 □에 알맞은 수는 무엇일까요?`, s - 4 * st, dots('●', [{ label: `${st}씩 작아져요`, icons: st }]), `${st}씩 작아지는 규칙이므로 ${seq[3]} 다음은 ${s - 4 * st}이에요.`); },
-      (r) => { const k = ri(1, 5, r), seq = [10 * k, 10 * (k + 1), 10 * (k + 2)]; return numberQ('lengthTime', '수 규칙', `${seq.join(', ')}, □ 에서 □에 알맞은 수는 무엇일까요?`, 10 * (k + 3), dots('●', [{ label: '10씩 커져요', icons: 5 }]), `10씩 커지는 규칙이므로 ${seq[2]} 다음은 ${10 * (k + 3)}이에요.`); },
-      (r) => { const a = ri(1, 8, r), st = ri(1, 3, r); return numberQ('lengthTime', '수 규칙', `${a}, □, ${a + 2 * st}, ${a + 3 * st} 에서 □에 알맞은 수는 무엇일까요?`, a + st, dots('●', [{ label: `${st}씩 커져요`, icons: st }]), `${st}씩 커지는 규칙이므로 □는 ${a + st}이에요.`); },
+      (r) => { const s = ri(14, 25, r), st = ri(1, 3, r), seq = [s, s - st, s - 2 * st, s - 3 * st]; return numberQ('lengthTime', '수 규칙', `${seq.join(', ')}, □ 에서 □에 알맞은 수는 무엇일까요?`, s - 4 * st, dots('●', [{ label: `${st}씩 작아져요`, icons: st }]), `${st}씩 작아지는 규칙이므로 ${seq[3]} 다음은 ${s - 4 * st}${ye(s - 4 * st)}.`); },
+      (r) => { const k = ri(1, 5, r), seq = [10 * k, 10 * (k + 1), 10 * (k + 2)]; return numberQ('lengthTime', '수 규칙', `${seq.join(', ')}, □ 에서 □에 알맞은 수는 무엇일까요?`, 10 * (k + 3), dots('●', [{ label: '10씩 커져요', icons: 5 }]), `10씩 커지는 규칙이므로 ${seq[2]} 다음은 ${10 * (k + 3)}${ye(10 * (k + 3))}.`); },
+      (r) => { const a = ri(1, 8, r), st = ri(1, 3, r); return numberQ('lengthTime', '수 규칙', `${a}, □, ${a + 2 * st}, ${a + 3 * st} 에서 □에 알맞은 수는 무엇일까요?`, a + st, dots('●', [{ label: `${st}씩 커져요`, icons: st }]), `${st}씩 커지는 규칙이므로 □는 ${a + st}${ye(a + st)}.`); },
     ],
     4: [
       (r) => { const set = pick([['🔴', '🔺', '🟦'], ['⭐', '🌙', '☀️'], ['🍎', '🍌', '🍇'], ['🐱', '🐶', '🐰']] as const, r), seq = [set[0], set[1], set[2], set[0], set[1]]; return choiceQ('lengthTime', '모양 규칙', `${seq.join(' ')} □ 에서 □에 들어갈 모양은 무엇일까요?`, set[2], [set[0], set[1]], dots(set[0], [{ label: '규칙', icons: 3 }]), `${j(set.join(' '), '이가')} 되풀이되므로 다음은 ${set[2]}예요.`, r); },

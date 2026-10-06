@@ -76,11 +76,14 @@ export function j(text: string | number, pair: '은는' | '이가' | '을를' | 
   return s + (kind === 'none' ? pair[1] : pair[0]);
 }
 
+/** 받침이 없으면 "예요", 있으면 "이에요"를 붙여요. 예: 길이예요, 모양이에요. */
+export const ye = (text: string | number) => (finalKind(String(text)) === 'none' ? '예요' : '이에요');
+
 export interface BankItem { q: string; a: string; w: string[]; x?: string; v?: CurriculumVisual }
 /** 같은 개념을 여러 질문 형태로 묻는 문제 은행. 항목 하나를 골라 오답 보기를 섞어 내요. */
 export const bankGen = (unit: NewCurriculumUnitId, skill: string, items: readonly BankItem[], visual: CurriculumVisual): GradeGen => (r) => {
   const item = pick(items, r), wrongs = shuffle(item.w, r).slice(0, 3);
-  return choiceQ(unit, skill, item.q, item.a, wrongs, item.v ?? visual, item.x ?? `${j(item.a, '이가')} 알맞아요.`, r);
+  return choiceQ(unit, skill, item.q, item.a, wrongs, item.v ?? visual, item.x ?? `정답은 “${item.a}”이에요.`, r);
 };
 /** 여러 생성기 중 하나를 같은 확률로 골라 써요. */
 export const mix = (...gens: GradeGen[]): GradeGen => (r, hard) => pick(gens, r)(r, hard);

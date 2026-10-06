@@ -1,4 +1,5 @@
 import type { CurriculumQuestion, CurriculumMission, CurriculumVisual } from './curriculum';
+import { fixVisual } from './grade-visual-fix';
 import type { CurriculumUnitId, NewCurriculumUnitId, SchoolGrade } from './rules';
 import { GRADE1 } from './grade-g1';
 import { GRADE2 } from './grade-g2';
@@ -29,7 +30,7 @@ const PLANS: Record<Exclude<SchoolGrade, 3>, GradePlan> = {
   },
   2: {
     plane: { icon: '🔢', name: '수와 식 마을', short: '네 자리 수와 덧셈·뺄셈 식', semester: '1학기', topics: ['백 알아보기', '세 자리 수', '천 알아보기', '네 자리 수', '수 비교'] },
-    lengthTime: { icon: '🕰️', name: '시각과 시간길', short: '몇 시 몇 분·시간·하루·달력', semester: '2학기', topics: ['몇 시 몇 분', '시간의 합', '시간의 차', '하루와 일주일', '달력'] },
+    lengthTime: { icon: '🕰️', name: '시각과 시간길', short: '몇 시 몇 분·시간·하루·달력', semester: '2학기', topics: ['몇 시 몇 분', '시간의 합', '시각 구하기', '하루와 일주일', '달력'] },
     fractionDecimal: { icon: '📏', name: '길이 재기마을', short: 'cm와 m로 재고 길이를 계산', semester: '1학기', topics: ['cm로 재기', '1 m', 'cm와 m', '길이의 합', '길이의 차'] },
     circle: { icon: '🔷', name: '여러 가지 도형정원', short: '삼각형·사각형·원과 쌓기 모양', semester: '1학기', topics: ['삼각형', '사각형', '원', '도형 분류', '쌓기 모양'] },
     fraction: { icon: '🧩', name: '규칙 찾기섬', short: '수·무늬·쌓기에서 규칙 찾기', semester: '2학기', topics: ['수 규칙', '무늬 규칙', '늘어나는 규칙', '줄어드는 규칙', '규칙 설명'] },
@@ -124,5 +125,5 @@ const TABLES: Record<Exclude<SchoolGrade, 3>, GradeTable> = {
 export function generateGradeQuestion(grade: Exclude<SchoolGrade, 3>, unit: NewCurriculumUnitId, mission: number, r: () => number = Math.random): CurriculumQuestion {
   const generators = TABLES[grade][unit];
   const hard = mission >= generators.length;
-  return withHardMode(hard, () => generators[mission % generators.length](r, hard));
+  return fixVisual(grade, withHardMode(hard, () => generators[mission % generators.length](r, hard)));
 }

@@ -31,7 +31,7 @@ test('every grade, unit and topic builds well-formed questions with a single cor
         assert.equal(values.filter(v => v === q.answer).length, 1, `${tag} answer count`);
       } else assert.match(q.answer, /^\d{1,4}$/, `${tag} number answer ${q.answer}`);
       const html = curriculumVisualHtml(q.visual);
-      assert.ok(html.includes('curriculum-visual') && !/undefined|NaN/.test(html), `${tag} visual`);
+      assert.ok((q.visual.kind === 'none' ? html === '' : html.includes('curriculum-visual')) && !/undefined|NaN/.test(html), `${tag} visual`);
     }
   }
 });

@@ -1,4 +1,4 @@
-import { bankGen, choiceQ, dots, j, numberQ, pick, ri, shuffle } from './grade-helpers';
+import { bankGen, choiceQ, dots, j, numberQ, pick, ri, shuffle, ye } from './grade-helpers';
 import type { VariantMap } from './grade-variants12';
 
 const GEO = (shape: 'rectangle' | 'square' | 'right-triangle' | 'angle', label: string) => ({ kind: 'geometry' as const, shape, label });
@@ -59,7 +59,7 @@ export const VARIANTS_G2: VariantMap = {
     ], lenVis([1], 'cm', ['어림']))],
   },
   measurement: {
-    0: [(r) => { const sets = [['동그란 단추와 네모난 단추로 나누어요', '모양'], ['빨간 블록과 파란 블록으로 나누어요', '색깔'], ['큰 공과 작은 공으로 나누어요', '크기'], ['고양이, 강아지, 토끼로 나누어요', '동물의 종류'], ['여름 옷과 겨울 옷으로 나누어요', '계절'], ['단 과일과 신 과일로 나누어요', '맛'], ['긴 연필과 짧은 연필로 나누어요', '길이'], ['무거운 물건과 가벼운 물건으로 나누어요', '무게']] as const, [what, answer] = pick(sets, r), all = ['모양', '색깔', '크기', '동물의 종류', '계절', '맛', '길이', '무게']; return choiceQ('measurement', '기준 정하기', `${what}. 어떤 기준으로 나눈 것일까요?`, answer, shuffle(all.filter(x => x !== answer), r).slice(0, 3), dots('🔘', [{ label: '분류', icons: 4 }]), `${what}. 그래서 기준은 ${answer}이에요.`, r); }],
+    0: [(r) => { const sets = [['동그란 단추와 네모난 단추로 나누어요', '모양'], ['빨간 블록과 파란 블록으로 나누어요', '색깔'], ['큰 공과 작은 공으로 나누어요', '크기'], ['고양이, 강아지, 토끼로 나누어요', '동물의 종류'], ['여름 옷과 겨울 옷으로 나누어요', '계절'], ['단 과일과 신 과일로 나누어요', '맛'], ['긴 연필과 짧은 연필로 나누어요', '길이'], ['무거운 물건과 가벼운 물건으로 나누어요', '무게']] as const, [what, answer] = pick(sets, r), all = ['모양', '색깔', '크기', '동물의 종류', '계절', '맛', '길이', '무게']; return choiceQ('measurement', '기준 정하기', `${what}. 어떤 기준으로 나눈 것일까요?`, answer, shuffle(all.filter(x => x !== answer), r).slice(0, 3), dots('🔘', [{ label: '분류', icons: 4 }]), `${what}. 그래서 기준은 ${answer}${ye(answer)}.`, r); }],
   },
   plane: {
     0: [
