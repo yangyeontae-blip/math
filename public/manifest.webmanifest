@@ -1,0 +1,18 @@
+{
+  "name": "베리숲 모험학교",
+  "short_name": "베리숲",
+  "description": "베리를 모으며 3학년 1·2학기 수학 전체를 배우는 포근한 3D 숲속 모험",
+  "lang": "ko",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#cce9d5",
+  "theme_color": "#246b53",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "favicon.svg", "sizes": "any", "type": "image/svg+xml" }
+  ]
+}

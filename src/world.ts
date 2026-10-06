@@ -1,10 +1,11 @@
 import * as T from 'three';
-import { CHARACTERS, MONSTERS, OUTFITS, PETS, RIDES, WEAPONS, PLAYER_MOVE_SPEED, petChaseSpeed, riderHeight, journeyFor, type ForestKind, type Save } from './rules';
+import { CHARACTERS, MONSTERS, OUTFITS, PETS, RIDES, WEAPONS, PLAYER_MOVE_SPEED, petChaseSpeed, riderHeight, journeyFor, roomFurniturePosition, type ForestKind, type Save } from './rules';
 import { STAGES, stageBerries, stageMonsters, stagePlatforms, stageTrees, stageSize, isVillagePond } from './stages';
 import { EXPEDITION_STAR_SPOTS, expeditionLayout } from './expedition';
 import { VILLAGE_THEMES, villageThemeId, type VillageTheme } from './villages';
 
 type Entity = { id: string; name: string; x: number; z: number; mesh: T.Group; label: HTMLDivElement };
+export type GuideKind = 'berry' | 'monster' | 'shop' | 'journey' | 'next' | 'star' | 'expMonster' | 'roomExit';
 const mat = (color: number, roughness = .86) => new T.MeshStandardMaterial({ color, roughness });
 const materials = new Map<number, T.MeshStandardMaterial>();
 const sharedGeometries = new Set<T.BufferGeometry>();
@@ -366,10 +367,11 @@ export class World {
   private keys = new Set<string>(); private stick = { x: 0, z: 0 }; private clock = new T.Clock(); private time = 0; private vy = 0; private grounded = true;
   private particles: { mesh: T.Mesh; v: T.Vector3; life: number }[] = []; private lastSafe = new T.Vector3(0, 0, 8); private follow = new T.Vector3(0, 0, 1);
   private sun: T.DirectionalLight; private labelLayer: HTMLDivElement; private selectedId: string | null = null;
+  private guideTarget: { object: T.Object3D; name: string; arrivalDistance: number } | null = null; private guideElement: HTMLDivElement;
   private swingUntil = 0; private rideIndex = -1; private petIndex = -1; private petModel: T.Group | null = null; private petTargetId: number | null = null; private animationRunning = false;
   private rideAnimated: T.Object3D[] = []; private butterflies: T.Object3D[] = []; private furnitureRoot: T.Group | null = null;
   private tempProjection = new T.Vector3(); private tempTarget = new T.Vector3(); private tempWorld = new T.Vector3(); private cameraTarget = new T.Vector3();
-  active = false; paused = true; inRoom = false; onCollect = (_id: number) => {}; onStar = (_id: number) => {}; onInteract = (_id: string) => {}; onAttack = (_id: string | null) => {}; onNear = (_name: string | null, _id: string | null) => {}; onJump = () => {}; onRescue = () => {};
+  active = false; paused = true; inRoom = false; onCollect = (_id: number) => {}; onStar = (_id: number) => {}; onInteract = (_id: string) => {}; onAttack = (_id: string | null) => {}; onNear = (_name: string | null, _id: string | null) => {}; onJump = () => {}; onRescue = () => {}; onStageLoaded = (_stage: number) => {};
   constructor(private container: HTMLElement) {
     this.scene.background = new T.Color(0xd0eade); this.scene.fog = new T.Fog(0xd0eade, 58, 112);
     const touchDevice = matchMedia('(pointer: coarse)').matches;
@@ -378,6 +380,7 @@ export class World {
     this.scene.add(new T.HemisphereLight(0xfff9e6, 0x74905a, 2.35)); this.sun = new T.DirectionalLight(0xffedcf, 2.8); this.sun.position.set(-15, 30, 15); this.sun.castShadow = true; this.sun.shadow.mapSize.set(1024, 1024); Object.assign(this.sun.shadow.camera, { left: -34, right: 34, top: 32, bottom: -30, far: 85 }); this.sun.shadow.normalBias = .06; this.scene.add(this.sun);
     const fill = new T.DirectionalLight(0xd8f3ff, .7); fill.position.set(18, 12, -14); this.scene.add(fill);
     this.labelLayer = document.createElement('div'); this.labelLayer.className = 'world-labels'; container.append(this.labelLayer);
+    this.guideElement = document.createElement('div'); this.guideElement.className = 'navigation-guide'; this.guideElement.hidden = true; this.guideElement.innerHTML = '<span aria-hidden="true">➜</span><div><b></b><small></small></div>'; container.append(this.guideElement);
     this.buildVillage(); this.setAvatar(0, 0, 0); this.player.position.set(0, 0, 8); this.scene.add(this.player);
     window.addEventListener('resize', () => { this.resize(); this.renderOnce(); }); this.resize();
     document.addEventListener('visibilitychange', () => { if (document.hidden) this.clearInput(); this.syncAnimation(); });
@@ -509,7 +512,7 @@ export class World {
     this.addBerries();
   }
   private clearMap() {
-    this.selectedId = null; this.petTargetId = null; this.onNear(null, null); this.entities.forEach(e => e.label.remove()); this.stars.forEach(star => star.label.remove()); this.entities = []; this.coins = []; this.stars = []; this.colliders = [];
+    this.clearGuide(); this.selectedId = null; this.petTargetId = null; this.onNear(null, null); this.entities.forEach(e => e.label.remove()); this.stars.forEach(star => star.label.remove()); this.entities = []; this.coins = []; this.stars = []; this.colliders = [];
     for (const child of [...this.scene.children]) if (child !== this.player && child !== this.petModel && !(child instanceof T.Light)) this.scene.remove(child);
     this.furnitureRoot = null;
   }
@@ -522,6 +525,7 @@ export class World {
     this.entities.forEach(e => { if (e.id.startsWith('monster')) e.mesh.visible = !expedition && !map.monsters.includes(Number(e.id.slice(7))); if (e.id.startsWith('tree')) e.mesh.visible = !expedition && !map.trees.includes(Number(e.id.slice(4))); });
     if (expedition) this.addExpeditionObjects(s);
     const spawn = this.stage === 0 ? { x: 0, z: 8 } : { x: 0, z: stageSize(this.stage).z - 9 }; const p = fresh ? spawn : s.position; this.player.position.set(p.x, 0, p.z); this.placePetNearPlayer(); this.lastSafe.copy(this.player.position); this.follow.copy(this.player.position);
+    this.onStageLoaded(this.stage);
   }
   enterRoom(s: Save, preservePosition = false) {
     const roomPosition = preservePosition ? this.player.position.clone() : new T.Vector3(0, 0, 2.7);
@@ -546,7 +550,7 @@ export class World {
     for (const x of [-1.35, 1.35]) box(this.scene, 0x9e795e, x, 1.25, 5.48, .2, 2.5, .25);
     box(this.scene, 0x9e795e, 0, 2.45, 5.48, 2.8, .2, .25);
     this.addEntity('roomExit', '마을로 돌아가기', 0, 4.2, this.gate(0x6eb7a1));
-    const sign = new T.Group(); box(sign, 0x9a754f, 0, 1, 0, 1.8, 1.5, .25); box(sign, 0xf2dfac, 0, 1.05, .16, 1.45, 1.1, .08); this.addEntity('roomDecor', '내 방 꾸미기', 2.2, 1.2, sign);
+    const sign = new T.Group(); box(sign, 0x9a754f, 0, 1, 0, 1.8, 1.5, .25); box(sign, 0xf2dfac, 0, 1.05, .16, 1.45, 1.1, .08); this.addEntity('roomDecor', '내 방 꾸미기', 5.65, 4.05, sign);
     this.furnitureRoot = new T.Group(); this.scene.add(this.furnitureRoot);
     this.updateRoomFurniture(s, false);
     this.player.position.copy(roomPosition); this.placePetNearPlayer(); this.lastSafe.copy(this.player.position); this.follow.copy(this.player.position);
@@ -555,10 +559,10 @@ export class World {
   updateRoomFurniture(s: Save, render = true) {
     if (!this.inRoom || !this.furnitureRoot) return;
     for (const child of [...this.furnitureRoot.children]) { this.furnitureRoot.remove(child); this.disposeModel(child as T.Group); }
-    const spots = [[-5.2, -3.7], [-2.6, -3.7], [0, -3.7], [2.6, -3.7], [5.2, -3.7], [-5.2, 3.7], [-2.6, 3.7], [0, 3.7], [2.6, 3.7], [5.2, 3.7], [-4, 0], [-1.35, 0], [1.35, 0], [4, 0], [-5.1, -1.7], [5.1, -1.7], [0, 2.15]] as const;
     for (const id of s.room.furniture) {
-      const spot = spots[id]; if (!spot) continue;
-      const [x, z] = spot, g = new T.Group(); g.position.set(x, 0, z); this.furnitureRoot.add(g);
+      const position = roomFurniturePosition(s, id);
+      const x = (position.column - 2) * 2.55, z = -3.65 + position.row * 2.05;
+      const g = new T.Group(); g.position.set(x, 0, z); this.furnitureRoot.add(g);
       if (id === 0) { cylinder(g, 0x9e7555, 0, .55, 0, .56, .62, .22, 8); cylinder(g, 0xe98b9a, 0, .75, 0, .4, .62, .26, 8); }
       else if (id === 1) { cylinder(g, 0xb97855, 0, .3, 0, .3, .38, .55, 8); cylinder(g, 0x579a68, 0, .85, 0, .04, .07, .95, 6); for (const side of [-1, 1]) ball(g, 0x87bf79, side * .25, 1.2, 0, .28); }
       else if (id === 2) { ball(g, 0xb98d62, 0, .55, 0, .48, .48, .38); ball(g, 0xb98d62, 0, 1.08, .04, .34); for (const side of [-1, 1]) ball(g, 0xb98d62, side * .39, .58, .08, .17); }
@@ -611,6 +615,24 @@ export class World {
     ball(g, foliage ?? (pink ? 0xe6a2ad : 0x63a56b), 0, 2.55, 0, 1.55, 1.5, 1.38); ball(g, foliage ?? (pink ? 0xf1b8bb : 0x88bd77), -.5, 3.35, 0, 1.12, 1.12, 1); ball(g, foliage ?? (pink ? 0xf5c9c7 : 0xa0cd7e), .5, 3.25, .45, .8, .83, .8);
     g.userData.hp = 7; this.addEntity(`tree${id}`, '베리나무 · 베기', x, z, g); this.colliders.push({ x, z, r: .5, id: `tree${id}` });
   }
+  // 틀린 개념을 다시 만나는 "그림자 몬스터". 마을에만 최대 3마리가 나타나고, 다시 풀면 사라져요.
+  setShadows(shadows: { id: string; name: string; type: number }[]) {
+    const keep: Entity[] = [];
+    for (const e of this.entities) { if (e.id.startsWith('shadow')) { this.scene.remove(e.mesh); this.disposeShadow(e.mesh); e.label.remove(); } else keep.push(e); }
+    this.entities = keep;
+    if (this.selectedId?.startsWith('shadow')) { this.selectedId = null; this.onNear(null, null); }
+    if (this.inRoom || this.stage !== 0) return;
+    const spots = [[-6.5, 7.5], [3.5, 10.5], [-12, 2.5]] as const, dark = new T.Color(0x3b2f5c);
+    shadows.slice(0, spots.length).forEach((shadow, i) => {
+      const model = makeMonster(shadow.type);
+      // 재질은 색마다 공유되므로, 복제해서 칠해야 다른 몬스터가 같이 어두워지지 않아요.
+      model.traverse(o => { if (o instanceof T.Mesh) { const m = (o.material as T.MeshStandardMaterial).clone(); m.color.lerp(dark, .72); m.transparent = true; m.opacity = .82; o.material = m; o.userData.ownMaterial = true; } });
+      this.addEntity(shadow.id, shadow.name, spots[i][0], spots[i][1], model);
+      this.entities[this.entities.length - 1].label.classList.add('monster-label');
+    });
+    this.renderOnce();
+  }
+  private disposeShadow(g: T.Group) { g.traverse(o => { if (o instanceof T.Mesh && o.userData.ownMaterial) (o.material as T.Material).dispose(); }); }
   private addEntity(id: string, name: string, x: number, z: number, model: T.Group) {
     model.position.set(x, 0, z); this.scene.add(model);
     const label = document.createElement('div'); label.className = `entity-label ${id.startsWith('monster') ? 'monster-label' : ''}`; label.textContent = name; this.labelLayer.append(label);
@@ -637,6 +659,21 @@ export class World {
   restore(s: Save) { this.setAvatar(s.character, s.outfit, s.weapon, s.outfits[s.outfit], s.weapons[s.weapon], s.ride, s.pet, s.hairstyle, s.face); if (s.room.inside) this.enterRoom(s); else this.loadStage(s); this.quality(s.settings.lowQuality); }
   quality(low: boolean) { const touchDevice = matchMedia('(pointer: coarse)').matches; this.renderer.setPixelRatio(Math.min(devicePixelRatio, low || touchDevice ? 1 : 1.25)); this.renderer.shadowMap.enabled = !low; this.sun.castShadow = !low; }
   clearInput() { this.keys.clear(); this.stick = { x: 0, z: 0 }; }
+  guideTo(kind: GuideKind) {
+    const entityMatch = (entity: Entity) => kind === 'monster' ? entity.id.startsWith('monster') : kind === 'expMonster' ? entity.id.startsWith('expMonster') : kind === 'shop' ? ['weapon', 'outfit', 'ride', 'pet', 'potion', 'beauty'].includes(entity.id) : entity.id === kind;
+    const candidates: { object: T.Object3D; name: string; arrivalDistance: number }[] = kind === 'berry'
+      ? this.coins.filter(coin => coin.mesh.visible).map(coin => ({ object: coin.mesh, name: '길 위의 베리', arrivalDistance: .9 }))
+      : kind === 'star'
+        ? this.stars.filter(star => star.mesh.visible).map(star => ({ object: star.mesh, name: '별빛 표식', arrivalDistance: 1.2 }))
+        : this.entities.filter(entity => entity.mesh.visible && entityMatch(entity)).map(entity => ({ object: entity.mesh, name: entity.name, arrivalDistance: 2.6 }));
+    candidates.sort((a, b) => a.object.position.distanceToSquared(this.player.position) - b.object.position.distanceToSquared(this.player.position));
+    this.guideTarget = candidates[0] ?? null;
+    if (!this.guideTarget) { this.clearGuide(); return null; }
+    this.guideElement.querySelector('b')!.textContent = this.guideTarget.name;
+    this.guideElement.hidden = false;
+    return this.guideTarget.name;
+  }
+  private clearGuide() { this.guideTarget = null; this.guideElement.hidden = true; }
   moveStick(x: number, z: number) { this.stick = { x, z }; }
   jump() { if (this.active && !this.paused && this.grounded) { this.vy = 7.4; this.grounded = false; this.onJump(); } }
   interact() { if (this.active && !this.paused && this.selectedId) this.onInteract(this.selectedId); }
@@ -737,7 +774,21 @@ export class World {
     if (this.player.userData.sparkles) this.player.userData.sparkles.rotation.y += dt;
     for (let i = this.particles.length - 1; i >= 0; i--) { const q = this.particles[i]; q.life -= dt; q.v.y -= dt * 5; q.mesh.position.addScaledVector(q.v, dt); q.mesh.scale.setScalar(Math.max(0, q.life)); if (q.life <= 0) { this.scene.remove(q.mesh); this.particles.splice(i, 1); } }
     const target = this.active ? p : this.cameraTarget.set(0, 0, -1); this.follow.lerp(target, 1 - Math.exp(-dt * 3));
-    this.camera.position.copy(this.follow).add(this.inRoom ? ROOM_CAMERA_OFFSET : CAMERA_OFFSET); this.camera.lookAt(this.follow); this.renderer.render(this.scene, this.camera);
+    this.camera.position.copy(this.follow).add(this.inRoom ? ROOM_CAMERA_OFFSET : CAMERA_OFFSET); this.camera.lookAt(this.follow); this.updateGuide(); this.renderer.render(this.scene, this.camera);
+  }
+  private updateGuide() {
+    const target = this.guideTarget;
+    if (!target || !target.object.visible) { if (target) this.clearGuide(); return; }
+    target.object.getWorldPosition(this.tempWorld);
+    const distance = Math.hypot(this.player.position.x - this.tempWorld.x, this.player.position.z - this.tempWorld.z);
+    if (distance < target.arrivalDistance) { this.clearGuide(); return; }
+    const projected = this.tempProjection.copy(this.tempWorld).project(this.camera), width = this.container.clientWidth, height = this.container.clientHeight;
+    const rawX = (projected.x * .5 + .5) * width, rawY = (-projected.y * .5 + .5) * height;
+    const x = Math.min(width - 64, Math.max(64, rawX)), y = Math.min(height - 92, Math.max(78, rawY));
+    const angle = Math.atan2(rawY - height / 2, rawX - width / 2) * 180 / Math.PI;
+    this.guideElement.style.transform = `translate(-50%, -50%) translate(${x}px, ${y}px)`;
+    (this.guideElement.querySelector('span') as HTMLElement).style.transform = `rotate(${angle}deg)`;
+    this.guideElement.querySelector('small')!.textContent = `${Math.ceil(distance)}m 앞`;
   }
 }
 

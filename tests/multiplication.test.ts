@@ -1,3 +1,4 @@
+import { sha256Hex } from '../src/sha256';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
@@ -68,16 +69,16 @@ test('the linked final gate survives reload and grants its gift only once', () =
   assert.equal(restored.multiplicationCompleted, true); assert.equal(restored.multiplicationRewardClaimed, true);
   const practice = startMultiplicationFinal(restored)!; answerMultiplicationFinal(restored, practice.left * practice.right);
   assert.deepEqual(answerMultiplicationFinal(restored, practice.left), { correct: true, complete: true, reward: false });
-  restored.room.furniture = [8]; assert.deepEqual(validateSave(JSON.parse(JSON.stringify(restored))), restored);
+  restored.room.furniture = [8]; restored.room.positions = { 8: { column: 0, row: 0 } }; assert.deepEqual(validateSave(JSON.parse(JSON.stringify(restored))), restored);
 });
 
 test('version 7 saves become division progress and teacher mode previews everything', () => {
   const old = structuredClone(newSave('예전숲', 0)) as unknown as Record<string, unknown>; old.version = 7;
   delete old.forest; delete old.multiplicationJourney; delete old.multiplicationFinal; delete old.multiplicationCompleted; delete old.multiplicationRewardClaimed; delete old.potions;
   const settings = old.settings as Record<string, unknown>; delete settings.multiplicationRange;
-  const migrated = validateSave(old); assert.equal(migrated.version, 12); assert.equal(migrated.forest, 'division'); assert.equal(migrated.multiplicationJourney.maps[1].cleared, false);
+  const migrated = validateSave(old); assert.equal(migrated.version, 13); assert.equal(migrated.forest, 'division'); assert.equal(migrated.multiplicationJourney.maps[1].cleared, false);
   assert.deepEqual(migrated.potions, { stock: [0, 0, 0], berryMultiplier: 1, berryUntil: 0, xpMultiplier: 1, xpUntil: 0 });
-  applyTeacherCode(migrated, 'teacher');
+  applyTeacherCode(migrated, 'teacher', sha256Hex('teacher'));
   assert.equal(canEnter(migrated, 10, 'multiplication'), true); assert.equal(migrated.multiplicationCompleted, true); assert.equal(migrated.multiplicationRewardClaimed, true);
   assert.equal(Object.keys(migrated.weapons).length, WEAPONS.length); assert.equal(Object.keys(migrated.outfits).length, OUTFITS.length); assert.equal(Object.keys(migrated.rides).length, RIDES.length); assert.equal(Object.keys(migrated.pets).length, PETS.length); assert.equal(Object.keys(migrated.hairstyles).length, HAIRSTYLES.length); assert.equal(Object.keys(migrated.faces).length, FACES.length);
 });
