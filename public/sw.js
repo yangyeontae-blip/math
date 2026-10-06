@@ -1,6 +1,6 @@
 // 베리숲 모험학교 서비스 워커: 한 번 열어 본 게임은 인터넷이 불안정해도 열려요.
 // 화면(HTML)은 항상 인터넷을 먼저 확인해서 새 버전이 배포되면 바로 받고, 해시가 붙은 /assets 파일은 캐시에서 바로 꺼내요.
-const CACHE = 'berry-forest-v1';
+const CACHE = 'berry-forest-v2';
 
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE).then(cache => cache.addAll([self.registration.scope, 'manifest.webmanifest', 'favicon.svg']).catch(() => {})).then(() => self.skipWaiting()));
