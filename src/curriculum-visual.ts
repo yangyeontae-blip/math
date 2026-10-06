@@ -68,7 +68,46 @@ function decimalHtml(visual: Extract<CurriculumVisual, { kind: 'decimal' }>) {
   return `<div class="curriculum-visual decimal-visual">${bar(visual.tenths, `0.${visual.tenths}`)}${visual.compare === undefined ? '' : bar(visual.compare, `0.${visual.compare}`)}<small>전체를 10칸으로 똑같이 나누어 살펴봐요</small></div>`;
 }
 
+const PALETTE = ['#7fb99a', '#f2b86b', '#e9827b', '#8db4e8', '#c79be0', '#e6d36a'];
+
+function barGraphHtml(visual: Extract<CurriculumVisual, { kind: 'bar-graph' }>) {
+  const { labels, values, unit, line, hidden = [] } = visual, W = 240, H = 168, left = 30, right = 8, top = 24, bottom = 30;
+  const peak = Math.max(...values, 1), step = visual.step ?? (peak <= 10 ? 2 : peak <= 20 ? 5 : peak <= 50 ? 10 : peak <= 100 ? 20 : 50), top_ = Math.ceil(peak / step) * step;
+  const plotW = W - left - right, plotH = H - top - bottom, slot = plotW / values.length;
+  const y = (v: number) => top + plotH - v / top_ * plotH, x = (i: number) => left + slot * i + slot / 2;
+  const grid = Array.from({ length: top_ / step + 1 }, (_, k) => `<line x1="${left}" x2="${W - right}" y1="${y(k * step)}" y2="${y(k * step)}" stroke="#d9e6d2"/><text x="${left - 4}" y="${y(k * step) + 3}" text-anchor="end" font-size="8" fill="#507a68">${k * step}</text>`).join('');
+  const label = (i: number, ypos: number) => `<text x="${x(i)}" y="${ypos}" text-anchor="middle" font-size="9" font-weight="700" fill="#2f5b49">${hidden.includes(i) ? '?' : values[i]}</text>`;
+  const marks = line
+    ? `<polyline fill="none" stroke="#e9827b" stroke-width="2.5" points="${values.map((v, i) => `${x(i)},${y(v)}`).join(' ')}"/>${values.map((v, i) => `<circle cx="${x(i)}" cy="${y(v)}" r="3.5" fill="#e9827b"/>${label(i, y(v) - 6)}`).join('')}`
+    : values.map((v, i) => `<rect x="${x(i) - slot * .3}" y="${y(v)}" width="${slot * .6}" height="${plotH - (y(v) - top)}" rx="2" fill="${PALETTE[i % PALETTE.length]}"/>${label(i, y(v) - 3)}`).join('');
+  const names = labels.map((name, i) => `<text x="${x(i)}" y="${H - bottom + 12}" text-anchor="middle" font-size="8.5" fill="#507a68">${esc(name)}</text>`).join('');
+  return `<div class="curriculum-visual bar-graph-visual"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${line ? '꺾은선그래프' : '막대그래프'}">${grid}${marks}${names}<text x="2" y="9" font-size="8" fill="#507a68">(${esc(unit)})</text></svg></div>`;
+}
+
+function ratioGraphHtml(visual: Extract<CurriculumVisual, { kind: 'ratio-graph' }>) {
+  const { parts, mode, hidden = [] } = visual, name = (p: { label: string; percent: number }, i: number) => `${esc(p.label)} ${hidden.includes(i) ? '?' : `${p.percent}%`}`;
+  if (mode === 'band') {
+    let at = 0;
+    const segs = parts.map((p, i) => { const x = 10 + at * 2, w = p.percent * 2; at += p.percent; return `<rect x="${x}" y="40" width="${w}" height="34" fill="${PALETTE[i % PALETTE.length]}" stroke="#fff" stroke-width="1.5"/><text x="${x + w / 2}" y="60" text-anchor="middle" font-size="9" font-weight="700" fill="#2f5b49">${hidden.includes(i) ? '?' : `${p.percent}%`}</text><text x="${x + w / 2}" y="92" text-anchor="middle" font-size="8.5" fill="#507a68">${esc(p.label)}</text>`; }).join('');
+    return `<div class="curriculum-visual ratio-graph-visual"><svg viewBox="0 0 220 110" role="img" aria-label="띠그래프">${segs}<text x="10" y="30" font-size="8" fill="#507a68">전체 100%</text></svg></div>`;
+  }
+  let angle = -Math.PI / 2;
+  const cx = 70, cy = 70, rad = 56, slices = parts.map((p, i) => { const sweep = p.percent / 100 * Math.PI * 2, a0 = angle, a1 = angle + sweep; angle = a1; const large = sweep > Math.PI ? 1 : 0, mid = (a0 + a1) / 2; return `<path d="M${cx} ${cy} L${cx + rad * Math.cos(a0)} ${cy + rad * Math.sin(a0)} A${rad} ${rad} 0 ${large} 1 ${cx + rad * Math.cos(a1)} ${cy + rad * Math.sin(a1)} Z" fill="${PALETTE[i % PALETTE.length]}" stroke="#fff" stroke-width="1.5"/><text x="${cx + rad * .62 * Math.cos(mid)}" y="${cy + rad * .62 * Math.sin(mid) + 3}" text-anchor="middle" font-size="8.5" font-weight="700" fill="#2f5b49">${hidden.includes(i) ? '?' : `${p.percent}%`}</text>`; }).join('');
+  const legend = parts.map((p, i) => `<rect x="146" y="${22 + i * 20}" width="10" height="10" fill="${PALETTE[i % PALETTE.length]}"/><text x="160" y="${31 + i * 20}" font-size="9" fill="#507a68">${esc(p.label)}</text>`).join('');
+  return `<div class="curriculum-visual ratio-graph-visual"><svg viewBox="0 0 220 140" role="img" aria-label="원그래프">${slices}${legend}</svg></div>`;
+}
+
+function transformHtml(visual: Extract<CurriculumVisual, { kind: 'transform' }>) {
+  const arrows: Record<typeof visual.op, string> = { slide: '→', 'flip-h': '⇄', 'flip-v': '⇅', 'rotate-cw90': '↻', 'rotate-ccw90': '↺', 'rotate-180': '⟳' };
+  const shape = '<path d="M20 14 H62 V28 H36 V42 H56 V56 H36 V92 H20 Z" fill="#dff1d5" stroke="#507a68" stroke-width="3" stroke-linejoin="round"/>';
+  const star = { top: [41, 12], bottom: [28, 106], left: [8, 56], right: [76, 56] }[visual.mark ?? 'none' as 'top'], mark = visual.mark && star ? `<text x="${star[0]}" y="${star[1]}" text-anchor="middle" font-size="16" fill="#e9a23b">★</text>` : '';
+  return `<div class="curriculum-visual transform-visual"><svg viewBox="0 0 200 112" role="img" aria-label="${esc(visual.label ?? '도형 움직이기')}"><g>${shape}</g>${mark}<text x="120" y="60" text-anchor="middle" font-size="34" fill="#e9827b">${arrows[visual.op]}</text><text x="100" y="104" text-anchor="middle" font-size="9" fill="#507a68">${esc(visual.label ?? '도형을 움직여요')}</text></svg></div>`;
+}
+
 export function curriculumVisualHtml(visual: CurriculumVisual): string {
+  if (visual.kind === 'bar-graph') return barGraphHtml(visual);
+  if (visual.kind === 'ratio-graph') return ratioGraphHtml(visual);
+  if (visual.kind === 'transform') return transformHtml(visual);
   if (visual.kind === 'circle') return circleHtml(visual);
   if (visual.kind === 'geometry') return geometryHtml(visual);
   if (visual.kind === 'length-time') return lengthTimeHtml(visual);

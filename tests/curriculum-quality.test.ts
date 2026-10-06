@@ -104,7 +104,7 @@ test('fraction questions are valid and their answers match an independent calcul
       assert.equal(question.answer, `${n}/${d}`);
     } else if (prompt.includes('바르게 읽은')) {
       kinds.add('reading');
-      const [, n, d] = prompt.match(/^(\d+)\/(\d+)을 바르게/)!.map(Number); assert.ok(n >= 1 && n < d);
+      const [, n, d] = prompt.match(/^(\d+)\/(\d+)[을를] 바르게/)!.map(Number); assert.ok(n >= 1 && n < d);
       assert.equal(question.answer, `${d}분의 ${n}`);
     } else if (/개 중 \d+\/\d+/.test(prompt)) {
       kinds.add('quantity');
@@ -115,16 +115,16 @@ test('fraction questions are valid and their answers match an independent calcul
       assert.ok(question.visual.kind === 'fraction' && question.visual.groups === total / d);
     } else if (prompt.includes('진분수일까요')) {
       kinds.add('proper');
-      const [, n, d] = prompt.match(/^(\d+)\/(\d+)은 진분수/)!.map(Number); assert.ok(n >= 1 && d >= 2);
+      const [, n, d] = prompt.match(/^(\d+)\/(\d+)[은는] 진분수/)!.map(Number); assert.ok(n >= 1 && d >= 2);
       assert.equal(question.answer, n < d ? '진분수' : '가분수');
     } else if (prompt.includes('대분수로') || prompt.includes('가분수로')) {
       kinds.add('conversion');
-      const toMixed = prompt.match(/^(\d+)\/(\d+)을 대분수로/);
+      const toMixed = prompt.match(/^(\d+)\/(\d+)[을를] 대분수로/);
       if (toMixed) { const n = num(toMixed[1]), d = num(toMixed[2]); assert.notEqual(n % d, 0); assert.equal(question.answer, `${Math.floor(n / d)} ${n % d}/${d}`); }
-      else { const [, w, r, d] = prompt.match(/^(\d+) (\d+)\/(\d+)을 가분수로/)!.map(Number); assert.ok(r >= 1 && r < d); assert.equal(question.answer, `${w * d + r}/${d}`); }
+      else { const [, w, r, d] = prompt.match(/^(\d+) (\d+)\/(\d+)[을를] 가분수로/)!.map(Number); assert.ok(r >= 1 && r < d); assert.equal(question.answer, `${w * d + r}/${d}`); }
     } else {
       kinds.add('compare');
-      const [, a, b, c, d] = prompt.match(/^(\d+)\/(\d+)과 (\d+)\/(\d+) 중 더 큰/)!.map(Number);
+      const [, a, b, c, d] = prompt.match(/^(\d+)\/(\d+)[과와] (\d+)\/(\d+) 중 더 큰/)!.map(Number);
       assert.ok(a >= 1 && a < b && c >= 1 && c < d); assert.ok(b >= 3 && d >= 3);
       assert.notEqual(a * d, c * b); assert.equal(question.choices!.length, 2);
       assert.equal(question.answer, a * d > c * b ? `${a}/${b}` : `${c}/${d}`);
