@@ -41,7 +41,7 @@ test('가구를 치우면 위치도 지우고 예전 저장은 기본 자리로 
   const old = JSON.parse(JSON.stringify(save));
   old.version = 12; delete old.room.positions;
   const migrated = validateSave(old);
-  assert.equal(migrated.version, 13);
+  assert.equal(migrated.version, 14);
   assert.deepEqual(migrated.room.positions, { 7: defaultRoomFurniturePosition(0) });
 });
 
