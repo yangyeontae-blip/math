@@ -28,8 +28,8 @@ test('grade question generators always include an answer that can be submitted',
 test('2022 curriculum topics and questions are genuinely grade-specific', () => {
   const expected = new Map<SchoolGrade, string[]>([
     [1, ['9와 50 수마을', '시계와 규칙길', '모양과 위치섬']],
-    [2, ['천과 만 수마을', '길이 재기마을', '표와 그래프 관측소']],
-    [4, ['큰 수 별마을', '각도와 삼각형길', '소수와 어림마을']],
+    [2, ['수와 식 마을', '길이 재기마을', '표와 그래프 관측소']],
+    [4, ['큰 수 별마을', '각도와 삼각형길', '소수 덧셈뺄셈마을']],
     [5, ['약수와 배수마을', '합동과 대칭정원', '평균과 가능성관측소']],
     [6, ['분수 나눗셈마을', '비와 비율마을', '원의 넓이정원']],
   ]);
@@ -42,9 +42,9 @@ test('2022 curriculum topics and questions are genuinely grade-specific', () => 
     assert.doesNotMatch(generateGradeQuestion(1, 'fraction', mission, () => .42).prompt, /분수|분모|분자/);
     assert.doesNotMatch(generateGradeQuestion(2, 'fraction', mission, () => .42).prompt, /분수|분모|분자/);
   }
-  assert.match(generateGradeQuestion(4, 'measurement', 0, () => .42).prompt, /반올림/);
-  assert.match(generateGradeQuestion(5, 'measurement', 0, () => .42).prompt, /평행사변형/);
-  assert.match(generateGradeQuestion(6, 'circle', 0, () => .42).prompt, /원의 넓이/);
+  assert.match(generateGradeQuestion(4, 'fractionDecimal', 0, () => .42).prompt, /밀/);
+  assert.match(generateGradeQuestion(5, 'measurement', 1, () => .42).prompt, /평행사변형/);
+  assert.match(generateGradeQuestion(6, 'circle', 3, () => .42).prompt, /원의 넓이/);
 });
 
 test('grade is saved and old version-12 saves continue as grade 3', () => {
