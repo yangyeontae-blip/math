@@ -174,8 +174,11 @@ test('grade 3 recap missions now also ask seconds-clock reading and shape buildi
     const q = generateCurriculumQuestion(unit, 8, random);
     seen.set(q.skill, (seen.get(q.skill) ?? 0) + 1);
     if (q.skill === '초 단위 시각 읽기') {
-      const [h, m, s] = q.prompt.match(/긴바늘은 (\d+), 초바늘은 (\d+)/)!.slice(1).map(Number).concat(0) as number[], hour = Number(q.prompt.match(/짧은바늘은 (\d+)(?:와|과)/)![1]);
-      assert.equal(q.answer, `${hour}시 ${h * 5}분 ${m * 5}초`); assert.equal(new Set(q.choices!.map(c => c.value)).size, q.choices!.length); void s;
+      const v = q.visual as { kind: string; clock?: boolean; values: number[] };
+      assert.ok(v.kind === 'length-time' && v.clock && v.values.length === 3, 'clock visual with a second hand');
+      const [hour, minute, second] = v.values;
+      assert.equal(q.answer, `${hour}시 ${minute}분 ${second}초`); assert.equal(new Set(q.choices!.map(c => c.value)).size, q.choices!.length);
+      assert.ok(!/[0-9]시|바늘/.test(q.prompt), 'prompt must not give away the time');
     }
   }
   assert.ok((seen.get('초 단위 시각 읽기') ?? 0) > 40 && (seen.get('도형으로 모양 만들기') ?? 0) > 40, JSON.stringify([...seen]));

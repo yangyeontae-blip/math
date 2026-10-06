@@ -38,7 +38,7 @@ export const VARIANTS_G1: VariantMap = {
   },
   fractionDecimal: {
     2: [
-      (r) => { const a = ri(1, 9, r); return numberQ('fractionDecimal', '10 만들기', `10에서 ${j(a, '을를')} 빼면 얼마일까요?`, 10 - a, dots('●', [{ label: `${a}`, icons: a }, { label: '남은 것', icons: 10 - a }]), `10에서 ${j(a, '을를')} 빼면 ${10 - a}예요.`); },
+      (r) => { const a = ri(1, 9, r); return numberQ('fractionDecimal', '10 만들기', `10에서 ${j(a, '을를')} 빼면 얼마일까요?`, 10 - a, dots('●', [{ label: `${a}`, icons: a }, { label: '남은 것', icons: 10 - a }]), `10에서 ${j(a, '을를')} 빼면 ${10 - a}${ye(10 - a)}.`); },
       (r) => { const a = ri(1, 9, r); return numberQ('fractionDecimal', '10 만들기', `□와 ${j(a, '을를')} 모으면 10이 돼요. □는 얼마일까요?`, 10 - a, dots('●', [{ label: '□', icons: 10 - a }, { label: `${a}`, icons: a }]), `${j(10 - a, '와과')} ${j(a, '을를')} 모으면 10이에요.`); },
     ],
   },
@@ -56,9 +56,9 @@ export const VARIANTS_G1: VariantMap = {
       (r) => { const a = ri(1, 8, r), st = ri(1, 3, r); return numberQ('lengthTime', '수 규칙', `${a}, □, ${a + 2 * st}, ${a + 3 * st} 에서 □에 알맞은 수는 무엇일까요?`, a + st, dots('●', [{ label: `${st}씩 커져요`, icons: st }]), `${st}씩 커지는 규칙이므로 □는 ${a + st}${ye(a + st)}.`); },
     ],
     4: [
-      (r) => { const set = pick([['🔴', '🔺', '🟦'], ['⭐', '🌙', '☀️'], ['🍎', '🍌', '🍇'], ['🐱', '🐶', '🐰']] as const, r), seq = [set[0], set[1], set[2], set[0], set[1]]; return choiceQ('lengthTime', '모양 규칙', `${seq.join(' ')} □ 에서 □에 들어갈 모양은 무엇일까요?`, set[2], [set[0], set[1]], dots(set[0], [{ label: '규칙', icons: 3 }]), `${j(set.join(' '), '이가')} 되풀이되므로 다음은 ${set[2]}예요.`, r); },
-      (r) => { const set = pick([['🔴', '🔺'], ['⭐', '🌙'], ['🍎', '🍌'], ['🐱', '🐶']] as const, r), seq = [set[0], set[0], set[1], set[0], set[0], set[1], set[0]]; return choiceQ('lengthTime', '모양 규칙', `${seq.join(' ')} □ 에서 □에 들어갈 모양은 무엇일까요?`, set[0], [set[1]], dots(set[0], [{ label: '규칙', icons: 3 }]), `${set[0]} ${set[0]} ${j(set[1], '이가')} 되풀이되므로 다음은 ${set[0]}예요.`, r); },
-      (r) => { const set = pick([['🔴', '🔺'], ['⭐', '🌙'], ['🍎', '🍌']] as const, r), seq = [set[0], set[1], set[1], set[0], set[1], set[1], set[0], set[1]]; return choiceQ('lengthTime', '모양 규칙', `${seq.join(' ')} □ 에서 □에 들어갈 모양은 무엇일까요?`, set[1], [set[0]], dots(set[0], [{ label: '규칙', icons: 3 }]), `${set[0]} ${set[1]} ${j(set[1], '이가')} 되풀이되므로 다음은 ${set[1]}예요.`, r); },
+      (r) => { const set = pick([['🔴', '🔺', '🟦'], ['⭐', '🌙', '☀️'], ['🍎', '🍌', '🍇'], ['🐱', '🐶', '🐰']] as const, r), seq = [set[0], set[1], set[2], set[0], set[1]]; return choiceQ('lengthTime', '모양 규칙', `${seq.join(' ')} □ 에서 □에 들어갈 모양은 무엇일까요?`, set[2], [set[0], set[1]], dots(set[0], [{ label: '규칙', icons: 3 }]), `${j(set.join(' '), '이가')} 되풀이되므로 다음은 ${set[2]}${ye(set[2])}.`, r); },
+      (r) => { const set = pick([['🔴', '🔺'], ['⭐', '🌙'], ['🍎', '🍌'], ['🐱', '🐶']] as const, r), seq = [set[0], set[0], set[1], set[0], set[0], set[1], set[0]]; return choiceQ('lengthTime', '모양 규칙', `${seq.join(' ')} □ 에서 □에 들어갈 모양은 무엇일까요?`, set[0], [set[1]], dots(set[0], [{ label: '규칙', icons: 3 }]), `${set[0]} ${set[0]} ${j(set[1], '이가')} 되풀이되므로 다음은 ${set[0]}${ye(set[0])}.`, r); },
+      (r) => { const set = pick([['🔴', '🔺'], ['⭐', '🌙'], ['🍎', '🍌']] as const, r), seq = [set[0], set[1], set[1], set[0], set[1], set[1], set[0], set[1]]; return choiceQ('lengthTime', '모양 규칙', `${seq.join(' ')} □ 에서 □에 들어갈 모양은 무엇일까요?`, set[1], [set[0]], dots(set[0], [{ label: '규칙', icons: 3 }]), `${set[0]} ${set[1]} ${j(set[1], '이가')} 되풀이되므로 다음은 ${set[1]}${ye(set[1])}.`, r); },
     ],
   },
   measurement: {
