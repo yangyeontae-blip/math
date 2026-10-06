@@ -25,7 +25,7 @@ let active: { el: HTMLElement; timer: number; text: string; shown: number; onDon
 export function bubbleOpen() { return !!active; }
 
 /** 말풍선을 보여 줘요. 한 번 누르면 글이 다 나오고, 한 번 더 누르면 닫혀서 onDone이 불려요. */
-export function showBubble(name: string, text: string, onDone: () => void, reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches) {
+export function showBubble(name: string, text: string, onDone: () => void, onTick: (index: number) => void = () => {}, reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches) {
   closeBubble(false);
   const el = document.createElement('div');
   el.className = 'talk-bubble'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-label', `${name}의 말`);
@@ -46,7 +46,7 @@ export function showBubble(name: string, text: string, onDone: () => void, reduc
   window.addEventListener('keydown', onKey, true);
   state.off = () => window.removeEventListener('keydown', onKey, true);
   active = state; draw();
-  if (!reducedMotion) state.timer = window.setInterval(() => { state.shown += 1; draw(); if (state.shown >= text.length) window.clearInterval(state.timer); }, 34);
+  if (!reducedMotion) state.timer = window.setInterval(() => { state.shown += 1; draw(); if (text[state.shown - 1] && text[state.shown - 1] !== ' ' && state.shown % 2 === 0) onTick(state.shown); if (state.shown >= text.length) window.clearInterval(state.timer); }, 34);
 }
 
 export function closeBubble(runDone: boolean) {
