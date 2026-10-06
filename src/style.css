@@ -361,3 +361,13 @@ input:not([type=checkbox]):not([type=radio]),select,textarea{min-height:44px}
 @keyframes ac-leaf{from{opacity:0;transform:translateY(8px) rotate(-30deg) scale(.5)}40%{opacity:1}to{opacity:0;transform:translateY(-12px) rotate(25deg) scale(1.2)}}
 @keyframes ac-soft-shake{20%{transform:translateX(-5px)}50%{transform:translateX(5px)}80%{transform:translateX(-3px)}}
 @media(prefers-reduced-motion:reduce){[data-curriculum-answer].correct,[data-curriculum-answer].correct:after,[data-curriculum-answer].wrong{animation:none}}
+
+/* 시간대·날씨 분위기: 화면 위에 살짝 색을 입혀요 (클릭은 그대로 통과) */
+.ambience{position:fixed;inset:0;pointer-events:none;transition:background 3s,opacity 3s;mix-blend-mode:multiply;background:transparent}
+.ambience[data-mood=dusk]{background:linear-gradient(180deg,#ffc99a 0%,#ffdcb8 55%,#fff1dc 100%)}
+.ambience[data-mood=night]{background:linear-gradient(180deg,#5b6aa8 0%,#7d8bc0 60%,#98a4cf 100%)}
+.ambience-rain{display:none;position:fixed;inset:0;pointer-events:none;background:repeating-linear-gradient(105deg,transparent 0 14px,#8fb3d9aa 14px 16px,transparent 16px 34px);background-size:140px 140px;animation:ac-rain .7s linear infinite;opacity:.8}
+.ambience[data-weather=rain][data-mood=day]{background:linear-gradient(180deg,#cfd9df,#e3eaee)}
+.ambience-rain[data-weather=rain]{display:block}
+@keyframes ac-rain{to{background-position:-40px 140px}}
+@media(prefers-reduced-motion:reduce){.ambience-rain{animation:none}}
