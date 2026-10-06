@@ -79,6 +79,9 @@ export function j(text: string | number, pair: '은는' | '이가' | '을를' | 
 /** 받침이 없으면 "예요", 있으면 "이에요"를 붙여요. 예: 길이예요, 모양이에요. */
 export const ye = (text: string | number) => (finalKind(String(text)) === 'none' ? '예요' : '이에요');
 
+/** 받침이 없으면 "라고", 있으면 "이라고"를 붙여요. 예: 구라고, 육이라고. */
+export const irago = (text: string | number) => (finalKind(String(text)) === 'none' ? '라고' : '이라고');
+
 export interface BankItem { q: string; a: string; w: string[]; x?: string; v?: CurriculumVisual }
 /** 같은 개념을 여러 질문 형태로 묻는 문제 은행. 항목 하나를 골라 오답 보기를 섞어 내요. */
 export const bankGen = (unit: NewCurriculumUnitId, skill: string, items: readonly BankItem[], visual: CurriculumVisual): GradeGen => (r) => {

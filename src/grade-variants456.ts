@@ -16,7 +16,7 @@ export const VARIANTS_G4: VariantMap = {
     0: [(r) => { const a = ri(2, 9, r), b = ri(1, 9, r), answer = a * 10000 + b * 1000; return choiceQ('plane', '만', `${a}만 ${b}천을 수로 쓰면 무엇일까요?`, fmt(answer), [fmt(a * 1000 + b * 100), fmt(a * 10000 + b * 100), fmt(a * 100000 + b * 1000)], dots('●', [{ label: '만', icons: a }, { label: '천', icons: b }]), `${a}만은 ${fmt(a * 10000)}, ${b}천은 ${fmt(b * 1000)}이므로 ${fmt(answer)}${ye(fmt(answer))}.`, r); },
          (r) => { const a = ri(2, 9, r), b = ri(1, 9, r), n = a * 10000 + b * 1000; return choiceQ('plane', '만', `${j(fmt(n), '은는')} 1만이 몇 개와 1천이 몇 개인 수일까요?`, `${a}개와 ${b}개`, [`${b}개와 ${a}개`, `${a * 10}개와 ${b}개`, `${a}개와 ${b * 10}개`], dots('●', [{ label: '만', icons: a }, { label: '천', icons: b }]), `${fmt(n)} = ${a}만 ${b}천이에요.`, r); }],
     1: [(r) => { const a = ri(2, 9, r), b = ri(1, 9, r), answer = a * 100000000 + b * 10000000; return choiceQ('plane', '억', `${a}억 ${b}천만을 수로 쓰면 무엇일까요?`, fmt(answer), [fmt(a * 10000000 + b * 1000000), fmt(a * 100000000 + b * 1000000), fmt(a * 1000000000 + b * 10000000)], dots('●', [{ label: '억', icons: a }, { label: '천만', icons: b }]), `${a}억은 ${fmt(a * 100000000)}, ${b}천만은 ${fmt(b * 10000000)}이므로 ${fmt(answer)}${ye(fmt(answer))}.`, r); },
-         (r) => { const a = ri(2, 9, r); return choiceQ('plane', '억', `1억은 1만의 몇 배일까요? (${a}억은 ${a}만의 몇 배인지 생각해 봐요)`, '10000배', ['100배', '1000배', '100000배'], dots('●', [{ label: '억', icons: a }]), '1억은 1만이 10000개 모인 수예요.', r); }],
+         (r) => { const a = ri(2, 9, r); return choiceQ('plane', '억', '1억은 1만의 몇 배일까요?', '10000배', ['100배', '1000배', '100000배'], dots('●', [{ label: '억', icons: a }]), '1억은 1만이 10000개 모인 수예요.', r); }],
     2: [bankGen('plane', '조', [
       { q: '1조는 1억이 몇 개 모인 수일까요?', a: '10000개', w: ['100개', '1000개', '100000개'] }, { q: '1조를 수로 쓰면 0이 모두 몇 개 필요할까요?', a: '12개', w: ['8개', '10개', '16개'] },
       { q: '1억이 10000개 모이면 얼마일까요?', a: '1조', w: ['1000만', '10억', '100조'] }, { q: '10000억은 얼마일까요?', a: '1조', w: ['1억', '10조', '100억'] },
@@ -49,7 +49,7 @@ export const VARIANTS_G4: VariantMap = {
       { q: '사다리꼴에는 평행한 변이 몇 쌍 이상 있을까요?', a: '한 쌍 이상', w: ['없어요', '세 쌍'] }, { q: '직사각형의 네 각은 모두 어떤 각일까요?', a: '직각', w: ['예각', '둔각'] },
       { q: '두 대각선의 길이가 같은 사각형은 무엇일까요?', a: '직사각형', w: ['마름모', '평행사변형'] }, { q: '두 대각선이 서로 수직으로 만나는 사각형은 무엇일까요?', a: '마름모', w: ['직사각형', '평행사변형'] },
       { q: '정사각형은 직사각형이라고 할 수 있을까요?', a: '네, 네 각이 모두 직각이니까요', w: ['아니요, 변의 길이가 같으니까요', '아니요, 모양이 다르니까요'] },
-      { q: '마주 보는 두 쌍의 변이 서로 평행한 사각형은 무엇일까요?', a: '평행사변형', w: ['마름모', '직사각형', '정사각형'] }, { q: '네 변의 길이가 모두 같고 네 각이 모두 직각인 사각형은 무엇일까요?', a: '정사각형', w: ['마름모', '직사각형', '사다리꼴'] },
+      { q: '마주 보는 두 쌍의 변이 서로 평행한 사각형은 무엇일까요?', a: '평행사변형', w: ['사다리꼴', '오각형', '삼각형'] }, { q: '네 변의 길이가 모두 같고 네 각이 모두 직각인 사각형은 무엇일까요?', a: '정사각형', w: ['마름모', '직사각형', '사다리꼴'] },
     ], GEO('rectangle', '사각형'))],
     3: [bankGen('circle', '다각형', [
       { q: '곧은 선분으로만 둘러싸인 도형을 무엇이라고 할까요?', a: '다각형', w: ['원', '곡선'] }, { q: '다음 중 다각형이 아닌 것은 무엇일까요?', a: '원', w: ['삼각형', '오각형', '육각형'] },
@@ -81,7 +81,7 @@ export const VARIANTS_G5: VariantMap = {
     1: [(r) => { const tri = r() < .5, A = tri ? LETTERS3 : LETTERS4, B = tri ? LETTERS3B : LETTERS4B, n = A.length, i = ri(0, n - 1, r), next = (i + 1) % n, kind = ri(0, 2, r), figure = tri ? '삼각형' : '사각형', head = `${figure} ${j(A.join(''), '와과')} ${figure} ${j(B.join(''), '이가')} 합동이고 점 ${A.join(', ')}의 대응점이 차례로 ${B.join(', ')}${ye(B.join(', '))}.`, visual = GEO(tri ? 'right-triangle' : 'rectangle', '합동인 두 도형'); if (kind === 0) return choiceQ('circle', '대응점', `${head} 점 ${A[i]}의 대응점은 어느 것일까요?`, B[i], B.filter((_, k) => k !== i) as string[], visual, `차례로 짝을 지으면 점 ${A[i]}의 대응점은 점 ${B[i]}${ye(B[i])}.`, r); if (kind === 1) return choiceQ('circle', '대응점', `${head} 변 ${A[i]}${A[next]}의 대응변은 어느 것일까요?`, `변 ${B[i]}${B[next]}`, B.map((_, k) => `변 ${B[k]}${B[(k + 1) % n]}`).filter((_, k) => k !== i), visual, `점 ${A[i]}→${B[i]}, 점 ${A[next]}→${B[next]}이므로 대응변은 변 ${B[i]}${B[next]}${ye(B[next])}.`, r); return choiceQ('circle', '대응점', `${head} 각 ${A[i]}의 대응각은 어느 것일까요?`, `각 ${B[i]}`, B.filter((_, k) => k !== i).map(x => `각 ${x}`), visual, `각 ${A[i]}의 대응각은 각 ${B[i]}${ye(B[i])}.`, r); }],
   },
   plane: {
-    4: [(r) => { const [a, b] = pick(PAIRS_LCM, r), L = lcm(a, b); return numberQ('plane', '최소공배수', `${a}일마다 가는 가게와 ${b}일마다 가는 도서관에 오늘 함께 갔어요. 몇 일 뒤에 처음으로 다시 같은 날 갈까요?`, L, dots('●', [{ label: `${a}일마다`, icons: 3 }, { label: `${b}일마다`, icons: 3 }]), `${j(a, '와과')} ${b}의 최소공배수가 ${L}이므로 ${L}일 뒤예요.`.replace(`${j(a, '와과')}`, j(a, '와과')), { hints: ['두 수의 배수를 각각 써 봐요.', '처음으로 같아지는 배수를 찾아요.', `최소공배수 ${L}${ye(L)}.`] }); },
+    4: [(r) => { const [a, b] = pick(PAIRS_LCM, r), L = lcm(a, b); return numberQ('plane', '최소공배수', `${a}일마다 가는 가게와 ${b}일마다 가는 도서관에 오늘 함께 갔어요. 며칠 뒤에 처음으로 다시 같은 날 갈까요?`, L, dots('●', [{ label: `${a}일마다`, icons: 3 }, { label: `${b}일마다`, icons: 3 }]), `${j(a, '와과')} ${b}의 최소공배수가 ${L}이므로 ${L}일 뒤예요.`.replace(`${j(a, '와과')}`, j(a, '와과')), { hints: ['두 수의 배수를 각각 써 봐요.', '처음으로 같아지는 배수를 찾아요.', `최소공배수 ${L}${ye(L)}.`] }); },
          (r) => { const [a, b] = pick(PAIRS_LCM, r); return numberQ('plane', '최소공배수', `${j(a, '와과')} ${b}의 최소공배수는 얼마일까요?`, lcm(a, b), dots('●', [{ label: String(a), icons: 3 }, { label: String(b), icons: 3 }]), `${a}의 배수와 ${b}의 배수 중 공통인 가장 작은 수는 ${lcm(a, b)}${ye(lcm(a, b))}.`); }],
   },
   fraction: {

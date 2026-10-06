@@ -1,5 +1,6 @@
 import type { CurriculumUnitId, NewCurriculumUnitId } from './rules';
-import { j, ye } from './grade-helpers';
+import { guardLeak } from './leak-guard';
+import { j, ye, irago } from './grade-helpers';
 import { grade3HasVariant, grade3Variant } from './grade3-variants';
 
 export type CurriculumQuestionKind = 'number' | 'choice';
@@ -165,6 +166,8 @@ export const CURRICULUM_MISSIONS: Record<NewCurriculumUnitId, CurriculumMission[
   ],
 };
 
+const howMany = (unit: string) => (unit === '일' ? '며칠' : `몇 ${unit}`);
+const hm = (h: number, m: number) => (m === 0 ? `${h}시` : `${h}시 ${m}분`);
 const randomInt = (min: number, max: number, random: () => number) => min + Math.floor(random() * (max - min + 1));
 const pick = <T>(items: readonly T[], random: () => number) => items[Math.floor(random() * items.length)];
 const shuffle = <T>(items: T[], random: () => number) => items.map(value => ({ value, order: random() })).sort((a, b) => a.order - b.order).map(item => item.value);
@@ -233,7 +236,7 @@ function fractionQuestion(mission: number, random: () => number): CurriculumQues
   }
   if (mission === 1) {
     const answer = `${denominator}분의 ${numerator}`;
-    return choiceQuestion({ ...base, prompt: `${j(`${numerator}/${denominator}`, '을를')} 바르게 읽은 것은 무엇일까요?`, hints: ['분수는 아래 수인 분모를 먼저 읽고 “분의”를 붙여요.', '분모를 읽은 다음에 위 수인 분자를 읽어요.', `${j(`${numerator}/${denominator}`, '은는')} “${answer}”이라고 읽어요.`], explanation: `분모 ${j(denominator, '을를')} 먼저 읽고 분자 ${j(numerator, '을를')} 읽으므로 “${answer}”이에요.` }, answer, withChoices(answer, [`${numerator}분의 ${denominator}`, `${denominator}분의 ${numerator + 1}`], random));
+    return choiceQuestion({ ...base, prompt: `${j(`${numerator}/${denominator}`, '을를')} 바르게 읽은 것은 무엇일까요?`, hints: ['분수는 아래 수인 분모를 먼저 읽고 “분의”를 붙여요.', '분모를 읽은 다음에 위 수인 분자를 읽어요.', `${j(`${numerator}/${denominator}`, '은는')} “${answer}”${irago(answer)} 읽어요.`], explanation: `분모 ${j(denominator, '을를')} 먼저 읽고 분자 ${j(numerator, '을를')} 읽으므로 “${answer}”이에요.` }, answer, withChoices(answer, [`${numerator}분의 ${denominator}`, `${denominator}분의 ${numerator + 1}`], random));
   }
   if (mission === 2 || mission >= 6) {
     const groups = randomInt(2, Math.min(5, Math.floor(30 / denominator)), random), total = denominator * groups, amount = numerator * groups;
@@ -242,8 +245,8 @@ function fractionQuestion(mission: number, random: () => number): CurriculumQues
     const prompt = askRemaining
       ? `${object} ${total}개 중 ${j(`${numerator}/${denominator}`, '을를')} 나누어 주었어요. 남은 것은 몇 개일까요?`
       : `${object} ${total}개 중 ${numerator}/${denominator}만큼은 몇 개일까요?`;
-    const explanation = `${total}개를 ${denominator}묶음으로 똑같이 나누면 한 묶음은 ${groups}개예요. ${numerator}묶음은 ${groups} × ${numerator} = ${amount}개${askRemaining ? `이고, ${total} - ${amount} = ${answer}개가 남아요.` : '예요.'}`;
-    const hints: [string, string, string] = [`전체를 ${denominator}묶음으로 똑같이 나누어 봐요.`, `한 묶음은 ${total} ÷ ${denominator} = ${groups}개예요.`, askRemaining ? `${numerator}묶음은 ${groups} × ${numerator} = ${amount}개이고, 남은 것은 ${total} - ${amount}예요.` : `${numerator}묶음이니까 ${groups} × ${numerator} 를 계산해요.`];
+    const explanation = `${total}개를 ${denominator}묶음으로 똑같이 나누면 한 묶음은 ${groups}개예요. ${numerator}묶음은 ${groups} × ${numerator} = ${amount}개${askRemaining ? `이고, ${total} − ${amount} = ${answer}개가 남아요.` : '예요.'}`;
+    const hints: [string, string, string] = [`전체를 ${denominator}묶음으로 똑같이 나누어 봐요.`, `한 묶음은 ${total} ÷ ${denominator} = ${groups}개예요.`, askRemaining ? `${numerator}묶음은 ${groups} × ${numerator} = ${amount}개이고, 남은 것은 ${total} − ${amount}${ye(amount)}.` : `${numerator}묶음이니까 ${groups} × ${numerator} 를 계산해요.`];
     return numberQuestion({ ...base, visual: { kind: 'fraction', numerator, denominator, groups }, prompt, hints, explanation }, answer);
   }
   if (mission === 3) {
@@ -319,7 +322,7 @@ function measurementQuestion(mission: number, random: () => number): CurriculumQ
     const liters = randomInt(1, 8, random), extra = randomInt(1, 9, random) * 100, answer = liters * 1000 + extra;
     if (random() < .5) return numberQuestion({ ...base, visual: { kind: 'measure', measure: 'capacity', values: [liters, extra], unit: 'mL', labels: [`${liters} L`, `${extra} mL`] }, prompt: `${liters} L ${extra} mL는 모두 몇 mL일까요?`, explanation: `${liters} L는 ${liters * 1000} mL이므로 모두 ${answer} mL예요.` }, answer);
     const mixed = `${liters} L ${extra} mL`;
-    return choiceQuestion({ ...base, visual: { kind: 'measure', measure: 'capacity', values: [answer], unit: 'mL' }, prompt: `${answer} mL를 L와 mL로 나타내면 무엇일까요?`, explanation: `${answer} mL에서 1,000 mL가 ${liters}번 있고 ${extra} mL가 남으므로 ${mixed}예요.` }, mixed, shuffle([{ label: mixed, value: mixed }, { label: `${liters + 1} L ${extra} mL`, value: `${liters + 1} L ${extra} mL` }, { label: `${liters} L ${Math.max(0, extra - 100)} mL`, value: `${liters} L ${Math.max(0, extra - 100)} mL` }], random));
+    return choiceQuestion({ ...base, visual: { kind: 'measure', measure: 'capacity', values: [answer], unit: 'mL' }, prompt: `${answer} mL를 L와 mL로 나타내면 무엇일까요?`, explanation: `${answer} mL에서 1,000 mL가 ${liters}번 있고 ${extra} mL가 남으므로 ${mixed}${ye(mixed)}.` }, mixed, shuffle([{ label: mixed, value: mixed }, { label: `${liters + 1} L ${extra} mL`, value: `${liters + 1} L ${extra} mL` }, { label: `${liters} L ${Math.max(0, extra - 100)} mL`, value: `${liters} L ${Math.max(0, extra - 100)} mL` }], random));
   }
   if (mission === 4) {
     const kilograms = randomInt(1, 8, random), extra = randomInt(1, 9, random) * 100, answer = kilograms * 1000 + extra;
@@ -333,7 +336,7 @@ function measurementQuestion(mission: number, random: () => number): CurriculumQ
     const context = capacity
       ? pick(subtract ? ['물통에서 물을 따라 냈어요', '주스 병에서 한 컵을 나누었어요', '물약 냄비에서 병에 덜었어요'] : ['두 물병의 물을 한 통에 모았어요', '두 종류의 주스를 섞었어요', '물약 두 병을 큰 병에 합쳤어요'], random)
       : pick(subtract ? ['밀가루 봉지에서 조금 사용했어요', '찰흙 덩이에서 한 조각을 떼었어요', '과일 바구니에서 일부를 꺼냈어요'] : ['두 봉지의 견과류를 합쳤어요', '두 찰흙 덩이를 한데 모았어요', '두 과일 상자를 저울에 함께 올렸어요'], random);
-    return numberQuestion({ ...base, visual: { kind: 'measure', measure: capacity ? 'capacity' : 'weight', values: [first, second], unit }, detail: context, prompt: `${first} ${unit}${subtract ? '에서' : '와'} ${second} ${unit}${subtract ? '을 덜어 내면' : '을 합하면'} 몇 ${unit}일까요?`, explanation: `${first} ${subtract ? '−' : '+'} ${second} = ${calculationAnswer}이므로 ${calculationAnswer} ${unit}예요.` }, calculationAnswer);
+    return numberQuestion({ ...base, visual: { kind: 'measure', measure: capacity ? 'capacity' : 'weight', values: [first, second], unit }, detail: context, prompt: `${subtract ? `${first} ${unit}에서` : j(`${first} ${unit}`, '와과')} ${j(`${second} ${unit}`, '을를')}${subtract ? ' 덜어 내면' : ' 합하면'} 몇 ${unit}일까요?`, explanation: `${first} ${subtract ? '−' : '+'} ${second} = ${calculationAnswer}이므로 ${calculationAnswer} ${unit}${ye(unit)}.` }, calculationAnswer);
   }
   if (mission === 6) {
     const bottles = randomInt(2, 5, random), each = randomInt(2, 6, random) * 100, answer = bottles * each;
@@ -348,7 +351,7 @@ function measurementQuestion(mission: number, random: () => number): CurriculumQ
   return numberQuestion({ ...base, visual: { kind: 'measure', measure: 'weight', values: Array(boxes).fill(each), unit: 'kg', labels: Array(boxes).fill(`${each} kg`) }, prompt: `${item} 한 상자의 무게가 ${each} kg이에요. ${boxes}상자를 함께 옮기면 모두 몇 kg일까요?`, explanation: `${each} kg씩 ${boxes}상자이므로 ${each} × ${boxes} = ${deliveryAnswer} kg이에요.` }, deliveryAnswer);
 }
 
-function pictographQuestion(mission: number, random: () => number): CurriculumQuestion {
+function pictographQuestion(mission: number, random: () => number, attempt = 0): CurriculumQuestion {
   if (mission >= 8) return pictographQuestion(randomInt(0, 7, random), random);
   const value = pick([2, 5, 10], random), iconsA = randomInt(2, 6, random), iconsB = randomInt(1, 5, random), iconsC = randomInt(1, 6, random);
   const theme = pick([
@@ -366,7 +369,7 @@ function pictographQuestion(mission: number, random: () => number): CurriculumQu
   if (mission === 0) return choiceQuestion({ ...base, prompt: `그림그래프에서 ${theme.icon} 하나의 값은 ${value}${theme.unit}${ye(theme.unit)}. ${j(theme.icon.repeat(3), '은는')} 모두 얼마일까요?`, explanation: `${value}${j(theme.unit, '이가')} 3묶음이므로 ${value} × 3 = ${value * 3}${theme.unit}${ye(theme.unit)}.` }, String(value * 3), numberChoices(value * 3, [-value, value, value * 2], theme.unit, random));
   if (mission === 1) {
     const answer = iconsA * value;
-    return numberQuestion({ ...base, detail: theme.subject, prompt: `${theme.a} 줄에는 ${j(theme.icon, '이가')} ${iconsA}개 있어요. ${theme.a} 자료는 모두 몇 ${theme.unit}일까요?`, explanation: `${theme.icon} ${iconsA}개 × ${value}${theme.unit} = ${answer}${theme.unit}${ye(theme.unit)}.` }, answer);
+    return numberQuestion({ ...base, detail: theme.subject, prompt: `${theme.a} 줄에는 ${j(theme.icon, '이가')} ${iconsA}개 있어요. ${theme.a} 자료는 모두 ${howMany(theme.unit)}일까요?`, explanation: `${theme.icon} ${iconsA}개 × ${value}${theme.unit} = ${answer}${theme.unit}${ye(theme.unit)}.` }, answer);
   }
   if (mission === 2) {
     const total = iconsA * value;
@@ -374,7 +377,7 @@ function pictographQuestion(mission: number, random: () => number): CurriculumQu
   }
   if (mission === 3) {
     const includeThree = random() < .45, iconTotal = iconsA + iconsB + (includeThree ? iconsC : 0), answer = iconTotal * value;
-    return numberQuestion({ ...base, detail: theme.subject, prompt: `${theme.a}, ${theme.b}${includeThree ? `, ${theme.c}` : ''} 자료를 모두 합하면 몇 ${theme.unit}일까요?`, explanation: `그림이 모두 ${iconTotal}개이므로 ${iconTotal} × ${value} = ${answer}${theme.unit}${ye(theme.unit)}.` }, answer);
+    return numberQuestion({ ...base, detail: theme.subject, prompt: `${theme.a}, ${theme.b}${includeThree ? `, ${theme.c}` : ''} 자료를 모두 합하면 ${howMany(theme.unit)}일까요?`, explanation: `그림이 모두 ${iconTotal}개이므로 ${iconTotal} × ${value} = ${answer}${theme.unit}${ye(theme.unit)}.` }, answer);
   }
   if (mission === 4) {
     const target = randomInt(2, 7, random), answer = target;
@@ -387,6 +390,7 @@ function pictographQuestion(mission: number, random: () => number): CurriculumQu
   if (mission === 6) {
     const entries = [{ label: theme.a, icons: iconsA }, { label: theme.b, icons: iconsB }, { label: theme.c, icons: iconsC }], most = [...entries].sort((a, b) => b.icons - a.icons)[0];
     const tied = entries.filter(entry => entry.icons === most.icons);
+    if (tied.length > 1 && attempt < 30) return pictographQuestion(mission, random, attempt + 1);
     if (tied.length > 1) {
       const answer = '같아요';
       return choiceQuestion({ ...base, detail: theme.subject, prompt: `${j(tied[0].label, '와과')} ${tied[1].label} 중 더 많은 자료는 어느 쪽일까요?`, hints: ['두 줄의 그림 수를 각각 세어요.', '그림 하나의 값이 같으므로 그림 수만 비교해도 돼요.', `두 줄 모두 그림이 ${most.icons}개예요.`], explanation: `두 줄 모두 ${j(theme.icon, '이가')} ${most.icons}개이므로 자료의 수가 같아요.` }, answer, [{ label: tied[0].label, value: tied[0].label }, { label: tied[1].label, value: tied[1].label }, { label: '두 자료가 같아요', value: answer }]);
@@ -395,7 +399,7 @@ function pictographQuestion(mission: number, random: () => number): CurriculumQu
   }
   const pair = pick([[theme.a, iconsA, theme.b, iconsB], [theme.a, iconsA, theme.c, iconsC], [theme.b, iconsB, theme.c, iconsC]] as const, random);
   const difference = Math.abs(pair[1] - pair[3]), answer = difference * value;
-  return numberQuestion({ ...base, detail: theme.subject, prompt: `${j(pair[0], '와과')} ${pair[2]} 자료는 몇 ${theme.unit} 차이 날까요?`, explanation: `그림 수의 차이는 ${difference}개이고, 그림 하나가 ${value}${j(theme.unit, '을를')} 나타내므로 ${answer}${theme.unit} 차이 나요.` }, answer);
+  return numberQuestion({ ...base, detail: theme.subject, prompt: `${j(pair[0], '와과')} ${pair[2]} 자료는 ${howMany(theme.unit)} 차이 날까요?`, explanation: `그림 수의 차이는 ${difference}개이고, 그림 하나가 ${value}${j(theme.unit, '을를')} 나타내므로 ${answer}${theme.unit} 차이 나요.` }, answer);
 }
 
 const SHAPE_BUILDS = [
@@ -432,7 +436,7 @@ function planeQuestion(mission: number, random: () => number): CurriculumQuestio
 function secondsClockQuestion(random: () => number): CurriculumQuestion {
   const h = randomInt(1, 11, random), m = randomInt(1, 5, random) * 10, s = randomInt(1, 11, random) * 5, answer = `${h}시 ${m}분 ${s}초`;
   const otherSecond = s >= 30 ? s - 10 : s + 10;
-  return choiceQuestion({ unit: 'lengthTime', skill: '초 단위 시각 읽기', visual: { kind: 'length-time', measure: 'time', values: [h, m, s], unit: '초', clock: true }, prompt: `시계의 짧은바늘은 ${j(h, '와과')} ${h + 1} 사이, 긴바늘은 ${m / 5}, 초바늘은 ${j(s / 5, '을를')} 가리켜요. 몇 시 몇 분 몇 초일까요?`, hints: ['짧은바늘은 시, 긴바늘은 분, 초바늘은 초를 나타내요.', '숫자 1은 5분(5초), 2는 10분(10초)처럼 5씩 뛰어 세어 읽어요.', `긴바늘 ${j(m / 5, '은는')} ${m}분, 초바늘 ${j(s / 5, '은는')} ${s}초예요.`], explanation: `긴바늘 ${j(m / 5, '은는')} ${m}분, 초바늘 ${j(s / 5, '은는')} ${s}초이므로 ${answer}${ye(answer)}.` }, answer, withChoices(answer, [`${h}시 ${s}분 ${m}초`, `${h}시 ${m}분 ${otherSecond}초`, `${h + 1}시 ${m}분 ${s}초`], random));
+  return choiceQuestion({ unit: 'lengthTime', skill: '초 단위 시각 읽기', visual: { kind: 'length-time', measure: 'time', values: [h, m, s], unit: '초', clock: true }, prompt: '시계가 나타내는 시각은 몇 시 몇 분 몇 초일까요?', hints: ['짧은바늘은 시, 긴바늘은 분, 초바늘은 초를 나타내요.', '숫자 1은 5분(5초), 2는 10분(10초)처럼 5씩 뛰어 세어 읽어요.', `긴바늘 ${j(m / 5, '은는')} ${m}분, 초바늘 ${j(s / 5, '은는')} ${s}초예요.`], explanation: `긴바늘 ${j(m / 5, '은는')} ${m}분, 초바늘 ${j(s / 5, '은는')} ${s}초이므로 ${answer}${ye(answer)}.` }, answer, withChoices(answer, [`${h}시 ${s}분 ${m}초`, `${h}시 ${m}분 ${otherSecond}초`, `${h + 1}시 ${m}분 ${s}초`], random));
 }
 
 function lengthTimeQuestion(mission: number, random: () => number): CurriculumQuestion {
@@ -461,7 +465,7 @@ function lengthTimeQuestion(mission: number, random: () => number): CurriculumQu
   }
   if (mission === 4) {
     const whole = randomInt(2, 6, random) * 1000, used = randomInt(2, 9, random) * 100, answer = whole - used;
-    return numberQuestion({ unit: 'lengthTime', skill, visual: visual('length', [whole, used], 'm'), prompt: `${whole} m 산책길에서 ${used} m를 걸었어요. 남은 길은 몇 m일까요?`, hints: hints('전체 길이에서 걸은 길이를 빼요.', `${whole} - ${j(used, '을를')} 계산해요.`, `남은 길은 ${answer} m예요.`), explanation: `${whole} - ${used} = ${answer}이므로 ${answer} m가 남아요.` }, answer);
+    return numberQuestion({ unit: 'lengthTime', skill, visual: visual('length', [whole, used], 'm'), prompt: `${whole} m 산책길에서 ${used} m를 걸었어요. 남은 길은 몇 m일까요?`, hints: hints('전체 길이에서 걸은 길이를 빼요.', `${whole} − ${j(used, '을를')} 계산해요.`, `남은 길은 ${answer} m예요.`), explanation: `${whole} − ${used} = ${answer}이므로 ${answer} m가 남아요.` }, answer);
   }
   if (mission === 5) {
     const minutes = randomInt(1, 5, random), seconds = randomInt(1, 5, random) * 10, answer = minutes * 60 + seconds;
@@ -471,8 +475,8 @@ function lengthTimeQuestion(mission: number, random: () => number): CurriculumQu
     const hours = randomInt(1, 4, random), minutes = randomInt(1, 5, random) * 10, answer = hours * 60 + minutes;
     return numberQuestion({ unit: 'lengthTime', skill, visual: visual('time', [hours, minutes], '분', [`${hours}시간`, `${minutes}분`]), prompt: `${hours}시간 ${minutes}분은 모두 몇 분일까요?`, hints: hints('1시간은 60분이에요.', `${hours}시간은 ${hours * 60}분이에요.`, `${hours * 60} + ${minutes} = ${answer}분이에요.`), explanation: `${hours}시간을 분으로 바꾸어 더하면 ${answer}분이에요.` }, answer);
   }
-  const start = randomInt(8, 10, random), startMinute = pick([0, 10, 20, 30], random), duration = pick([20, 30, 40, 50], random), endTotal = start * 60 + startMinute + duration, endHour = Math.floor(endTotal / 60), endMinute = endTotal % 60, answer = `${endHour}시 ${endMinute.toString().padStart(2, '0')}분`;
-  return choiceQuestion({ unit: 'lengthTime', skill, visual: visual('time', [start, startMinute, duration], '분', [`${start}시 ${startMinute.toString().padStart(2, '0')}분 출발`, `${duration}분 걸림`]), prompt: `${start}시 ${startMinute.toString().padStart(2, '0')}분에 출발해 ${duration}분 동안 갔어요. 도착 시각은 언제일까요?`, hints: hints('출발 시각의 분에 걸린 시간을 더해요.', '60분이 되면 1시간을 올려요.', `도착 시각은 ${answer}${ye(answer)}.`), explanation: `출발 시각에 ${duration}분을 더하면 ${answer}${ye(answer)}.` }, answer, withChoices(answer, [`${start}시 ${Math.max(0, startMinute - 10).toString().padStart(2, '0')}분`, `${endHour + 1}시 ${endMinute.toString().padStart(2, '0')}분`], random));
+  const start = randomInt(8, 10, random), startMinute = pick([0, 10, 20, 30], random), duration = pick([20, 30, 40, 50], random), endTotal = start * 60 + startMinute + duration, endHour = Math.floor(endTotal / 60), endMinute = endTotal % 60, answer = `${hm(endHour, endMinute)}`;
+  return choiceQuestion({ unit: 'lengthTime', skill, visual: visual('time', [start, startMinute, duration], '분', [`${hm(start, startMinute)} 출발`, `${duration}분 걸림`]), prompt: `${hm(start, startMinute)}에 출발해 ${duration}분 동안 갔어요. 도착 시각은 언제일까요?`, hints: hints('출발 시각의 분에 걸린 시간을 더해요.', '60분이 되면 1시간을 올려요.', `도착 시각은 ${answer}${ye(answer)}.`), explanation: `출발 시각에 ${duration}분을 더하면 ${answer}${ye(answer)}.` }, answer, withChoices(answer, [`${hm(start, Math.max(0, startMinute - 10))}`, `${hm(endHour + 1, endMinute)}`], random));
 }
 
 function fractionDecimalQuestion(mission: number, random: () => number): CurriculumQuestion {
@@ -480,8 +484,8 @@ function fractionDecimalQuestion(mission: number, random: () => number): Curricu
   const skill = CURRICULUM_MISSIONS.fractionDecimal[mission].skill, denominator = pick([2, 3, 4, 5, 6, 8, 10], random), numerator = randomInt(1, denominator - 1, random);
   const fractionVisual = (n = numerator, d = denominator) => ({ kind: 'fraction' as const, numerator: n, denominator: d });
   const decimalVisual = (tenths: number, compare?: number) => ({ kind: 'decimal' as const, tenths, compare });
-  if (mission === 0) return choiceQuestion({ unit: 'fractionDecimal', skill, visual: fractionVisual(1, denominator), prompt: `전체를 ${denominator}부분으로 똑같이 나눈 것 중 한 부분을 나타낸 분수는 무엇일까요?`, hints: ['전체를 나눈 수가 분모예요.', '고른 부분은 1개예요.', `정답은 1/${denominator}${ye(denominator)}.`], explanation: `전체를 ${denominator}부분으로 나눈 한 부분은 1/${denominator}${ye(denominator)}.` }, `1/${denominator}`, withChoices(`1/${denominator}`, [`${denominator}/1`, `2/${denominator}`], random));
-  if (mission === 1) return choiceQuestion({ unit: 'fractionDecimal', skill, visual: fractionVisual(), prompt: `${denominator}칸 중 ${numerator}칸을 색칠했어요. 알맞은 분수는 무엇일까요?`, hints: ['전체 칸 수가 분모예요.', '색칠한 칸 수가 분자예요.', `정답은 ${numerator}/${denominator}${ye(denominator)}.`], explanation: `전체 ${denominator}칸 중 ${numerator}칸이므로 ${numerator}/${denominator}${ye(denominator)}.` }, `${numerator}/${denominator}`, withChoices(`${numerator}/${denominator}`, [`${denominator}/${numerator}`, `${Math.max(1, numerator - 1)}/${denominator}`], random));
+  if (mission === 0) return choiceQuestion({ unit: 'fractionDecimal', skill, visual: fractionVisual(1, denominator), prompt: `전체를 ${denominator}부분으로 똑같이 나눈 것 중 한 부분을 나타낸 분수는 무엇일까요?`, hints: ['전체를 나눈 수가 분모예요.', '고른 부분은 1개예요.', `정답은 1/${denominator}${ye(`${1}/${denominator}`)}.`], explanation: `전체를 ${denominator}부분으로 나눈 한 부분은 1/${denominator}${ye(`${1}/${denominator}`)}.` }, `1/${denominator}`, withChoices(`1/${denominator}`, [`${denominator}/1`, `2/${denominator}`], random));
+  if (mission === 1) return choiceQuestion({ unit: 'fractionDecimal', skill, visual: fractionVisual(), prompt: `${denominator}칸 중 ${numerator}칸을 색칠했어요. 알맞은 분수는 무엇일까요?`, hints: ['전체 칸 수가 분모예요.', '색칠한 칸 수가 분자예요.', `정답은 ${numerator}/${denominator}${ye(`${numerator}/${denominator}`)}.`], explanation: `전체 ${denominator}칸 중 ${numerator}칸이므로 ${numerator}/${denominator}${ye(`${numerator}/${denominator}`)}.` }, `${numerator}/${denominator}`, withChoices(`${numerator}/${denominator}`, [`${denominator}/${numerator}`, `${Math.max(1, numerator - 1)}/${denominator}`], random));
   if (mission === 2) {
     const a = randomInt(2, 5, random), b = randomInt(6, 10, random), answer = `1/${a}`;
     return choiceQuestion({ unit: 'fractionDecimal', skill, visual: { kind: 'fraction', numerator: 1, denominator: a, compare: { numerator: 1, denominator: b } }, prompt: `${j(`1/${a}`, '와과')} 1/${b} 중 더 큰 분수는 무엇일까요?`, hints: ['전체의 크기는 같아요.', '똑같이 나눈 조각 수가 적을수록 한 조각은 커요.', `${j(a, '이가')} ${b}보다 작으므로 ${j(`1/${a}`, '이가')} 더 커요.`], explanation: `같은 전체를 ${a}조각으로 나눈 한 조각이 ${b}조각으로 나눈 한 조각보다 커요.` }, answer, withChoices(answer, [`1/${b}`, '같아요'], random));
@@ -494,9 +498,9 @@ function fractionDecimalQuestion(mission: number, random: () => number): Curricu
   if (mission === 4) return choiceQuestion({ unit: 'fractionDecimal', skill, visual: decimalVisual(tenths), prompt: `전체를 10칸으로 나누어 ${tenths}칸을 색칠했어요. 소수로 나타내면 무엇일까요?`, hints: ['10분의 몇인지 먼저 생각해요.', `${j(`${tenths}/10`, '은는')} 소수 한 자리로 나타낼 수 있어요.`, `${tenths}/10 = ${decimal}${ye(decimal)}.`], explanation: `10분의 ${j(tenths, '은는')} 소수로 ${decimal}${ye(decimal)}.` }, decimal, withChoices(decimal, [`${tenths}.0`, `0.${Math.max(0, tenths - 1)}`], random));
   if (mission === 5) {
     const words = ['영', '일', '이', '삼', '사', '오', '육', '칠', '팔', '구']; const answer = `영 점 ${words[tenths]}`;
-    return choiceQuestion({ unit: 'fractionDecimal', skill, visual: decimalVisual(tenths), prompt: `${j(decimal, '을를')} 바르게 읽은 것은 무엇일까요?`, hints: ['소수점 앞의 0은 영이라고 읽어요.', '소수점은 점이라고 읽어요.', `${j(decimal, '은는')} “${answer}”이라고 읽어요.`], explanation: `${j(decimal, '은는')} “${answer}”이라고 읽어요.` }, answer, withChoices(answer, [`${tenths} 점 영`, `영 분의 ${tenths}`], random));
+    return choiceQuestion({ unit: 'fractionDecimal', skill, visual: decimalVisual(tenths), prompt: `${j(decimal, '을를')} 바르게 읽은 것은 무엇일까요?`, hints: ['소수점 앞의 0은 영이라고 읽어요.', '소수점은 점이라고 읽어요.', `${j(decimal, '은는')} “${answer}”${irago(answer)} 읽어요.`], explanation: `${j(decimal, '은는')} “${answer}”${irago(answer)} 읽어요.` }, answer, withChoices(answer, [`${tenths} 점 영`, `영 분의 ${tenths}`], random));
   }
-  if (mission === 6) return choiceQuestion({ unit: 'fractionDecimal', skill, visual: decimalVisual(tenths), prompt: `${j(decimal, '와과')} 같은 크기의 분수는 무엇일까요?`, hints: ['소수 한 자리는 10분의 몇을 나타내요.', '소수점 오른쪽 숫자가 분자가 돼요.', `${decimal} = ${tenths}/10이에요.`], explanation: `${j(decimal, '은는')} 10분의 ${tenths}이므로 ${j(`${tenths}/10`, '와과')} 같아요.` }, `${tenths}/10`, withChoices(`${tenths}/10`, [`10/${tenths}`, `${Math.max(1, tenths - 1)}/10`], random));
+  if (mission === 6) return choiceQuestion({ unit: 'fractionDecimal', skill, visual: decimalVisual(tenths), prompt: `${j(decimal, '와과')} 같은 크기의 분수는 무엇일까요?`, hints: ['소수 한 자리는 10분의 몇을 나타내요.', '소수점 오른쪽 숫자가 분자가 돼요.', `${decimal} = ${tenths}/10${ye(`${tenths}/10`)}.`], explanation: `${j(decimal, '은는')} 10분의 ${tenths}이므로 ${j(`${tenths}/10`, '와과')} 같아요.` }, `${tenths}/10`, withChoices(`${tenths}/10`, [`10/${tenths}`, `${Math.max(1, tenths - 1)}/10`], random));
   const other = tenths === 9 ? randomInt(1, 8, random) : randomInt(tenths + 1, 9, random), answer = `0.${Math.max(tenths, other)}`;
   return choiceQuestion({ unit: 'fractionDecimal', skill, visual: decimalVisual(tenths, other), prompt: `${j(`0.${tenths}`, '와과')} 0.${other} 중 더 큰 수는 무엇일까요?`, hints: ['두 수 모두 0과 1 사이예요.', '소수점 오른쪽 숫자를 비교해요.', `${j(Math.max(tenths, other), '이가')} 더 크므로 ${j(answer, '이가')} 더 커요.`], explanation: `소수 한 자리끼리는 소수점 오른쪽 숫자가 큰 수가 더 커요.` }, answer, withChoices(answer, [`0.${Math.min(tenths, other)}`, '같아요'], random));
 }
@@ -525,9 +529,9 @@ export function generateCurriculumQuestion(unit: NewCurriculumUnitId, mission: n
   if (variant) {
     const hints = variant.hints ?? ['문제를 천천히 읽고 무엇을 묻는지 찾아봐요.', '그림이나 알고 있는 약속을 떠올려 봐요.', variant.explanation];
     const base = { unit, skill: CURRICULUM_MISSIONS[unit][mission].skill, prompt: variant.prompt, visual: variant.visual, hints, explanation: variant.explanation };
-    return withDistinctHints(variant.kind === 'number' ? numberQuestion(base, Number(variant.answer)) : choiceQuestion(base, variant.answer, withChoices(variant.answer, variant.wrongs ?? [], random)));
+    return guardLeak(withDistinctHints(variant.kind === 'number' ? numberQuestion(base, Number(variant.answer)) : choiceQuestion(base, variant.answer, withChoices(variant.answer, variant.wrongs ?? [], random))));
   }
-  return withDistinctHints(generateRawCurriculumQuestion(unit, mission, random));
+  return guardLeak(withDistinctHints(generateRawCurriculumQuestion(unit, mission, random)));
 }
 
 export function generateReviewQuestion(unit: CurriculumUnitId, random: () => number = Math.random): CurriculumQuestion {
@@ -538,7 +542,7 @@ export function generateReviewQuestion(unit: CurriculumUnitId, random: () => num
   if (unit === 'division') {
     const divisor = randomInt(2, 9, random), quotient = randomInt(12, 80, random), remainder = randomInt(0, divisor - 1, random), dividend = divisor * quotient + remainder, answer = `${quotient}R${remainder}`;
     const choices = shuffle([answer, `${quotient + 1}R${remainder}`, `${quotient}R${(remainder + 1) % divisor}`].map(value => ({ label: value.replace('R0', '').replace('R', ' · 나머지 '), value })), random);
-    return choiceQuestion({ unit, skill: '나눗셈 복습', prompt: `${dividend} ÷ ${divisor}의 몫과 나머지를 찾아요.`, visual: { kind: 'groups', total: dividend, divisor, remainder }, hints: [`${divisor}씩 ${quotient}묶음을 만들 수 있어요.`, `${divisor} × ${quotient} = ${divisor * quotient}${ye(divisor * quotient)}.`, `${dividend} - ${divisor * quotient} = ${remainder}이므로 나머지는 ${remainder}예요.`], explanation: `${dividend} = ${divisor} × ${quotient} + ${remainder}이므로 몫은 ${quotient}, 나머지는 ${remainder}예요.` }, answer, choices);
+    return choiceQuestion({ unit, skill: '나눗셈 복습', prompt: `${dividend} ÷ ${divisor}의 몫과 나머지를 찾아요.`, visual: { kind: 'groups', total: dividend, divisor, remainder }, hints: [`${divisor}씩 ${quotient}묶음을 만들 수 있어요.`, `${divisor} × ${quotient} = ${divisor * quotient}${ye(divisor * quotient)}.`, `${dividend} − ${divisor * quotient} = ${remainder}이므로 나머지는 ${remainder}${ye(remainder)}.`], explanation: `${dividend} = ${divisor} × ${quotient} + ${remainder}이므로 몫은 ${quotient}, 나머지는 ${remainder}${ye(remainder)}.` }, answer, choices);
   }
   if (unit === 'addition') {
     const left = randomInt(12, 70, random), right = randomInt(11, 99 - left, random), answer = left + right, tens = Math.floor(right / 10) * 10, ones = right % 10;
@@ -546,7 +550,7 @@ export function generateReviewQuestion(unit: CurriculumUnitId, random: () => num
   }
   if (unit === 'subtraction') {
     const left = randomInt(31, 99, random), right = randomInt(11, left - 10, random), answer = left - right, tens = Math.floor(right / 10) * 10, ones = right % 10;
-    return numberQuestion({ unit, skill: '뺄셈 복습', prompt: `${left} - ${j(right, '은는')} 얼마일까요?`, visual: { kind: 'array', rows: 2, columns: 10 }, hints: [`${j(right, '을를')} ${j(tens, '와과')} ${ones}으로 나누어 차례로 빼요.`, `${left} - ${tens} = ${left - tens}${ye(left - tens)}.`, `${left - tens} - ${ones} = ${answer}${ye(answer)}.`], explanation: `${left} - ${right} = ${answer}${ye(answer)}.` }, answer);
+    return numberQuestion({ unit, skill: '뺄셈 복습', prompt: `${left} − ${j(right, '은는')} 얼마일까요?`, visual: { kind: 'array', rows: 2, columns: 10 }, hints: [`${j(right, '을를')} ${j(tens, '와과')} ${ones}으로 나누어 차례로 빼요.`, `${left} − ${tens} = ${left - tens}${ye(left - tens)}.`, `${left - tens} − ${ones} = ${answer}${ye(answer)}.`], explanation: `${left} − ${right} = ${answer}${ye(answer)}.` }, answer);
   }
   return generateCurriculumQuestion(unit, randomInt(0, 7, random), random);
 }

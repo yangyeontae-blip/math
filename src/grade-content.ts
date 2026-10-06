@@ -1,5 +1,6 @@
 import type { CurriculumQuestion, CurriculumMission, CurriculumVisual } from './curriculum';
 import { fixVisual } from './grade-visual-fix';
+import { guardLeak } from './leak-guard';
 import type { CurriculumUnitId, NewCurriculumUnitId, SchoolGrade } from './rules';
 import { GRADE1 } from './grade-g1';
 import { GRADE2 } from './grade-g2';
@@ -125,5 +126,5 @@ const TABLES: Record<Exclude<SchoolGrade, 3>, GradeTable> = {
 export function generateGradeQuestion(grade: Exclude<SchoolGrade, 3>, unit: NewCurriculumUnitId, mission: number, r: () => number = Math.random): CurriculumQuestion {
   const generators = TABLES[grade][unit];
   const hard = mission >= generators.length;
-  return fixVisual(grade, withHardMode(hard, () => generators[mission % generators.length](r, hard)));
+  return guardLeak(fixVisual(grade, withHardMode(hard, () => generators[mission % generators.length](r, hard))));
 }
