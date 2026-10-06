@@ -1,5 +1,5 @@
 import * as T from 'three';
-import { CHARACTERS, MONSTERS, OUTFITS, PETS, RIDES, WEAPONS, PLAYER_MOVE_SPEED, petChaseSpeed, riderHeight, journeyFor, type ForestKind, type Save } from './rules';
+import { CHARACTERS, MONSTERS, OUTFITS, PETS, RIDES, WEAPONS, PLAYER_MOVE_SPEED, petChaseSpeed, riderHeight, journeyFor, roomFurniturePosition, type ForestKind, type Save } from './rules';
 import { STAGES, stageBerries, stageMonsters, stagePlatforms, stageTrees, stageSize, isVillagePond } from './stages';
 import { EXPEDITION_STAR_SPOTS, expeditionLayout } from './expedition';
 import { VILLAGE_THEMES, villageThemeId, type VillageTheme } from './villages';
@@ -550,7 +550,7 @@ export class World {
     for (const x of [-1.35, 1.35]) box(this.scene, 0x9e795e, x, 1.25, 5.48, .2, 2.5, .25);
     box(this.scene, 0x9e795e, 0, 2.45, 5.48, 2.8, .2, .25);
     this.addEntity('roomExit', '마을로 돌아가기', 0, 4.2, this.gate(0x6eb7a1));
-    const sign = new T.Group(); box(sign, 0x9a754f, 0, 1, 0, 1.8, 1.5, .25); box(sign, 0xf2dfac, 0, 1.05, .16, 1.45, 1.1, .08); this.addEntity('roomDecor', '내 방 꾸미기', 2.2, 1.2, sign);
+    const sign = new T.Group(); box(sign, 0x9a754f, 0, 1, 0, 1.8, 1.5, .25); box(sign, 0xf2dfac, 0, 1.05, .16, 1.45, 1.1, .08); this.addEntity('roomDecor', '내 방 꾸미기', 5.65, 4.05, sign);
     this.furnitureRoot = new T.Group(); this.scene.add(this.furnitureRoot);
     this.updateRoomFurniture(s, false);
     this.player.position.copy(roomPosition); this.placePetNearPlayer(); this.lastSafe.copy(this.player.position); this.follow.copy(this.player.position);
@@ -559,10 +559,10 @@ export class World {
   updateRoomFurniture(s: Save, render = true) {
     if (!this.inRoom || !this.furnitureRoot) return;
     for (const child of [...this.furnitureRoot.children]) { this.furnitureRoot.remove(child); this.disposeModel(child as T.Group); }
-    const spots = [[-5.2, -3.7], [-2.6, -3.7], [0, -3.7], [2.6, -3.7], [5.2, -3.7], [-5.2, 3.7], [-2.6, 3.7], [0, 3.7], [2.6, 3.7], [5.2, 3.7], [-4, 0], [-1.35, 0], [1.35, 0], [4, 0], [-5.1, -1.7], [5.1, -1.7], [0, 2.15]] as const;
     for (const id of s.room.furniture) {
-      const spot = spots[id]; if (!spot) continue;
-      const [x, z] = spot, g = new T.Group(); g.position.set(x, 0, z); this.furnitureRoot.add(g);
+      const position = roomFurniturePosition(s, id);
+      const x = (position.column - 2) * 2.55, z = -3.65 + position.row * 2.05;
+      const g = new T.Group(); g.position.set(x, 0, z); this.furnitureRoot.add(g);
       if (id === 0) { cylinder(g, 0x9e7555, 0, .55, 0, .56, .62, .22, 8); cylinder(g, 0xe98b9a, 0, .75, 0, .4, .62, .26, 8); }
       else if (id === 1) { cylinder(g, 0xb97855, 0, .3, 0, .3, .38, .55, 8); cylinder(g, 0x579a68, 0, .85, 0, .04, .07, .95, 6); for (const side of [-1, 1]) ball(g, 0x87bf79, side * .25, 1.2, 0, .28); }
       else if (id === 2) { ball(g, 0xb98d62, 0, .55, 0, .48, .48, .38); ball(g, 0xb98d62, 0, 1.08, .04, .34); for (const side of [-1, 1]) ball(g, 0xb98d62, side * .39, .58, .08, .17); }

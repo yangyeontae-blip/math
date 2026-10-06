@@ -5,7 +5,7 @@ import { curriculumActivityHtml } from './curriculum-activity';
 import { VILLAGE_THEMES, villageThemeId } from './villages';
 import { DAILY_MISSIONS, DAILY_STAMPS, DAILY_ALL_CLEAR_BONUS, claimDaily, dailyReady, dailyStampsShown, ensureDaily } from './daily';
 import type { World, AvatarPreview, GuideKind } from './world';
-import { type CurriculumMistake, newSave, validateSave, CHARACTERS, MONSTERS, OUTFITS, PETS, POTIONS, RIDES, WEAPONS, HAIRSTYLES, FACES, WEAPON_UPGRADES, OUTFIT_UPGRADES, Encounter, grantReward, rewardFor, potionEffects, buy, upgrade, buyRide, dismount, buyPet, unequipPet, buyLook, buyPotion, usePotion, applyTeacherCode, collectBerry, finishHunt, fellTree, treeDamage, canEnter, monsterBattleRounds, recordWrongAnswer, recordCorrectAnswer, STAGE_STORIES, journeyFor, multiplicationUsesStory, startMultiplicationFinal, answerMultiplicationFinal, questionAnswerText, curriculumUnitComplete, canStartCurriculumMission, recordCurriculumAttempt, completeCurriculumMission, curriculumGraduationAvailable, claimCurriculumGraduation, OPERATIONS, NEW_CURRICULUM_UNITS, OPERATION_INFO, PRACTICE_TIER_NAMES, type CurriculumUnitId, type NewCurriculumUnitId, type ForestKind, type Operation, type PracticeTier, type Save } from './rules';
+import { type CurriculumMistake, newSave, validateSave, CHARACTERS, MONSTERS, OUTFITS, PETS, POTIONS, RIDES, WEAPONS, HAIRSTYLES, FACES, WEAPON_UPGRADES, OUTFIT_UPGRADES, ROOM_GRID_COLUMNS, ROOM_GRID_ROWS, Encounter, grantReward, rewardFor, potionEffects, buy, upgrade, buyRide, dismount, buyPet, unequipPet, buyLook, buyPotion, usePotion, applyTeacherCode, collectBerry, finishHunt, fellTree, treeDamage, canEnter, monsterBattleRounds, recordWrongAnswer, recordCorrectAnswer, STAGE_STORIES, journeyFor, multiplicationUsesStory, startMultiplicationFinal, answerMultiplicationFinal, questionAnswerText, curriculumUnitComplete, canStartCurriculumMission, recordCurriculumAttempt, completeCurriculumMission, curriculumGraduationAvailable, claimCurriculumGraduation, addRoomFurniture, removeRoomFurniture, placeRoomFurniture, roomFurniturePosition, defaultRoomFurniturePosition, OPERATIONS, NEW_CURRICULUM_UNITS, OPERATION_INFO, PRACTICE_TIER_NAMES, type CurriculumUnitId, type NewCurriculumUnitId, type ForestKind, type Operation, type PracticeTier, type Save } from './rules';
 import { STAGES, stageMonsters, stageBerries, berryValue, clearBonus } from './stages';
 import { Sound } from './audio';
 import { RESCUES, FLOWERS, gardenOf, rescueSheep, plantFlower } from './garden';
@@ -857,6 +857,9 @@ function openInventory(tab: 'weapon' | 'outfit' | 'ride' | 'pet' = 'weapon', sel
 }
 
 const FURNITURE = ['🍄 버섯 의자', '🪴 새싹 화분', '🧸 곰 인형', '🪟 둥근 창문', '🛏 구름 침대', '📚 모험 책장', '🕯 별빛 조명', '🧺 베리 바구니', '🌻 구구단 해바라기 화분', '🌙 달빛 컴퍼스 장식', '🍰 조각케이크 쿠션', '⚖️ 물방울 저울', '📊 별빛 그래프판', '🎓 3학년 수학 수료장', '📐 반듯반듯 도형 액자', '🕰️ 똑딱 숲시계', '🔟 열칸 무지개 러그'];
+let selectedRoomFurniture: number | null = null;
+const furnitureIcon = (id: number) => FURNITURE[id].split(' ')[0];
+const furnitureName = (id: number) => FURNITURE[id].split(' ').slice(1).join(' ');
 function furnitureUnlocked(s: Save, id: number) {
   if (id === 8) return s.teacherMode || s.multiplicationCompleted;
   if (id >= 9 && id <= 12) return s.teacherMode || s.curriculum.units[(['circle', 'fraction', 'measurement', 'pictograph'] as NewCurriculumUnitId[])[id - 9]].rewardClaimed;
@@ -867,14 +870,49 @@ function furnitureUnlocked(s: Save, id: number) {
 function openRoom() {
   if (!state) return;
   const placed = state.room.furniture, unlockedFurniture = FURNITURE.filter((_, id) => furnitureUnlocked(state!, id)).length;
+  if (selectedRoomFurniture === null || !placed.includes(selectedRoomFurniture)) selectedRoomFurniture = placed[0] ?? null;
   const rewardUnits: Partial<Record<number, NewCurriculumUnitId>> = { 9: 'circle', 10: 'fraction', 11: 'measurement', 12: 'pictograph', 14: 'plane', 15: 'lengthTime', 16: 'fractionDecimal' };
   const furnitureCards = FURNITURE.map((item, id) => {
     const unlocked = furnitureUnlocked(state!, id), rewardUnit = rewardUnits[id];
     const lockedText = id === 8 ? '곱셈의 숲 10단계와 햇살문을 통과하면 받아요' : id === 13 ? '모든 3학년 수학 지역과 졸업 모험을 통과하면 받아요' : rewardUnit ? `${curriculumName(rewardUnit)}을 완주하면 받아요` : '친구를 더 만나면 열려요';
     return `<button class="item-card ${placed.includes(id) ? 'selected' : ''}" data-furniture="${id}" ${unlocked ? '' : 'disabled'}><span class="item-swatch">${item.split(' ')[0]}</span><strong>${item.split(' ').slice(1).join(' ')}</strong><small>${placed.includes(id) ? '방에 놓였어요 · 다시 누르면 치워요' : unlocked ? '발견했어요 · 누르면 방에 놓여요' : lockedText}</small></button>`;
   }).join('');
-  openModal(title('나만의 작은 방', '모험가의 포근한 집') + `<p class="shop-explainer">가구를 누르면 왼쪽의 진짜 3D 방에 바로 놓여요. 한 번 더 누르면 치워져요. 놓은 가구는 자동 저장돼요.</p><p class="room-status">지금 방에 놓인 가구 ${placed.length}개 · 발견한 가구 ${unlockedFurniture}개</p><div class="item-grid room-items">${furnitureCards}</div><button class="primary wide" data-close>3D 방 둘러보기</button>`, 'room-modal');
-  document.querySelectorAll<HTMLButtonElement>('[data-furniture]').forEach(button => button.onclick = () => { const id = Number(button.dataset.furniture); if (!furnitureUnlocked(state!, id)) return; const list = state!.room.furniture; const removing = list.includes(id); state!.room.furniture = removing ? list.filter(x => x !== id) : [...list, id]; world.updateRoomFurniture(state!); persist(); openRoom(); toast(`${FURNITURE[id]} ${removing ? '치웠어요' : '방에 놓았어요'}!`); });
+  const picker = placed.length ? `<div class="room-furniture-picker" role="list" aria-label="옮길 가구 고르기">${placed.map(id => `<button data-room-select="${id}" class="${selectedRoomFurniture === id ? 'selected' : ''}" aria-pressed="${selectedRoomFurniture === id}"><span>${furnitureIcon(id)}</span>${furnitureName(id)}</button>`).join('')}</div>` : '<p class="room-empty-message">아래에서 발견한 가구를 먼저 방에 놓아 보세요.</p>';
+  const cells = Array.from({ length: ROOM_GRID_COLUMNS * ROOM_GRID_ROWS }, (_, index) => {
+    const column = index % ROOM_GRID_COLUMNS, row = Math.floor(index / ROOM_GRID_COLUMNS);
+    const occupant = placed.find(id => { const p = roomFurniturePosition(state!, id); return p.column === column && p.row === row; });
+    const selected = occupant !== undefined && occupant === selectedRoomFurniture;
+    return `<button class="room-layout-cell ${occupant === undefined ? 'empty' : 'filled'} ${selected ? 'selected' : ''}" data-room-column="${column}" data-room-row="${row}" ${occupant === undefined ? '' : `data-room-occupant="${occupant}" draggable="true"`} aria-label="${occupant === undefined ? `${row + 1}번째 줄 ${column + 1}번째 빈 자리` : `${FURNITURE[occupant]}${selected ? ', 선택됨' : ''}`}">${occupant === undefined ? '<span class="room-empty-dot">＋</span>' : `<span class="room-cell-icon">${furnitureIcon(occupant)}</span><small>${furnitureName(occupant)}</small>`}</button>`;
+  }).join('');
+  const chosen = selectedRoomFurniture === null ? '옮길 가구를 골라 주세요' : `${FURNITURE[selectedRoomFurniture]}을(를) 옮기는 중`;
+  openModal(title('나만의 작은 방', '가구를 내 마음대로 배치해요') + `<p class="shop-explainer"><b>① 가구 고르기 → ② 방의 원하는 칸 누르기</b><br>다른 가구가 있는 칸을 누르면 두 가구가 자리를 바꿔요. PC에서는 가구를 끌어서 옮길 수도 있어요.</p><section class="room-placement"><h3>🖐 옮길 가구 고르기</h3>${picker}<div class="room-layout-header"><strong>${chosen}</strong><button class="text-button" id="room-auto-arrange" ${placed.length ? '' : 'disabled'}>자동 정리</button></div><div class="room-layout-board" role="grid" aria-label="내 방 가구 배치판">${cells}</div><div class="room-move-pad" aria-label="선택한 가구 한 칸 옮기기"><button data-room-move="up" aria-label="위로 한 칸">▲<small>위</small></button><button data-room-move="left" aria-label="왼쪽으로 한 칸">◀<small>왼쪽</small></button><button data-room-move="down" aria-label="아래로 한 칸">▼<small>아래</small></button><button data-room-move="right" aria-label="오른쪽으로 한 칸">▶<small>오른쪽</small></button></div><p class="room-save-note">✓ 옮긴 위치는 바로 자동 저장되고 실제 3D 방에도 그대로 보여요.</p></section><p class="room-status">지금 방에 놓인 가구 ${placed.length}개 · 발견한 가구 ${unlockedFurniture}개</p><details class="room-furniture-drawer"><summary>가구 놓기·치우기 (${unlockedFurniture}개 발견)</summary><div class="item-grid room-items">${furnitureCards}</div></details><button class="primary wide" data-close>완성된 3D 방 둘러보기</button>`, 'room-modal');
+  const moveFurniture = (id: number, column: number, row: number, message = '새 자리로 옮겼어요!') => {
+    if (!placeRoomFurniture(state!, id, column, row)) return;
+    selectedRoomFurniture = id; world.updateRoomFurniture(state!); persist(); openRoom(); toast(`${FURNITURE[id]} ${message}`);
+  };
+  document.querySelectorAll<HTMLButtonElement>('[data-room-select]').forEach(button => button.onclick = () => { selectedRoomFurniture = Number(button.dataset.roomSelect); openRoom(); });
+  document.querySelectorAll<HTMLButtonElement>('[data-room-column]').forEach(cell => {
+    cell.onclick = () => { const occupant = cell.dataset.roomOccupant === undefined ? null : Number(cell.dataset.roomOccupant); if (selectedRoomFurniture === null) { if (occupant !== null) { selectedRoomFurniture = occupant; openRoom(); } return; } moveFurniture(selectedRoomFurniture, Number(cell.dataset.roomColumn), Number(cell.dataset.roomRow)); };
+    cell.ondragstart = event => { const id = Number(cell.dataset.roomOccupant); if (!Number.isInteger(id)) { event.preventDefault(); return; } selectedRoomFurniture = id; event.dataTransfer?.setData('text/plain', String(id)); cell.classList.add('dragging'); };
+    cell.ondragend = () => cell.classList.remove('dragging');
+    cell.ondragover = event => { event.preventDefault(); cell.classList.add('drag-target'); };
+    cell.ondragleave = () => cell.classList.remove('drag-target');
+    cell.ondrop = event => { event.preventDefault(); const id = Number(event.dataTransfer?.getData('text/plain')); cell.classList.remove('drag-target'); if (Number.isInteger(id)) moveFurniture(id, Number(cell.dataset.roomColumn), Number(cell.dataset.roomRow)); };
+  });
+  document.querySelectorAll<HTMLButtonElement>('[data-room-move]').forEach(button => button.onclick = () => {
+    if (selectedRoomFurniture === null) return;
+    const p = roomFurniturePosition(state!, selectedRoomFurniture), direction = button.dataset.roomMove;
+    const column = Math.max(0, Math.min(ROOM_GRID_COLUMNS - 1, p.column + (direction === 'left' ? -1 : direction === 'right' ? 1 : 0)));
+    const row = Math.max(0, Math.min(ROOM_GRID_ROWS - 1, p.row + (direction === 'up' ? -1 : direction === 'down' ? 1 : 0)));
+    if (column === p.column && row === p.row) { toast('방 끝이에요. 다른 방향으로 옮겨 보세요!'); return; }
+    moveFurniture(selectedRoomFurniture, column, row, '한 칸 옮겼어요!');
+  });
+  $('#room-auto-arrange').onclick = () => { placed.forEach((id, index) => { state!.room.positions[String(id)] = defaultRoomFurniturePosition(index); }); world.updateRoomFurniture(state!); persist(); openRoom(); toast('가구를 차례대로 반듯하게 정리했어요!'); };
+  document.querySelectorAll<HTMLButtonElement>('[data-furniture]').forEach(button => button.onclick = () => {
+    const id = Number(button.dataset.furniture); if (!furnitureUnlocked(state!, id)) return;
+    const removing = state!.room.furniture.includes(id); if (removing) { removeRoomFurniture(state!, id); if (selectedRoomFurniture === id) selectedRoomFurniture = state!.room.furniture[0] ?? null; } else { addRoomFurniture(state!, id); selectedRoomFurniture = id; }
+    world.updateRoomFurniture(state!); persist(); openRoom(); toast(`${FURNITURE[id]} ${removing ? '방에서 치웠어요' : '빈 자리에 놓았어요'}!`);
+  });
 }
 function openNotebook() {
   if (!state) return; const seenM = state.discoveries.monsters, seenP = state.discoveries.pets, seenO = state.discoveries.outfits;
