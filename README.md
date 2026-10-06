@@ -1,6 +1,6 @@
 # 베리숲 모험학교
 
-초등학교 3학년 1·2학기 수학 전체를 탐험하는 3D 학습 RPG. TypeScript · Three.js · Vite.
+초등학교 1~6학년 수학을 학년별로 탐험하는 3D 학습 RPG. TypeScript · Three.js · Vite.
 
 > © 2026 양연태. All rights reserved. 이 저장소는 오픈소스가 아닙니다.
 
@@ -57,7 +57,7 @@ pnpm build
 ## 구현 구조
 
 - `src/rules.ts`: 아이템·몬스터 데이터, 문제 생성, 보상, 강화 및 저장 검증.
-- `src/curriculum.ts`: 3학년 수학 지역별 10단계 임무와 문제·힌트 생성.
+- `src/curriculum.ts`, `src/grade-content.ts`: 1~6학년 수학 지역별 10단계 임무와 문제·힌트 생성.
 - `src/curriculum-visual.ts`: 평면도형, 길이·시간, 분수·소수 등 문제 그림.
 - `src/villages.ts`: 각 수학 지역의 3D 마을 색과 장식 테마.
 - `src/expedition.ts`: 반복 원정의 목표·칭호·진행 규칙.
