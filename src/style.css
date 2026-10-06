@@ -352,3 +352,12 @@ input:not([type=checkbox]):not([type=radio]),select,textarea{min-height:44px}
 .stage-card.cleared{position:relative}
 .stage-card.cleared:after{content:'통과';position:absolute;right:8px;top:8px;padding:5px 6px;border:3px double #e07a5f;border-radius:50%;color:#e07a5f;font-size:.7rem;line-height:1;transform:rotate(-12deg);background:#fffaee99;pointer-events:none}
 .unit-progress{border:3px dashed #e3cf9f;background:#fff7e0}
+
+/* 정답·오답 연출: 정답은 잎사귀가 반짝, 오답은 부드럽게 흔들려요 (틀려도 괜찮아요) */
+[data-curriculum-answer].correct{position:relative;animation:ac-yes .5s var(--bounce,cubic-bezier(.34,1.56,.64,1))}
+[data-curriculum-answer].correct:after{content:'🍃';position:absolute;right:10px;top:6px;font-size:1.1rem;animation:ac-leaf 1.1s ease-out both;pointer-events:none}
+[data-curriculum-answer].wrong{animation:ac-soft-shake .42s ease-in-out}
+@keyframes ac-yes{40%{transform:scale(1.045)}}
+@keyframes ac-leaf{from{opacity:0;transform:translateY(8px) rotate(-30deg) scale(.5)}40%{opacity:1}to{opacity:0;transform:translateY(-12px) rotate(25deg) scale(1.2)}}
+@keyframes ac-soft-shake{20%{transform:translateX(-5px)}50%{transform:translateX(5px)}80%{transform:translateX(-3px)}}
+@media(prefers-reduced-motion:reduce){[data-curriculum-answer].correct,[data-curriculum-answer].correct:after,[data-curriculum-answer].wrong{animation:none}}
