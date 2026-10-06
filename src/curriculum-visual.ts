@@ -1,4 +1,5 @@
 import type { CurriculumVisual } from './curriculum';
+import { mathTextHtml } from './math-format';
 
 const esc = (value: string | number) => String(value).replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch]!);
 
@@ -26,7 +27,7 @@ function circleHtml(visual: Extract<CurriculumVisual, { kind: 'circle' }>) {
 function barGroup(numerator: number, denominator: number, label?: string) {
   const wholes = Math.max(1, Math.ceil(numerator / denominator));
   const bars = Array.from({ length: wholes }, (_, whole) => `<div class="frac-bar" style="--cells:${denominator}">${Array.from({ length: denominator }, (_, cell) => `<i class="${whole * denominator + cell < numerator ? 'filled' : ''}"></i>`).join('')}</div>`).join('');
-  return `<div class="frac-group" aria-label="${denominator}칸 중 ${numerator}칸">${label ? `<em>${esc(label)}</em>` : ''}${bars}</div>`;
+  return `<div class="frac-group" aria-label="${denominator}칸 중 ${numerator}칸">${label ? `<em>${mathTextHtml(label)}</em>` : ''}${bars}</div>`;
 }
 
 function fractionHtml(visual: Extract<CurriculumVisual, { kind: 'fraction' }>) {
