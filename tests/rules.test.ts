@@ -101,13 +101,13 @@ test('outfit effects boost rewards but do not make problems or weapons optional'
 test('trees give only 2 to 4 berries once and stronger weapons cut faster', () => {
   const s = newSave('나무', 0); assert.ok(stageTrees(0).length > 0); assert.equal(treeDamage(s), 1);
   assert.equal(fellTree(s, 0, 4), 4); assert.equal(s.berries, 4); assert.equal(fellTree(s, 0, 2), 0); assert.equal(s.berries, 4);
-  s.berries = 5000; buy(s, 'weapon', WEAPONS.length - 1); assert.equal(treeDamage(s), WEAPONS.at(-1)!.treePower); upgrade(s, 'weapon', WEAPONS.length - 1); assert.equal(treeDamage(s), WEAPONS.at(-1)!.treePower + 1);
+  s.berries = 10_000; buy(s, 'weapon', WEAPONS.length - 1); assert.equal(treeDamage(s), WEAPONS.at(-1)!.treePower); upgrade(s, 'weapon', WEAPONS.length - 1); assert.equal(treeDamage(s), WEAPONS.at(-1)!.treePower + 1);
   assert.equal(fellTree(s, 999, 2), 0); assert.equal(fellTree(s, 1, 1 as 2), 0); assert.equal(fellTree(s, 1, 5 as 2), 0);
 });
 test('version 2 saves migrate with untouched tree progress', () => {
   const old = structuredClone(newSave('예전', 0)) as unknown as Record<string, unknown>; old.version = 2;
   const journey = old.journey as { maps: Array<Record<string, unknown>> }; journey.maps.forEach(m => delete m.trees);
-  const migrated = validateSave(old); assert.equal(migrated.version, 13); assert.deepEqual(migrated.journey.maps[0].trees, []); assert.equal(migrated.ride, -1); assert.deepEqual(migrated.rides, {}); assert.equal(migrated.pet, -1); assert.deepEqual(migrated.hairstyles, { 0: true }); assert.equal(migrated.settings.maxDividend, 0); assert.equal(migrated.settings.multiplicationRange, 'stage'); assert.equal(migrated.settings.focusUnit, 'all'); assert.equal(migrated.settings.spiralReview, true); assert.deepEqual(migrated.room, { furniture: [], inside: false, positions: {} }); assert.deepEqual(migrated.expedition, { completed: 0, selectedTitle: 0, active: null }); assert.equal(migrated.forest, 'division'); assert.equal(migrated.multiplicationJourney.stage, 0); assert.equal(migrated.curriculum.units.circle.completedMissions.length, 0);
+  const migrated = validateSave(old); assert.equal(migrated.version, 14); assert.deepEqual(migrated.journey.maps[0].trees, []); assert.equal(migrated.ride, -1); assert.deepEqual(migrated.rides, {}); assert.equal(migrated.pet, -1); assert.deepEqual(migrated.hairstyles, { 0: true }); assert.equal(migrated.settings.maxDividend, 0); assert.equal(migrated.settings.multiplicationRange, 'stage'); assert.equal(migrated.settings.focusUnit, 'all'); assert.equal(migrated.settings.spiralReview, true); assert.deepEqual(migrated.room, { furniture: [], inside: false, positions: {} }); assert.deepEqual(migrated.expedition, { completed: 0, selectedTitle: 0, active: null }); assert.equal(migrated.forest, 'division'); assert.equal(migrated.multiplicationJourney.stage, 0); assert.equal(migrated.curriculum.units.circle.completedMissions.length, 0);
 });
 test('teacher curriculum ceilings and local learning records behave safely', () => {
   const s = newSave('수업', 0);
@@ -150,7 +150,7 @@ test('money codes add the exact berries and pet and beauty purchases stay safe',
   const s = newSave('꾸미기', 0); applyTeacherCode(s, 'showmethemoney'); assert.equal(s.berries, 1000); applyTeacherCode(s, 'greedisgood'); assert.equal(s.berries, 11000);
   const beforePet = s.berries; buyPet(s, 0); assert.equal(s.berries, beforePet - PETS[0].price); assert.equal(s.pet, 0); buyPet(s, 0); assert.equal(s.berries, beforePet - PETS[0].price);
   const beforeHair = s.berries; buyLook(s, 'hairstyle', 1); assert.equal(s.berries, beforeHair - HAIRSTYLES[1].price); assert.equal(s.hairstyle, 1); buyLook(s, 'hairstyle', 0); assert.equal(s.hairstyle, 0);
-  assert.throws(() => applyTeacherCode(s, 'SHOWMETHEMONEY')); assert.equal(RIDES.length, 14); assert.equal(PETS.length, 12);
+  assert.throws(() => applyTeacherCode(s, 'SHOWMETHEMONEY')); assert.equal(RIDES.length, 14); assert.equal(PETS.length, 15);
   assert.equal(applyTeacherCode(s, 'star'), '이신비의 별을 얻고 바로 함께하기로 했어요!'); assert.equal(s.pets[SHINBI_STAR_PET_ID], true); assert.equal(s.pet, SHINBI_STAR_PET_ID); assert.ok(s.discoveries.pets.includes(SHINBI_STAR_PET_ID));
 });
 test('teacher level codes raise only the requested number of levels', () => {
@@ -174,11 +174,28 @@ test('Junwoo potions last for their exact time and never overspend', () => {
   usePotion(s, 0, now + 600_001); assert.equal(s.potions.stock[0], 0);
   const poor = newSave('부족', 0); assert.throws(() => buyPotion(poor, 2)); assert.equal(poor.berries, 0);
 });
+test('new potions have distinct long and strong time effects', () => {
+  const now = 1_900_000_000_000;
+  const berry = newSave('긴물약', 0); berry.berries = 2_000; buyPotion(berry, 3); usePotion(berry, 3, now);
+  assert.equal(potionEffects(berry, now).berryMultiplier, 2); assert.equal(potionEffects(berry, now).berrySeconds, 1_200);
+  const study = newSave('공부물약', 0); study.berries = 2_000; buyPotion(study, 4); usePotion(study, 4, now);
+  assert.equal(potionEffects(study, now).xpMultiplier, 2); assert.equal(potionEffects(study, now).xpSeconds, 1_200);
+  const focus = newSave('집중물약', 0); focus.berries = 2_000; buyPotion(focus, 5); usePotion(focus, 5, now);
+  assert.equal(potionEffects(focus, now).xpMultiplier, 4); assert.equal(potionEffects(focus, now).xpSeconds, 300);
+});
+test('new named equipment is ordered safely and flying pets stay below the hero range', () => {
+  const honey = WEAPONS.find(item => item.name === '꿀단지 철퇴')!, book = WEAPONS.find(item => item.name === '구구단 마법책')!;
+  const paw = WEAPONS.find(item => item.name === '강지후의 발바닥')!, bee = WEAPONS.find(item => item.name === '황금벌 지휘봉')!, sword = WEAPONS.find(item => item.name === '나현이의 칼')!;
+  assert.ok(paw.bonus > honey.bonus && paw.bonus < book.bonus); assert.ok(paw.multiplier > honey.multiplier && paw.multiplier < book.multiplier);
+  assert.ok(sword.bonus > bee.bonus && sword.multiplier > bee.multiplier && sword.treePower > bee.treePower);
+  assert.equal(OUTFITS.at(-1)?.name, '송하나의 별고양이 갑옷');
+  assert.equal(PETS.filter(pet => pet.flying).length, 3); assert.ok(PETS.filter(pet => pet.flying).every(pet => pet.radius < PETS[HERO_BREAD_PET_ID].radius));
+});
 test('version 8 active potions become a safe five-minute time effect', () => {
   const old = structuredClone(newSave('옛물약', 0)) as unknown as Record<string, unknown>;
   old.version = 8; old.potions = { stock: [1, 0, 0], berryMultiplier: 2, berryUses: 3, xpMultiplier: 1, xpUses: 0 };
   const restored = validateSave(old), effect = potionEffects(restored);
-  assert.equal(restored.version, 13); assert.equal(effect.berryMultiplier, 2); assert.ok(effect.berrySeconds > 295 && effect.berrySeconds <= 300); assert.equal(effect.xpSeconds, 0);
+  assert.equal(restored.version, 14); assert.equal(restored.potions.stock.length, POTIONS.length); assert.equal(effect.berryMultiplier, 2); assert.ok(effect.berrySeconds > 295 && effect.berrySeconds <= 300); assert.equal(effect.xpSeconds, 0);
 });
 
 import { sha256Hex } from '../src/sha256';

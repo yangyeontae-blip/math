@@ -92,7 +92,7 @@ test('version 10 saves gain empty addition and subtraction forests and default p
   old.version = 10; delete old.additionJourney; delete old.subtractionJourney; delete old.additionCompleted; delete old.subtractionCompleted;
   delete old.settings.practice; delete old.curriculum.units.addition; delete old.curriculum.units.subtraction;
   const migrated = validateSave(old);
-  assert.equal(migrated.version, 13); assert.equal(migrated.additionCompleted, false); assert.equal(migrated.subtractionCompleted, false);
+  assert.equal(migrated.version, 14); assert.equal(migrated.additionCompleted, false); assert.equal(migrated.subtractionCompleted, false);
   assert.equal(migrated.additionJourney.maps.length, 11); assert.deepEqual(migrated.settings.practice, { operation: 'auto', tier: 1, skipPicker: false });
   assert.ok(migrated.curriculum.units.addition && migrated.curriculum.units.subtraction);
 });

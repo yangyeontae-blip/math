@@ -67,7 +67,7 @@ function syncShadows() {
   if (shadowList.length && world.stage === 0 && !world.inRoom && !shadowToastShown) { shadowToastShown = true; setTimeout(() => toast('🌑 마을에 그림자 몬스터가 나타났어요! 다시 풀면 사라져요.'), 2200); }
 }
 let storageError = false, sessionExpired = false, sessionElapsed = 0, sessionCorrect = 0, sessionWrong = 0;
-const OUTFIT_ICONS = ['🌿', '🌈', '🍃', '☁️', '🌸', '🌟', '🌙', '👑', '🍓', '🐥', '🐰', '🌰', '🐱', '🐑', '🐸', '🧚', '🌻', '🐝', '🍑', '✴️'];
+const OUTFIT_ICONS = ['🌿', '🌈', '🍃', '☁️', '🌸', '🌟', '🌙', '👑', '🍓', '🐥', '🐰', '🌰', '🐱', '🐑', '🐸', '🧚', '🌻', '🐝', '🍑', '✴️', '🛡️'];
 type CurriculumRegion = { id: CurriculumUnitId; icon: string; name: string; short: string; className: string; semester: '1학기' | '2학기' | '공통' };
 const GRADE3_SEMESTER1: CurriculumRegion[] = [
   { id: 'addition', icon: '🍎', name: '사과 덧셈숲', short: '세 자리 수의 덧셈과 받아올림', className: 'addition', semester: '1학기' },
@@ -113,7 +113,7 @@ function outfitEffectBadges(id: number) {
   return `<div class="stat-chips">${badges.join('')}</div>`;
 }
 function rideEffectBadges(id: number) { const item = RIDES[id]; return `<div class="stat-chips"><span class="stat-chip speed">➜ 걷기보다 ${item.speed}배 빠름</span><span class="stat-chip ${item.flying ? 'fly' : 'ground'}">${item.flying ? '🪽 물과 장애물 위로 비행' : '🐾 땅 위를 빠르게 달림'}</span></div>`; }
-function petEffectBadges(id: number) { const item = PETS[id]; return `<div class="stat-chips"><span class="stat-chip pet-range">🍓 ${item.radius}칸 안의 베리 발견</span><span class="stat-chip pet-move">🐾 직접 달려가 한 번만 수집</span>${id === HERO_BREAD_PET_ID ? '<span class="stat-chip pet-hero">✨ 캐릭터 주위에 황금빛 광채</span><span class="stat-chip pet-hero">👑 현재 가장 넓은 수집 범위</span>' : ''}</div>`; }
+function petEffectBadges(id: number) { const item = PETS[id]; return `<div class="stat-chips"><span class="stat-chip pet-range">🍓 ${item.radius}칸 안의 베리 발견</span><span class="stat-chip pet-move">🐾 직접 가서 한 번만 수집</span>${item.flying ? '<span class="stat-chip pet-fly">🪽 땅 위를 둥실 날아서 따라와요</span>' : ''}${id === HERO_BREAD_PET_ID ? '<span class="stat-chip pet-hero">✨ 캐릭터 주위에 황금빛 광채</span><span class="stat-chip pet-hero">👑 현재 가장 넓은 수집 범위</span>' : ''}</div>`; }
 function itemColor(color: number) { return `#${color.toString(16).padStart(6, '0')}`; }
 function toast(message: string) { $('#toast').textContent = message; $('#toast').classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => $('#toast').classList.remove('show'), 3500); }
 function persist() {

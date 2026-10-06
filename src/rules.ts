@@ -19,6 +19,8 @@ export const WEAPONS = [
   { name: '꿀단지 철퇴', price: 2900, bonus: 25, multiplier: 5.2, treePower: 8, icon: '🍯', color: 0xd99736 },
   { name: '구구단 마법책', price: 3500, bonus: 28, multiplier: 5.6, treePower: 8, icon: '📕', color: 0xe88352 },
   { name: '황금벌 지휘봉', price: 4200, bonus: 31, multiplier: 6, treePower: 9, icon: '🐝', color: 0xf2bd35 },
+  { name: '강지후의 발바닥', price: 3200, bonus: 27, multiplier: 5.4, treePower: 8, icon: '🐾', color: 0xf18fa5 },
+  { name: '나현이의 칼', price: 5800, bonus: 38, multiplier: 6.8, treePower: 10, icon: '⚔️', color: 0xffcf45 },
 ] as const;
 export const OUTFITS = [
   { name: '새싹 탐험복', price: 0, color: 0x4d9c78, accent: 0xffe4a3, desc: '처음 떠나는 모험의 설렘', effect: '추가 효과가 없는 기본 옷이에요.', berryBonus: 0, xpBonus: 0, clearBonus: 0 },
@@ -41,6 +43,7 @@ export const OUTFITS = [
   { name: '꿀벌 후드', price: 1280, color: 0xf0bd38, accent: 0x493c35, desc: '작은 더듬이와 줄무늬 날개가 달린 후드', effect: '몬스터마다 경험치 +7, 스테이지를 통과하면 베리 +35를 받아요.', berryBonus: 0, xpBonus: 7, clearBonus: 35 },
   { name: '살구빛 구름옷', price: 1520, color: 0xf3ad79, accent: 0xffead3, desc: '살구빛 구름 자수와 폭신한 소매가 있는 옷', effect: '길의 베리마다 +4, 스테이지를 통과하면 베리 +55를 받아요.', berryBonus: 4, xpBonus: 0, clearBonus: 55 },
   { name: '곱셈별 예복', price: 1900, color: 0xcc7755, accent: 0xffdf72, desc: '숫자별과 햇살 망토가 반짝이는 특별 예복', effect: '몬스터마다 경험치 +9, 스테이지를 통과하면 베리 +65를 받아요.', berryBonus: 0, xpBonus: 9, clearBonus: 65 },
+  { name: '송하나의 별고양이 갑옷', price: 3600, color: 0x8a6eb1, accent: 0xffcf70, desc: '민들레 고양이 문양과 별빛 방패를 갖춘 든든한 갑옷', effect: '길의 베리마다 +5, 몬스터마다 경험치 +10, 스테이지를 통과하면 베리 +70을 받아요.', berryBonus: 5, xpBonus: 10, clearBonus: 70 },
 ] as const;
 export const CHARACTERS = [
   { name: '봄이', desc: '동글동글 양 갈래', hair: 0x623d2e, skin: 0xffd8b1, style: 0 },
@@ -84,18 +87,21 @@ export function berryWithinReach(playerX: number, playerZ: number, berryX: numbe
   return Math.hypot(playerX - berryX, playerZ - berryZ) <= BERRY_PICKUP_RADIUS;
 }
 export const PETS = [
-  { name: '딸기 햄찌', price: 400, radius: 2.8, icon: '🐹', color: 0xd9a16f, desc: '가까운 베리를 쪼르르 달려가 먹어 줘요' },
-  { name: '구름 토끼콩', price: 700, radius: 3.3, icon: '🐰', color: 0xf1e8ec, desc: '긴 귀로 베리 냄새를 잘 찾아요' },
-  { name: '숲냥이 모리', price: 1200, radius: 3.8, icon: '🐱', color: 0xb68b70, desc: '살금살금 다가가 주변 베리를 모아요' },
-  { name: '별부엉이 루루', price: 2000, radius: 4.5, icon: '🦉', color: 0x9b83bd, desc: '밝은 눈으로 조금 먼 베리도 찾아요' },
-  { name: '아기용 베리링', price: 3500, radius: 5.2, icon: '🐲', color: 0x75bd91, desc: '넓은 범위의 베리를 재빠르게 모아 줘요' },
-  { name: '꿀벌 몽이', price: 4500, radius: 5.8, icon: '🐝', color: 0xf2c94c, desc: '꽃가루를 반짝이며 먼 베리까지 날아가요' },
-  { name: '해바라기 여우', price: 5500, radius: 6.4, icon: '🦊', color: 0xe8a15b, desc: '해바라기 꼬리를 흔들며 넓게 찾아요' },
-  { name: '도토리 다람쥐 콩이', price: 6500, radius: 7, icon: '🐿️', color: 0xb97a4a, desc: '도토리 모자를 쓰고 먼 베리까지 쪼르르 찾아요' },
-  { name: '이신비의 별', price: 9000, radius: 9, icon: '⭐', color: 0xffd54a, desc: '밤하늘에서 내려온 신비한 별. 넓은 곳의 베리를 반짝반짝 찾아내요' },
-  { name: '달빛 수달 모모', price: 12000, radius: 10, icon: '🦦', color: 0x76b8c4, desc: '반달 가방을 메고 물가처럼 부드럽게 베리를 찾아요' },
-  { name: '무지개 알파카 포포', price: 22000, radius: 12, icon: '🦙', color: 0xf1dfca, desc: '몽실몽실한 털과 무지개 안장을 갖춘 멀리 보는 탐험 친구예요' },
-  { name: '호빵 별용사 팡팡', price: 50000, radius: 16, icon: '🥯', color: 0xd69a62, desc: '따뜻한 빵 얼굴과 별빛 망토를 갖춘 최고급 용사. 장착하면 캐릭터 주위에 황금빛 광채가 돌아요' },
+  { name: '딸기 햄찌', price: 400, radius: 2.8, flying: false, icon: '🐹', color: 0xd9a16f, desc: '가까운 베리를 쪼르르 달려가 먹어 줘요' },
+  { name: '구름 토끼콩', price: 700, radius: 3.3, flying: false, icon: '🐰', color: 0xf1e8ec, desc: '긴 귀로 베리 냄새를 잘 찾아요' },
+  { name: '숲냥이 모리', price: 1200, radius: 3.8, flying: false, icon: '🐱', color: 0xb68b70, desc: '살금살금 다가가 주변 베리를 모아요' },
+  { name: '별부엉이 루루', price: 2000, radius: 4.5, flying: false, icon: '🦉', color: 0x9b83bd, desc: '밝은 눈으로 조금 먼 베리도 찾아요' },
+  { name: '아기용 베리링', price: 3500, radius: 5.2, flying: false, icon: '🐲', color: 0x75bd91, desc: '넓은 범위의 베리를 재빠르게 모아 줘요' },
+  { name: '꿀벌 몽이', price: 4500, radius: 5.8, flying: false, icon: '🐝', color: 0xf2c94c, desc: '꽃가루를 반짝이며 먼 베리까지 날아가요' },
+  { name: '해바라기 여우', price: 5500, radius: 6.4, flying: false, icon: '🦊', color: 0xe8a15b, desc: '해바라기 꼬리를 흔들며 넓게 찾아요' },
+  { name: '도토리 다람쥐 콩이', price: 6500, radius: 7, flying: false, icon: '🐿️', color: 0xb97a4a, desc: '도토리 모자를 쓰고 먼 베리까지 쪼르르 찾아요' },
+  { name: '이신비의 별', price: 9000, radius: 9, flying: false, icon: '⭐', color: 0xffd54a, desc: '밤하늘에서 내려온 신비한 별. 넓은 곳의 베리를 반짝반짝 찾아내요' },
+  { name: '달빛 수달 모모', price: 12000, radius: 10, flying: false, icon: '🦦', color: 0x76b8c4, desc: '반달 가방을 메고 물가처럼 부드럽게 베리를 찾아요' },
+  { name: '무지개 알파카 포포', price: 22000, radius: 12, flying: false, icon: '🦙', color: 0xf1dfca, desc: '몽실몽실한 털과 무지개 안장을 갖춘 멀리 보는 탐험 친구예요' },
+  { name: '호빵 별용사 팡팡', price: 50000, radius: 16, flying: false, icon: '🥯', color: 0xd69a62, desc: '따뜻한 빵 얼굴과 별빛 망토를 갖춘 최고급 용사. 장착하면 캐릭터 주위에 황금빛 광채가 돌아요' },
+  { name: '별구름 아기새 루미', price: 18000, radius: 11, flying: true, icon: '🕊️', color: 0xddeaff, desc: '구름 날개로 땅 위를 둥실 날며 멀리 있는 베리까지 찾아가요' },
+  { name: '달빛 아기용 세라', price: 32000, radius: 13, flying: true, icon: '🐉', color: 0x9b8bd8, desc: '달빛 날개를 크게 펄럭이며 넓은 곳의 베리를 찾아 날아가요' },
+  { name: '오로라 날개고양이 나비', price: 45000, radius: 15, flying: true, icon: '🪽', color: 0x86d7cf, desc: '무지개빛 세 겹 날개로 둥실 떠서 아주 먼 베리도 찾아 줘요' },
 ] as const;
 export const SHINBI_STAR_PET_ID = 8;
 export const HERO_BREAD_PET_ID = 11;
@@ -119,6 +125,9 @@ export const POTIONS = [
   { name: '달콤 베리물약', icon: '🧃', price: 140, kind: 'berry', multiplier: 2, durationMinutes: 10, desc: '사용한 뒤 10분 동안 몬스터에게 받는 베리가 2배가 돼요.' },
   { name: '황금 베리물약', icon: '🍯', price: 360, kind: 'berry', multiplier: 3, durationMinutes: 5, desc: '사용한 뒤 5분 동안 몬스터에게 받는 베리가 3배가 돼요.' },
   { name: '쑥쑥 경험물약', icon: '🧪', price: 320, kind: 'xp', multiplier: 3, durationMinutes: 10, desc: '사용한 뒤 10분 동안 몬스터에게 받는 경험치가 3배가 돼요.' },
+  { name: '긴밤 베리차', icon: '🌙', price: 420, kind: 'berry', multiplier: 2, durationMinutes: 20, desc: '사용한 뒤 20분 동안 몬스터에게 받는 베리가 2배가 돼요. 오래 모험할 때 좋아요.' },
+  { name: '포근 공부물약', icon: '📘', price: 420, kind: 'xp', multiplier: 2, durationMinutes: 20, desc: '사용한 뒤 20분 동안 몬스터에게 받는 경험치가 2배가 돼요. 천천히 오래 공부할 때 좋아요.' },
+  { name: '별빛 집중물약', icon: '✨', price: 680, kind: 'xp', multiplier: 4, durationMinutes: 5, desc: '사용한 뒤 5분 동안 몬스터에게 받는 경험치가 4배가 돼요. 짧고 힘이 센 물약이에요.' },
 ] as const;
 export const WEAPON_UPGRADES = [60, 120, 240];
 export const OUTFIT_UPGRADES = [50, 100];
@@ -147,7 +156,7 @@ export interface RoomFurniturePosition { column: number; row: number }
 export const ROOM_GRID_COLUMNS = 5;
 export const ROOM_GRID_ROWS = 4;
 export interface Save {
-  version: 13; nickname: string; character: number; berries: number; level: number; xp: number;
+  version: 14; nickname: string; character: number; berries: number; level: number; xp: number;
   weapon: number; outfit: number; weapons: Record<string, number>; outfits: Record<string, number>;
   ride: number; rides: Record<string, boolean>; pet: number; pets: Record<string, boolean>;
   hairstyle: number; hairstyles: Record<string, boolean>; face: number; faces: Record<string, boolean>; teacherMode: boolean;
@@ -171,7 +180,7 @@ export interface Save {
   additionCompleted: boolean;
   subtractionCompleted: boolean;
   curriculum: CurriculumProgress;
-  potions: { stock: number[]; berryMultiplier: 1 | 2 | 3; berryUntil: number; xpMultiplier: 1 | 3; xpUntil: number };
+  potions: { stock: number[]; berryMultiplier: 1 | 2 | 3; berryUntil: number; xpMultiplier: 1 | 2 | 3 | 4; xpUntil: number };
 }
 export interface Question { dividend: number; divisor: number; answer: number; remainder?: number; operation?: Operation }
 export const STAGE_DIVISION_DIFFICULTY = [
@@ -189,7 +198,7 @@ export const STAGE_DIVISION_DIFFICULTY = [
 export function newSave(nickname: string, character: number): Save {
   if (!nickname.trim() || [...nickname.trim()].length > 10 || !Number.isInteger(character) || character < 0 || character > 3) throw new Error('이름은 1~10자, 캐릭터는 4명 중 골라 주세요.');
   const hairstyle = CHARACTERS[character].style;
-  return { version: 13, nickname: nickname.trim(), character, berries: 0, level: 1, xp: 0, weapon: 0, outfit: 0, weapons: { 0: 0 }, outfits: { 0: 0 }, ride: -1, rides: {}, pet: -1, pets: {}, hairstyle, hairstyles: { 0: true, [hairstyle]: true }, face: 0, faces: { 0: true }, teacherMode: false, best: 0, position: { x: 0, z: 8 }, tutorial: { collected: false, battle: false, shop: false }, settings: { music: true, sound: true, lowQuality: false, maxDividend: 0, multiplicationRange: 'stage', sessionMinutes: 0, focusUnit: 'all', spiralReview: true, practice: { operation: 'auto', tier: 1, skipPicker: false } }, learning: { elapsedSeconds: 0, correct: 0, wrong: 0, wrongQuestions: [] }, discoveries: { monsters: [], pets: [], outfits: [0] }, room: { furniture: [], inside: false, positions: {} }, forest: 'division', journey: emptyJourney(), multiplicationJourney: emptyJourney(), multiplicationFinal: null, multiplicationCompleted: false, multiplicationRewardClaimed: false, additionJourney: emptyJourney(), subtractionJourney: emptyJourney(), additionCompleted: false, subtractionCompleted: false, curriculum: emptyCurriculumProgress(), potions: { stock: [0, 0, 0], berryMultiplier: 1, berryUntil: 0, xpMultiplier: 1, xpUntil: 0 }, garden: { rescued: 0, flowers: [-1, -1, -1] }, expedition: emptyExpedition() };
+  return { version: 14, nickname: nickname.trim(), character, berries: 0, level: 1, xp: 0, weapon: 0, outfit: 0, weapons: { 0: 0 }, outfits: { 0: 0 }, ride: -1, rides: {}, pet: -1, pets: {}, hairstyle, hairstyles: { 0: true, [hairstyle]: true }, face: 0, faces: { 0: true }, teacherMode: false, best: 0, position: { x: 0, z: 8 }, tutorial: { collected: false, battle: false, shop: false }, settings: { music: true, sound: true, lowQuality: false, maxDividend: 0, multiplicationRange: 'stage', sessionMinutes: 0, focusUnit: 'all', spiralReview: true, practice: { operation: 'auto', tier: 1, skipPicker: false } }, learning: { elapsedSeconds: 0, correct: 0, wrong: 0, wrongQuestions: [] }, discoveries: { monsters: [], pets: [], outfits: [0] }, room: { furniture: [], inside: false, positions: {} }, forest: 'division', journey: emptyJourney(), multiplicationJourney: emptyJourney(), multiplicationFinal: null, multiplicationCompleted: false, multiplicationRewardClaimed: false, additionJourney: emptyJourney(), subtractionJourney: emptyJourney(), additionCompleted: false, subtractionCompleted: false, curriculum: emptyCurriculumProgress(), potions: { stock: POTIONS.map(() => 0), berryMultiplier: 1, berryUntil: 0, xpMultiplier: 1, xpUntil: 0 }, garden: { rescued: 0, flowers: [-1, -1, -1] }, expedition: emptyExpedition() };
 }
 
 export function defaultRoomFurniturePosition(index: number): RoomFurniturePosition {
@@ -552,7 +561,7 @@ export function usePotion(s: Save, id: number, now = Date.now()) {
   if (potion.kind === 'xp' && effects.xpSeconds) throw new Error(`경험치 물약 효과가 ${Math.ceil(effects.xpSeconds / 60)}분 정도 남아 있어요.`);
   s.potions.stock[id]--;
   if (potion.kind === 'berry') { s.potions.berryMultiplier = potion.multiplier as 2 | 3; s.potions.berryUntil = now + potion.durationMinutes * 60_000; }
-  else { s.potions.xpMultiplier = 3; s.potions.xpUntil = now + potion.durationMinutes * 60_000; }
+  else { s.potions.xpMultiplier = potion.multiplier as 2 | 3 | 4; s.potions.xpUntil = now + potion.durationMinutes * 60_000; }
   return `${potion.name}을(를) 사용했어요. ${potion.durationMinutes}분 동안 효과가 있어요!`;
 }
 /** 교사용 코드(`teacher`)의 SHA-256. 더 어려운 코드로 바꾸려면 새 코드의 해시로 교체하세요(README 참고). */
@@ -661,9 +670,14 @@ export function validateSave(value: unknown): Save {
     const room = migrated.room as { furniture?: number[]; inside?: boolean; positions?: Record<string, RoomFurniturePosition> } | undefined;
     if (room) room.positions = Object.fromEntries((room.furniture ?? []).map((id, index) => [String(id), defaultRoomFurniturePosition(index)]));
   }
+  if (migrated.version === 13) {
+    migrated.version = 14;
+    const potions = migrated.potions as Save['potions'] | undefined;
+    if (potions && Array.isArray(potions.stock)) potions.stock = POTIONS.map((_, id) => potions.stock[id] ?? (migrated.teacherMode ? 9 : 0));
+  }
   const s = migrated as unknown as Save;
   if (s.garden === undefined) s.garden = { rescued: 0, flowers: [-1, -1, -1] };
-  if (s.potions === undefined) s.potions = { stock: s.teacherMode ? POTIONS.map(() => 9) : [0, 0, 0], berryMultiplier: 1, berryUntil: 0, xpMultiplier: 1, xpUntil: 0 };
+  if (s.potions === undefined) s.potions = { stock: s.teacherMode ? POTIONS.map(() => 9) : POTIONS.map(() => 0), berryMultiplier: 1, berryUntil: 0, xpMultiplier: 1, xpUntil: 0 };
   if (s.room && s.room.inside === undefined) s.room.inside = false;
   // Teacher saves may predate newly released collection items. Keep the demonstration wardrobe complete.
   const hasTeacherCollection = s.teacherMode && (Object.keys(s.weapons).length > 1 || Object.keys(s.outfits).length > 1 || Object.keys(s.rides).length > 0 || Object.keys(s.pets).length > 0);
@@ -672,12 +686,13 @@ export function validateSave(value: unknown): Save {
     OUTFITS.forEach((_, id) => { if (s.outfits[id] === undefined) s.outfits[id] = 2; });
     RIDES.forEach((_, id) => { s.rides[id] = true; }); PETS.forEach((_, id) => { s.pets[id] = true; });
     HAIRSTYLES.forEach((_, id) => { s.hairstyles[id] = true; }); FACES.forEach((_, id) => { s.faces[id] = true; });
+    s.potions.stock = POTIONS.map((_, id) => s.potions.stock[id] ?? 9);
     s.discoveries.monsters = MONSTERS.map((_, id) => id); s.discoveries.pets = PETS.map((_, id) => id); s.discoveries.outfits = OUTFITS.map((_, id) => id);
   }
   const integer = (v: unknown, min: number, max: number): v is number => typeof v === 'number' && Number.isSafeInteger(v) && v >= min && v <= max;
   if (!s.garden || !integer(s.garden.rescued, 0, 3) || !Array.isArray(s.garden.flowers) || s.garden.flowers.length !== 3 || s.garden.flowers.some(f => !integer(f, -1, 2)) || s.garden.flowers.filter(f => f >= 0).length > s.garden.rescued) return fail();
-  if (s.version !== 13 || !OPERATIONS.includes(s.forest) || typeof s.teacherMode !== 'boolean' || typeof s.nickname !== 'string' || !s.nickname.trim() || [...s.nickname].length > 10 || !integer(s.character, 0, 3) || !integer(s.berries, 0, 1e9) || !integer(s.level, 1, 100000) || !integer(s.xp, 0, s.level * 40 - 1) || !integer(s.best, 0, 1e9)) return fail();
-  if (!s.potions || !Array.isArray(s.potions.stock) || s.potions.stock.length !== POTIONS.length || s.potions.stock.some(n => !integer(n, 0, 99)) || ![1, 2, 3].includes(s.potions.berryMultiplier) || !integer(s.potions.berryUntil, 0, Number.MAX_SAFE_INTEGER) || ![1, 3].includes(s.potions.xpMultiplier) || !integer(s.potions.xpUntil, 0, Number.MAX_SAFE_INTEGER) || (s.potions.berryUntil === 0) !== (s.potions.berryMultiplier === 1) || (s.potions.xpUntil === 0) !== (s.potions.xpMultiplier === 1)) return fail();
+  if (s.version !== 14 || !OPERATIONS.includes(s.forest) || typeof s.teacherMode !== 'boolean' || typeof s.nickname !== 'string' || !s.nickname.trim() || [...s.nickname].length > 10 || !integer(s.character, 0, 3) || !integer(s.berries, 0, 1e9) || !integer(s.level, 1, 100000) || !integer(s.xp, 0, s.level * 40 - 1) || !integer(s.best, 0, 1e9)) return fail();
+  if (!s.potions || !Array.isArray(s.potions.stock) || s.potions.stock.length !== POTIONS.length || s.potions.stock.some(n => !integer(n, 0, 99)) || ![1, 2, 3].includes(s.potions.berryMultiplier) || !integer(s.potions.berryUntil, 0, Number.MAX_SAFE_INTEGER) || ![1, 2, 3, 4].includes(s.potions.xpMultiplier) || !integer(s.potions.xpUntil, 0, Number.MAX_SAFE_INTEGER) || (s.potions.berryUntil === 0) !== (s.potions.berryMultiplier === 1) || (s.potions.xpUntil === 0) !== (s.potions.xpMultiplier === 1)) return fail();
   const expedition = s.expedition;
   if (!expedition || !integer(expedition.completed, 0, 1e8) || !integer(expedition.selectedTitle, 0, EXPEDITION_TITLES.length - 1) || expedition.completed < EXPEDITION_TITLES[expedition.selectedTitle].need) return fail();
   if (expedition.active !== null) {
