@@ -79,6 +79,10 @@ export const RIDES = [
 export function riderHeight(id: number) { const ride = RIDES[id]; return 'riderY' in ride ? ride.riderY : ride.flying ? 1.03 : .78; }
 export const PLAYER_MOVE_SPEED = 8.45;
 export function petChaseSpeed(rideSpeed: number) { return Math.max(12, PLAYER_MOVE_SPEED * rideSpeed * 1.2); }
+export const BERRY_PICKUP_RADIUS = 1.25;
+export function berryWithinReach(playerX: number, playerZ: number, berryX: number, berryZ: number) {
+  return Math.hypot(playerX - berryX, playerZ - berryZ) <= BERRY_PICKUP_RADIUS;
+}
 export const PETS = [
   { name: '딸기 햄찌', price: 400, radius: 2.8, icon: '🐹', color: 0xd9a16f, desc: '가까운 베리를 쪼르르 달려가 먹어 줘요' },
   { name: '구름 토끼콩', price: 700, radius: 3.3, icon: '🐰', color: 0xf1e8ec, desc: '긴 귀로 베리 냄새를 잘 찾아요' },
@@ -88,8 +92,13 @@ export const PETS = [
   { name: '꿀벌 몽이', price: 4500, radius: 5.8, icon: '🐝', color: 0xf2c94c, desc: '꽃가루를 반짝이며 먼 베리까지 날아가요' },
   { name: '해바라기 여우', price: 5500, radius: 6.4, icon: '🦊', color: 0xe8a15b, desc: '해바라기 꼬리를 흔들며 넓게 찾아요' },
   { name: '도토리 다람쥐 콩이', price: 6500, radius: 7, icon: '🐿️', color: 0xb97a4a, desc: '도토리 모자를 쓰고 먼 베리까지 쪼르르 찾아요' },
-  { name: '이신비의 별', price: 150000, radius: 9, icon: '⭐', color: 0xffd54a, desc: '밤하늘에서 내려온 신비한 별. 반짝반짝 가장 먼 베리까지 찾아내요' },
+  { name: '이신비의 별', price: 9000, radius: 9, icon: '⭐', color: 0xffd54a, desc: '밤하늘에서 내려온 신비한 별. 넓은 곳의 베리를 반짝반짝 찾아내요' },
+  { name: '달빛 수달 모모', price: 12000, radius: 10, icon: '🦦', color: 0x76b8c4, desc: '반달 가방을 메고 물가처럼 부드럽게 베리를 찾아요' },
+  { name: '무지개 알파카 포포', price: 22000, radius: 12, icon: '🦙', color: 0xf1dfca, desc: '몽실몽실한 털과 무지개 안장을 갖춘 멀리 보는 탐험 친구예요' },
+  { name: '호빵 별용사 팡팡', price: 50000, radius: 16, icon: '🥯', color: 0xd69a62, desc: '따뜻한 빵 얼굴과 별빛 망토를 갖춘 최고급 용사. 장착하면 캐릭터 주위에 황금빛 광채가 돌아요' },
 ] as const;
+export const SHINBI_STAR_PET_ID = 8;
+export const HERO_BREAD_PET_ID = 11;
 export const HAIRSTYLES = [
   { name: '기본 머리', price: 0, icon: '🙂' }, { name: '몽실 양갈래', price: 100, icon: '🎀' },
   { name: '반짝 단발', price: 160, icon: '✨' }, { name: '밤톨 웨이브', price: 240, icon: '🌰' },
@@ -554,6 +563,11 @@ export function enableTeacherMode(s: Save, code: string, teacherHash = TEACHER_C
 export function applyTeacherCode(s: Save, code: string, teacherHash = TEACHER_CODE_HASH): string {
   if (code === 'showmethemoney') { s.berries += 1000; return '수업용 베리 1,000개를 추가했어요!'; }
   if (code === 'greedisgood') { s.berries += 10000; return '수업용 베리 10,000개를 추가했어요!'; }
+  if (code === 'star') {
+    s.pets[SHINBI_STAR_PET_ID] = true; s.pet = SHINBI_STAR_PET_ID;
+    if (!s.discoveries.pets.includes(SHINBI_STAR_PET_ID)) s.discoveries.pets.push(SHINBI_STAR_PET_ID);
+    return '이신비의 별을 얻고 바로 함께하기로 했어요!';
+  }
   const levelGain = code === 'levelup' || code === 'levelup1' ? 1 : code === 'levelup10' ? 10 : 0;
   if (levelGain) {
     if (s.level + levelGain > 100_000) throw new Error('레벨은 100,000까지 올릴 수 있어요.');
