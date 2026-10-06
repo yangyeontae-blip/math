@@ -1,5 +1,5 @@
 import * as T from 'three';
-import { CHARACTERS, MONSTERS, OUTFITS, PETS, RIDES, WEAPONS, PLAYER_MOVE_SPEED, petChaseSpeed, riderHeight, journeyFor, roomFurniturePosition, type ForestKind, type Save } from './rules';
+import { CHARACTERS, MONSTERS, OUTFITS, PETS, RIDES, WEAPONS, PLAYER_MOVE_SPEED, HERO_BREAD_PET_ID, berryWithinReach, petChaseSpeed, riderHeight, journeyFor, roomFurniturePosition, type ForestKind, type Save } from './rules';
 import { STAGES, stageBerries, stageMonsters, stagePlatforms, stageTrees, stageSize, isVillagePond } from './stages';
 import { EXPEDITION_STAR_SPOTS, expeditionLayout } from './expedition';
 import { VILLAGE_THEMES, villageThemeId, type VillageTheme } from './villages';
@@ -334,7 +334,7 @@ function makePet(id: number) {
     ball(body, 0x8a5a36, 0, .93, .14, .24, .1, .24); ball(body, 0xc99562, 0, .86, .14, .2, .06, .2); cylinder(body, 0x6b4a2d, 0, 1.03, .14, .012, .018, .09, 5);
     ball(body, 0x9a6a3c, 0, .28, .44, .07, .09, .07);
     for (let i = 0; i < 6; i++) ball(tailRoot, i < 4 ? pet.color : 0xffe2b8, 0, .08 + i * .12, -.1 - Math.sin(i * .5) * .2, .2 - i * .005, .17, .2);
-  } else { // 이신비의 별: 반짝이는 금빛 별 몸통, 졸린 듯 귀여운 얼굴, 별가루와 빛 고리
+  } else if (id === 8) { // 이신비의 별: 반짝이는 금빛 별 몸통, 졸린 듯 귀여운 얼굴, 별가루와 빛 고리
     const k = .6, cy = .6;
     const outline = new T.Shape();
     for (let i = 0; i < 10; i++) { const radius = (i % 2 ? .3 : .68) * k, angle = Math.PI / 2 + i * Math.PI / 5, x = Math.cos(angle) * radius, y = Math.sin(angle) * radius; if (i === 0) outline.moveTo(x, y); else outline.lineTo(x, y); }
@@ -345,12 +345,51 @@ function makePet(id: number) {
     ball(body, 0x8a5a24, 0, cy - .09, .175, .035, .018, .012);
     mesh(new T.TorusGeometry(.62, .012, 6, 40), 0xfff3b0, 0, cy, -.2, body);
     for (let i = 0; i < 6; i++) { const sparkle = ball(body, i % 2 ? 0xffffff : 0xfff0a8, Math.cos(i * 1.05 + .4) * .6, cy + Math.sin(i * 1.05 + .4) * .52, -.1, .035); sparkle.userData.petCharm = true; }
+  } else if (id === 9) { // 달빛 수달 모모: 넓은 꼬리, 반달 가방, 물방울 장식
+    ball(body, pet.color, 0, .34, -.03, .4, .27, .46); ball(body, pet.color, 0, .67, .2, .3, .27, .29);
+    ball(body, 0xffedcf, 0, .33, .39, .22, .19, .055); ball(body, 0xffedcf, 0, .57, .42, .18, .13, .055); ball(body, 0x5a4035, 0, .6, .475, .052, .035, .025);
+    for (const side of [-1, 1]) { eye(side, .105, .72, .43, 0x263e48, 1.08); cheek(side, .21, .59, .405, 0xf2a6a4); paw(side, 0x9fd3d7, .22, .18, .22); ball(body, pet.color, side * .23, .88, .12, .105); ball(body, 0xe8c6ad, side * .23, .88, .19, .055); }
+    for (let i = 0; i < 6; i++) { const tail = ball(tailRoot, i < 4 ? 0x5f9eaa : 0xa8d9df, 0, .02 + i * .025, -.2 - i * .14, .17 - i * .01, .1, .2); tail.rotation.x = -.05 * i; }
+    const moon = mesh(new T.TorusGeometry(.13, .035, 5, 16, Math.PI * 1.5), 0xffe58a, -.25, .79, .2, body); moon.rotation.z = -.55; moon.userData.petCharm = true;
+    for (let i = 0; i < 3; i++) { const drop = ball(body, 0xbcecff, .32 + i * .08, .47 + i * .12, -.12, .05 - i * .008); drop.userData.petCharm = true; }
+  } else if (id === 10) { // 무지개 알파카 포포: 겨울 목, 구름 털, 색동 안장
+    ball(body, 0xece2d2, 0, .35, -.04, .43, .32, .47); for (const x of [-.25, 0, .25]) for (const y of [.27, .48]) ball(body, x === 0 && y > .4 ? 0xffffff : pet.color, x, y, -.25, .22);
+    ball(body, 0xead9c4, 0, .66, .02, .17, .36, .18); ball(body, pet.color, 0, .93, .18, .3, .28, .28); ball(body, 0xfff0dc, 0, .82, .42, .17, .13, .06); ball(body, 0xb98177, 0, .85, .475, .05, .035, .025);
+    for (const side of [-1, 1]) { eye(side, .105, .98, .43, 0x493c46, 1.12); cheek(side, .21, .84, .4, 0xf4aeba); const ear = mesh(new T.ConeGeometry(.095, .28, 5), 0xd8c3aa, side * .2, 1.22, .11, body); ear.rotation.z = side * -.32; ear.userData.petEar = side; paw(side, side < 0 ? 0xe89d9d : 0x79c9c4, .23, .13, .18); }
+    for (let i = 0; i < 5; i++) ball(body, [0xef8b91, 0xf4c45d, 0x79c9c4, 0x82a9df, 0xb38ad7][i], -.28 + i * .14, .5, .37, .09, .045, .03);
+    for (let i = 0; i < 5; i++) { const tuft = ball(body, i % 2 ? 0xffffff : 0xf4ecdf, -.18 + i * .09, 1.18 + (i % 2) * .07, .16, .115); tuft.userData.petCharm = true; }
+    for (let i = 0; i < 3; i++) ball(tailRoot, 0xffffff, 0, .08 + i * .05, -.18 - i * .09, .15 - i * .025);
+  } else { // 호빵 별용사 팡팡: 독자적인 빵 영웅, 산호빛 볼과 남색 별망토
+    ball(body, 0x3e436f, 0, .39, -.08, .34, .34, .3); // 영웅복
+    ball(body, pet.color, 0, .78, .18, .43, .42, .3); ball(body, 0xefc28d, 0, .81, .31, .34, .33, .13); // 두 겹의 호빵 얼굴
+    for (const side of [-1, 1]) {
+      eye(side, .13, .88, .46, 0x3b2a2a, 1.18); ball(body, 0xf06f67, side * .25, .73, .42, .12, .095, .045);
+      const glove = ball(body, 0xffd85d, side * .38, .42, .15, .14, .13, .15); glove.userData.petPaw = side;
+      const boot = ball(body, 0x75d8cc, side * .17, .12, .08, .15, .1, .2); boot.rotation.z = side * .12; boot.userData.petPaw = side;
+      const cape = mesh(new T.CircleGeometry(.36, 8), 0x564077, side * .22, .46, -.3, body); cape.scale.set(.75, 1.25, 1); cape.rotation.z = side * .22; cape.userData.petWing = side;
+    }
+    ball(body, 0xe85b58, 0, .79, .47, .1, .085, .05); const smile = mesh(new T.TorusGeometry(.095, .018, 5, 16, Math.PI), 0x7c3d45, 0, .67, .47, body); smile.rotation.z = Math.PI;
+    const badge = mesh(new T.OctahedronGeometry(.11), 0xffe376, 0, .43, .28, body); badge.scale.y = 1.18; badge.userData.petCharm = true;
+    const belt = box(body, 0xf1c75d, 0, .3, .18, .6, .075, .06); belt.rotation.x = -.08; box(body, 0xffffff, 0, .3, .225, .11, .1, .035);
+    const halo = mesh(new T.TorusGeometry(.31, .028, 6, 24), 0xffef9a, 0, 1.25, .03, body); halo.rotation.x = Math.PI / 2; halo.userData.petCharm = true;
+    for (let i = 0; i < 5; i++) { const star = mesh(new T.OctahedronGeometry(.055), i % 2 ? 0xffffff : 0xffde6b, Math.cos(i * 1.26) * .5, .72 + Math.sin(i * 1.26) * .45, -.15, body); star.userData.petCharm = true; }
   }
   // 작은 여행 가방과 빛나는 이름표는 모든 펫의 공통 모험 장비입니다. (별 펫은 몸 자체가 장식이라 제외)
-  if (id !== 2 && id !== 8) { const collar = mesh(new T.TorusGeometry(.2, .024, 5, 16), id > 2 ? 0xbbeeff : 0xf4d478, 0, .48, .18, body); collar.rotation.x = Math.PI / 2; }
-  if (id !== 8) box(body, 0x9b7653, -.31, .34, -.09, .18, .23, .1);
-  if (id !== 2 && id !== 8) { const charm = mesh(new T.OctahedronGeometry(.065), id > 2 ? 0xbbeeff : 0xffd788, 0, .38, .44, body); charm.userData.petCharm = true; }
+  if (id !== 2 && id !== 8 && id !== HERO_BREAD_PET_ID) { const collar = mesh(new T.TorusGeometry(.2, .024, 5, 16), id > 2 ? 0xbbeeff : 0xf4d478, 0, .48, .18, body); collar.rotation.x = Math.PI / 2; }
+  if (id !== 8 && id !== HERO_BREAD_PET_ID) box(body, 0x9b7653, -.31, .34, -.09, .18, .23, .1);
+  if (id !== 2 && id !== 8 && id !== HERO_BREAD_PET_ID) { const charm = mesh(new T.OctahedronGeometry(.065), id > 2 ? 0xbbeeff : 0xffd788, 0, .38, .44, body); charm.userData.petCharm = true; }
   g.position.set(-1.05, .02, -.7); g.userData.petModel = true; g.userData.petBody = body; return g;
+}
+
+function makeHeroPetAura(ride: number) {
+  const aura = new T.Group(); aura.position.y = ride >= 0 ? riderHeight(ride) : 0; aura.userData.heroPetAura = true;
+  const floorRing = mesh(new T.TorusGeometry(.75, .035, 6, 30), 0xffd75e, 0, .12, 0, aura); floorRing.rotation.x = Math.PI / 2; floorRing.userData.heroAuraRing = 1;
+  const skyRing = mesh(new T.TorusGeometry(.58, .025, 6, 26), 0xfff5bd, 0, 1.12, 0, aura); skyRing.rotation.x = Math.PI / 2; skyRing.userData.heroAuraRing = -1;
+  for (let i = 0; i < 8; i++) {
+    const sparkle = mesh(new T.OctahedronGeometry(i % 2 ? .055 : .075), i % 2 ? 0xffffff : 0xffdf6f, Math.cos(i * Math.PI / 4) * .82, .58 + (i % 3) * .3, Math.sin(i * Math.PI / 4) * .82, aura);
+    sparkle.userData.heroAuraSparkle = i;
+  }
+  return aura;
 }
 
 const FOREST_PALETTES: Partial<Record<ForestKind, { sky: number; ground: number; accent: number; foliage: number }>> = {
@@ -644,6 +683,7 @@ export class World {
     if (this.petModel) { this.scene.remove(this.petModel); this.disposeModel(this.petModel); }
     this.rideIndex = ride; this.petIndex = pet; this.petModel = null; this.petTargetId = null; this.rideAnimated = [];
     if (ride >= 0 && RIDES[ride]) { const body = this.player.userData.body as T.Group; body.position.y = riderHeight(ride); const rideModel = makeRide(ride); rideModel.traverse(o => { if (o.userData.rideWing || o.userData.ridePropeller || o.userData.rideGlow) this.rideAnimated.push(o); }); this.player.add(rideModel); }
+    if (pet === HERO_BREAD_PET_ID) { const aura = makeHeroPetAura(ride); this.player.add(aura); this.player.userData.heroPetAura = aura; }
     if (pet >= 0 && PETS[pet]) { this.petModel = makePet(pet); this.scene.add(this.petModel); this.placePetNearPlayer(); }
   }
   private placePetNearPlayer() { if (this.petModel) this.petModel.position.set(this.player.position.x - 1.05, this.player.position.y + .02, this.player.position.z - .7); }
@@ -707,7 +747,8 @@ export class World {
       const bounds = this.inRoom ? { x: 6.8, z: 5.2 } : stageSize(this.stage);
       if (Math.abs(p.x) > bounds.x - .5 || Math.abs(p.z) > bounds.z - .5 || (!flying && this.water(p.x, p.z) && p.y <= .2)) { p.copy(this.lastSafe); this.vy = 0; this.onRescue(); }
       else if (this.grounded && (flying || !this.water(p.x, p.z)) && Math.abs(p.x) < bounds.x - 2 && Math.abs(p.z) < bounds.z - 2) this.lastSafe.copy(p);
-      for (const c of this.coins) if (c.mesh.visible && p.distanceTo(c.mesh.position) < 1) { c.mesh.visible = false; this.burst(c.mesh.position, 0xff9fb4, 6); this.onCollect(c.id); }
+      // 베리는 바닥의 수평 거리로 판정해 발판·점프·라이딩 높이에서도 눈에 닿으면 수집됩니다.
+      for (const c of this.coins) if (c.mesh.visible && berryWithinReach(p.x, p.z, c.mesh.position.x, c.mesh.position.z)) { c.mesh.visible = false; this.burst(c.mesh.position, 0xff9fb4, 6); this.onCollect(c.id); }
       for (const star of this.stars) if (star.mesh.visible && Math.hypot(p.x - star.mesh.position.x, p.z - star.mesh.position.z) < 1.35) { star.mesh.visible = false; star.label.hidden = true; this.burst(star.mesh.position, 0xffdf83, 8); this.onStar(star.id); }
       if (this.petModel && this.petIndex >= 0) {
         let target = this.petTargetId === null ? undefined : this.coins.find(c => c.id === this.petTargetId && c.mesh.visible);
@@ -771,6 +812,14 @@ export class World {
       if (o.userData.petTail) o.rotation.y = Math.sin(this.time * 4.6 + Number(o.userData.petTail)) * .36;
       if (o.userData.petPaw) o.rotation.z = Number(o.userData.petPaw) * (.08 + Math.sin(this.time * 8 + Number(o.userData.petPaw)) * .08);
     });
+    const heroAura = this.player.userData.heroPetAura as T.Group | undefined;
+    if (heroAura) {
+      heroAura.rotation.y += dt * 1.35;
+      heroAura.traverse(o => {
+        if (o.userData.heroAuraRing) { o.rotation.z += dt * .55 * Number(o.userData.heroAuraRing); const pulse = 1 + Math.sin(this.time * 3.4 + Number(o.userData.heroAuraRing)) * .07; o.scale.setScalar(pulse); }
+        if (o.userData.heroAuraSparkle !== undefined) { const i = Number(o.userData.heroAuraSparkle); o.position.y = .55 + (i % 3) * .3 + Math.sin(this.time * 3.2 + i) * .09; o.rotation.y += dt * 2.4; }
+      });
+    }
     if (this.player.userData.sparkles) this.player.userData.sparkles.rotation.y += dt;
     for (let i = this.particles.length - 1; i >= 0; i--) { const q = this.particles[i]; q.life -= dt; q.v.y -= dt * 5; q.mesh.position.addScaledVector(q.v, dt); q.mesh.scale.setScalar(Math.max(0, q.life)); if (q.life <= 0) { this.scene.remove(q.mesh); this.particles.splice(i, 1); } }
     const target = this.active ? p : this.cameraTarget.set(0, 0, -1); this.follow.lerp(target, 1 - Math.exp(-dt * 3));
@@ -800,7 +849,7 @@ export class AvatarPreview {
   }
   private replaceModel(model: T.Group, camera: [number, number, number], lookY: number) { this.scene.remove(this.model); this.model.traverse(x => { if (x instanceof T.Mesh && !sharedGeometries.has(x.geometry)) x.geometry.dispose(); }); this.model = model; this.model.rotation.y = -.18; this.camera.position.set(...camera); this.camera.lookAt(0, lookY, 0); this.scene.add(this.model); this.draw(); }
   show(c: number, o: number, w: number, ol = 0, wl = 0, hairstyle = 0, face = 0) { const model = makeCharacter(c, o, w, ol, wl, hairstyle, face); model.userData.previewKind = 'avatar'; this.replaceModel(model, [2.2, 1.9, 5.8], 1.1); }
-  showPet(id: number) { const model = makePet(id); model.position.set(0, .08, 0); model.scale.setScalar(1.72); model.userData.previewKind = 'pet'; this.replaceModel(model, [2.1, 1.35, 4.15], .62); }
+  showPet(id: number) { const model = makePet(id); model.position.set(0, .08, 0); model.scale.setScalar(id === 10 ? 1.48 : id === HERO_BREAD_PET_ID ? 1.6 : 1.72); model.userData.previewKind = 'pet'; this.replaceModel(model, [2.1, 1.35, 4.15], id === 10 ? .68 : .62); }
   showRide(id: number, c: number, o: number, w: number, ol = 0, wl = 0, hairstyle = 0, face = 0) { const model = makeCharacter(c, o, w, ol, wl, hairstyle, face), body = model.userData.body as T.Group; body.position.y = riderHeight(id); model.add(makeRide(id)); model.userData.previewKind = 'ride'; this.replaceModel(model, [3.4, 2.35, 7.7], 1.15); }
   private draw() { const w = this.element.clientWidth, h = this.element.clientHeight; if (!w || !h) return; if (w !== this.drawWidth || h !== this.drawHeight) { this.drawWidth = w; this.drawHeight = h; this.renderer.setSize(w, h); this.camera.aspect = w / h; this.camera.updateProjectionMatrix(); } this.renderer.render(this.scene, this.camera); }
   private animate = (time: number) => { this.animationFrame = requestAnimationFrame(this.animate); if (time - this.lastFrame < 33 || document.hidden || !this.element.isConnected) return; this.lastFrame = time; this.model.rotation.y = -.18 + Math.sin(time * .0007) * .16; const body = this.model.userData.body as T.Group | undefined; if (body) { body.userData.baseY ??= body.position.y; body.position.y = (body.userData.baseY as number) + Math.sin(time * .003) * .035; } const sparkles = this.model.userData.sparkles as T.Group | undefined; if (sparkles) sparkles.rotation.y += .025; this.model.traverse(o => { if (o.userData.petCharm) { o.rotation.y += .06; o.userData.baseScale ??= o.scale.clone(); o.scale.copy(o.userData.baseScale as T.Vector3).multiplyScalar(1 + Math.sin(time * .006) * .12); } if (o.userData.petWing) o.rotation.z = Number(o.userData.petWing) * (.4 + Math.sin(time * .011) * .14); if (o.userData.rideWing) o.rotation.z = Number(o.userData.rideWing) * (.52 + Math.sin(time * .009) * .11); if (o.userData.ridePropeller) o.rotation.z += .18; if (o.userData.rideGlow) o.rotation.z += .025; }); this.draw(); };

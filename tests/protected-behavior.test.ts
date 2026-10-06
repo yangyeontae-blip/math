@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { newSave, applyTeacherCode, TEACHER_CODE_HASH } from '../src/rules';
+import { newSave, applyTeacherCode, TEACHER_CODE_HASH, SHINBI_STAR_PET_ID } from '../src/rules';
 import { sha256Hex } from '../src/sha256';
 
 // 이 테스트들은 "건드리면 안 되는 기존 동작"을 고정해요. 바꾸려면 CLAUDE.md의 Protected behaviors를 먼저 확인하고 사용자 허락을 받으세요.
@@ -19,6 +19,13 @@ test('protected: level and money codes work on any save, without teacher mode', 
   applyTeacherCode(s, 'levelup1'); assert.equal(s.level, 3);
   applyTeacherCode(s, 'levelup10'); assert.equal(s.level, 13);
   assert.equal(s.teacherMode, false);
+});
+
+test('protected: star grants and equips only the Shinbi star pet', () => {
+  const s = newSave('아이', 0); const berries = s.berries;
+  applyTeacherCode(s, 'star');
+  assert.equal(s.pets[SHINBI_STAR_PET_ID], true); assert.equal(s.pet, SHINBI_STAR_PET_ID);
+  assert.deepEqual(Object.keys(s.pets), [String(SHINBI_STAR_PET_ID)]); assert.equal(s.berries, berries); assert.equal(s.teacherMode, false);
 });
 
 test('protected: wrong or differently-cased codes are rejected without changing the save', () => {
