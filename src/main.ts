@@ -365,10 +365,12 @@ function openStageMap(forest?: ForestKind) {
   if (!forest) {
     const isForest = (unit: CurriculumUnitId) => OPERATIONS.includes(unit as Operation);
     const progress = (unit: CurriculumUnitId) => isForest(unit) ? `${journeyFor(s, unit as ForestKind).maps.slice(1).filter(m => m.cleared).length} / 10단계` : `${s.curriculum.units[unit].completedMissions.length} / 10단계`;
+    const stampCount = (unit: CurriculumUnitId) => isForest(unit) ? journeyFor(s, unit as ForestKind).maps.slice(1).filter(m => m.cleared).length : s.curriculum.units[unit].completedMissions.length;
+    const stampRow = (unit: CurriculumUnitId) => { const n = Math.min(10, stampCount(unit)); return `<i class="stamp-row" aria-hidden="true">${Array.from({ length: 10 }, (_, k) => `<u class="${k < n ? "on" : ""}"></u>`).join("")}</i>`; };
     const card = (region: CurriculumRegion) => {
       const complete = curriculumUnitComplete(s, region.id), focus = s.settings.focusUnit === region.id;
       const action = isForest(region.id) ? `data-forest="${region.id}"` : `data-curriculum-unit="${region.id}"`;
-      return `<button class="forest-card curriculum-region ${region.className} ${complete ? 'complete' : ''} ${focus ? 'focus-unit' : ''}" ${action}><span>${region.icon}</span><strong>${region.name}</strong><small>${region.short}</small><b>${complete ? '✓ 단원 완료' : progress(region.id)}${focus ? ' · 오늘의 단원' : ''}</b></button>`;
+      return `<button class="forest-card curriculum-region ${region.className} ${complete ? 'complete' : ''} ${focus ? 'focus-unit' : ''}" ${action}><span>${region.icon}</span><strong>${region.name}</strong><small>${region.short}</small>${stampRow(region.id)}<b>${complete ? '✓ 단원 완료' : progress(region.id)}${focus ? ' · 오늘의 단원' : ''}</b></button>`;
     };
     const sets = curriculumRegionSets(s.grade), firstCards = sets.first.map(card).join(''), secondCards = sets.second.map(card).join('');
     const graduateReady = curriculumGraduationAvailable(s) || s.teacherMode;

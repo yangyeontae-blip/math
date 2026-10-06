@@ -342,3 +342,13 @@ input:not([type=checkbox]):not([type=radio]),select,textarea{min-height:44px}
 @keyframes talk-pop{from{opacity:0;transform:translateX(-50%) translateY(14px) scale(.94)}}
 @keyframes talk-bob{50%{transform:translateY(4px)}}
 @media(prefers-reduced-motion:reduce){.talk-bubble,.talk-bubble.finished .talk-next{animation:none}}
+
+/* 여권 도장: 단원 카드의 도장 칸과 통과한 단계의 동그란 도장 */
+.stamp-row{display:grid;grid-template-columns:repeat(10,minmax(0,1fr));gap:2px;margin:2px 0 4px;width:100%;max-width:118px}
+.stamp-row u{display:block;aspect-ratio:1;max-width:11px;border-radius:50%;border:2px dashed #cdb98c;background:#fffaee;box-sizing:border-box;text-decoration:none}
+.stamp-row u.on{border:2px solid #e07a5f;background:#ffb8a3;box-shadow:0 1px 0 #e07a5f66}
+.forest-card.complete{position:relative}
+.forest-card.complete:after{content:'완료';position:absolute;right:10px;bottom:10px;padding:3px 7px;border:3px double #e07a5f;border-radius:50%;color:#e07a5f;font-size:.72rem;line-height:1;transform:rotate(-14deg);opacity:.9;pointer-events:none;background:#fffaee99}
+.stage-card.cleared{position:relative}
+.stage-card.cleared:after{content:'통과';position:absolute;right:8px;top:8px;padding:5px 6px;border:3px double #e07a5f;border-radius:50%;color:#e07a5f;font-size:.7rem;line-height:1;transform:rotate(-12deg);background:#fffaee99;pointer-events:none}
+.unit-progress{border:3px dashed #e3cf9f;background:#fff7e0}
