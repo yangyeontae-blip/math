@@ -107,7 +107,7 @@ test('trees give only 2 to 4 berries once and stronger weapons cut faster', () =
 test('version 2 saves migrate with untouched tree progress', () => {
   const old = structuredClone(newSave('예전', 0)) as unknown as Record<string, unknown>; old.version = 2;
   const journey = old.journey as { maps: Array<Record<string, unknown>> }; journey.maps.forEach(m => delete m.trees);
-  const migrated = validateSave(old); assert.equal(migrated.version, 12); assert.deepEqual(migrated.journey.maps[0].trees, []); assert.equal(migrated.ride, -1); assert.deepEqual(migrated.rides, {}); assert.equal(migrated.pet, -1); assert.deepEqual(migrated.hairstyles, { 0: true }); assert.equal(migrated.settings.maxDividend, 0); assert.equal(migrated.settings.multiplicationRange, 'stage'); assert.equal(migrated.settings.focusUnit, 'all'); assert.equal(migrated.settings.spiralReview, true); assert.deepEqual(migrated.room, { furniture: [], inside: false }); assert.deepEqual(migrated.expedition, { completed: 0, selectedTitle: 0, active: null }); assert.equal(migrated.forest, 'division'); assert.equal(migrated.multiplicationJourney.stage, 0); assert.equal(migrated.curriculum.units.circle.completedMissions.length, 0);
+  const migrated = validateSave(old); assert.equal(migrated.version, 13); assert.deepEqual(migrated.journey.maps[0].trees, []); assert.equal(migrated.ride, -1); assert.deepEqual(migrated.rides, {}); assert.equal(migrated.pet, -1); assert.deepEqual(migrated.hairstyles, { 0: true }); assert.equal(migrated.settings.maxDividend, 0); assert.equal(migrated.settings.multiplicationRange, 'stage'); assert.equal(migrated.settings.focusUnit, 'all'); assert.equal(migrated.settings.spiralReview, true); assert.deepEqual(migrated.room, { furniture: [], inside: false, positions: {} }); assert.deepEqual(migrated.expedition, { completed: 0, selectedTitle: 0, active: null }); assert.equal(migrated.forest, 'division'); assert.equal(migrated.multiplicationJourney.stage, 0); assert.equal(migrated.curriculum.units.circle.completedMissions.length, 0);
 });
 test('teacher curriculum ceilings and local learning records behave safely', () => {
   const s = newSave('수업', 0);
@@ -116,7 +116,7 @@ test('teacher curriculum ceilings and local learning records behave safely', () 
   assert.ok(questionPool(10, 6, 180).some(q => q.dividend > 90));
   const q = { dividend: 40, divisor: 5, answer: 8 }; recordWrongAnswer(s, q); recordWrongAnswer(s, q); assert.equal(s.learning.wrong, 2); assert.equal(s.learning.wrongQuestions.length, 1);
   recordCorrectAnswer(s, 2); assert.equal(s.learning.correct, 1); assert.deepEqual(s.discoveries.monsters, [2]);
-  s.settings.sessionMinutes = 15; s.learning.elapsedSeconds = 32; s.room.furniture = [0, 4]; assert.deepEqual(validateSave(JSON.parse(JSON.stringify(s))), s);
+  s.settings.sessionMinutes = 15; s.learning.elapsedSeconds = 32; s.room.furniture = [0, 4]; s.room.positions = { 0: { column: 0, row: 0 }, 4: { column: 1, row: 0 } }; assert.deepEqual(validateSave(JSON.parse(JSON.stringify(s))), s);
   s.room.inside = true; assert.deepEqual(validateSave(JSON.parse(JSON.stringify(s))), s);
   const oldRoom = JSON.parse(JSON.stringify(s)); delete oldRoom.room.inside; assert.equal(validateSave(oldRoom).room.inside, false);
 });
@@ -171,7 +171,7 @@ test('version 8 active potions become a safe five-minute time effect', () => {
   const old = structuredClone(newSave('옛물약', 0)) as unknown as Record<string, unknown>;
   old.version = 8; old.potions = { stock: [1, 0, 0], berryMultiplier: 2, berryUses: 3, xpMultiplier: 1, xpUses: 0 };
   const restored = validateSave(old), effect = potionEffects(restored);
-  assert.equal(restored.version, 12); assert.equal(effect.berryMultiplier, 2); assert.ok(effect.berrySeconds > 295 && effect.berrySeconds <= 300); assert.equal(effect.xpSeconds, 0);
+  assert.equal(restored.version, 13); assert.equal(effect.berryMultiplier, 2); assert.ok(effect.berrySeconds > 295 && effect.berrySeconds <= 300); assert.equal(effect.xpSeconds, 0);
 });
 
 import { sha256Hex } from '../src/sha256';

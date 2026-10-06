@@ -134,8 +134,11 @@ export interface MultiplicationFinal { left: number; right: number; step: 0 | 1 
 export interface CurriculumUnitProgress { completedMissions: number[]; stars: number[]; correct: number; wrong: number; hints: number; rewardClaimed: boolean }
 export interface CurriculumMistake { unit: CurriculumUnitId; mission: number; skill: string }
 export interface CurriculumProgress { units: Record<CurriculumUnitId, CurriculumUnitProgress>; wrongSkills: CurriculumMistake[]; graduationClaimed: boolean }
+export interface RoomFurniturePosition { column: number; row: number }
+export const ROOM_GRID_COLUMNS = 5;
+export const ROOM_GRID_ROWS = 4;
 export interface Save {
-  version: 12; nickname: string; character: number; berries: number; level: number; xp: number;
+  version: 13; nickname: string; character: number; berries: number; level: number; xp: number;
   weapon: number; outfit: number; weapons: Record<string, number>; outfits: Record<string, number>;
   ride: number; rides: Record<string, boolean>; pet: number; pets: Record<string, boolean>;
   hairstyle: number; hairstyles: Record<string, boolean>; face: number; faces: Record<string, boolean>; teacherMode: boolean;
@@ -143,7 +146,7 @@ export interface Save {
   settings: { music: boolean; sound: boolean; lowQuality: boolean; maxDividend: 0 | 90 | 180; multiplicationRange: MultiplicationRange; sessionMinutes: number; focusUnit: 'all' | CurriculumUnitId; spiralReview: boolean; practice: PracticeChoice };
   learning: { elapsedSeconds: number; correct: number; wrong: number; wrongQuestions: Question[] };
   discoveries: { monsters: number[]; pets: number[]; outfits: number[] };
-  room: { furniture: number[]; inside: boolean };
+  room: { furniture: number[]; inside: boolean; positions: Record<string, RoomFurniturePosition> };
   garden?: { rescued: number; flowers: number[] };
   daily?: DailyState;
   expedition: ExpeditionProgress;
@@ -177,7 +180,34 @@ export const STAGE_DIVISION_DIFFICULTY = [
 export function newSave(nickname: string, character: number): Save {
   if (!nickname.trim() || [...nickname.trim()].length > 10 || !Number.isInteger(character) || character < 0 || character > 3) throw new Error('이름은 1~10자, 캐릭터는 4명 중 골라 주세요.');
   const hairstyle = CHARACTERS[character].style;
-  return { version: 12, nickname: nickname.trim(), character, berries: 0, level: 1, xp: 0, weapon: 0, outfit: 0, weapons: { 0: 0 }, outfits: { 0: 0 }, ride: -1, rides: {}, pet: -1, pets: {}, hairstyle, hairstyles: { 0: true, [hairstyle]: true }, face: 0, faces: { 0: true }, teacherMode: false, best: 0, position: { x: 0, z: 8 }, tutorial: { collected: false, battle: false, shop: false }, settings: { music: true, sound: true, lowQuality: false, maxDividend: 0, multiplicationRange: 'stage', sessionMinutes: 0, focusUnit: 'all', spiralReview: true, practice: { operation: 'auto', tier: 1, skipPicker: false } }, learning: { elapsedSeconds: 0, correct: 0, wrong: 0, wrongQuestions: [] }, discoveries: { monsters: [], pets: [], outfits: [0] }, room: { furniture: [], inside: false }, forest: 'division', journey: emptyJourney(), multiplicationJourney: emptyJourney(), multiplicationFinal: null, multiplicationCompleted: false, multiplicationRewardClaimed: false, additionJourney: emptyJourney(), subtractionJourney: emptyJourney(), additionCompleted: false, subtractionCompleted: false, curriculum: emptyCurriculumProgress(), potions: { stock: [0, 0, 0], berryMultiplier: 1, berryUntil: 0, xpMultiplier: 1, xpUntil: 0 }, garden: { rescued: 0, flowers: [-1, -1, -1] }, expedition: emptyExpedition() };
+  return { version: 13, nickname: nickname.trim(), character, berries: 0, level: 1, xp: 0, weapon: 0, outfit: 0, weapons: { 0: 0 }, outfits: { 0: 0 }, ride: -1, rides: {}, pet: -1, pets: {}, hairstyle, hairstyles: { 0: true, [hairstyle]: true }, face: 0, faces: { 0: true }, teacherMode: false, best: 0, position: { x: 0, z: 8 }, tutorial: { collected: false, battle: false, shop: false }, settings: { music: true, sound: true, lowQuality: false, maxDividend: 0, multiplicationRange: 'stage', sessionMinutes: 0, focusUnit: 'all', spiralReview: true, practice: { operation: 'auto', tier: 1, skipPicker: false } }, learning: { elapsedSeconds: 0, correct: 0, wrong: 0, wrongQuestions: [] }, discoveries: { monsters: [], pets: [], outfits: [0] }, room: { furniture: [], inside: false, positions: {} }, forest: 'division', journey: emptyJourney(), multiplicationJourney: emptyJourney(), multiplicationFinal: null, multiplicationCompleted: false, multiplicationRewardClaimed: false, additionJourney: emptyJourney(), subtractionJourney: emptyJourney(), additionCompleted: false, subtractionCompleted: false, curriculum: emptyCurriculumProgress(), potions: { stock: [0, 0, 0], berryMultiplier: 1, berryUntil: 0, xpMultiplier: 1, xpUntil: 0 }, garden: { rescued: 0, flowers: [-1, -1, -1] }, expedition: emptyExpedition() };
+}
+
+export function defaultRoomFurniturePosition(index: number): RoomFurniturePosition {
+  const safe = Math.max(0, Math.floor(index));
+  return { column: safe % ROOM_GRID_COLUMNS, row: Math.floor(safe / ROOM_GRID_COLUMNS) % ROOM_GRID_ROWS };
+}
+export function roomFurniturePosition(s: Save, id: number): RoomFurniturePosition {
+  return s.room.positions[String(id)] ?? defaultRoomFurniturePosition(Math.max(0, s.room.furniture.indexOf(id)));
+}
+export function addRoomFurniture(s: Save, id: number) {
+  if (!Number.isInteger(id) || id < 0 || id > 16 || s.room.furniture.includes(id) || s.room.furniture.length >= ROOM_GRID_COLUMNS * ROOM_GRID_ROWS) return false;
+  const occupied = new Set(s.room.furniture.map(item => { const p = roomFurniturePosition(s, item); return `${p.column},${p.row}`; }));
+  let position = defaultRoomFurniturePosition(s.room.furniture.length);
+  outer: for (let row = 0; row < ROOM_GRID_ROWS; row++) for (let column = 0; column < ROOM_GRID_COLUMNS; column++) if (!occupied.has(`${column},${row}`)) { position = { column, row }; break outer; }
+  s.room.furniture.push(id); s.room.positions[String(id)] = position; return true;
+}
+export function removeRoomFurniture(s: Save, id: number) {
+  if (!s.room.furniture.includes(id)) return false;
+  s.room.furniture = s.room.furniture.filter(item => item !== id); delete s.room.positions[String(id)]; return true;
+}
+export function placeRoomFurniture(s: Save, id: number, column: number, row: number) {
+  if (!s.room.furniture.includes(id) || !Number.isInteger(column) || !Number.isInteger(row) || column < 0 || column >= ROOM_GRID_COLUMNS || row < 0 || row >= ROOM_GRID_ROWS) return false;
+  const previous = roomFurniturePosition(s, id);
+  const occupant = s.room.furniture.find(item => item !== id && roomFurniturePosition(s, item).column === column && roomFurniturePosition(s, item).row === row);
+  s.room.positions[String(id)] = { column, row };
+  if (occupant !== undefined) s.room.positions[String(occupant)] = previous;
+  return true;
 }
 // 3학년 한 해의 모든 모험 지역. 계산 숲 네 곳과 교구형 수학 지역 일곱 곳을 함께 완주해요.
 const CURRICULUM_UNITS: CurriculumUnitId[] = ['addition', 'subtraction', 'plane', 'multiplication', 'division', 'lengthTime', 'fractionDecimal', 'circle', 'fraction', 'measurement', 'pictograph'];
@@ -555,7 +585,7 @@ export function validateSave(value: unknown): Save {
     migrated.settings = { ...(migrated.settings as object), maxDividend: 0, sessionMinutes: 0 };
     migrated.learning = { elapsedSeconds: 0, correct: 0, wrong: 0, wrongQuestions: [] };
     migrated.discoveries = { monsters: [], pets: Object.keys(migrated.pets as object).map(Number), outfits: Object.keys(migrated.outfits as object).map(Number) };
-    migrated.room = { furniture: [], inside: false };
+    migrated.room = { furniture: [], inside: false, positions: {} };
   }
   if (migrated.version === 6) { migrated.version = 7; migrated.expedition = emptyExpedition(); }
   if (migrated.version === 7) {
@@ -612,6 +642,11 @@ export function validateSave(value: unknown): Save {
       curriculum.graduationClaimed = false;
     }
   }
+  if (migrated.version === 12) {
+    migrated.version = 13;
+    const room = migrated.room as { furniture?: number[]; inside?: boolean; positions?: Record<string, RoomFurniturePosition> } | undefined;
+    if (room) room.positions = Object.fromEntries((room.furniture ?? []).map((id, index) => [String(id), defaultRoomFurniturePosition(index)]));
+  }
   const s = migrated as unknown as Save;
   if (s.garden === undefined) s.garden = { rescued: 0, flowers: [-1, -1, -1] };
   if (s.potions === undefined) s.potions = { stock: s.teacherMode ? POTIONS.map(() => 9) : [0, 0, 0], berryMultiplier: 1, berryUntil: 0, xpMultiplier: 1, xpUntil: 0 };
@@ -627,7 +662,7 @@ export function validateSave(value: unknown): Save {
   }
   const integer = (v: unknown, min: number, max: number): v is number => typeof v === 'number' && Number.isSafeInteger(v) && v >= min && v <= max;
   if (!s.garden || !integer(s.garden.rescued, 0, 3) || !Array.isArray(s.garden.flowers) || s.garden.flowers.length !== 3 || s.garden.flowers.some(f => !integer(f, -1, 2)) || s.garden.flowers.filter(f => f >= 0).length > s.garden.rescued) return fail();
-  if (s.version !== 12 || !OPERATIONS.includes(s.forest) || typeof s.teacherMode !== 'boolean' || typeof s.nickname !== 'string' || !s.nickname.trim() || [...s.nickname].length > 10 || !integer(s.character, 0, 3) || !integer(s.berries, 0, 1e9) || !integer(s.level, 1, 100000) || !integer(s.xp, 0, s.level * 40 - 1) || !integer(s.best, 0, 1e9)) return fail();
+  if (s.version !== 13 || !OPERATIONS.includes(s.forest) || typeof s.teacherMode !== 'boolean' || typeof s.nickname !== 'string' || !s.nickname.trim() || [...s.nickname].length > 10 || !integer(s.character, 0, 3) || !integer(s.berries, 0, 1e9) || !integer(s.level, 1, 100000) || !integer(s.xp, 0, s.level * 40 - 1) || !integer(s.best, 0, 1e9)) return fail();
   if (!s.potions || !Array.isArray(s.potions.stock) || s.potions.stock.length !== POTIONS.length || s.potions.stock.some(n => !integer(n, 0, 99)) || ![1, 2, 3].includes(s.potions.berryMultiplier) || !integer(s.potions.berryUntil, 0, Number.MAX_SAFE_INTEGER) || ![1, 3].includes(s.potions.xpMultiplier) || !integer(s.potions.xpUntil, 0, Number.MAX_SAFE_INTEGER) || (s.potions.berryUntil === 0) !== (s.potions.berryMultiplier === 1) || (s.potions.xpUntil === 0) !== (s.potions.xpMultiplier === 1)) return fail();
   const expedition = s.expedition;
   if (!expedition || !integer(expedition.completed, 0, 1e8) || !integer(expedition.selectedTitle, 0, EXPEDITION_TITLES.length - 1) || expedition.completed < EXPEDITION_TITLES[expedition.selectedTitle].need) return fail();
@@ -693,7 +728,13 @@ export function validateSave(value: unknown): Save {
   }
   if (s.curriculum.wrongSkills.some(item => !item || !ALL_UNITS.includes(item.unit) || !integer(item.mission, 0, 9) || typeof item.skill !== 'string' || !item.skill || item.skill.length > 40)) return fail();
   if (s.curriculum.graduationClaimed && !s.teacherMode && !curriculumGraduationAvailable(s)) return fail();
-  if (!s.discoveries || !s.room || typeof s.room.inside !== 'boolean' || !Array.isArray(s.room.furniture) || s.room.furniture.some(id => !integer(id, 0, 16)) || new Set(s.room.furniture).size !== s.room.furniture.length) return fail();
+  if (!s.discoveries || !s.room || typeof s.room.inside !== 'boolean' || !Array.isArray(s.room.furniture) || s.room.furniture.some(id => !integer(id, 0, 16)) || new Set(s.room.furniture).size !== s.room.furniture.length || !s.room.positions || typeof s.room.positions !== 'object' || Array.isArray(s.room.positions)) return fail();
+  const occupiedRoomCells = new Set<string>();
+  for (const [idText, position] of Object.entries(s.room.positions)) {
+    if (!/^\d+$/.test(idText) || !s.room.furniture.includes(Number(idText)) || !position || !integer(position.column, 0, ROOM_GRID_COLUMNS - 1) || !integer(position.row, 0, ROOM_GRID_ROWS - 1)) return fail();
+    const cell = `${position.column},${position.row}`; if (occupiedRoomCells.has(cell)) return fail(); occupiedRoomCells.add(cell);
+  }
+  if (s.room.furniture.some(id => !Object.hasOwn(s.room.positions, id))) return fail();
   if (s.room.inside && journeyFor(s).stage !== 0) return fail();
   if (s.hub !== undefined && (!NEW_CURRICULUM_UNITS.includes(s.hub) || journeyFor(s).stage !== 0)) return fail();
   if (s.daily !== undefined) {
