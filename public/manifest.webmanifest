@@ -1,7 +1,7 @@
 {
   "name": "베리숲 모험학교",
   "short_name": "베리숲",
-  "description": "베리를 모으며 3학년 1·2학기 수학 전체를 배우는 포근한 3D 숲속 모험",
+  "description": "베리를 모으며 1~6학년 수학를 배우는 포근한 3D 숲속 모험",
   "lang": "ko",
   "start_url": "./",
   "scope": "./",

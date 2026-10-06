@@ -137,6 +137,7 @@ export type CurriculumUnitId = ForestKind | 'plane' | 'lengthTime' | 'fractionDe
 export type NewCurriculumUnitId = Exclude<CurriculumUnitId, ForestKind>;
 export type MultiplicationRange = 'stage' | 'tables';
 export type PracticeTier = 0 | 1 | 2;
+export type SchoolGrade = 1 | 2 | 3 | 4 | 5 | 6;
 export interface PracticeChoice { operation: 'auto' | Operation; tier: PracticeTier; skipPicker: boolean }
 export const OPERATIONS = ['addition', 'subtraction', 'multiplication', 'division'] as const;
 export const OPERATION_INFO = {
@@ -156,7 +157,7 @@ export interface RoomFurniturePosition { column: number; row: number }
 export const ROOM_GRID_COLUMNS = 5;
 export const ROOM_GRID_ROWS = 4;
 export interface Save {
-  version: 14; nickname: string; character: number; berries: number; level: number; xp: number;
+  version: 14; grade: SchoolGrade; nickname: string; character: number; berries: number; level: number; xp: number;
   weapon: number; outfit: number; weapons: Record<string, number>; outfits: Record<string, number>;
   ride: number; rides: Record<string, boolean>; pet: number; pets: Record<string, boolean>;
   hairstyle: number; hairstyles: Record<string, boolean>; face: number; faces: Record<string, boolean>; teacherMode: boolean;
@@ -195,10 +196,10 @@ export const STAGE_DIVISION_DIFFICULTY = [
   { maxDividend: 160, maxAnswer: 36 },
   { maxDividend: 180, maxAnswer: 45 },
 ] as const;
-export function newSave(nickname: string, character: number): Save {
-  if (!nickname.trim() || [...nickname.trim()].length > 10 || !Number.isInteger(character) || character < 0 || character > 3) throw new Error('이름은 1~10자, 캐릭터는 4명 중 골라 주세요.');
+export function newSave(nickname: string, character: number, grade: SchoolGrade = 3): Save {
+  if (!nickname.trim() || [...nickname.trim()].length > 10 || !Number.isInteger(character) || character < 0 || character > 3 || !Number.isInteger(grade) || grade < 1 || grade > 6) throw new Error('이름은 1~10자, 학년과 캐릭터를 골라 주세요.');
   const hairstyle = CHARACTERS[character].style;
-  return { version: 14, nickname: nickname.trim(), character, berries: 0, level: 1, xp: 0, weapon: 0, outfit: 0, weapons: { 0: 0 }, outfits: { 0: 0 }, ride: -1, rides: {}, pet: -1, pets: {}, hairstyle, hairstyles: { 0: true, [hairstyle]: true }, face: 0, faces: { 0: true }, teacherMode: false, best: 0, position: { x: 0, z: 8 }, tutorial: { collected: false, battle: false, shop: false }, settings: { music: true, sound: true, lowQuality: false, maxDividend: 0, multiplicationRange: 'stage', sessionMinutes: 0, focusUnit: 'all', spiralReview: true, practice: { operation: 'auto', tier: 1, skipPicker: false } }, learning: { elapsedSeconds: 0, correct: 0, wrong: 0, wrongQuestions: [] }, discoveries: { monsters: [], pets: [], outfits: [0] }, room: { furniture: [], inside: false, positions: {} }, forest: 'division', journey: emptyJourney(), multiplicationJourney: emptyJourney(), multiplicationFinal: null, multiplicationCompleted: false, multiplicationRewardClaimed: false, additionJourney: emptyJourney(), subtractionJourney: emptyJourney(), additionCompleted: false, subtractionCompleted: false, curriculum: emptyCurriculumProgress(), potions: { stock: POTIONS.map(() => 0), berryMultiplier: 1, berryUntil: 0, xpMultiplier: 1, xpUntil: 0 }, garden: { rescued: 0, flowers: [-1, -1, -1] }, expedition: emptyExpedition() };
+  return { version: 14, grade, nickname: nickname.trim(), character, berries: 0, level: 1, xp: 0, weapon: 0, outfit: 0, weapons: { 0: 0 }, outfits: { 0: 0 }, ride: -1, rides: {}, pet: -1, pets: {}, hairstyle, hairstyles: { 0: true, [hairstyle]: true }, face: 0, faces: { 0: true }, teacherMode: false, best: 0, position: { x: 0, z: 8 }, tutorial: { collected: false, battle: false, shop: false }, settings: { music: true, sound: true, lowQuality: false, maxDividend: 0, multiplicationRange: 'stage', sessionMinutes: 0, focusUnit: 'all', spiralReview: true, practice: { operation: 'auto', tier: 1, skipPicker: false } }, learning: { elapsedSeconds: 0, correct: 0, wrong: 0, wrongQuestions: [] }, discoveries: { monsters: [], pets: [], outfits: [0] }, room: { furniture: [], inside: false, positions: {} }, forest: grade <= 2 ? 'addition' : 'division', journey: emptyJourney(), multiplicationJourney: emptyJourney(), multiplicationFinal: null, multiplicationCompleted: false, multiplicationRewardClaimed: false, additionJourney: emptyJourney(), subtractionJourney: emptyJourney(), additionCompleted: false, subtractionCompleted: false, curriculum: emptyCurriculumProgress(), potions: { stock: POTIONS.map(() => 0), berryMultiplier: 1, berryUntil: 0, xpMultiplier: 1, xpUntil: 0 }, garden: { rescued: 0, flowers: [-1, -1, -1] }, expedition: emptyExpedition() };
 }
 
 export function defaultRoomFurniturePosition(index: number): RoomFurniturePosition {
@@ -230,6 +231,11 @@ export function placeRoomFurniture(s: Save, id: number, column: number, row: num
 // 3학년 한 해의 모든 모험 지역. 계산 숲 네 곳과 교구형 수학 지역 일곱 곳을 함께 완주해요.
 const CURRICULUM_UNITS: CurriculumUnitId[] = ['addition', 'subtraction', 'plane', 'multiplication', 'division', 'lengthTime', 'fractionDecimal', 'circle', 'fraction', 'measurement', 'pictograph'];
 const ALL_UNITS: CurriculumUnitId[] = [...CURRICULUM_UNITS];
+export function curriculumUnitsForGrade(grade: SchoolGrade): CurriculumUnitId[] {
+  if (grade === 1) return CURRICULUM_UNITS.filter(unit => unit !== 'multiplication' && unit !== 'division');
+  if (grade === 2) return CURRICULUM_UNITS.filter(unit => unit !== 'division');
+  return [...CURRICULUM_UNITS];
+}
 export const NEW_CURRICULUM_UNITS: NewCurriculumUnitId[] = ['plane', 'lengthTime', 'fractionDecimal', 'circle', 'fraction', 'measurement', 'pictograph'];
 export function emptyCurriculumUnit(): CurriculumUnitProgress { return { completedMissions: [], stars: Array(10).fill(0), correct: 0, wrong: 0, hints: 0, rewardClaimed: false }; }
 export function emptyCurriculumProgress(): CurriculumProgress {
@@ -270,9 +276,9 @@ export function completeCurriculumMission(s: Save, unit: NewCurriculumUnitId, mi
   s.berries += berries;
   return { firstCompletion, unitCompleted, unitRewarded, berries };
 }
-export function curriculumGraduationAvailable(s: Save) { return CURRICULUM_UNITS.every(unit => curriculumUnitComplete(s, unit)); }
+export function curriculumGraduationAvailable(s: Save) { return curriculumUnitsForGrade(s.grade).every(unit => curriculumUnitComplete(s, unit)); }
 export function claimCurriculumGraduation(s: Save) {
-  if (!s.teacherMode && !curriculumGraduationAvailable(s)) throw new Error('3학년 수학 모험 지역을 먼저 모두 통과해 주세요.');
+  if (!s.teacherMode && !curriculumGraduationAvailable(s)) throw new Error(`${s.grade}학년 수학 모험 지역을 먼저 모두 통과해 주세요.`);
   if (s.curriculum.graduationClaimed) return 0;
   s.curriculum.graduationClaimed = true; s.berries += 1500; return 1500;
 }
@@ -458,12 +464,21 @@ function pickSimpleQuestion(operation: 'addition' | 'subtraction', stage: number
 }
 export function pickAdditionQuestion(stage = 1, previous?: Question) { return pickSimpleQuestion('addition', stage, previous); }
 export function pickSubtractionQuestion(stage = 1, previous?: Question) { return pickSimpleQuestion('subtraction', stage, previous); }
-export function practiceQuestion(operation: Operation, tier: PracticeTier, previous?: Question, level = 1): Question {
+function pickGradeOperationQuestion(grade: SchoolGrade, operation: Operation, stage: number, previous: Question | undefined, level: number, maxDividend: 0 | 90 | 180, range: MultiplicationRange) {
+  if (operation === 'addition') return pickAdditionQuestion(grade === 1 ? Math.min(2, stage) : grade === 2 ? Math.min(6, stage) : stage, previous);
+  if (operation === 'subtraction') return pickSubtractionQuestion(grade === 1 ? Math.min(2, stage) : grade === 2 ? Math.min(6, stage) : stage, previous);
+  if (operation === 'multiplication') return pickMultiplicationQuestion(grade === 2 ? Math.min(2, stage) : stage, previous, grade === 2 ? 'tables' : range);
+  if (grade >= 4) {
+    const divisor = 10 + Math.floor(Math.random() * Math.min(40, 10 + stage * 3));
+    const answer = 2 + Math.floor(Math.random() * Math.min(90, 8 + stage * 5));
+    const remainder = stage >= 7 ? Math.floor(Math.random() * Math.min(divisor, 10)) : 0;
+    return { dividend: divisor * answer + remainder, divisor, answer, remainder, operation: 'division' as const };
+  }
+  return pickQuestion(level, previous, stage, maxDividend);
+}
+export function practiceQuestion(operation: Operation, tier: PracticeTier, previous?: Question, level = 1, grade: SchoolGrade = 3): Question {
   const stage = PRACTICE_STAGES[operation][tier];
-  if (operation === 'addition') return pickAdditionQuestion(stage, previous);
-  if (operation === 'subtraction') return pickSubtractionQuestion(stage, previous);
-  if (operation === 'multiplication') return pickMultiplicationQuestion(stage, previous, 'stage');
-  return pickQuestion(level, previous, stage, 0);
+  return pickGradeOperationQuestion(grade, operation, stage, previous, level, 0, 'stage');
 }
 export function multiplicationUsesStory(monsterIndex: number) {
   return Number.isInteger(monsterIndex) && monsterIndex >= 0 && (monsterIndex + 1) % 3 === 0;
@@ -675,6 +690,8 @@ export function validateSave(value: unknown): Save {
     const potions = migrated.potions as Save['potions'] | undefined;
     if (potions && Array.isArray(potions.stock)) potions.stock = POTIONS.map((_, id) => potions.stock[id] ?? (migrated.teacherMode ? 9 : 0));
   }
+  // 학년 기능이 생기기 전의 저장은 기존 내용에 맞게 3학년으로 이어가요.
+  if (migrated.grade === undefined) migrated.grade = 3;
   const s = migrated as unknown as Save;
   if (s.garden === undefined) s.garden = { rescued: 0, flowers: [-1, -1, -1] };
   if (s.potions === undefined) s.potions = { stock: s.teacherMode ? POTIONS.map(() => 9) : POTIONS.map(() => 0), berryMultiplier: 1, berryUntil: 0, xpMultiplier: 1, xpUntil: 0 };
@@ -691,7 +708,7 @@ export function validateSave(value: unknown): Save {
   }
   const integer = (v: unknown, min: number, max: number): v is number => typeof v === 'number' && Number.isSafeInteger(v) && v >= min && v <= max;
   if (!s.garden || !integer(s.garden.rescued, 0, 3) || !Array.isArray(s.garden.flowers) || s.garden.flowers.length !== 3 || s.garden.flowers.some(f => !integer(f, -1, 2)) || s.garden.flowers.filter(f => f >= 0).length > s.garden.rescued) return fail();
-  if (s.version !== 14 || !OPERATIONS.includes(s.forest) || typeof s.teacherMode !== 'boolean' || typeof s.nickname !== 'string' || !s.nickname.trim() || [...s.nickname].length > 10 || !integer(s.character, 0, 3) || !integer(s.berries, 0, 1e9) || !integer(s.level, 1, 100000) || !integer(s.xp, 0, s.level * 40 - 1) || !integer(s.best, 0, 1e9)) return fail();
+  if (s.version !== 14 || !integer(s.grade, 1, 6) || !OPERATIONS.includes(s.forest) || typeof s.teacherMode !== 'boolean' || typeof s.nickname !== 'string' || !s.nickname.trim() || [...s.nickname].length > 10 || !integer(s.character, 0, 3) || !integer(s.berries, 0, 1e9) || !integer(s.level, 1, 100000) || !integer(s.xp, 0, s.level * 40 - 1) || !integer(s.best, 0, 1e9)) return fail();
   if (!s.potions || !Array.isArray(s.potions.stock) || s.potions.stock.length !== POTIONS.length || s.potions.stock.some(n => !integer(n, 0, 99)) || ![1, 2, 3].includes(s.potions.berryMultiplier) || !integer(s.potions.berryUntil, 0, Number.MAX_SAFE_INTEGER) || ![1, 2, 3, 4].includes(s.potions.xpMultiplier) || !integer(s.potions.xpUntil, 0, Number.MAX_SAFE_INTEGER) || (s.potions.berryUntil === 0) !== (s.potions.berryMultiplier === 1) || (s.potions.xpUntil === 0) !== (s.potions.xpMultiplier === 1)) return fail();
   const expedition = s.expedition;
   if (!expedition || !integer(expedition.completed, 0, 1e8) || !integer(expedition.selectedTitle, 0, EXPEDITION_TITLES.length - 1) || expedition.completed < EXPEDITION_TITLES[expedition.selectedTitle].need) return fail();
@@ -746,7 +763,7 @@ export function validateSave(value: unknown): Save {
     ? integer(q.dividend, 2, 999) && integer(q.divisor, 1, 998) && q.dividend > q.divisor && q.answer === q.dividend - q.divisor
     : q.operation === 'multiplication'
     ? integer(q.dividend, 2, 999) && integer(q.divisor, 2, 99) && q.answer === q.dividend * q.divisor
-    : integer(q.dividend, 10, 999) && integer(q.divisor, 2, 9) && integer(q.remainder ?? 0, 0, q.divisor - 1) && q.answer === Math.floor(q.dividend / q.divisor) && (q.remainder ?? 0) === q.dividend % q.divisor;
+    : integer(q.dividend, 10, 9999) && integer(q.divisor, 2, 99) && integer(q.remainder ?? 0, 0, q.divisor - 1) && q.answer === Math.floor(q.dividend / q.divisor) && (q.remainder ?? 0) === q.dividend % q.divisor;
   if (!s.learning || !integer(s.learning.elapsedSeconds, 0, 1e9) || !integer(s.learning.correct, 0, 1e9) || !integer(s.learning.wrong, 0, 1e9) || !Array.isArray(s.learning.wrongQuestions) || s.learning.wrongQuestions.length > 30 || s.learning.wrongQuestions.some(q => !validQuestion(q))) return fail();
   if (!s.curriculum || typeof s.curriculum.graduationClaimed !== 'boolean' || !s.curriculum.units || !Array.isArray(s.curriculum.wrongSkills) || s.curriculum.wrongSkills.length > 30) return fail();
   for (const unit of ALL_UNITS) {
@@ -777,13 +794,10 @@ export function validateSave(value: unknown): Save {
 }
 export class Encounter {
   question: Question; solved = false; monster: number; arena: boolean; stage: number;
-  constructor(monster: number, arena: boolean, level: number, previous?: Question, stage = 0, maxDividend: 0 | 90 | 180 = 0, operation: Operation = 'division', multiplicationRange: MultiplicationRange = 'stage', practice?: { operation: Operation; tier: PracticeTier }) {
+  constructor(monster: number, arena: boolean, level: number, previous?: Question, stage = 0, maxDividend: 0 | 90 | 180 = 0, operation: Operation = 'division', multiplicationRange: MultiplicationRange = 'stage', practice?: { operation: Operation; tier: PracticeTier }, grade: SchoolGrade = 3) {
     this.monster = monster; this.arena = arena; this.stage = stage;
-    this.question = practice ? practiceQuestion(practice.operation, practice.tier, previous, level)
-      : operation === 'addition' ? pickAdditionQuestion(stage || 1, previous)
-      : operation === 'subtraction' ? pickSubtractionQuestion(stage || 1, previous)
-      : operation === 'multiplication' ? pickMultiplicationQuestion(stage || 1, previous, multiplicationRange)
-      : pickQuestion(level, previous, stage, maxDividend);
+    this.question = practice ? practiceQuestion(practice.operation, practice.tier, previous, level, grade)
+      : pickGradeOperationQuestion(grade, operation, stage || 1, previous, level, maxDividend, multiplicationRange);
   }
   answer(value: string): 'correct' | 'wrong' | 'ignored' {
     if (this.solved) return 'ignored';
