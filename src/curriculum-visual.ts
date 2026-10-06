@@ -54,11 +54,21 @@ function geometryHtml(visual: Extract<CurriculumVisual, { kind: 'geometry' }>) {
     'right-triangle': '<path d="M48 112 L48 42 L160 112 Z"/><path d="M48 88 L72 88 L72 112" fill="none" stroke="#e9827b"/>',
     rectangle: '<rect x="42" y="38" width="116" height="76" rx="3"/><path d="M42 62 L66 62 L66 38" fill="none" stroke="#e9827b"/>',
     square: '<rect x="60" y="34" width="88" height="88" rx="3"/><path d="M60 58 L84 58 L84 34" fill="none" stroke="#e9827b"/>',
+    circle: '<circle cx="100" cy="78" r="46"/>',
+    triangle: '<path d="M100 30 L152 120 L48 120 Z"/>',
   };
   return `<div class="curriculum-visual geometry-visual"><svg viewBox="0 0 200 150" role="img" aria-label="${esc(visual.label ?? '평면도형 그림')}">${arrows}<g ${common}>${drawings[visual.shape]}</g><text x="100" y="142">${esc(visual.label ?? '도형의 성질을 살펴봐요')}</text></svg></div>`;
 }
 
+function clockHtml(h: number, m: number, s?: number) {
+  const hand = (deg: number, len: number, width: number, color: string) => `<line x1="80" y1="80" x2="${(80 + len * Math.sin(deg * Math.PI / 180)).toFixed(1)}" y2="${(80 - len * Math.cos(deg * Math.PI / 180)).toFixed(1)}" stroke="${color}" stroke-width="${width}" stroke-linecap="round"/>`;
+  const numbers = Array.from({ length: 12 }, (_, i) => { const n = i + 1, a = n * 30 * Math.PI / 180; return `<text x="${(80 + 60 * Math.sin(a)).toFixed(1)}" y="${(86 - 60 * Math.cos(a)).toFixed(1)}" text-anchor="middle" font-size="15" font-weight="700" fill="#5a4a3a">${n}</text>`; }).join('');
+  const ticks = Array.from({ length: 60 }, (_, i) => { const a = i * 6 * Math.PI / 180, r1 = i % 5 === 0 ? 72 : 75; return `<line x1="${(80 + r1 * Math.sin(a)).toFixed(1)}" y1="${(80 - r1 * Math.cos(a)).toFixed(1)}" x2="${(80 + 77 * Math.sin(a)).toFixed(1)}" y2="${(80 - 77 * Math.cos(a)).toFixed(1)}" stroke="#c9b58a" stroke-width="1"/>`; }).join('');
+  return `<div class="curriculum-visual clock-visual"><svg viewBox="0 0 160 160" role="img" aria-label="시계 그림"><circle cx="80" cy="80" r="78" fill="#fffaee" stroke="#d9ad7c" stroke-width="4"/>${ticks}${numbers}${hand((h % 12) * 30 + m * 0.5, 38, 5, '#5a4a3a')}${hand(m * 6, 56, 3.5, '#3b8a57')}${s === undefined ? '' : hand(s * 6, 62, 1.6, '#e07a5f')}<circle cx="80" cy="80" r="4" fill="#5a4a3a"/></svg><em>시계의 바늘을 잘 살펴봐요</em></div>`;
+}
+
 function lengthTimeHtml(visual: Extract<CurriculumVisual, { kind: 'length-time' }>) {
+  if (visual.clock && visual.measure === 'time') return clockHtml(visual.values[0], visual.values[1] ?? 0, visual.values[2]);
   const icon = visual.measure === 'length' ? '📏' : '🕰️';
   return `<div class="curriculum-visual length-time-visual"><div class="length-time-items">${visual.values.map((value, index) => `<b><span>${icon}</span><small>${esc(visual.labels?.[index] ?? `${value} ${visual.unit}`)}</small></b>`).join('')}</div><em>${visual.measure === 'length' ? '길이 단위를 맞추어 살펴봐요' : '시간 단위를 맞추어 살펴봐요'}</em></div>`;
 }
@@ -104,7 +114,20 @@ function transformHtml(visual: Extract<CurriculumVisual, { kind: 'transform' }>)
   return `<div class="curriculum-visual transform-visual"><svg viewBox="0 0 200 112" role="img" aria-label="${esc(visual.label ?? '도형 움직이기')}"><g>${shape}</g>${mark}<text x="120" y="60" text-anchor="middle" font-size="34" fill="#e9827b">${arrows[visual.op]}</text><text x="100" y="104" text-anchor="middle" font-size="9" fill="#507a68">${esc(visual.label ?? '도형을 움직여요')}</text></svg></div>`;
 }
 
+function sceneHtml(visual: Extract<CurriculumVisual, { kind: 'scene' }>) {
+  return `<div class="curriculum-visual scene-visual"><div class="scene-items">${visual.items.map(item => `<b><span>${esc(item.icon)}</span>${item.label ? `<small>${esc(item.label)}</small>` : ''}</b>`).join('')}</div>${visual.caption ? `<em>${esc(visual.caption)}</em>` : ''}</div>`;
+}
+
+function rulerHtml(end: number, max = Math.max(10, Math.ceil((end + 1) / 5) * 5)) {
+  const x = (n: number) => 20 + n * (300 / max);
+  const ticks = Array.from({ length: max + 1 }, (_, n) => `<line x1="${x(n)}" y1="46" x2="${x(n)}" y2="${n % 5 === 0 ? 62 : 56}" stroke="#8a7863" stroke-width="1.5"/><text x="${x(n)}" y="78" text-anchor="middle" font-size="10" fill="#5a4a3a">${n}</text>`).join('');
+  return `<div class="curriculum-visual ruler-visual"><svg viewBox="0 0 340 92" role="img" aria-label="자 그림"><rect x="${x(0)}" y="10" width="${x(end) - x(0)}" height="20" rx="4" fill="#f4c978" stroke="#d9ad7c" stroke-width="2"/><path d="M${x(end)} 10 L${x(end) + 12} 20 L${x(end)} 30 Z" fill="#e07a5f"/><rect x="14" y="38" width="${300 + 12}" height="46" rx="4" fill="#fff3d6" stroke="#d9ad7c" stroke-width="2"/>${ticks}</svg><em>자의 눈금을 살펴봐요 (cm)</em></div>`;
+}
+
 export function curriculumVisualHtml(visual: CurriculumVisual): string {
+  if (visual.kind === 'none') return '';
+  if (visual.kind === 'scene') return sceneHtml(visual);
+  if (visual.kind === 'ruler') return rulerHtml(visual.end, visual.max);
   if (visual.kind === 'bar-graph') return barGraphHtml(visual);
   if (visual.kind === 'ratio-graph') return ratioGraphHtml(visual);
   if (visual.kind === 'transform') return transformHtml(visual);

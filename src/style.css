@@ -371,3 +371,17 @@ input:not([type=checkbox]):not([type=radio]),select,textarea{min-height:44px}
 .ambience-rain[data-weather=rain]{display:block}
 @keyframes ac-rain{to{background-position:-40px 140px}}
 @media(prefers-reduced-motion:reduce){.ambience-rain{animation:none}}
+
+/* 시계 그림 (몇 시·몇 분 문제) */
+.clock-visual{display:grid;place-items:center;gap:6px;padding:12px}
+.clock-visual svg{width:min(190px,52vw);height:auto;filter:drop-shadow(0 4px 0 #e8d7b3)}
+.clock-visual em{font-style:normal;font-size:.82rem;color:#8a7863}
+
+/* 장면 그림(물건·숫자 카드)과 자 그림 */
+.scene-visual,.ruler-visual{display:grid;place-items:center;gap:8px;padding:14px}
+.scene-items{display:flex;flex-wrap:wrap;justify-content:center;gap:10px}
+.scene-items b{display:grid;place-items:center;gap:2px;min-width:68px;padding:8px 10px;border:3px solid #fffef8;border-radius:18px;background:#fff7e0;box-shadow:0 4px 0 #e3cf9f}
+.scene-items b span{font-size:2rem;line-height:1.1}
+.scene-items b small{font-size:.8rem;color:#7a6246}
+.scene-visual em,.ruler-visual em{font-style:normal;font-size:.82rem;color:#8a7863}
+.ruler-visual svg{width:min(360px,92%);height:auto}

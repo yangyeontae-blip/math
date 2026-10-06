@@ -1,5 +1,5 @@
 import type { CurriculumVisual } from './curriculum';
-import { j } from './grade-helpers';
+import { j, ye } from './grade-helpers';
 import type { NewCurriculumUnitId } from './rules';
 
 export interface Grade3Variant { kind: 'choice' | 'number'; prompt: string; answer: string; wrongs?: string[]; explanation: string; visual: CurriculumVisual; hints?: [string, string, string] }
@@ -133,27 +133,27 @@ const OBJ = ['피자', '케이크', '초콜릿 판', '색종이', '샌드위치'
 const fractionMeaning = (r: Rand): Grade3Variant => {
   const d = ri(2, 10, r), n = ri(1, d - 1, r), obj = pick(OBJ, r), kind = ri(0, 2, r);
   const frac = (a: number) => `${a}/${d}`, vis: CurriculumVisual = { kind: 'fraction', numerator: n, denominator: d };
-  if (kind === 0) return { kind: 'choice', prompt: `${j(obj, '을를')} 똑같이 ${d}조각으로 나누어 ${n}조각을 먹었어요. 먹은 양은 전체의 얼마일까요?`, answer: frac(n), wrongs: [d - n === n ? `${Math.min(d - 1, n + 1)}/${d}` : frac(d - n), `${d}/${n}`, `${n}/${d + 1}`], explanation: `전체를 ${d}로 나눈 것 중 ${n}조각이므로 ${frac(n)}이에요.`, visual: vis };
-  if (kind === 1) return { kind: 'choice', prompt: `${j(obj, '을를')} 똑같이 ${d}조각으로 나누어 ${n}조각을 먹었어요. 남은 양은 전체의 얼마일까요?`, answer: frac(d - n), wrongs: [frac(n), `${d}/${d - n}`, `${d - n}/${d + 1}`], explanation: `남은 조각은 ${d} − ${n} = ${d - n}조각이므로 ${frac(d - n)}이에요.`, visual: { kind: 'fraction', numerator: d - n, denominator: d } };
-  return { kind: 'choice', prompt: `전체를 똑같이 ${d}로 나눈 것 중 ${n}만큼 색칠했어요. 색칠한 부분을 분수로 나타내면 무엇일까요?`, answer: frac(n), wrongs: [`${d}/${n}`, frac(d - n), `${n}/${d + 1}`], explanation: `분모는 전체를 나눈 수 ${d}, 분자는 색칠한 수 ${n}이에요.`, visual: vis };
+  if (kind === 0) return { kind: 'choice', prompt: `${j(obj, '을를')} 똑같이 ${d}조각으로 나누어 ${n}조각을 먹었어요. 먹은 양은 전체의 얼마일까요?`, answer: frac(n), wrongs: [d - n === n ? `${Math.min(d - 1, n + 1)}/${d}` : frac(d - n), `${d}/${n}`, `${n}/${d + 1}`], explanation: `전체를 ${d}로 나눈 것 중 ${n}조각이므로 ${frac(n)}${ye(frac(n))}.`, visual: vis };
+  if (kind === 1) return { kind: 'choice', prompt: `${j(obj, '을를')} 똑같이 ${d}조각으로 나누어 ${n}조각을 먹었어요. 남은 양은 전체의 얼마일까요?`, answer: frac(d - n), wrongs: [frac(n), `${d}/${d - n}`, `${d - n}/${d + 1}`], explanation: `남은 조각은 ${d} − ${n} = ${d - n}조각이므로 ${frac(d - n)}${ye(frac(d - n))}.`, visual: { kind: 'fraction', numerator: d - n, denominator: d } };
+  return { kind: 'choice', prompt: `전체를 똑같이 ${d}로 나눈 것 중 ${n}만큼 색칠했어요. 색칠한 부분을 분수로 나타내면 무엇일까요?`, answer: frac(n), wrongs: [`${d}/${n}`, frac(d - n), `${n}/${d + 1}`], explanation: `분모는 전체를 나눈 수 ${d}, 분자는 색칠한 수 ${n}${ye(n)}.`, visual: vis };
 };
 const decimalMeaning = (r: Rand): Grade3Variant => {
   const n = ri(1, 9, r), kind = ri(0, 3, r), dec = `0.${n}`, vis: CurriculumVisual = { kind: 'decimal', tenths: n };
-  if (kind === 0) return { kind: 'choice', prompt: `0.1이 ${n}개이면 얼마일까요?`, answer: dec, wrongs: [`${n}.0`, `0.${Math.max(0, n - 1)}`, `${n}.1`].filter(x => x !== dec), explanation: `0.1이 ${n}개이면 ${dec}이에요.`, visual: vis };
-  if (kind === 1) return { kind: 'choice', prompt: `1을 똑같이 10으로 나눈 것 중 ${n}만큼은 얼마일까요?`, answer: dec, wrongs: [`${n}`, `${n}.0`, `0.0${n}`], explanation: `1을 10으로 나눈 한 칸이 0.1이므로 ${n}칸은 ${dec}이에요.`, visual: vis };
-  if (kind === 2) return { kind: 'choice', prompt: `10분의 ${j(n, '을를')} 소수로 나타내면 무엇일까요?`, answer: dec, wrongs: [`${n}.0`, `0.${Math.min(9, n + 1)}`, `${n}/10`].filter(x => x !== dec), explanation: `10분의 ${j(n, '은는')} ${dec}이에요.`, visual: vis };
+  if (kind === 0) return { kind: 'choice', prompt: `0.1이 ${n}개이면 얼마일까요?`, answer: dec, wrongs: [`${n}.0`, `0.${Math.max(0, n - 1)}`, `${n}.1`].filter(x => x !== dec), explanation: `0.1이 ${n}개이면 ${dec}${ye(dec)}.`, visual: vis };
+  if (kind === 1) return { kind: 'choice', prompt: `1을 똑같이 10으로 나눈 것 중 ${n}만큼은 얼마일까요?`, answer: dec, wrongs: [`${n}`, `${n}.0`, `0.0${n}`], explanation: `1을 10으로 나눈 한 칸이 0.1이므로 ${n}칸은 ${dec}${ye(dec)}.`, visual: vis };
+  if (kind === 2) return { kind: 'choice', prompt: `10분의 ${j(n, '을를')} 소수로 나타내면 무엇일까요?`, answer: dec, wrongs: [`${n}.0`, `0.${Math.min(9, n + 1)}`, `${n}/10`].filter(x => x !== dec), explanation: `10분의 ${j(n, '은는')} ${dec}${ye(dec)}.`, visual: vis };
   return { kind: 'number', prompt: `${j(dec, '은는')} 0.1이 몇 개인 수일까요?`, answer: String(n), explanation: `${j(dec, '은는')} 0.1이 ${n}개예요.`, visual: vis };
 };
 const decimalReading = (r: Rand): Grade3Variant => {
   const n = ri(1, 9, r), words = ['영', '일', '이', '삼', '사', '오', '육', '칠', '팔', '구'], kind = ri(0, 1, r), dec = `0.${n}`;
-  if (kind === 0) return { kind: 'choice', prompt: `“영 점 ${words[n]}”을 소수로 쓰면 무엇일까요?`, answer: dec, wrongs: [`${n}.0`, `0.${Math.min(9, n + 1)}`, `0.0${n}`].filter(x => x !== dec), explanation: `영 점 ${j(words[n], '은는')} ${dec}이에요.`, visual: { kind: 'decimal', tenths: n } };
+  if (kind === 0) return { kind: 'choice', prompt: `“영 점 ${words[n]}”을 소수로 쓰면 무엇일까요?`, answer: dec, wrongs: [`${n}.0`, `0.${Math.min(9, n + 1)}`, `0.0${n}`].filter(x => x !== dec), explanation: `영 점 ${j(words[n], '은는')} ${dec}${ye(dec)}.`, visual: { kind: 'decimal', tenths: n } };
   return { kind: 'choice', prompt: `소수 ${dec}에서 소수점 아래의 숫자 ${j(n, '은는')} 어느 자리 숫자일까요?`, answer: '소수 첫째 자리', wrongs: ['일의 자리', '소수 둘째 자리', '십의 자리'], explanation: `소수점 바로 아래 자리가 소수 첫째 자리예요.`, visual: { kind: 'decimal', tenths: n } };
 };
 const fractionDecimalPair = (r: Rand): Grade3Variant => {
   const n = ri(1, 9, r), kind = ri(0, 2, r), vis: CurriculumVisual = { kind: 'decimal', tenths: n };
-  if (kind === 0) return { kind: 'number', prompt: `${n}/10 = 0.□ 에서 □에 알맞은 수는 무엇일까요?`, answer: String(n), explanation: `10분의 ${j(n, '은는')} 0.${n}이에요.`, visual: vis };
-  if (kind === 1) return { kind: 'number', prompt: `0.${n} = □/10 에서 □에 알맞은 수는 무엇일까요?`, answer: String(n), explanation: `0.${j(n, '은는')} 10분의 ${n}이에요.`, visual: vis };
-  return { kind: 'choice', prompt: `10분의 ${j(n, '와과')} 크기가 같은 소수는 무엇일까요?`, answer: `0.${n}`, wrongs: [`${n}.0`, `0.0${n}`, `${n}.1`], explanation: `10분의 ${j(n, '은는')} 0.${n}이에요.`, visual: vis };
+  if (kind === 0) return { kind: 'number', prompt: `${n}/10 = 0.□ 에서 □에 알맞은 수는 무엇일까요?`, answer: String(n), explanation: `10분의 ${j(n, '은는')} 0.${n}${ye(n)}.`, visual: vis };
+  if (kind === 1) return { kind: 'number', prompt: `0.${n} = □/10 에서 □에 알맞은 수는 무엇일까요?`, answer: String(n), explanation: `0.${j(n, '은는')} 10분의 ${n}${ye(n)}.`, visual: vis };
+  return { kind: 'choice', prompt: `10분의 ${j(n, '와과')} 크기가 같은 소수는 무엇일까요?`, answer: `0.${n}`, wrongs: [`${n}.0`, `0.0${n}`, `${n}.1`], explanation: `10분의 ${j(n, '은는')} 0.${n}${ye(n)}.`, visual: vis };
 };
 
 const capacityBank = fromItems([
