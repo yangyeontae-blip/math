@@ -27,3 +27,9 @@ export function applyAmbience(host: HTMLElement, before: Element | null, now = n
   layer.dataset.mood = mood; layer.dataset.weather = weather; if (rain) rain.dataset.weather = weather;
   return { mood, weather };
 }
+
+/** 말풍선 대사에 쓸 지금 분위기예요. 분위기 설정을 끄면 낮·맑음으로 쳐요. */
+export function lineContext(now = new Date()): { night: boolean; rain: boolean } {
+  if (!ambienceEnabled()) return { night: false, rain: false };
+  return { night: moodForHour(now.getHours()) === 'night', rain: weatherForDate(now) === 'rain' };
+}
