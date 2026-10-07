@@ -44,11 +44,12 @@ function fractionHtml(visual: Extract<CurriculumVisual, { kind: 'fraction' }>) {
 
 function geometryHtml(visual: Extract<CurriculumVisual, { kind: 'geometry' }>) {
   const common = 'stroke="#507a68" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" fill="#dff1d5"';
-  const arrows = '<defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3 z" fill="#507a68"/></marker></defs>';
+  // 화살촉은 표식(marker) 대신 직접 그려요. 표식은 왼쪽 끝에서도 오른쪽을 가리켜서 직선이 반직선처럼 보였어요.
+  const head = (tip: number, dir: 1 | -1) => `<path d="M${tip} 74 L${tip - dir * 16} 63 L${tip - dir * 16} 85 Z" fill="#507a68" stroke-width="3"/>`;
   const drawings: Record<typeof visual.shape, string> = {
     segment: '<line x1="48" y1="74" x2="152" y2="74"/><circle cx="48" cy="74" r="7"/><circle cx="152" cy="74" r="7"/>',
-    line: '<line x1="32" y1="74" x2="168" y2="74" marker-start="url(#arrow)" marker-end="url(#arrow)"/>',
-    ray: '<circle cx="48" cy="74" r="7"/><line x1="48" y1="74" x2="168" y2="74" marker-end="url(#arrow)"/>',
+    line: `<line x1="36" y1="74" x2="164" y2="74"/>${head(22, -1)}${head(178, 1)}`,
+    ray: `<circle cx="48" cy="74" r="7"/><line x1="48" y1="74" x2="164" y2="74"/>${head(178, 1)}`,
     angle: '<path d="M48 112 L100 58 L160 112" fill="none"/><circle cx="100" cy="58" r="6"/>',
     'right-angle': '<path d="M55 112 L55 48 L150 48" fill="none"/><path d="M55 72 L79 72 L79 48" fill="none" stroke="#e9827b"/>',
     'right-triangle': '<path d="M48 112 L48 42 L160 112 Z"/><path d="M48 88 L72 88 L72 112" fill="none" stroke="#e9827b"/>',
@@ -57,7 +58,7 @@ function geometryHtml(visual: Extract<CurriculumVisual, { kind: 'geometry' }>) {
     circle: '<circle cx="100" cy="78" r="46"/>',
     triangle: '<path d="M100 30 L152 120 L48 120 Z"/>',
   };
-  return `<div class="curriculum-visual geometry-visual"><svg viewBox="0 0 200 150" role="img" aria-label="${esc(visual.label ?? '평면도형 그림')}">${arrows}<g ${common}>${drawings[visual.shape]}</g><text x="100" y="142">${esc(visual.label ?? '도형의 성질을 살펴봐요')}</text></svg></div>`;
+  return `<div class="curriculum-visual geometry-visual"><svg viewBox="0 0 200 150" role="img" aria-label="${esc(visual.label ?? '평면도형 그림')}"><g ${common}>${drawings[visual.shape]}</g><text x="100" y="142">${esc(visual.label ?? '도형의 성질을 살펴봐요')}</text></svg></div>`;
 }
 
 function clockHtml(h: number, m: number, s?: number) {
