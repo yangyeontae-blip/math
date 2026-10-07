@@ -21,6 +21,16 @@ function circleHtml(visual: Extract<CurriculumVisual, { kind: 'circle' }>) {
     labels = `<text class="circle-known-label" x="100" y="52">지름 ${esc(visual.radius * 2)} ${unit}</text><text class="circle-question-label" x="127" y="122">반지름 ?</text>`;
     caption = '지름은 중심을 지나 원 끝에서 끝까지예요';
   }
+  else if (focus === 'radius-only') {
+    marks = '<line x1="100" y1="76" x2="154" y2="76" />';
+    labels = `<text class="circle-known-label" x="127" y="61">반지름 ${esc(visual.radius)} ${unit}</text>`;
+    caption = '반지름은 중심에서 원 둘레까지예요';
+  }
+  else if (focus === 'diameter-only') {
+    marks = '<line x1="46" y1="76" x2="154" y2="76" />';
+    labels = `<text class="circle-known-label" x="100" y="52">지름 ${esc(visual.radius * 2)} ${unit}</text>`;
+    caption = '지름은 중심을 지나 원 끝에서 끝까지예요';
+  }
   return `<div class="curriculum-visual circle-visual"><svg viewBox="0 0 200 150" role="img" aria-label="원 그림"><circle class="circle-shape" cx="100" cy="76" r="54"/><g class="circle-line">${marks}</g><g class="circle-dimension">${dimensions}</g><circle class="circle-center" cx="100" cy="76" r="6"/>${labels}<text class="circle-caption" x="100" y="143">${caption}</text></svg></div>`;
 }
 

@@ -5,7 +5,7 @@ import { grade3HasVariant, grade3Variant } from './grade3-variants';
 
 export type CurriculumQuestionKind = 'number' | 'choice';
 export type CurriculumVisual =
-  | { kind: 'circle'; focus: 'center' | 'radius' | 'diameter' | 'compass' | 'given-radius' | 'given-diameter'; radius: number; unit?: 'cm' | 'm' }
+  | { kind: 'circle'; focus: 'center' | 'radius' | 'diameter' | 'compass' | 'given-radius' | 'given-diameter' | 'radius-only' | 'diameter-only'; radius: number; unit?: 'cm' | 'm' }
   | { kind: 'geometry'; shape: 'segment' | 'line' | 'ray' | 'angle' | 'right-angle' | 'right-triangle' | 'rectangle' | 'square' | 'circle' | 'triangle'; label?: string }
   | { kind: 'length-time'; measure: 'length' | 'time'; values: number[]; unit: 'mm' | 'cm' | 'm' | 'km' | '초' | '분' | '시간'; labels?: string[]; clock?: boolean }
   | { kind: 'decimal'; tenths: number; compare?: number }
