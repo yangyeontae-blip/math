@@ -4,7 +4,7 @@ import { answerCurriculumQuestion } from '../src/curriculum.ts';
 import { curriculumVisualHtml } from '../src/curriculum-visual.ts';
 import { generateGradeQuestion, gradeMissions, gradeTopics } from '../src/grade-content.ts';
 import { j } from '../src/grade-helpers.ts';
-import { NEW_CURRICULUM_UNITS } from '../src/rules.ts';
+import { NEW_CURRICULUM_UNITS, newUnitsForGrade } from '../src/rules.ts';
 
 const grades = [1, 2, 4, 5, 6] as const;
 function seeded(seed: number) { let state = seed >>> 0; return () => ((state = (state * 1664525 + 1013904223) >>> 0) / 4294967296); }
@@ -13,7 +13,7 @@ const SAMPLES = 250;
 const gq = (grade: (typeof grades)[number], unit: (typeof NEW_CURRICULUM_UNITS)[number], topic: number, random: () => number) => generateGradeQuestion(grade, unit, topic + (random() < .5 ? gradeTopics(grade, unit).length : 0), random);
 
 test('every grade, unit and topic builds well-formed questions with a single correct answer', () => {
-  for (const grade of grades) for (const unit of NEW_CURRICULUM_UNITS) for (let topic = 0; topic < gradeTopics(grade, unit).length; topic++) {
+  for (const grade of grades) for (const unit of newUnitsForGrade(grade)) for (let topic = 0; topic < gradeTopics(grade, unit).length; topic++) {
     const random = seeded(grade * 1000 + topic * 37 + unit.length);
     for (let sample = 0; sample < SAMPLES; sample++) {
       const mission = topic + (sample % 2) * gradeTopics(grade, unit).length, tag = `${grade}-${unit}-${mission}#${sample}`;
@@ -38,7 +38,7 @@ test('every grade, unit and topic builds well-formed questions with a single cor
 
 test('missions 0-4 of a region cover five different kinds of question (no more one-template regions)', () => {
   const skeleton = (prompt: string) => prompt.replace(/\d/g, '#');
-  for (const grade of grades) for (const unit of NEW_CURRICULUM_UNITS) {
+  for (const grade of grades) for (const unit of newUnitsForGrade(grade)) {
     const random = seeded(grade * 31 + unit.length);
     const count = gradeTopics(grade, unit).length, perTopic = Array.from({ length: count }, (_, topic) => new Set(Array.from({ length: 60 }, () => skeleton(generateGradeQuestion(grade, unit, topic, random).prompt))));
     for (let a = 0; a < count; a++) for (let b = a + 1; b < count; b++) {
@@ -49,7 +49,7 @@ test('missions 0-4 of a region cover five different kinds of question (no more o
 });
 
 test('each mission skill matches the topic of the question it asks', () => {
-  for (const grade of grades) for (const unit of NEW_CURRICULUM_UNITS) {
+  for (const grade of grades) for (const unit of newUnitsForGrade(grade)) {
     const missions = gradeMissions(grade, unit)!;
     for (let mission = 0; mission < 10; mission++) assert.equal(generateGradeQuestion(grade, unit, mission, seeded(mission + 5)).skill, missions[mission].skill, `${grade}-${unit}-${mission}`);
   }
@@ -64,7 +64,7 @@ test('spot checks: answers match an independent calculation', () => {
     q = gq(5, 'plane', 4, random); [a, b] = nums(q.prompt); assert.equal(Number(q.answer), a / gcd(a, b) * b, q.prompt);
     q = gq(5, 'measurement', 2, random); const [w, h] = nums(q.prompt); assert.equal(Number(q.answer), w * h / 2);
     q = gq(5, 'measurement', 3, random); const [x, y, z] = nums(q.prompt); assert.equal(Number(q.answer), (x + y) * z / 2);
-    q = gq(4, 'lengthTime', 3, random); const angles = q.prompt.match(/(\d+)°, (\d+)°, (\d+)°/)!.slice(1).map(Number); assert.equal(angles.reduce((s, v) => s + v, 0), 180);
+    q = gq(4, 'triangle', 0, random); const angles = q.prompt.match(/(\d+)°, (\d+)°, (\d+)°/)!.slice(1).map(Number); assert.equal(angles.reduce((s, v) => s + v, 0), 180);
     assert.equal(q.answer, angles.some(v => v === 90) ? '직각삼각형' : angles.some(v => v > 90) ? '둔각삼각형' : '예각삼각형');
     q = gq(4, 'circle', 4, random); if (q.kind === 'number' && q.prompt.includes('대각선')) { const n = ['삼각형', '사각형', '오각형', '육각형', '칠각형', '팔각형', '구각형'].findIndex(name => q.prompt.startsWith(name)) + 3; assert.ok(n >= 4, q.prompt); assert.equal(Number(q.answer), q.prompt.includes('한 꼭짓점에서 그을 수 있는 대각선은 몇 개') ? n - 3 : n * (n - 3) / 2, q.prompt); }
     q = gq(6, 'pictograph', 2, random); const [total, percent] = nums(q.prompt); assert.equal(Number(q.answer), total * percent / 100);
@@ -93,7 +93,7 @@ test('grade 4 teaches plane-figure movement and grade 5 teaches ranges and round
 
 test('Korean particles after numbers follow the final-consonant rule', () => {
   const pairs: Record<string, '은는' | '이가' | '을를' | '와과'> = { 은: '은는', 는: '은는', 이: '이가', 가: '이가', 을: '을를', 를: '을를', 와: '와과', 과: '와과' };
-  for (const grade of grades) for (const unit of NEW_CURRICULUM_UNITS) for (let mission = 0; mission < 10; mission++) {
+  for (const grade of grades) for (const unit of newUnitsForGrade(grade)) for (let mission = 0; mission < 10; mission++) {
     const random = seeded(grade * 7 + mission);
     for (let sample = 0; sample < 80; sample++) {
       const q = generateGradeQuestion(grade, unit, mission, random);
@@ -107,7 +107,7 @@ test('Korean particles after numbers follow the final-consonant rule', () => {
 });
 
 test('the topic list of every region matches its question generators and each topic builds on its own', () => {
-  for (const grade of grades) for (const unit of NEW_CURRICULUM_UNITS) {
+  for (const grade of grades) for (const unit of newUnitsForGrade(grade)) {
     const topics = gradeTopics(grade, unit);
     assert.ok(topics.length >= 5 && topics.length <= 10, `${grade}-${unit}`);
     assert.equal(new Set(topics).size, topics.length, `${grade}-${unit} duplicate topic`);
@@ -139,7 +139,7 @@ test('challenge missions (steps after every topic was met once) use larger numbe
   const biggest = (prompt: string) => Math.max(0, ...(prompt.match(/\d+(?:\.\d+)?/g) ?? []).map(Number));
   const random = seeded(4242);
   let harder = 0;
-  for (const grade of grades) for (const unit of NEW_CURRICULUM_UNITS) {
+  for (const grade of grades) for (const unit of newUnitsForGrade(grade)) {
     const count = gradeTopics(grade, unit).length;
     for (let topic = 0; topic < count; topic++) {
       let easy = 0, hard = 0;
@@ -157,7 +157,7 @@ test('added 1st/2nd/4th grade topics: answers match an independent calculation',
     let q = gq(4, 'plane', 5, random); { const [a, b] = nums(q.prompt), rd = (n: number) => Math.round(n / 100) * 100; assert.equal(Number(q.answer), q.prompt.includes('+') ? rd(a) + rd(b) : rd(a) - rd(b), q.prompt); }
     q = gq(4, 'fractionDecimal', 5, random); { const m = q.prompt.match(/가로 (\d+)칸, 세로 (\d+)칸\)에 있어요. 이 점을 (오른쪽|왼쪽)으로 (\d+)칸, (위쪽|아래쪽)으로 (\d+)칸/)!; const x = Number(m[1]) + (m[3] === '오른쪽' ? 1 : -1) * Number(m[4]), y = Number(m[2]) + (m[5] === '위쪽' ? 1 : -1) * Number(m[6]); assert.equal(q.answer, `(${x}, ${y})`, q.prompt); assert.ok(x >= 1 && y >= 1); }
     q = gq(4, 'fractionDecimal', 6, random); if (q.kind === 'number') { if (q.prompt.includes('홀수')) { const n = Number(q.prompt.match(/1부터 (\d+)까지 홀수/)![1]); assert.equal(Number(q.answer), ((n + 1) / 2) ** 2); } else if (q.prompt.includes('9 ×')) { const ones = q.prompt.match(/9 × (1+)의 결과/)![1]; assert.equal(Number(q.answer), Number('9'.repeat(ones.length))); } else { const n = Number(q.prompt.match(/1부터 (\d+)까지 모두 더하면/)![1]); assert.equal(Number(q.answer), n * (n + 1) / 2); } } else { const asked = q.prompt.match(/(1+) × \1의 결과/)![1]; assert.ok(!q.prompt.includes(`${asked} × ${asked} =`), 'the pattern question must not show its own answer'); const n = asked.length, up = [...Array(n).keys()].map(k => k + 1), v = up.concat(up.slice(0, -1).reverse()).join(''); assert.equal(q.answer.replace(/,/g, ''), v); }
-    q = gq(4, 'lengthTime', 5, random); if (q.prompt.includes('크기가 다른 한 각')) { const top = nums(q.prompt)[0]; assert.equal(Number(q.answer), (180 - top) / 2); }
+    q = gq(4, 'triangle', 1, random); if (q.prompt.includes('크기가 다른 한 각')) { const top = nums(q.prompt)[0]; assert.equal(Number(q.answer), (180 - top) / 2); }
     q = gq(4, 'circle', 5, random); if (q.kind === 'number' && q.prompt.includes('변의 길이의 합')) { const s = nums(q.prompt)[0], n = ['정삼각형', '정사각형', '정오각형', '정육각형'].findIndex(name => q.prompt.includes(name)) + 3; assert.equal(Number(q.answer), s * n); }
     q = gq(4, 'measurement', 5, random); if (q.prompt.includes('0.001이')) assert.equal(Number(q.answer), Number(nums(q.prompt)[1]) / 1000);
     q = gq(2, 'plane', 6, random); { const [a, b] = nums(q.prompt); assert.equal(Number(q.answer), q.prompt.includes('+ □') ? b - a : b + a, q.prompt); }
@@ -187,7 +187,7 @@ test('grade 3 recap missions now also ask seconds-clock reading and shape buildi
 test('grade 3 (original curriculum) questions are well-formed and use correct Korean particles', async () => {
   const { generateCurriculumQuestion } = await import('../src/curriculum.ts');
   const pairs: Record<string, '은는' | '이가' | '을를' | '와과'> = { 은: '은는', 는: '은는', 이: '이가', 가: '이가', 을: '을를', 를: '을를', 와: '와과', 과: '와과' };
-  for (const unit of NEW_CURRICULUM_UNITS) for (let mission = 0; mission < 10; mission++) {
+  for (const unit of newUnitsForGrade(3)) for (let mission = 0; mission < 10; mission++) {
     const random = seeded(unit.length * 100 + mission);
     for (let sample = 0; sample < 300; sample++) {
       const q = generateCurriculumQuestion(unit, mission, random), tag = `${unit}-${mission}`;
@@ -206,12 +206,12 @@ test('every topic keeps a minimum variety of distinct questions (picture and ans
   const { generateCurriculumQuestion } = await import('../src/curriculum.ts');
   const random = seeded(2024), key = (q: { prompt: string; detail?: string; visual: unknown; answer: string }) => [q.prompt, q.detail ?? '', JSON.stringify(q.visual), q.answer].join('|');
   const low: string[] = [];
-  for (const grade of grades) for (const unit of NEW_CURRICULUM_UNITS) for (let topic = 0; topic < gradeTopics(grade, unit).length; topic++) {
+  for (const grade of grades) for (const unit of newUnitsForGrade(grade)) for (let topic = 0; topic < gradeTopics(grade, unit).length; topic++) {
     const seen = new Set<string>();
     for (let k = 0; k < 1500; k++) seen.add(key(generateGradeQuestion(grade, unit, topic, random)));
     if (seen.size < 9) low.push(`${grade}학년 ${unit} ${gradeTopics(grade, unit)[topic]} (${seen.size}종)`);
   }
-  for (const unit of NEW_CURRICULUM_UNITS) for (let mission = 0; mission < 8; mission++) {
+  for (const unit of newUnitsForGrade(3)) for (let mission = 0; mission < 8; mission++) {
     const seen = new Set<string>();
     for (let k = 0; k < 1500; k++) seen.add(key(generateCurriculumQuestion(unit, mission, random)));
     if (seen.size < 9) low.push(`3학년 ${unit} 단계${mission + 1} (${seen.size}종)`);

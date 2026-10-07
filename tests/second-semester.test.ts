@@ -4,7 +4,7 @@ import { generateGradeQuestion, gradeTopics } from '../src/grade-content.ts';
 import { SECOND_TOPICS } from '../src/grade-second.ts';
 import { curriculumVisualHtml } from '../src/curriculum-visual.ts';
 import { answerCurriculumQuestion, type CurriculumQuestion } from '../src/curriculum.ts';
-import type { NewCurriculumUnitId } from '../src/rules.ts';
+import { completeCurriculumMission, curriculumGraduationAvailable, newSave, newUnitsForGrade, validateSave, type NewCurriculumUnitId } from '../src/rules.ts';
 
 type Grade = 1 | 2 | 4 | 5 | 6;
 const RUNS = 300;
@@ -65,6 +65,19 @@ const CHECKS: Record<string, (q: CurriculumQuestion, tag: string) => void> = {
   '대분수의 덧셈': (q, tag) => { const [w1, a1, d, w2, a2] = nums(q.prompt); assert.ok(Math.abs(frac(q.answer) - (w1 + a1 / d + w2 + a2 / d)) < 1e-9, tag); },
   '대분수의 뺄셈': (q, tag) => { const [w1, a1, d, w2, a2] = nums(q.prompt); assert.ok(Math.abs(frac(q.answer) - (w1 + a1 / d - w2 - a2 / d)) < 1e-9, tag); assert.ok(frac(q.answer) > 0); },
   '□가 있는 분수식': (q, tag) => { const [a, d, c] = nums(q.prompt); assert.ok(Math.abs(frac(q.answer) - (c - a) / d) < 1e-9, tag); },
+  '각도 크기 비교': (q, tag) => { const v = [...q.prompt.matchAll(/(\d+)°/g)].map(m => Number(m[1])); assert.equal(v.length, 3); assert.equal(Number(q.answer.replace('°', '')), q.prompt.includes('가장 큰') ? Math.max(...v) : Math.min(...v), tag); },
+  '각도의 차': (q, tag) => { const [a, b] = nums(q.prompt.replace(/ㄱ|ㄴ/g, '')); assert.equal(Number(q.answer), a - b, tag); assert.ok(a > b); },
+  '시계 바늘이 이루는 각': (q, tag) => { const n = nums(q.prompt)[0]; assert.equal(Number(q.answer), Math.min(30 * n, 360 - 30 * n), tag); },
+  '일직선 위의 각': (q, tag) => { assert.equal(Number(q.answer), 180 - nums(q.prompt)[0], tag); },
+  '각도 똑같이 나누기': (q, tag) => { const [base, parts] = nums(q.prompt); assert.ok(base === 90 || base === 180); assert.equal(Number(q.answer), base / parts, tag); assert.ok(Number.isInteger(base / parts)); },
+  '변의 길이로 삼각형 분류하기': (q, tag) => { const s = [...q.prompt.matchAll(/(\d+) cm/g)].map(m => Number(m[1])).sort((a, b) => a - b); assert.equal(s.length, 3); assert.ok(s[0] + s[1] > s[2], `${tag} not a triangle`); const same = new Set(s).size; assert.equal(q.answer, same === 1 ? '정삼각형' : same === 2 ? '이등변삼각형' : '세 변의 길이가 모두 다른 삼각형', tag); q.choices!.filter(c => c.value !== q.answer).forEach(c => assert.ok(!(same === 1 && c.value === '이등변삼각형'), `${tag} ambiguous`)); },
+  '이등변삼각형의 변': (q, tag) => { const [a, b] = nums(q.prompt); assert.equal(Number(q.answer), 2 * a + b, tag); assert.ok(b < 2 * a, tag); },
+  '이등변삼각형의 각': (q, tag) => { assert.equal(Number(q.answer), 180 - 2 * nums(q.prompt)[0], tag); assert.ok(Number(q.answer) > 0); },
+  '정삼각형의 성질': (q, tag) => { if (q.prompt.includes('한 각은')) assert.equal(Number(q.answer), 60, tag); else assert.equal(Number(q.answer) * 3, nums(q.prompt)[0], tag); },
+  '삼각형의 세 각의 합': (q, tag) => { const [a, b] = nums(q.prompt); assert.equal(Number(q.answer), 180 - a - b, tag); assert.ok(Number(q.answer) > 0); },
+  '예각삼각형 찾기': (q, tag) => { const kind = (label: string) => { const v = label.split(', ').map(x => Number(x.replace('°', ''))); return { sum: v[0] + v[1] + v[2], max: Math.max(...v) }; }; const right = kind(q.answer); assert.ok(right.sum === 180 && right.max < 90, tag); q.choices!.filter(c => c.value !== q.answer).forEach(c => { const k = kind(c.value); assert.ok(!(k.sum === 180 && k.max < 90), `${tag} second acute ${c.value}`); }); },
+  '둔각삼각형 찾기': (q, tag) => { const kind = (label: string) => { const v = label.split(', ').map(x => Number(x.replace('°', ''))); return { sum: v[0] + v[1] + v[2], max: Math.max(...v) }; }; const right = kind(q.answer); assert.ok(right.sum === 180 && right.max > 90, tag); q.choices!.filter(c => c.value !== q.answer).forEach(c => { const k = kind(c.value); assert.ok(!(k.sum === 180 && k.max > 90), `${tag} second obtuse ${c.value}`); }); },
+  '삼각형의 이름 정하기': (q, tag) => { const [x, , third] = nums(q.prompt); assert.equal(third, 180 - 2 * x); const max = Math.max(x, third), kind = max < 90 ? '예각' : max === 90 ? '직각' : '둔각'; assert.equal(q.answer, `${kind}삼각형이면서 이등변삼각형`, tag); },
   // 5학년
   '곱하는 수의 0의 개수': (q, tag) => { const [x, m] = nums(q.prompt); near(Number(q.answer), x * m, tag); },
   '곱의 소수점 위치': (q, tag) => { const n = nums(q.prompt); near(Number(q.answer), n[3] * n[4], tag); assert.equal(n[0] * n[1], n[2]); },
@@ -95,7 +108,7 @@ const CHECKS: Record<string, (q: CurriculumQuestion, tag: string) => void> = {
 
 test('every added second-semester topic is covered by an independent check', () => {
   const skills = (Object.values(SECOND_TOPICS) as Partial<Record<NewCurriculumUnitId, string[]>>[]).flatMap(unit => Object.values(unit).flat() as string[]);
-  const bankTopics = ['긴바늘과 짧은바늘', '표와 그래프의 좋은 점', '가능성을 수로 나타내기', '가능성을 말로 판단하기'];
+  const bankTopics = ['각도 어림하기', '긴바늘과 짧은바늘', '표와 그래프의 좋은 점', '가능성을 수로 나타내기', '가능성을 말로 판단하기'];
   const missing = skills.filter(skill => !CHECKS[skill] && !bankTopics.includes(skill));
   assert.deepEqual(missing, []);
 });
@@ -128,4 +141,19 @@ test('bank topics: every item has exactly one right choice and the right choice 
     for (let k = 0; k < 600; k++) { const q = generateGradeQuestion(grade, unit, topic, random); seen.add(q.prompt + q.answer); assert.equal(q.choices!.filter(c => c.value === q.answer).length, 1, q.prompt); }
     assert.ok(seen.size >= 9, `${skill} has only ${seen.size} variants`);
   }
+});
+
+test('angle and triangle are two regions for grade 4 only, and old grade 4 progress carries over', () => {
+  assert.ok(newUnitsForGrade(4).includes('triangle') && !newUnitsForGrade(3).includes('triangle') && !newUnitsForGrade(5).includes('triangle'));
+  assert.equal(gradeTopics(4, 'lengthTime').length, 10); assert.equal(gradeTopics(4, 'triangle').length, 10);
+  assert.ok(!gradeTopics(4, 'lengthTime').some(topic => topic.includes('삼각형')), 'the angle region no longer asks triangle topics');
+  // 옛 저장(삼각형 지역이 없던 저장): 각도와 삼각형을 모두 끝낸 4학년은 삼각형도 끝낸 것으로 이어져요.
+  const save = newSave('옛탐험가', 0, 4); for (let mission = 0; mission < 10; mission++) completeCurriculumMission(save, 'lengthTime', mission, 3);
+  const old = JSON.parse(JSON.stringify(save)); delete old.curriculum.units.triangle;
+  const restored = validateSave(old);
+  assert.equal(restored.curriculum.units.triangle.completedMissions.length, 10);
+  assert.equal(validateSave(JSON.parse(JSON.stringify(newSave('새탐험가', 1, 4)))).curriculum.units.triangle.completedMissions.length, 0);
+  const fresh = JSON.parse(JSON.stringify(newSave('삼학년', 2, 3))); delete fresh.curriculum.units.triangle;
+  assert.equal(validateSave(fresh).curriculum.units.triangle.completedMissions.length, 0);
+  assert.equal(curriculumGraduationAvailable(newSave('삼학년', 2, 3)), false);
 });

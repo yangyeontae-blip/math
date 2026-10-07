@@ -18,7 +18,7 @@ import { GRADE_SECOND, SECOND_TOPICS } from './grade-second';
 export interface GradeRegion { id: CurriculumUnitId; icon: string; name: string; short: string; className: string; semester: '1학기' | '2학기' | '공통' }
 
 type UnitPlan = { icon: string; name: string; short: string; semester: '1학기' | '2학기'; topics: string[] };
-type GradePlan = Record<NewCurriculumUnitId, UnitPlan>;
+type GradePlan = Record<Exclude<NewCurriculumUnitId, 'triangle'>, UnitPlan> & { triangle?: UnitPlan };
 
 const PLANS: Record<Exclude<SchoolGrade, 3>, GradePlan> = {
   1: {
@@ -41,7 +41,8 @@ const PLANS: Record<Exclude<SchoolGrade, 3>, GradePlan> = {
   },
   4: {
     plane: { icon: '🔢', name: '큰 수 별마을', short: '만·억·조와 큰 수의 자릿값', semester: '1학기', topics: ['만', '억', '조', '자릿값', '큰 수 비교'] },
-    lengthTime: { icon: '📐', name: '각도와 삼각형길', short: '각도·예각·둔각과 삼각형 분류', semester: '1학기', topics: ['각도', '각도 재기', '예각과 둔각', '삼각형 분류', '각도 계산'] },
+    lengthTime: { icon: '📐', name: '각도 재기길', short: '각도·예각·둔각과 각도의 합과 차', semester: '1학기', topics: ['각도', '각도 재기', '예각과 둔각', '각도 계산'] },
+    triangle: { icon: '🔺', name: '삼각형길', short: '이등변삼각형·정삼각형과 예각·둔각삼각형', semester: '2학기', topics: ['삼각형 분류'] },
     fractionDecimal: { icon: '🪞', name: '이동과 규칙마을', short: '평면도형의 밀기·뒤집기·돌리기와 규칙 찾기', semester: '1학기', topics: ['밀기', '뒤집기', '돌리기', '수 배열 규칙', '규칙을 식으로'] },
     circle: { icon: '🔷', name: '수직·평행·다각형정원', short: '수직과 평행, 다각형의 성질', semester: '2학기', topics: ['수직', '평행', '사각형', '다각형', '대각선'] },
     fraction: { icon: '🍰', name: '분수 계산섬', short: '분모가 같은 분수의 덧셈과 뺄셈', semester: '2학기', topics: ['진분수', '가분수와 대분수', '크기 비교', '분수 덧셈', '분수 뺄셈'] },
@@ -87,7 +88,7 @@ export function gradeRegions(grade: SchoolGrade): { first: GradeRegion[]; second
 const EXTRA_TOPICS: Partial<Record<Exclude<SchoolGrade, 3>, Partial<Record<NewCurriculumUnitId, string[]>>>> = {
   1: { fractionDecimal: ['이야기에 맞는 식', '덧셈과 뺄셈의 관계'] },
   2: { plane: ['세 수의 덧셈·뺄셈', '□가 있는 식', '덧셈과 뺄셈의 관계'], fractionDecimal: ['길이 어림'], circle: ['입체도형 모양', '쌓기나무 위치와 방향'] },
-  4: { plane: ['어림셈'], lengthTime: ['이등변삼각형과 정삼각형'], fractionDecimal: ['점의 이동', '계산식 배열 규칙'], circle: ['정다각형', '모양 만들기와 채우기'], measurement: ['소수 세 자리 수'] },
+  4: { plane: ['어림셈'], triangle: ['이등변삼각형과 정삼각형'], fractionDecimal: ['점의 이동', '계산식 배열 규칙'], circle: ['정다각형', '모양 만들기와 채우기'], measurement: ['소수 세 자리 수'] },
   5: {
     plane: ['공배수'],
     lengthTime: ['대응 관계 표', '대응 관계 식'],
@@ -102,23 +103,24 @@ const EXTRA_TOPICS: Partial<Record<Exclude<SchoolGrade, 3>, Partial<Record<NewCu
     pictograph: ['가능성을 수로', '가능성 판단'],
   },
 };
+function planOf(grade: Exclude<SchoolGrade, 3>, unit: NewCurriculumUnitId): UnitPlan { const plan = PLANS[grade][unit]; if (!plan) throw new Error(`${grade}학년에는 ${unit} 지역이 없어요.`); return plan; }
 export function gradeTopics(grade: Exclude<SchoolGrade, 3>, unit: NewCurriculumUnitId): string[] {
-  return [...PLANS[grade][unit].topics, ...(EXTRA_TOPICS[grade]?.[unit] ?? []), ...(SECOND_TOPICS[grade][unit] ?? [])];
+  return [...planOf(grade, unit).topics, ...(EXTRA_TOPICS[grade]?.[unit] ?? []), ...(SECOND_TOPICS[grade][unit] ?? [])];
 }
 
 export function gradeMissions(grade: SchoolGrade, unit: NewCurriculumUnitId): CurriculumMission[] | null {
   if (grade === 3) return null;
   const topics = gradeTopics(grade, unit);
   return Array.from({length:10}, (_, i) => ({
-    name: i === 9 ? `${PLANS[grade][unit].name} 수호자` : `${topics[i % topics.length]} ${i < topics.length ? '첫걸음' : '도전'}`,
+    name: i === 9 ? `${planOf(grade, unit).name} 수호자` : `${topics[i % topics.length]} ${i < topics.length ? '첫걸음' : '도전'}`,
     kind: i === 0 ? 'concept' : i === 9 ? 'guardian' : i % 3 === 0 ? 'story' : 'practice',
     skill: topics[i % topics.length],
-    description: i === 9 ? `${PLANS[grade][unit].name}에서 배운 문제를 모두 모아 도전해요.` : i < topics.length ? `${j(topics[i % topics.length], '을를')} 그림과 함께 차근차근 익혀요.` : `${j(topics[i % topics.length], '을를')} 더 큰 수와 더 긴 이야기로 풀어 봐요.`,
+    description: i === 9 ? `${planOf(grade, unit).name}에서 배운 문제를 모두 모아 도전해요.` : i < topics.length ? `${j(topics[i % topics.length], '을를')} 그림과 함께 차근차근 익혀요.` : `${j(topics[i % topics.length], '을를')} 더 큰 수와 더 긴 이야기로 풀어 봐요.`,
   }));
 }
-const merge = (base: GradeTable, extra: Partial<GradeTable>): GradeTable => Object.fromEntries((Object.keys(base) as NewCurriculumUnitId[]).map(unit => [unit, [...base[unit], ...(extra[unit] ?? [])]])) as GradeTable;
+const merge = (base: GradeTable, extra: Partial<GradeTable>): GradeTable => Object.fromEntries((Object.keys(base) as NewCurriculumUnitId[]).map(unit => [unit, [...(base[unit] ?? []), ...(extra[unit] ?? [])]])) as GradeTable;
 /** 질문이 너무 빨리 되풀이되는 주제에는, 같은 개념을 다른 방식으로 묻는 변형을 섞어요. */
-const withVariants = (table: GradeTable, variants: VariantMap): GradeTable => Object.fromEntries((Object.keys(table) as NewCurriculumUnitId[]).map(unit => [unit, table[unit].map((base, index) => { const extra = variants[unit]?.[index]; return extra?.length ? mix(base, ...extra) : base; })])) as GradeTable;
+const withVariants = (table: GradeTable, variants: VariantMap): GradeTable => Object.fromEntries((Object.keys(table) as NewCurriculumUnitId[]).map(unit => [unit, (table[unit] ?? []).map((base, index) => { const extra = variants[unit]?.[index]; return extra?.length ? mix(base, ...extra) : base; })])) as GradeTable;
 const TABLES: Record<Exclude<SchoolGrade, 3>, GradeTable> = {
   1: withVariants(merge(merge(GRADE1, GRADE1_EXTRA), GRADE_SECOND[1]), VARIANTS_G1), 2: withVariants(merge(merge(GRADE2, GRADE2_EXTRA), GRADE_SECOND[2]), VARIANTS_G2), 4: withVariants(merge(merge(GRADE4, GRADE4_EXTRA), GRADE_SECOND[4]), VARIANTS_G4),
   5: withVariants(merge(merge(GRADE5, GRADE5_EXTRA), GRADE_SECOND[5]), VARIANTS_G5), 6: withVariants(merge(merge(GRADE6, GRADE6_EXTRA), GRADE_SECOND[6]), VARIANTS_G6),
@@ -126,6 +128,7 @@ const TABLES: Record<Exclude<SchoolGrade, 3>, GradeTable> = {
 
 export function generateGradeQuestion(grade: Exclude<SchoolGrade, 3>, unit: NewCurriculumUnitId, mission: number, r: () => number = Math.random): CurriculumQuestion {
   const generators = TABLES[grade][unit];
+  if (!generators) throw new Error(`${grade}학년에는 ${unit} 지역이 없어요.`);
   const hard = mission >= generators.length;
   return guardLeak(fixVisual(grade, withHardMode(hard, () => generators[mission % generators.length](r, hard))));
 }
