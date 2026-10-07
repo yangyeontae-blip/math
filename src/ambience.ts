@@ -7,10 +7,10 @@ const KEY = 'berry-forest-ambience-v1';
 export function ambienceEnabled(): boolean { try { return localStorage.getItem(KEY) !== 'off'; } catch { return true; } }
 export function setAmbience(on: boolean) { try { localStorage.setItem(KEY, on ? 'on' : 'off'); } catch { /* 저장이 막혀 있어도 괜찮아요 */ } }
 
-/** 같은 날에는 같은 날씨가 나와요. 대략 여섯 날에 하루쯤 비가 와요. */
+/** 같은 날에는 같은 날씨가 나와요. 대략 열흘에 하루쯤 비가 와요. */
 export function weatherForDate(date: Date): Weather {
   const day = Math.floor(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) / 86400000);
-  return (day * 2654435761 >>> 0) % 6 === 0 ? 'rain' : 'clear';
+  return (day * 2654435761 >>> 0) % 10 === 0 ? 'rain' : 'clear';
 }
 
 let layer: HTMLDivElement | null = null, rain: HTMLDivElement | null = null;
@@ -18,7 +18,7 @@ let layer: HTMLDivElement | null = null, rain: HTMLDivElement | null = null;
 /** 분위기 덮개를 켜거나 끄고, 지금 시각과 날씨에 맞게 바꿔요. */
 export function applyAmbience(host: HTMLElement, before: Element | null, now = new Date()): { mood: Mood; weather: Weather } {
   const mood = moodForHour(now.getHours()), weather = weatherForDate(now);
-  if (!ambienceEnabled()) { layer?.remove(); rain?.remove(); layer = rain = null; return { mood, weather }; }
+  if (!ambienceEnabled()) { layer?.remove(); rain?.remove(); layer = rain = null; host.ownerDocument.querySelectorAll('.ambience, .ambience-rain').forEach(el => el.remove()); return { mood, weather }; }
   if (!layer) {
     layer = document.createElement('div'); layer.className = 'ambience'; layer.setAttribute('aria-hidden', 'true');
     rain = document.createElement('div'); rain.className = 'ambience-rain'; rain.setAttribute('aria-hidden', 'true');
