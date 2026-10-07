@@ -331,3 +331,57 @@ input:not([type=checkbox]):not([type=radio]),select,textarea{min-height:44px}
 /* 교과서식 세로 분수와 시작 학년 선택 */
 .math-mixed{display:inline-flex;align-items:center;gap:.14em;vertical-align:middle;white-space:nowrap}.math-whole{font-size:1em}.math-fraction{display:inline-grid;grid-template-rows:1fr 1fr;min-width:1.55em;line-height:1.02;text-align:center;vertical-align:middle}.math-fraction>span:first-child{padding:0 .16em .08em;border-bottom:.09em solid currentColor}.math-fraction>span:last-child{padding:.08em .16em 0}.grade-label{margin-top:9px}.grade-picker{display:grid;grid-template-columns:repeat(6,1fr);gap:7px;margin:6px 0 10px}.grade-picker button{min-width:0;min-height:46px;padding:6px 2px;border:2px solid #dfcfaa;border-radius:13px;background:#fff8e7;color:#6f5b42;font-size:1.05rem;font-weight:900}.grade-picker button small{display:block;font-size:.62rem}.grade-picker button.selected{border-color:#62a56d;background:#dff3d9;color:#2f7445;box-shadow:0 3px 0 #77a46d55}.fraction-counter{grid-template-columns:1fr!important;grid-template-rows:auto 3px auto auto;gap:3px}.fraction-counter b,.fraction-counter span{font-size:1.7rem}.fraction-counter i{width:38px!important}.fraction-counter small{grid-column:1!important}.curriculum-answers .math-fraction,.curriculum-question-card h3 .math-fraction{font-size:1.08em}
 @media(max-width:600px){.grade-picker{gap:4px}.grade-picker button{min-height:40px;font-size:.9rem;border-radius:10px}.welcome-card{padding-top:16px}.welcome-card h1{margin:4px 0}.intro{margin:5px 0}.start-avatar{height:108px}}
+
+/* 말풍선 대화: 이름표가 붙은 둥근 말풍선과 ▼ 표시 */
+.talk-bubble{position:fixed;left:50%;bottom:max(104px,calc(env(safe-area-inset-bottom) + 96px));transform:translateX(-50%);width:min(560px,calc(100vw - 32px));z-index:30;padding:26px 24px 20px;border:4px solid #fffef8;border-radius:30px;background:#fffaee radial-gradient(#f3e3bf 1.4px,transparent 1.5px) 0 0/18px 18px;box-shadow:0 0 0 3px #e8c98f,0 8px 0 #d9bf8a88,0 18px 36px #3a2a1a40;color:var(--ink,#5a4a3a);cursor:pointer;word-break:keep-all;overflow-wrap:break-word;animation:talk-pop .3s var(--bounce,cubic-bezier(.34,1.56,.64,1));touch-action:manipulation}
+.talk-bubble:after{content:'';position:absolute;left:50%;bottom:-19px;transform:translateX(-50%);border:11px solid transparent;border-top-color:#fffaee;border-bottom:0;filter:drop-shadow(0 3px 0 #e8c98f)}
+.talk-name{position:absolute;left:22px;top:-18px;padding:5px 18px;border-radius:999px;background:linear-gradient(180deg,#7fcc8d,#4aa266);border:3px solid #fffef8;box-shadow:0 3px 0 #2c6b43;color:#fffef0;font-size:1rem;text-shadow:0 1px 0 #2c6b4366}
+.talk-text{margin:0;min-height:3.1em;font-size:1.15rem;line-height:1.55}
+.talk-next{position:absolute;right:20px;bottom:10px;color:#d8884e;font-style:normal;font-size:1rem;opacity:0}
+.talk-bubble.finished .talk-next{opacity:1;animation:talk-bob .9s ease-in-out infinite}
+@keyframes talk-pop{from{opacity:0;transform:translateX(-50%) translateY(14px) scale(.94)}}
+@keyframes talk-bob{50%{transform:translateY(4px)}}
+@media(prefers-reduced-motion:reduce){.talk-bubble,.talk-bubble.finished .talk-next{animation:none}}
+
+/* 여권 도장: 단원 카드의 도장 칸과 통과한 단계의 동그란 도장 */
+.stamp-row{display:grid;grid-template-columns:repeat(10,minmax(0,1fr));gap:2px;margin:2px 0 4px;width:100%;max-width:118px}
+.stamp-row u{display:block;aspect-ratio:1;max-width:11px;border-radius:50%;border:2px dashed #cdb98c;background:#fffaee;box-sizing:border-box;text-decoration:none}
+.stamp-row u.on{border:2px solid #e07a5f;background:#ffb8a3;box-shadow:0 1px 0 #e07a5f66}
+.forest-card.complete{position:relative}
+.forest-card.complete:after{content:'완료';position:absolute;right:10px;bottom:10px;padding:3px 7px;border:3px double #e07a5f;border-radius:50%;color:#e07a5f;font-size:.72rem;line-height:1;transform:rotate(-14deg);opacity:.9;pointer-events:none;background:#fffaee99}
+.stage-card.cleared{position:relative}
+.stage-card.cleared:after{content:'통과';position:absolute;right:8px;top:8px;padding:5px 6px;border:3px double #e07a5f;border-radius:50%;color:#e07a5f;font-size:.7rem;line-height:1;transform:rotate(-12deg);background:#fffaee99;pointer-events:none}
+.unit-progress{border:3px dashed #e3cf9f;background:#fff7e0}
+
+/* 정답·오답 연출: 정답은 잎사귀가 반짝, 오답은 부드럽게 흔들려요 (틀려도 괜찮아요) */
+[data-curriculum-answer].correct{position:relative;animation:ac-yes .5s var(--bounce,cubic-bezier(.34,1.56,.64,1))}
+[data-curriculum-answer].correct:after{content:'🍃';position:absolute;right:10px;top:6px;font-size:1.1rem;animation:ac-leaf 1.1s ease-out both;pointer-events:none}
+[data-curriculum-answer].wrong{animation:ac-soft-shake .42s ease-in-out}
+@keyframes ac-yes{40%{transform:scale(1.045)}}
+@keyframes ac-leaf{from{opacity:0;transform:translateY(8px) rotate(-30deg) scale(.5)}40%{opacity:1}to{opacity:0;transform:translateY(-12px) rotate(25deg) scale(1.2)}}
+@keyframes ac-soft-shake{20%{transform:translateX(-5px)}50%{transform:translateX(5px)}80%{transform:translateX(-3px)}}
+@media(prefers-reduced-motion:reduce){[data-curriculum-answer].correct,[data-curriculum-answer].correct:after,[data-curriculum-answer].wrong{animation:none}}
+
+/* 시간대·날씨 분위기: 화면 위에 살짝 색을 입혀요 (클릭은 그대로 통과) */
+.ambience{position:fixed;inset:0;pointer-events:none;transition:background 3s,opacity 3s;mix-blend-mode:multiply;background:transparent}
+.ambience[data-mood=dusk]{background:linear-gradient(180deg,#ffc99a 0%,#ffdcb8 55%,#fff1dc 100%)}
+.ambience[data-mood=night]{background:linear-gradient(180deg,#5b6aa8 0%,#7d8bc0 60%,#98a4cf 100%)}
+.ambience-rain{display:none;position:fixed;inset:0;pointer-events:none;background:repeating-linear-gradient(105deg,transparent 0 14px,#8fb3d9aa 14px 16px,transparent 16px 34px);background-size:140px 140px;animation:ac-rain .7s linear infinite;opacity:.8}
+.ambience[data-weather=rain][data-mood=day]{background:linear-gradient(180deg,#cfd9df,#e3eaee)}
+.ambience-rain[data-weather=rain]{display:block}
+@keyframes ac-rain{to{background-position:-40px 140px}}
+@media(prefers-reduced-motion:reduce){.ambience-rain{animation:none}}
+
+/* 시계 그림 (몇 시·몇 분 문제) */
+.clock-visual{display:grid;place-items:center;gap:6px;padding:12px}
+.clock-visual svg{width:min(190px,52vw);height:auto;filter:drop-shadow(0 4px 0 #e8d7b3)}
+.clock-visual em{font-style:normal;font-size:.82rem;color:#8a7863}
+
+/* 장면 그림(물건·숫자 카드)과 자 그림 */
+.scene-visual,.ruler-visual{display:grid;place-items:center;gap:8px;padding:14px}
+.scene-items{display:flex;flex-wrap:wrap;justify-content:center;gap:10px}
+.scene-items b{display:grid;place-items:center;gap:2px;min-width:68px;padding:8px 10px;border:3px solid #fffef8;border-radius:18px;background:#fff7e0;box-shadow:0 4px 0 #e3cf9f}
+.scene-items b span{font-size:2rem;line-height:1.1}
+.scene-items b small{font-size:.8rem;color:#7a6246}
+.scene-visual em,.ruler-visual em{font-style:normal;font-size:.82rem;color:#8a7863}
+.ruler-visual svg{width:min(360px,92%);height:auto}

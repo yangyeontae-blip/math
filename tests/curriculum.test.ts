@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  NEW_CURRICULUM_UNITS, canStartCurriculumMission, claimCurriculumGraduation,
+  newUnitsForGrade, canStartCurriculumMission, claimCurriculumGraduation,
   completeCurriculumMission, curriculumGraduationAvailable, curriculumUnitComplete,
   newSave, recordCurriculumAttempt, validateSave,
 } from '../src/rules.ts';
@@ -9,7 +9,7 @@ import { CURRICULUM_MISSIONS, answerCurriculumQuestion, generateCurriculumQuesti
 import { stageMonsters } from '../src/stages.ts';
 
 test('all seven activity regions have ten missions and generate self-consistent questions', () => {
-  for (const unit of NEW_CURRICULUM_UNITS) {
+  for (const unit of newUnitsForGrade(3)) {
     assert.equal(CURRICULUM_MISSIONS[unit].length, 10);
     for (let mission = 0; mission < 10; mission++) {
       for (let sample = 0; sample < 80; sample++) {
@@ -27,7 +27,7 @@ test('all seven activity regions have ten missions and generate self-consistent 
 });
 
 test('mixed review covers all eleven curriculum regions', () => {
-  for (const unit of ['multiplication', 'division', ...NEW_CURRICULUM_UNITS] as const) {
+  for (const unit of ['multiplication', 'division', ...newUnitsForGrade(3)] as const) {
     for (let sample = 0; sample < 100; sample++) {
       const question = generateReviewQuestion(unit);
       assert.equal(question.unit, unit);
@@ -112,7 +112,7 @@ test('the graduation gift unlocks after all eleven regions and is paid once', ()
   }
   save.multiplicationCompleted = true; save.multiplicationRewardClaimed = true;
   save.additionCompleted = true; save.subtractionCompleted = true;
-  for (const unit of NEW_CURRICULUM_UNITS) for (let mission = 0; mission < 10; mission++) completeCurriculumMission(save, unit, mission, 3);
+  for (const unit of newUnitsForGrade(3)) for (let mission = 0; mission < 10; mission++) completeCurriculumMission(save, unit, mission, 3);
   assert.equal(curriculumGraduationAvailable(save), true);
   const before = save.berries;
   assert.equal(claimCurriculumGraduation(save), 1500);
@@ -142,7 +142,7 @@ test('version 9 saves inherit an empty curriculum without losing previous progre
   assert.equal(restored.version, 14);
   assert.equal(restored.settings.focusUnit, 'all');
   assert.equal(restored.settings.spiralReview, true);
-  assert.ok(NEW_CURRICULUM_UNITS.every(unit => restored.curriculum.units[unit].completedMissions.length === 0));
+  assert.ok(newUnitsForGrade(3).every(unit => restored.curriculum.units[unit].completedMissions.length === 0));
 });
 
 test('version 11 saves keep finished second-semester regions and gain the first-semester maps', () => {
