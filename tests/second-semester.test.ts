@@ -11,6 +11,7 @@ const RUNS = 300;
 function seeded(seed: number) { let s = seed >>> 0; return () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296); }
 const nums = (text: string) => (text.match(/\d+(?:\.\d+)?/g) ?? []).map(Number);
 const near = (a: number, b: number, tag: string) => assert.ok(Math.abs(a - b) < 1e-9, `${tag}: ${a} !== ${b}`);
+const frac = (text: string) => { const m = text.match(/^(?:(\d+) )?(\d+)\/(\d+)$/); return m ? Number(m[1] ?? 0) + Number(m[2]) / Number(m[3]) : Number(text); };
 const gcd = (a: number, b: number): number => (b ? gcd(b, a % b) : a);
 const ONES = ['', '일', '이', '삼', '사', '오', '육', '칠', '팔', '구'], TENS = ['', '십', '이십', '삼십', '사십', '오십', '육십', '칠십', '팔십', '구십'];
 const bars = (q: CurriculumQuestion) => { assert.equal(q.visual.kind, 'bar-graph'); return q.visual as Extract<CurriculumQuestion['visual'], { kind: 'bar-graph' }>; };
@@ -59,6 +60,11 @@ const CHECKS: Record<string, (q: CurriculumQuestion, tag: string) => void> = {
   '변화가 가장 큰 때': (q, tag) => { const { labels, values } = bars(q), diffs = values.slice(1).map((v, i) => Math.abs(v - values[i])), max = Math.max(...diffs); assert.equal(diffs.filter(d => d === max).length, 1, `${tag} unique`); assert.equal(q.answer, `${labels[diffs.indexOf(max)]}에서 ${labels[diffs.indexOf(max) + 1]}`, tag); },
   '변화한 양': (q, tag) => { const { labels, values } = bars(q), m = q.prompt.match(/(\d+)월부터 (\d+)월까지/)!, i = labels.indexOf(`${m[1]}월`), k = labels.indexOf(`${m[2]}월`); assert.equal(Number(q.answer), values[k] - values[i], tag); assert.ok(values[k] > values[i]); },
   '그래프로 예상하기': (q, tag) => { const [, a, , b] = nums(q.prompt); assert.equal(Number(q.answer), (a + b) / 2, tag); },
+  '분수 덧셈 이야기': (q, tag) => { const [a, d, b] = nums(q.prompt); assert.ok(Math.abs(frac(q.answer) - (a + b) / d) < 1e-9, tag); },
+  '1에서 분수 빼기': (q, tag) => { const [a, d] = nums(q.prompt).slice(1); assert.ok(Math.abs(frac(q.answer) - (1 - a / d)) < 1e-9, tag); },
+  '대분수의 덧셈': (q, tag) => { const [w1, a1, d, w2, a2] = nums(q.prompt); assert.ok(Math.abs(frac(q.answer) - (w1 + a1 / d + w2 + a2 / d)) < 1e-9, tag); },
+  '대분수의 뺄셈': (q, tag) => { const [w1, a1, d, w2, a2] = nums(q.prompt); assert.ok(Math.abs(frac(q.answer) - (w1 + a1 / d - w2 - a2 / d)) < 1e-9, tag); assert.ok(frac(q.answer) > 0); },
+  '□가 있는 분수식': (q, tag) => { const [a, d, c] = nums(q.prompt); assert.ok(Math.abs(frac(q.answer) - (c - a) / d) < 1e-9, tag); },
   // 5학년
   '곱하는 수의 0의 개수': (q, tag) => { const [x, m] = nums(q.prompt); near(Number(q.answer), x * m, tag); },
   '곱의 소수점 위치': (q, tag) => { const n = nums(q.prompt); near(Number(q.answer), n[3] * n[4], tag); assert.equal(n[0] * n[1], n[2]); },

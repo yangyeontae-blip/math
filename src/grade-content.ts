@@ -44,7 +44,7 @@ const PLANS: Record<Exclude<SchoolGrade, 3>, GradePlan> = {
     lengthTime: { icon: '📐', name: '각도와 삼각형길', short: '각도·예각·둔각과 삼각형 분류', semester: '1학기', topics: ['각도', '각도 재기', '예각과 둔각', '삼각형 분류', '각도 계산'] },
     fractionDecimal: { icon: '🪞', name: '이동과 규칙마을', short: '평면도형의 밀기·뒤집기·돌리기와 규칙 찾기', semester: '1학기', topics: ['밀기', '뒤집기', '돌리기', '수 배열 규칙', '규칙을 식으로'] },
     circle: { icon: '🔷', name: '수직·평행·다각형정원', short: '수직과 평행, 다각형의 성질', semester: '2학기', topics: ['수직', '평행', '사각형', '다각형', '대각선'] },
-    fraction: { icon: '🍰', name: '분수 계산섬', short: '분모가 같은 분수의 덧셈과 뺄셈', semester: '1학기', topics: ['진분수', '가분수와 대분수', '크기 비교', '분수 덧셈', '분수 뺄셈'] },
+    fraction: { icon: '🍰', name: '분수 계산섬', short: '분모가 같은 분수의 덧셈과 뺄셈', semester: '2학기', topics: ['진분수', '가분수와 대분수', '크기 비교', '분수 덧셈', '분수 뺄셈'] },
     measurement: { icon: '🔟', name: '소수 덧셈뺄셈마을', short: '소수 두·세 자리 수와 소수의 덧셈·뺄셈', semester: '2학기', topics: ['소수의 자릿값', '소수 크기 비교', '소수 덧셈', '소수 뺄셈', '소수 생활 문제'] },
     pictograph: { icon: '📈', name: '그래프 관측소', short: '막대그래프와 꺾은선그래프 해석', semester: '2학기', topics: ['막대그래프', '꺾은선그래프', '변화 읽기', '자료 비교', '그래프 해석'] },
   },
