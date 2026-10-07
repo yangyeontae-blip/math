@@ -15,6 +15,7 @@ export const VILLAGE_THEMES: Record<VillageThemeId, VillageTheme> = {
   circle: { name: '달빛 마을', icon: '🌙', blurb: '둥근 달빛 무늬가 반짝이는 원의 마을', sky: 0xd6dbf4, ground: 0x9cb6d6, groundDeep: 0x7f9bbd, path: 0xe9e2f4, square: 0xf1ecfa, foliage: 0x93a9d8, pinkTrees: false, gate: 0x8f86d8, deco: 'moon' },
   fraction: { name: '케이크 마을', icon: '🍰', blurb: '달콤한 케이크를 똑같이 나누는 분수 마을', sky: 0xffe5ee, ground: 0xf1c9cd, groundDeep: 0xd9a6ae, path: 0xfff0d6, square: 0xfff6e4, foliage: 0xf4a6bf, pinkTrees: true, gate: 0xf08fa8, deco: 'cake' },
   measurement: { name: '저울 마을', icon: '⚖️', blurb: '물약병과 저울이 반짝이는 들이·무게 마을', sky: 0xdff4f5, ground: 0x9fd3cf, groundDeep: 0x7db7b3, path: 0xf2ecd2, square: 0xf7f3df, foliage: 0x6fbfa7, pinkTrees: false, gate: 0x4fb5b8, deco: 'scales' },
+  triangle: { name: '삼각 지붕 마을', icon: '🔺', blurb: '뾰족한 삼각 지붕이 줄지어 선 삼각형 마을', sky: 0xffe8d6, ground: 0xc9c27a, groundDeep: 0xa59f5b, path: 0xf1cfa0, square: 0xf8e0bb, foliage: 0xa6bb62, pinkTrees: false, gate: 0xe0894f, deco: 'shapes' },
   pictograph: { name: '별빛 마을', icon: '🔭', blurb: '별을 세어 그림그래프를 그리는 관측소 마을', sky: 0xdedcf8, ground: 0x959fe0, groundDeep: 0x7882c4, path: 0xe7e3fa, square: 0xf0edfd, foliage: 0x8f90d8, pinkTrees: false, gate: 0x8a74d6, deco: 'stars' },
 };
 

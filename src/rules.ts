@@ -133,7 +133,7 @@ export const WEAPON_UPGRADES = [60, 120, 240];
 export const OUTFIT_UPGRADES = [50, 100];
 export type Operation = 'addition' | 'subtraction' | 'multiplication' | 'division';
 export type ForestKind = Operation;
-export type CurriculumUnitId = ForestKind | 'plane' | 'lengthTime' | 'fractionDecimal' | 'circle' | 'fraction' | 'measurement' | 'pictograph';
+export type CurriculumUnitId = ForestKind | 'plane' | 'lengthTime' | 'fractionDecimal' | 'circle' | 'fraction' | 'measurement' | 'pictograph' | 'triangle';
 export type NewCurriculumUnitId = Exclude<CurriculumUnitId, ForestKind>;
 export type MultiplicationRange = 'stage' | 'tables';
 export type PracticeTier = 0 | 1 | 2;
@@ -235,14 +235,19 @@ export function placeRoomFurniture(s: Save, id: number, column: number, row: num
   return true;
 }
 // 3학년 한 해의 모든 모험 지역. 계산 숲 네 곳과 교구형 수학 지역 일곱 곳을 함께 완주해요.
-const CURRICULUM_UNITS: CurriculumUnitId[] = ['addition', 'subtraction', 'plane', 'multiplication', 'division', 'lengthTime', 'fractionDecimal', 'circle', 'fraction', 'measurement', 'pictograph'];
+const CURRICULUM_UNITS: CurriculumUnitId[] = ['addition', 'subtraction', 'plane', 'multiplication', 'division', 'lengthTime', 'fractionDecimal', 'circle', 'fraction', 'measurement', 'pictograph', 'triangle'];
 const ALL_UNITS: CurriculumUnitId[] = [...CURRICULUM_UNITS];
+/** 4학년에서만 쓰는 삼각형 지역(각도와 삼각형을 두 지역으로 나눴어요). */
+const GRADE4_ONLY_UNITS: CurriculumUnitId[] = ['triangle'];
 export function curriculumUnitsForGrade(grade: SchoolGrade): CurriculumUnitId[] {
-  if (grade === 1) return CURRICULUM_UNITS.filter(unit => unit !== 'multiplication' && unit !== 'division');
-  if (grade === 2) return CURRICULUM_UNITS.filter(unit => unit !== 'division');
-  return [...CURRICULUM_UNITS];
+  const common = grade === 4 ? CURRICULUM_UNITS : CURRICULUM_UNITS.filter(unit => !GRADE4_ONLY_UNITS.includes(unit));
+  if (grade === 1) return common.filter(unit => unit !== 'multiplication' && unit !== 'division');
+  if (grade === 2) return common.filter(unit => unit !== 'division');
+  return [...common];
 }
-export const NEW_CURRICULUM_UNITS: NewCurriculumUnitId[] = ['plane', 'lengthTime', 'fractionDecimal', 'circle', 'fraction', 'measurement', 'pictograph'];
+export const NEW_CURRICULUM_UNITS: NewCurriculumUnitId[] = ['plane', 'lengthTime', 'fractionDecimal', 'circle', 'fraction', 'measurement', 'pictograph', 'triangle'];
+/** 학년마다 실제로 열려 있는 새 지역(삼각형 지역은 4학년에만 있어요). */
+export function newUnitsForGrade(grade: SchoolGrade): NewCurriculumUnitId[] { return NEW_CURRICULUM_UNITS.filter(unit => grade === 4 || !GRADE4_ONLY_UNITS.includes(unit)); }
 export function emptyCurriculumUnit(): CurriculumUnitProgress { return { completedMissions: [], stars: Array(10).fill(0), correct: 0, wrong: 0, hints: 0, rewardClaimed: false }; }
 export function emptyCurriculumProgress(): CurriculumProgress {
   return { units: Object.fromEntries(ALL_UNITS.map(id => [id, emptyCurriculumUnit()])) as Record<CurriculumUnitId, CurriculumUnitProgress>, wrongSkills: [], graduationClaimed: false };
@@ -723,6 +728,8 @@ export function validateSave(value: unknown): Save {
   if (migrated.grade === undefined) migrated.grade = 3;
   const s = migrated as unknown as Save;
   if (s.garden === undefined) s.garden = { rescued: 0, flowers: [-1, -1, -1] };
+  // 4학년 '각도와 삼각형길'을 각도·삼각형 두 지역으로 나눴어요. 예전 진행은 삼각형 지역에도 그대로 이어 줘요(저장 구조 버전은 그대로예요).
+  if (s.curriculum?.units && !s.curriculum.units.triangle) { const angle = s.curriculum.units.lengthTime; s.curriculum.units.triangle = s.grade === 4 && angle ? structuredClone(angle) : emptyCurriculumUnit(); }
   if (s.potions === undefined) s.potions = { stock: s.teacherMode ? POTIONS.map(() => 9) : POTIONS.map(() => 0), berryMultiplier: 1, berryUntil: 0, xpMultiplier: 1, xpUntil: 0 };
   if (s.room && s.room.inside === undefined) s.room.inside = false;
   // Teacher saves may predate newly released collection items. Keep the demonstration wardrobe complete.

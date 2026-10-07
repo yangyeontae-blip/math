@@ -179,6 +179,7 @@ export const CURRICULUM_MISSIONS: Record<NewCurriculumUnitId, CurriculumMission[
     { name: '별빛 조사 발표회', kind: 'story', skill: '그림그래프 종합', description: '여러 그림그래프를 읽고 비교해요.' },
     { name: '관측소 수호자', kind: 'guardian', skill: '그림그래프 종합', description: '읽기·비교·완성을 모두 사용해요.' },
   ],
+  triangle: [], // 삼각형 지역은 4학년 전용이라 3학년 임무는 없어요.
 };
 
 const howMany = (unit: string) => (unit === '일' ? '며칠' : `몇 ${unit}`);

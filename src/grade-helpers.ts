@@ -3,7 +3,8 @@ import type { NewCurriculumUnitId } from './rules';
 
 export type Rand = () => number;
 export type GradeGen = (r: Rand, hard: boolean) => CurriculumQuestion;
-export type GradeTable = Record<NewCurriculumUnitId, GradeGen[]>;
+/** 삼각형 지역은 4학년에만 있어서 다른 학년 표에는 없어도 돼요. */
+export type GradeTable = Record<Exclude<NewCurriculumUnitId, 'triangle'>, GradeGen[]> & { triangle?: GradeGen[] };
 
 let hardMode = false;
 /** 도전 단계에서는 폭이 넓은 숫자 범위를 위쪽으로 치우쳐 뽑아 더 큰 수가 나오게 해요(좁은 범위는 종류 고르기에 쓰이므로 그대로 둬요). */
