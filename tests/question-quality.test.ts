@@ -83,3 +83,25 @@ test('grade 5 group scores are never negative and grade 3 graph questions never 
     assert.notEqual(q.answer, '같아요', q.prompt);
   }
 });
+
+test('grade 5 divisor, multiple and range questions have exactly one right option', () => {
+  const rnd = seeded(31);
+  const counts: Record<string, number> = { divisor: 0, multiple: 0, common: 0, commonMultiple: 0, range: 0 };
+  for (let i = 0; i < 6000; i++) {
+    const q = generateGradeQuestion(5, 'plane', i % 10, rnd), r = generateGradeQuestion(5, 'lengthTime', i % 10, rnd);
+    for (const item of [q, r]) {
+      const options = (item.choices ?? []).map(c => Number(c.value));
+      let m: RegExpMatchArray | null;
+      if ((m = item.prompt.match(/^(\d+)의 약수인 것은/))) { counts.divisor++; assert.equal(options.filter(c => Number(m![1]) % c === 0).length, 1, item.prompt); }
+      else if ((m = item.prompt.match(/^(\d+)의 배수인 것은/))) { counts.multiple++; assert.equal(options.filter(c => c % Number(m![1]) === 0).length, 1, item.prompt); }
+      else if ((m = item.prompt.match(/^(\d+)(?:와|과) (\d+)의 공약수인 것은/))) { counts.common++; const [a, b] = [Number(m[1]), Number(m[2])]; assert.equal(options.filter(c => a % c === 0 && b % c === 0 && c > 1).length, 1, item.prompt); }
+      else if ((m = item.prompt.match(/^(\d+)(?:와|과) (\d+)의 공배수인 것은/))) { counts.commonMultiple++; const [a, b] = [Number(m[1]), Number(m[2])]; assert.equal(options.filter(c => c % a === 0 && c % b === 0).length, 1, item.prompt); }
+      else if ((m = item.prompt.match(/^(\d+) (이상|초과) (\d+) (이하|미만)인 수/))) {
+        counts.range++; const lo = Number(m[1]), hi = Number(m[3]);
+        const ok = (c: number) => (m![2] === '이상' ? c >= lo : c > lo) && (m![4] === '이하' ? c <= hi : c < hi);
+        assert.equal(options.filter(ok).length, 1, item.prompt);
+      }
+    }
+  }
+  assert.ok(Object.values(counts).every(n => n > 20), JSON.stringify(counts));
+});

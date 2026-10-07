@@ -583,7 +583,7 @@ async function submitCurriculumAnswer(value: string) {
   if (!run.missedCurrent) { state.learning.correct++; recordCurriculumAttempt(state, q.unit, true, run.mission, q.skill); if (!run.review) addBossDamage(localStorage); }
   document.querySelectorAll<HTMLButtonElement>('[data-curriculum-answer],[data-curriculum-number],[data-pizza-slice],[data-pizza-submit],[data-circle-adjust],[data-circle-submit]').forEach(button => { button.disabled = true; if (button.dataset.curriculumAnswer === value) button.classList.add('correct'); });
   const input = document.querySelector<HTMLInputElement>('#curriculum-answer'); if (input) input.disabled = true;
-  $('#curriculum-hint-button').hidden = true; $('#curriculum-message').textContent = '정답이에요! 그림 속 규칙을 잘 찾았어요.';
+  $('#curriculum-hint-button').hidden = true; $('#curriculum-message').textContent = '정답이에요! 정말 잘 풀었어요.';
   const result = $('#curriculum-result'); result.hidden = false;
   result.innerHTML = `<div class="curriculum-explanation"><strong>🌟 이렇게 생각해요</strong><p>${mathTextHtml(q.explanation)}</p></div><button id="curriculum-next" class="primary wide">${run.index + 1 < run.total ? '다음 문제 →' : run.review ? '복습 마치기' : run.graduation ? '졸업 모험 마치기 🎓' : '임무 완료하기 ✨'}</button>`;
   if (run.review) state.curriculum.wrongSkills = state.curriculum.wrongSkills.filter(item => !(item.unit === q.unit && item.skill === q.skill));
