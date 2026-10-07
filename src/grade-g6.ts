@@ -1,7 +1,7 @@
 import { choiceQ, dec, dots, fracBar, fracText, gcd, numberQ, pick, ri, type GradeTable, j, ye } from './grade-helpers';
 
 const geo = (shape: 'rectangle' | 'square' | 'right-triangle' | 'angle' | 'segment', label: string) => ({ kind: 'geometry' as const, shape, label });
-const circ = (radius: number) => ({ kind: 'circle' as const, focus: 'given-radius' as const, radius, unit: 'cm' as const });
+const circ = (radius: number) => ({ kind: 'circle' as const, focus: 'radius-only' as const, radius, unit: 'cm' as const });
 const band = (parts: { label: string; percent: number }[], mode: 'band' | 'pie', hidden: number[] = []) => ({ kind: 'ratio-graph' as const, mode, parts, hidden });
 const dv = (tenths: number) => ({ kind: 'decimal' as const, tenths: Math.max(0, Math.min(9, tenths)) });
 const SPORTS = ['축구', '피구', '줄넘기', '달리기'] as const;

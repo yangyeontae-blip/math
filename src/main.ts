@@ -282,8 +282,16 @@ function learningInsight(s: Save) {
   const next = curriculumRegions().find(region => !curriculumUnitComplete(s, region.id));
   return { strong, review: needs?.name ?? '아직 꼭 다시 연습해야 할 단원이 없어요', recommend: next ? `${next.name}의 다음 열린 단계` : `${s.grade}학년 졸업 모험 다시 도전하기` };
 }
+const GRADE_OVERVIEW: Record<SchoolGrade, string> = {
+  1: '9까지와 100까지의 수, 모으기와 가르기, 덧셈과 뺄셈, 여러 가지 모양, 시계, 규칙 찾기',
+  2: '네 자리 수, 덧셈과 뺄셈, 곱셈구구, 길이 재기, 시각과 시간, 여러 가지 도형, 규칙 찾기, 표와 그래프',
+  3: '계산, 도형, 길이와 시간, 분수와 소수, 원, 측정, 그림그래프',
+  4: '큰 수, 곱셈과 나눗셈, 각도, 분수와 소수의 덧셈·뺄셈, 삼각형·사각형·다각형, 규칙, 막대·꺾은선그래프',
+  5: '약수와 배수, 혼합 계산, 분수와 소수의 계산, 합동과 대칭, 둘레와 넓이, 평균과 가능성',
+  6: '분수와 소수의 나눗셈, 비와 비율, 비례식, 원의 넓이, 입체도형, 띠그래프와 원그래프'
+};
 function openGuide() {
-  openModal(title('마을 대장 · 연태쌤', '베리숲에 온 걸 환영해요!') + `<div class="guide-content"><p>나는 연태쌤이야. 모험의 문에서 <strong>${state!.grade}학년 1·2학기 수학 지역</strong>을 골라 보렴. 모든 지역에는 차근차근 열리는 10개의 모험 단계가 있단다.</p><ol><li><b>🍓 스테이지 베리</b><span>한 번 모은 베리는 같은 사냥터에서 다시 나타나지 않아. 다른 숲과 새 단계에는 새로운 베리가 있어!</span></li><li><b>🌳 베리나무</b><span>나무 가까이에서 F 또는 나무 베기를 눌러 보렴. 다 베면 2~4베리가 나오고, 좋은 무기일수록 빨라!</span></li><li><b>🗺 ${state!.grade}학년 전체 수학</b><span>계산, 도형, 길이와 시간, 분수와 소수, 원, 측정, 그림그래프를 그림과 이야기로 배워요.</span></li><li><b>✨ 마을 상점과 인벤토리</b><span>강지후의 무기, 오지후의 옷, 나현이의 라이딩, 윤준의 펫을 모아 봐. 가영이에게는 헤어와 성형을 바꿀 수 있어.</span></li></ol><p class="note">키보드는 WASD·방향키 이동, Space 점프, E 대화, F 나무 베기예요.<br>휴대폰과 태블릿은 화면 아래 조이스틱과 버튼을 사용해요.</p><button class="primary wide" data-close>좋아, 모험을 떠나자!</button></div>`);
+  openModal(title('마을 대장 · 연태쌤', '베리숲에 온 걸 환영해요!') + `<div class="guide-content"><p>나는 연태쌤이야. 모험의 문에서 <strong>${state!.grade}학년 1·2학기 수학 지역</strong>을 골라 보렴. 모든 지역에는 차근차근 열리는 10개의 모험 단계가 있단다.</p><ol><li><b>🍓 스테이지 베리</b><span>한 번 모은 베리는 같은 사냥터에서 다시 나타나지 않아. 다른 숲과 새 단계에는 새로운 베리가 있어!</span></li><li><b>🌳 베리나무</b><span>나무 가까이에서 F 또는 나무 베기를 눌러 보렴. 다 베면 2~4베리가 나오고, 좋은 무기일수록 빨라!</span></li><li><b>🗺 ${state!.grade}학년 수학 지도</b><span>${GRADE_OVERVIEW[state!.grade]} 단원을 그림과 이야기로 배워요.</span></li><li><b>✨ 마을 상점과 인벤토리</b><span>강지후의 무기, 오지후의 옷, 나현이의 라이딩, 윤준의 펫을 모아 봐. 가영이에게는 헤어와 성형을 바꿀 수 있어.</span></li></ol><p class="note">키보드는 WASD·방향키 이동, Space 점프, E 대화, F 나무 베기예요.<br>휴대폰과 태블릿은 화면 아래 조이스틱과 버튼을 사용해요.</p><button class="primary wide" data-close>좋아, 모험을 떠나자!</button></div>`);
 }
 async function loadWorld() {
   if (world!) return;
