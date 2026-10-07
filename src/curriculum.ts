@@ -51,8 +51,13 @@ export function curriculumWrongFeedback(question: CurriculumQuestion, submitted:
     if (question.visual.kind === 'array') return `${size}가로와 세로의 수를 곱했는지 확인해 봐요. ${question.hints[0]}`;
     if (question.visual.kind === 'groups') return `${size}전체를 ${question.visual.divisor}개씩 묶고 남는 수까지 세어 봐요.`;
     if (question.visual.kind === 'fraction') return `${size}전체 조각 수와 색칠한 조각 수를 그림에서 다시 세어 봐요.`;
-    if (question.visual.kind === 'pictograph') return `${size}그림 한 개가 ${question.visual.value}${j(question.visual.unitLabel ?? '', '을를')} 나타내는지 확인해 봐요.`;
-    if (question.visual.kind === 'length-time' || question.visual.kind === 'measure') return `${size}먼저 단위를 같게 바꾸었는지 확인해 봐요. ${question.hints[0]}`;
+    if (question.visual.kind === 'pictograph') return question.visual.value === 1 ? `${size}그림의 수를 하나씩 다시 세어 봐요.` : `${size}그림 한 개가 ${question.visual.value}${j(question.visual.unitLabel ?? '', '을를')} 나타내는지 확인해 봐요.`;
+    if (question.visual.kind === 'ruler') return `${size}연필의 끝이 자의 어느 눈금에 닿았는지 다시 읽어 봐요.`;
+    if (question.visual.kind === 'length-time' && question.visual.clock) return `${size}짧은바늘과 긴바늘이 가리키는 숫자를 다시 살펴봐요.`;
+    if (question.visual.kind === 'length-time' || question.visual.kind === 'measure') {
+      const units = new Set([...(question.prompt.match(/(?<![a-zA-Z])(km|cm|mm|m|kg|g|t|mL|L)(?![a-zA-Z])/g) ?? []), ...(question.prompt.match(/\d\s?(시간|분|초)/g) ?? []).map(match => match.replace(/[\d\s]/g, ''))]);
+      return units.size >= 2 ? `${size}먼저 단위를 같게 바꾸었는지 확인해 봐요. ${question.hints[0]}` : `${size}${question.hints[0]}`;
+    }
     if (question.visual.kind === 'circle') return `${size}반지름과 지름의 관계를 그림에서 다시 찾아봐요.`;
     return `${size}${question.hints[0]}`;
   }
@@ -63,12 +68,22 @@ export function curriculumWrongFeedback(question: CurriculumQuestion, submitted:
     if (selectedFraction[1] === answerFraction[1]) return `${j(chosen, '을를')} 골랐어요. 분모는 같지만 고른 조각 수가 맞는지 그림에서 다시 세어 봐요.`;
     return `${j(chosen, '을를')} 골랐어요. 전체를 몇 조각으로 나눴는지 먼저 세어 분모를 확인해 봐요.`;
   }
-  if (question.visual.kind === 'pictograph') return `${j(chosen, '을를')} 골랐어요. 각 줄의 ${question.visual.icon} 수를 다시 세고, 그림 한 개의 값 ${question.visual.value}${j(question.visual.unitLabel ?? '', '을를')} 적용해 봐요.`;
-  if (question.visual.kind === 'measure') return `${j(chosen, '을를')} 골랐어요. 물건의 실제 크기를 떠올리고 ${question.visual.measure === 'capacity' ? 'mL와 L' : 'g, kg, t'} 중 알맞은 단위를 골라 봐요.`;
-  if (question.visual.kind === 'length-time') return `${j(chosen, '을를')} 골랐어요. ${j(question.visual.measure === 'time' ? '60초와 1분, 60분과 1시간' : '길이 단위 사이의 관계', '을를')} 먼저 확인해 봐요.`;
-  if (question.visual.kind === 'circle') return `${j(chosen, '을를')} 골랐어요. 선분이 원의 중심을 지나는지, 양 끝이 어디에 닿는지 그림에서 확인해 봐요.`;
-  if (question.visual.kind === 'geometry') return `${j(chosen, '을를')} 골랐어요. 선의 끝점과 도형의 모서리를 하나씩 짚어 보며 특징을 비교해 봐요.`;
-  if (question.visual.kind === 'decimal') return `${j(chosen, '을를')} 골랐어요. 열 칸 중 색칠한 칸 수와 소수점 오른쪽 숫자를 연결해 봐요.`;
+  if (question.visual.kind === 'pictograph') return question.visual.value === 1 ? `${j(chosen, '을를')} 골랐어요. 그림과 문제를 다시 읽고 하나씩 세어 봐요.` : `${j(chosen, '을를')} 골랐어요. 각 줄의 ${question.visual.icon} 수를 다시 세고, 그림 한 개의 값 ${question.visual.value}${j(question.visual.unitLabel ?? '', '을를')} 적용해 봐요.`;
+  if (question.visual.kind === 'measure') {
+    if (!/단위$|어림/.test(question.skill)) return `${j(chosen, '을를')} 골랐어요. ${question.hints[0]}`;
+    const capacity = /(mL|L)(?![가-힣a-zA-Z])|들이/.test(`${question.prompt} ${chosen} ${question.answer}`);
+    return `${j(chosen, '을를')} 골랐어요. 물건의 실제 크기를 떠올리고 ${capacity ? 'mL와 L' : 'g, kg, t'} 중 알맞은 단위를 골라 봐요.`;
+  }
+  if (question.visual.kind === 'length-time') {
+    if (question.visual.clock) return `${j(chosen, '을를')} 골랐어요. 짧은바늘은 시, 긴바늘은 분을 나타내요. 두 바늘이 가리키는 숫자를 다시 살펴봐요.`;
+    if (question.visual.labels?.[0] === '하루') return `${j(chosen, '을를')} 골랐어요. 아침, 낮, 저녁, 밤에 우리가 하는 일을 떠올려 봐요.`;
+    if (/요일$/.test(chosen)) return `${j(chosen, '을를')} 골랐어요. 일주일은 7일이라서 7일이 지나면 같은 요일이 돌아와요.`;
+    if (/어림/.test(question.skill)) return `${j(chosen, '을를')} 골랐어요. 물건의 실제 크기를 떠올려 알맞은 단위와 수를 골라 봐요.`;
+    return `${j(chosen, '을를')} 골랐어요. ${j(question.visual.measure === 'time' ? '시간 단위 사이의 관계' : '길이 단위 사이의 관계', '을를')} 먼저 확인해 봐요.`;
+  }
+  if (question.visual.kind === 'circle') return /그리기/.test(question.skill) ? `${j(chosen, '을를')} 골랐어요. ${question.hints[0]}` : `${j(chosen, '을를')} 골랐어요. 선분이 원의 중심을 지나는지, 양 끝이 어디에 닿는지 그림에서 확인해 봐요.`;
+  if (question.visual.kind === 'geometry') return `${j(chosen, '을를')} 골랐어요. ${question.hints[0]}`;
+  if (question.visual.kind === 'decimal') return /읽기/.test(question.skill) || !/뜻|크기|분수/.test(question.skill) ? `${j(chosen, '을를')} 골랐어요. ${question.hints[0]}` : `${j(chosen, '을를')} 골랐어요. 열 칸 중 색칠한 칸 수와 소수점 오른쪽 숫자를 연결해 봐요.`;
   return `${j(chosen, '을를')} 골랐어요. ${question.hints[0]}`;
 }
 

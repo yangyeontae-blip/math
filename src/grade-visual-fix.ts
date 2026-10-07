@@ -60,10 +60,6 @@ export function fixVisual(grade: number, question: CurriculumQuestion): Curricul
 
   if (grade === 2) {
     if (['백 알아보기', '천 알아보기'].includes(skill) && /보다 얼마나/.test(prompt)) visual = NONE;
-    if (skill === 'cm로 재기') {
-      const end = Number(prompt.match(/다른 쪽 끝이 (\d+)/)?.[1]);
-      visual = end > 0 ? { kind: 'ruler', end } : NONE;
-    }
     if (skill === '입체도형 모양') {
       const names = objectNamesIn(prompt.split(/[은는]/)[0]);
       visual = names.length ? { kind: 'scene', items: names.map(name => ({ icon: OBJECT_EMOJI[name], label: name })), caption: '물건의 모양을 떠올려 봐요' } : NONE;

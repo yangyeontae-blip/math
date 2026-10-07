@@ -140,8 +140,8 @@ const fractionMeaning = (r: Rand): Grade3Variant => {
 const decimalMeaning = (r: Rand): Grade3Variant => {
   const n = ri(1, 9, r), kind = ri(0, 3, r), dec = `0.${n}`, vis: CurriculumVisual = { kind: 'decimal', tenths: n };
   if (kind === 0) return { kind: 'choice', prompt: `0.1이 ${n}개이면 얼마일까요?`, answer: dec, wrongs: [`${n}.0`, `0.${Math.max(0, n - 1)}`, `${n}.1`].filter(x => x !== dec), explanation: `0.1이 ${n}개이면 ${dec}${ye(dec)}.`, visual: vis };
-  if (kind === 1) return { kind: 'choice', prompt: `1을 똑같이 10으로 나눈 것 중 ${n}만큼은 얼마일까요?`, answer: dec, wrongs: [`${n}`, `${n}.0`, `0.0${n}`], explanation: `1을 10으로 나눈 한 칸이 0.1이므로 ${n}칸은 ${dec}${ye(dec)}.`, visual: vis };
-  if (kind === 2) return { kind: 'choice', prompt: `10분의 ${j(n, '을를')} 소수로 나타내면 무엇일까요?`, answer: dec, wrongs: [`${n}.0`, `0.${Math.min(9, n + 1)}`, `${n}/10`].filter(x => x !== dec), explanation: `10분의 ${j(n, '은는')} ${dec}${ye(dec)}.`, visual: vis };
+  if (kind === 1) return { kind: 'choice', prompt: `1을 똑같이 10으로 나눈 것 중 ${n}만큼은 얼마일까요?`, answer: dec, wrongs: [`${n}`, `0.0${n}`, `0.${n === 9 ? 8 : n + 1}`], explanation: `1을 10으로 나눈 한 칸이 0.1이므로 ${n}칸은 ${dec}${ye(dec)}.`, visual: vis };
+  if (kind === 2) return { kind: 'choice', prompt: `10분의 ${j(n, '을를')} 소수로 나타내면 무엇일까요?`, answer: dec, wrongs: [`${n}.0`, `0.${n === 9 ? 8 : n + 1}`, `0.0${n}`].filter(x => x !== dec), explanation: `10분의 ${j(n, '은는')} ${dec}${ye(dec)}.`, visual: vis };
   return { kind: 'number', prompt: `${j(dec, '은는')} 0.1이 몇 개인 수일까요?`, answer: String(n), explanation: `${j(dec, '은는')} 0.1이 ${n}개예요.`, visual: vis };
 };
 const decimalReading = (r: Rand): Grade3Variant => {
