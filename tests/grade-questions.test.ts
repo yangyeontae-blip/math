@@ -131,7 +131,7 @@ test('added 5th/6th grade topics: answers match an independent calculation', () 
     q = gq(6, 'plane', 6, random); { const [w, nn, dd, mm] = nums(q.prompt); assert.ok(Math.abs(frac(q.answer) - (w + nn / dd) / mm) < 1e-9, q.prompt); }
     q = gq(6, 'lengthTime', 5, random); { const [p, r2] = nums(q.prompt); assert.ok(Math.abs(Number(q.answer) - p / r2) < 1e-9, q.prompt); }
     q = gq(6, 'fractionDecimal', 6, random); { const [price, pct] = nums(q.prompt); assert.equal(Number(q.answer), price * pct / 100); }
-    q = gq(6, 'measurement', 7, random); { const [w, d, l] = nums(q.prompt); const asked = q.prompt.includes('위에서') ? w * d : q.prompt.includes('앞에서') ? w * l : d * l; assert.equal(Number(q.answer), asked); }
+    q = gq(6, 'measurement', 7, random); { assert.equal(q.visual.kind, 'stack-grid'); const heights = q.visual.kind === 'stack-grid' ? q.visual.heights : []; if (q.prompt.includes('모두 몇 개')) assert.equal(Number(q.answer), heights.flat().reduce((sum, n) => sum + n, 0)); else { const expected = q.prompt.includes('앞에서') ? Array.from({ length: heights[0].length }, (_, x) => Math.max(...heights.map(row => row[x]))) : heights.map(row => Math.max(...row)); assert.equal(q.answer, expected.join('-')); } }
   }
 });
 
