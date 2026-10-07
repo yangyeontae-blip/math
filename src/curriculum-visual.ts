@@ -105,6 +105,14 @@ function barGraphHtml(visual: Extract<CurriculumVisual, { kind: 'bar-graph' }>) 
   return `<div class="curriculum-visual bar-graph-visual"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${line ? '꺾은선그래프' : '막대그래프'}">${grid}${marks}${names}<text x="2" y="9" font-size="8" fill="#507a68">(${esc(unit)})</text></svg></div>`;
 }
 
+function stackGridHtml(visual: Extract<CurriculumVisual, { kind: 'stack-grid' }>) {
+  const columns = Math.max(...visual.heights.map(row => row.length));
+  const cells = visual.heights.flatMap((row, y) => row.map((height, x) =>
+    `<b aria-label="앞에서 ${visual.heights.length - y}째 줄, 왼쪽에서 ${x + 1}째 칸, ${height}층"><span>${height}</span><small>층</small></b>`
+  )).join('');
+  return `<div class="curriculum-visual stack-grid-visual"><div class="stack-grid" style="--stack-columns:${columns}">${cells}</div><em>위에서 본 자리별 높이 · 아래쪽이 앞이에요</em></div>`;
+}
+
 function ratioGraphHtml(visual: Extract<CurriculumVisual, { kind: 'ratio-graph' }>) {
   const { parts, mode, hidden = [] } = visual, name = (p: { label: string; percent: number }, i: number) => `${esc(p.label)} ${hidden.includes(i) ? '?' : `${p.percent}%`}`;
   if (mode === 'band') {
@@ -140,6 +148,7 @@ export function curriculumVisualHtml(visual: CurriculumVisual): string {
   if (visual.kind === 'scene') return sceneHtml(visual);
   if (visual.kind === 'ruler') return rulerHtml(visual.end, visual.max);
   if (visual.kind === 'bar-graph') return barGraphHtml(visual);
+  if (visual.kind === 'stack-grid') return stackGridHtml(visual);
   if (visual.kind === 'ratio-graph') return ratioGraphHtml(visual);
   if (visual.kind === 'transform') return transformHtml(visual);
   if (visual.kind === 'circle') return circleHtml(visual);

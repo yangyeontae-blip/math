@@ -28,7 +28,7 @@ const G1: Partial<GradeTable> = {
     ], NO)),
     (r) => { const h = ri(1, 11, r), half = r() < .5, answer = `${h + 1}시${half ? ' 30분' : ''}`; return choiceQ('lengthTime', '1시간 뒤의 시각', `${h}시${half ? ' 30분' : ''}에서 1시간이 지나면 몇 시${half ? ' 30분' : ''}일까요?`, answer, [`${h}시${half ? ' 30분' : ''}`, `${h + 2}시${half ? ' 30분' : ''}`, `${Math.max(1, h - 1)}시${half ? ' 30분' : ''}`], clock(h, half ? 30 : 0), `1시간이 지나면 짧은바늘이 숫자 하나만큼 움직여 ${answer}${ye(answer)}.`, r, { hints: ['1시간이 지나면 짧은바늘이 숫자 한 칸 움직여요.', `${h}에서 한 칸 더 간 숫자를 찾아봐요.`, `${answer}${ye(answer)}.`] }); },
     (r) => { const times = [[2, 0], [3, 30], [4, 0], [5, 30], [6, 0], [7, 30], [8, 0], [9, 30], [10, 0], [11, 30]] as const; const a = pick(times, r); let b = pick(times, r); while (b[0] === a[0]) b = pick(times, r); const name = (t: readonly [number, number]) => `${t[0]}시${t[1] ? ' 30분' : ''}`, later = a[0] > b[0] ? a : b, earlier = a[0] > b[0] ? b : a, asksLate = r() < .5; return choiceQ('lengthTime', '시각의 앞과 뒤', `${j(name(a), '와과')} ${name(b)} 중 ${asksLate ? '더 늦은' : '더 이른'} 시각은 무엇일까요?`, name(asksLate ? later : earlier), [name(asksLate ? earlier : later)], clock(a[0], a[1]), `시계의 짧은바늘이 더 ${asksLate ? '큰' : '작은'} 숫자 쪽에 있는 ${name(asksLate ? later : earlier)}이 더 ${asksLate ? '늦어요' : '일러요'}.`, r); },
-    (r) => { const pair = pick([['🍎', '🍌'], ['🔴', '🔵'], ['⭐', '🌙'], ['🐶', '🐱']] as const, r), len = ri(4, 7, r), seq = Array.from({ length: len }, (_, i) => pair[i % 2]), answer = pair[len % 2]; return choiceQ('lengthTime', 'AB 규칙 찾기', `두 가지 모양이 번갈아 나와요. ${seq.join(' ')} □ 에서 □에 들어갈 모양은 무엇일까요?`, answer, [pair[0] === answer ? pair[1] : pair[0]], NO, `${pair.join('와 ')}가 번갈아 나오므로 □는 ${answer}${ye(answer)}.`, r); },
+    (r) => { const pair = pick([['🍎', '🍌'], ['🔴', '🔵'], ['⭐', '🌙'], ['🐶', '🐱'], ['🌼', '🌿']] as const, r), mode = r() < .5 ? 'AB' : 'AAB', unit = mode === 'AB' ? [pair[0], pair[1]] : [pair[0], pair[0], pair[1]], answer = Array.from({ length: 8 }, (_, i) => unit[i % unit.length]).join(' '), wrongs = [Array.from({ length: 8 }, (_, i) => pair[(i + 1) % 2]).join(' '), Array.from({ length: 8 }, (_, i) => i < 4 ? pair[0] : pair[1]).join(' '), Array.from({ length: 8 }, (_, i) => i % 3 === 0 ? pair[1] : pair[0]).join(' ')]; return choiceQ('lengthTime', '규칙 만들고 설명하기', `내가 정한 한 묶음은 [${unit.join(' ')}]이에요. 이 묶음이 되풀이되도록 늘어놓고 설명한 것은 무엇일까요?`, `${answer} · ${unit.join(' ')}이 되풀이돼요`, wrongs.map(seq => `${seq} · 다른 규칙이에요`), NO, `${unit.join(' ')}을 한 묶음으로 정해 되풀이한 배열이에요.`, r, { hints: ['내가 정한 한 묶음이 무엇인지 먼저 찾아봐요.', `${unit.join(' ')}을 한 묶음으로 생각해요.`, `${unit.join(' ')}이 차례로 계속 되풀이돼요.`] }); },
     (r) => { const pair = pick([['🍎', '🍌'], ['🔴', '🔵'], ['⭐', '🌙'], ['🐶', '🐱']] as const, r), unit = [pair[0], pair[0], pair[1]], len = ri(4, 7, r), seq = Array.from({ length: len }, (_, i) => unit[i % 3]), answer = unit[len % 3]; return choiceQ('lengthTime', '세 칸 규칙 찾기', `${pair[0]} ${pair[0]} ${pair[1]} 순서가 되풀이돼요. ${seq.join(' ')} □ 에서 □에 들어갈 모양은 무엇일까요?`, answer, [answer === pair[0] ? pair[1] : pair[0]], NO, `${unit.join(' ')}이 되풀이되므로 □는 ${answer}${ye(answer)}.`, r); }
   ],
   fraction: [
@@ -64,7 +64,7 @@ const G2: Partial<GradeTable> = {
     (r) => { const step = pick([2, 3, 5, 10], r), start = ri(1, 4, r) * step, idx = ri(1, 3, r), seq = [0, 1, 2, 3, 4].map(k => start + k * step), shown = seq.map((v, k) => k === idx ? '□' : String(v)).join(', '); return numberQ('fraction', '빈칸의 수 찾기', `규칙에 따라 수를 늘어놓았어요. ${shown} 에서 □에 알맞은 수는 무엇일까요?`, seq[idx], NO, `${step}씩 커지는 규칙이므로 □는 ${seq[idx]}${ye(seq[idx])}.`); }
   ],
   pictograph: [
-    (r) => { const counts = distinct(4, 1, 10, r), least = counts.indexOf(Math.min(...counts)); return choiceQ('pictograph', '가장 적은 것', `과일 표예요. ${FRUITS.map((f, k) => `${f} ${counts[k]}명`).join(', ')}. 가장 적은 친구가 좋아하는 과일은 무엇일까요?`, FRUITS[least], FRUITS.filter((_, k) => k !== least), dots('○', FRUITS.map((f, k) => ({ label: f, icons: counts[k] }))), `${counts[least]}명으로 ${j(FRUITS[least], '이가')} 가장 적어요.`, r); },
+    (r) => { const raw = shuffle([...FRUITS, ...FRUITS, ...FRUITS, pick(FRUITS, r), pick(FRUITS, r)], r), target = pick(FRUITS, r), count = raw.filter(fruit => fruit === target).length; return numberQ('pictograph', '원자료로 표와 그래프 만들기', `친구들이 고른 과일을 차례로 적었어요: ${raw.join(', ')}. 이 자료를 표로 정리하고 한 명을 ○ 한 개로 나타낼 때, ${target} 줄에는 ○를 몇 개 그려야 할까요?`, count, NO, `원자료에서 ${j(target, '을를')} 고른 친구를 세면 ${count}명이므로 표에는 ${count}, 그래프에는 ○ ${count}개를 나타내요.`, { hints: [`원자료에서 ${target}만 표시해 봐요.`, `${target}이 몇 번 나오는지 하나씩 세어 봐요.`, `${target}은 ${count}번 나오므로 ○ ${count}개예요.`] }); },
     (r) => { const counts = FRUITS.map(() => ri(2, 9, r)), a = ri(0, 3, r); let b = ri(0, 3, r); if (b === a) b = (a + 1) % 4; return numberQ('pictograph', '두 항목의 합', `${FRUITS.map((f, k) => `${f} ${counts[k]}명`).join(', ')}을 좋아해요. ${j(FRUITS[a], '와과')} ${j(FRUITS[b], '을를')} 좋아하는 친구는 모두 몇 명일까요?`, counts[a] + counts[b], dots('○', FRUITS.map((f, k) => ({ label: f, icons: counts[k] }))), `${counts[a]} + ${counts[b]} = ${counts[a] + counts[b]}명이에요.`); },
     (r) => { const counts = FRUITS.map(() => ri(2, 8, r)), total = counts.reduce((x, y) => x + y, 0), i = ri(0, 3, r); return numberQ('pictograph', '모르는 칸 구하기', `우리 반 ${total}명이 좋아하는 과일을 조사했어요. ${FRUITS.map((f, k) => k === i ? `${f} □명` : `${f} ${counts[k]}명`).join(', ')}이에요. □에 알맞은 수는 무엇일까요?`, counts[i], NO, `${total}에서 나머지를 빼면 ${counts[i]}명이에요.`, { hints: ['전체 수에서 알고 있는 수를 빼면 돼요.', `${total}에서 나머지 항목의 수를 차례로 빼요.`, `${counts[i]}명이에요.`] }); },
     (r) => { const counts = distinct(4, 1, 10, r), hi = Math.max(...counts), lo = Math.min(...counts); return numberQ('pictograph', '많고 적음의 차', `그래프에서 ${FRUITS.map((f, k) => `${f} ${counts[k]}명`).join(', ')}이에요. 가장 많은 것과 가장 적은 것은 몇 명 차이가 날까요?`, hi - lo, dots('○', FRUITS.map((f, k) => ({ label: f, icons: counts[k] }))), `가장 많은 ${hi}명에서 가장 적은 ${lo}명을 빼면 ${hi - lo}명이에요.`); },
@@ -219,14 +219,14 @@ export const GRADE_SECOND: Record<1 | 2 | 4 | 5 | 6, Partial<GradeTable>> = { 1:
 
 export const SECOND_TOPICS: Record<1 | 2 | 4 | 5 | 6, Topics> = {
   1: {
-    lengthTime: ['긴바늘과 짧은바늘', '1시간 뒤의 시각', '시각의 앞과 뒤', 'AB 규칙 찾기', '세 칸 규칙 찾기'],
+    lengthTime: ['긴바늘과 짧은바늘', '1시간 뒤의 시각', '시각의 앞과 뒤', '규칙 만들고 설명하기', '세 칸 규칙 찾기'],
     fraction: ['가운데와 사이', '반대쪽에서 세기', '줄 서기 순서', '쌓은 개수 세기', '층 위치'],
     pictograph: ['몇 묶음과 낱개', '1 큰 수와 1 작은 수', '10 큰 수와 10 작은 수', '수 읽고 쓰기', '세 수 크기 비교']
   },
   2: {
     lengthTime: ['걸린 시간', '몇 시간 뒤 시각', '오전과 오후', '분을 시간으로 바꾸기', '며칠 뒤 날짜'],
     fraction: ['덧셈표의 규칙', '곱셈표의 규칙', '쌓은 모양의 규칙', '반복 무늬의 자리', '빈칸의 수 찾기'],
-    pictograph: ['가장 적은 것', '두 항목의 합', '모르는 칸 구하기', '많고 적음의 차', '표와 그래프의 좋은 점']
+    pictograph: ['원자료로 표와 그래프 만들기', '두 항목의 합', '모르는 칸 구하기', '많고 적음의 차', '표와 그래프의 좋은 점']
   },
   4: {
     lengthTime: ['각도 크기 비교', '각도 어림하기', '각도의 차', '시계 바늘이 이루는 각', '일직선 위의 각', '각도 똑같이 나누기'],

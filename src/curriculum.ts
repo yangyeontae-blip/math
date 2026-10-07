@@ -13,6 +13,7 @@ export type CurriculumVisual =
   | { kind: 'measure'; measure: 'capacity' | 'weight'; values: number[]; unit: 'mL' | 'L' | 'g' | 'kg' | 't'; labels?: string[] }
   | { kind: 'pictograph'; icon: string; value: number; unitLabel?: string; rows: { label: string; icons: number }[] }
   | { kind: 'bar-graph'; labels: string[]; values: number[]; unit: string; line?: boolean; hidden?: number[]; step?: number }
+  | { kind: 'stack-grid'; heights: number[][] }
   | { kind: 'ratio-graph'; mode: 'band' | 'pie'; parts: { label: string; percent: number }[]; hidden?: number[] }
   | { kind: 'transform'; op: 'slide' | 'flip-h' | 'flip-v' | 'rotate-cw90' | 'rotate-ccw90' | 'rotate-180'; label?: string; mark?: 'top' | 'bottom' | 'left' | 'right' }
   | { kind: 'array'; rows: number; columns: number }
