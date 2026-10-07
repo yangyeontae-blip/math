@@ -358,12 +358,16 @@ function bindPracticePicker(root: ParentNode) {
   root.querySelectorAll<HTMLButtonElement>('[data-practice-tier]').forEach(button => button.onclick = () => { setAdaptive(false); adaptiveLevels.clear(); state!.settings.practice.tier = Number(button.dataset.practiceTier) as PracticeTier; sync(); persist(); });
   root.querySelectorAll<HTMLButtonElement>('[data-practice-adaptive]').forEach(button => button.onclick = () => { setAdaptive(true); adaptiveLevels.clear(); sync(); });
 }
+let practiceChosenIn: string | null = null;
 function beginHuntBattle(monster: number, id: string) {
   if (!state) return;
+  const saved = state.settings.practice;
+  // 대련장에서 골라 둔 다른 계산이 숲의 몬스터에게 몰래 따라오지 않게, 숲이 바뀐 것 같으면 그 숲의 계산(자동)으로 되돌리고 다시 물어요.
+  if (saved.operation !== 'auto' && saved.operation !== state.forest && practiceChosenIn !== state.forest && !id.startsWith('expMonster')) { saved.operation = 'auto'; saved.skipPicker = false; persist(); }
   if (state.settings.practice.skipPicker) { startBattle(monster, false, id); return; }
   openModal(title('대련 준비', '무엇을 연습할까요?') + `${practicePickerHtml()}<label class="practice-skip"><input type="checkbox" id="practice-skip"> 다음부터는 묻지 않고 이 방식으로 바로 시작해요 <small>(설정에서 다시 바꿀 수 있어요)</small></label><button class="primary wide" id="practice-go">대련 시작하기 →</button>`);
   bindPracticePicker($('#modal-content'));
-  $('#practice-go').onclick = () => { state!.settings.practice.skipPicker = $<HTMLInputElement>('#practice-skip').checked; persist(); startBattle(monster, false, id); };
+  $('#practice-go').onclick = () => { state!.settings.practice.skipPicker = $<HTMLInputElement>('#practice-skip').checked; practiceChosenIn = state!.forest; persist(); startBattle(monster, false, id); };
 }
 function openVillageBoard() { if (!state) return; if (state.hub) void openCurriculumUnit(state.hub); else openStageMap(state.forest); }
 function openArena() {
