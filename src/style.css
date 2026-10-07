@@ -385,3 +385,4 @@ input:not([type=checkbox]):not([type=radio]),select,textarea{min-height:44px}
 .scene-items b small{font-size:.8rem;color:#7a6246}
 .scene-visual em,.ruler-visual em{font-style:normal;font-size:.82rem;color:#8a7863}
 .ruler-visual svg{width:min(360px,92%);height:auto}
+.stack-grid{display:grid;grid-template-columns:repeat(var(--stack-columns,3),58px);gap:6px;justify-content:center;margin:6px auto}.stack-grid b{display:flex;flex-direction:column;align-items:center;justify-content:center;height:54px;border-radius:10px;background:#fff7d8;border:2px solid #e3c985;color:#6b5320;line-height:1.1}.stack-grid b span{font-size:1.35rem;font-weight:900}.stack-grid b small{font-size:.7rem}.stack-grid b.empty{background:transparent;border:2px dashed #d9dfc9}.stack-grid-visual{text-align:center}.stack-grid-visual em{display:block;font-size:.8rem;color:#7b8469;font-style:normal;margin-top:4px}

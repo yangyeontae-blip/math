@@ -12,7 +12,8 @@ import { GRADE1_EXTRA, GRADE2_EXTRA, GRADE4_EXTRA } from './grade-g124x';
 import { VARIANTS_G1, type VariantMap } from './grade-variants12';
 import { VARIANTS_G2 } from './grade-variants2';
 import { VARIANTS_G4, VARIANTS_G5, VARIANTS_G6 } from './grade-variants456';
-import { j, mix, withHardMode, type GradeTable } from './grade-helpers';
+import { ADDED_VARIANTS } from './grade-school-additions';
+import { j, mix, withHardMode, type GradeGen, type GradeTable } from './grade-helpers';
 import { GRADE_SECOND, SECOND_TOPICS } from './grade-second';
 
 export interface GradeRegion { id: CurriculumUnitId; icon: string; name: string; short: string; className: string; semester: '1학기' | '2학기' | '공통' }
@@ -121,9 +122,10 @@ export function gradeMissions(grade: SchoolGrade, unit: NewCurriculumUnitId): Cu
 const merge = (base: GradeTable, extra: Partial<GradeTable>): GradeTable => Object.fromEntries((Object.keys(base) as NewCurriculumUnitId[]).map(unit => [unit, [...(base[unit] ?? []), ...(extra[unit] ?? [])]])) as GradeTable;
 /** 질문이 너무 빨리 되풀이되는 주제에는, 같은 개념을 다른 방식으로 묻는 변형을 섞어요. */
 const withVariants = (table: GradeTable, variants: VariantMap): GradeTable => Object.fromEntries((Object.keys(table) as NewCurriculumUnitId[]).map(unit => [unit, (table[unit] ?? []).map((base, index) => { const extra = variants[unit]?.[index]; return extra?.length ? mix(base, ...extra) : base; })])) as GradeTable;
+const joinVariants = (a: VariantMap, b: VariantMap): VariantMap => { const out: VariantMap = {}; for (const unit of new Set([...Object.keys(a), ...Object.keys(b)]) as Set<NewCurriculumUnitId>) { const merged: Record<number, GradeGen[]> = { ...(a[unit] ?? {}) }; for (const [index, gens] of Object.entries(b[unit] ?? {})) merged[Number(index)] = [...(merged[Number(index)] ?? []), ...gens]; out[unit] = merged; } return out; };
 const TABLES: Record<Exclude<SchoolGrade, 3>, GradeTable> = {
-  1: withVariants(merge(merge(GRADE1, GRADE1_EXTRA), GRADE_SECOND[1]), VARIANTS_G1), 2: withVariants(merge(merge(GRADE2, GRADE2_EXTRA), GRADE_SECOND[2]), VARIANTS_G2), 4: withVariants(merge(merge(GRADE4, GRADE4_EXTRA), GRADE_SECOND[4]), VARIANTS_G4),
-  5: withVariants(merge(merge(GRADE5, GRADE5_EXTRA), GRADE_SECOND[5]), VARIANTS_G5), 6: withVariants(merge(merge(GRADE6, GRADE6_EXTRA), GRADE_SECOND[6]), VARIANTS_G6),
+  1: withVariants(merge(merge(GRADE1, GRADE1_EXTRA), GRADE_SECOND[1]), joinVariants(VARIANTS_G1, ADDED_VARIANTS[1])), 2: withVariants(merge(merge(GRADE2, GRADE2_EXTRA), GRADE_SECOND[2]), VARIANTS_G2), 4: withVariants(merge(merge(GRADE4, GRADE4_EXTRA), GRADE_SECOND[4]), joinVariants(VARIANTS_G4, ADDED_VARIANTS[4])),
+  5: withVariants(merge(merge(GRADE5, GRADE5_EXTRA), GRADE_SECOND[5]), VARIANTS_G5), 6: withVariants(merge(merge(GRADE6, GRADE6_EXTRA), GRADE_SECOND[6]), joinVariants(VARIANTS_G6, ADDED_VARIANTS[6])),
 };
 
 export function generateGradeQuestion(grade: Exclude<SchoolGrade, 3>, unit: NewCurriculumUnitId, mission: number, r: () => number = Math.random): CurriculumQuestion {

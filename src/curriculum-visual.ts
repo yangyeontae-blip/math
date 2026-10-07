@@ -108,7 +108,7 @@ function barGraphHtml(visual: Extract<CurriculumVisual, { kind: 'bar-graph' }>) 
 function stackGridHtml(visual: Extract<CurriculumVisual, { kind: 'stack-grid' }>) {
   const columns = Math.max(...visual.heights.map(row => row.length));
   const cells = visual.heights.flatMap((row, y) => row.map((height, x) =>
-    `<b aria-label="앞에서 ${visual.heights.length - y}째 줄, 왼쪽에서 ${x + 1}째 칸, ${height}층"><span>${height}</span><small>층</small></b>`
+    height > 0 ? `<b aria-label="앞에서 ${visual.heights.length - y}째 줄, 왼쪽에서 ${x + 1}째 칸, ${height}층"><span>${height}</span><small>층</small></b>` : '<b class="empty" aria-hidden="true"></b>'
   )).join('');
   return `<div class="curriculum-visual stack-grid-visual"><div class="stack-grid" style="--stack-columns:${columns}">${cells}</div><em>위에서 본 자리별 높이 · 아래쪽이 앞이에요</em></div>`;
 }

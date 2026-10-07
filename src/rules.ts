@@ -497,10 +497,22 @@ function decimalQuestion(grade: SchoolGrade, operation: Operation, stage: number
   }
   return null;
 }
+/** 3학년 학교 평가에서 자주 나오는 곱하는 수가 두 자리 수인 곱셈이에요(40×30, 35×25, 15×50처럼). 답은 네 자리 이하예요. */
+function pickTwoDigitMultiplier(previous?: Question): Question {
+  for (let attempt = 0; attempt < 20; attempt++) {
+    const tens = Math.random() < .4;
+    const left = tens ? (2 + Math.floor(Math.random() * 7)) * 10 : 11 + Math.floor(Math.random() * 39);
+    const right = tens ? (2 + Math.floor(Math.random() * 4)) * 10 : 20 + Math.floor(Math.random() * 31);
+    if (left * right > 2400 || (previous && previous.dividend === left && previous.divisor === right)) continue;
+    return { dividend: left, divisor: right, answer: left * right, operation: 'multiplication' };
+  }
+  return { dividend: 35, divisor: 25, answer: 875, operation: 'multiplication' };
+}
 function pickGradeOperationQuestion(grade: SchoolGrade, operation: Operation, stage: number, previous: Question | undefined, level: number, maxDividend: 0 | 90 | 180, range: MultiplicationRange) {
   if (grade >= 5 && Math.random() < .5) { const decimal = decimalQuestion(grade, operation, stage, previous); if (decimal) return decimal; }
   if (operation === 'addition') return pickAdditionQuestion(grade === 1 ? Math.min(2, stage) : grade === 2 ? Math.min(6, stage) : stage, previous);
   if (operation === 'subtraction') return pickSubtractionQuestion(grade === 1 ? Math.min(2, stage) : grade === 2 ? Math.min(6, stage) : stage, previous);
+  if (operation === 'multiplication' && grade === 3 && range === 'stage' && stage >= 8 && Math.random() < .4) return pickTwoDigitMultiplier(previous);
   if (operation === 'multiplication') return pickMultiplicationQuestion(grade === 2 ? Math.min(2, stage) : stage, previous, grade === 2 ? 'tables' : range);
   if (grade >= 4) {
     const divisor = 10 + Math.floor(Math.random() * Math.min(40, 10 + stage * 3));
