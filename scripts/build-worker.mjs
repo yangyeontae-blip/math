@@ -1,6 +1,7 @@
 import { cp, mkdir, readFile, readdir, rm, writeFile } from 'node:fs/promises';
 import { extname, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { embedWorkerAssets } from './embed-worker-assets.mjs';
 
 const root = resolve(fileURLToPath(new URL('..', import.meta.url)));
 const dist = join(root, 'dist'), workerSource = join(root, 'worker', 'index.js');
@@ -37,9 +38,8 @@ for (const file of await files(dist)) {
 
 const template = await readFile(workerSource, 'utf8');
 const marker = '/*__EMBEDDED_ASSETS__*/{}';
-if (!template.includes(marker)) throw new Error('Worker asset marker is missing.');
 await mkdir(join(dist, 'server'), { recursive: true });
-await writeFile(join(dist, 'server', 'index.js'), template.replace(marker, JSON.stringify(manifest)), 'utf8');
+await writeFile(join(dist, 'server', 'index.js'), embedWorkerAssets(template, marker, manifest), 'utf8');
 await mkdir(join(dist, '.openai'), { recursive: true });
 await cp(join(root, '.openai', 'hosting.json'), join(dist, '.openai', 'hosting.json'));
 await rm(join(dist, '.openai', 'drizzle'), { recursive: true, force: true });
