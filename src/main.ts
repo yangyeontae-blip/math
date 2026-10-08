@@ -23,6 +23,9 @@ import { addBossDamage, bossOfWeek, claimBossReward, readBoss, setClassCode, syn
 import { bubbleOpen, closeBubble, greetingFor, showBubble } from './bubble';
 import { speak, speechSupported, stopSpeech, autoReadEnabled, setAutoRead } from './speech';
 
+const CLIENT_BUILD = '2026-10-08.1';
+document.documentElement.dataset.clientBuild = CLIENT_BUILD;
+
 const $ = <T extends HTMLElement = HTMLElement>(selector: string) => document.querySelector<T>(selector)!;
 const root = $('#game');
 const COPYRIGHT_OWNER = '양연태';
