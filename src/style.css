@@ -362,15 +362,27 @@ input:not([type=checkbox]):not([type=radio]),select,textarea{min-height:44px}
 @keyframes ac-soft-shake{20%{transform:translateX(-5px)}50%{transform:translateX(5px)}80%{transform:translateX(-3px)}}
 @media(prefers-reduced-motion:reduce){[data-curriculum-answer].correct,[data-curriculum-answer].correct:after,[data-curriculum-answer].wrong{animation:none}}
 
-/* 시간대·날씨 분위기: 화면 위에 살짝 색을 입혀요 (클릭은 그대로 통과) */
-.ambience{position:fixed;inset:0;pointer-events:none;transition:background 3s,opacity 3s;mix-blend-mode:multiply;background:transparent}
-.ambience[data-mood=dusk]{background:linear-gradient(180deg,#ffc99a 0%,#ffdcb8 55%,#fff1dc 100%)}
-.ambience[data-mood=night]{background:linear-gradient(180deg,#5b6aa8 0%,#7d8bc0 60%,#98a4cf 100%)}
+/* 무작위 계절·하늘 이벤트: 실제 시각과 관계없이 숲에만 색을 입혀요. */
+.ambience{position:fixed;inset:0;pointer-events:none;transition:background 4s,opacity 4s;mix-blend-mode:multiply;background:transparent}
+.ambience[data-season=autumn][data-mood=day]{background:linear-gradient(180deg,#f7c87966,#d98b5252 68%,#a66b3930)}
+.ambience[data-season=winter][data-mood=day]{background:linear-gradient(180deg,#d9eff26b,#eaf5f266 62%,#bbd8df52)}
+.ambience[data-mood=dusk]{background:linear-gradient(180deg,#dd7f7f8f 0%,#ffc88682 54%,#8b6b8d50 100%)}
+.ambience[data-season=autumn][data-mood=dusk]{background:linear-gradient(180deg,#d96e568c,#ed9b5682 54%,#8b584f61)}
+.ambience[data-season=winter][data-mood=dusk]{background:linear-gradient(180deg,#b783a180,#efb58c73 54%,#8293b666)}
+.ambience[data-mood=night]{background:linear-gradient(180deg,#253562bd 0%,#4b588da8 60%,#64749a8f 100%)}
 .ambience-rain{display:none;position:fixed;inset:0;pointer-events:none;opacity:.4;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='200'%3E%3Cg stroke='%23dff0ff' stroke-width='1.2' stroke-linecap='round' opacity='.9'%3E%3Cpath d='M12 20l-3 12M101 40l-3 12M139 130l-3 12M30 150l-3 12M84 175l-3 12'/%3E%3C/g%3E%3C/svg%3E"),url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='260'%3E%3Cg stroke='%23c4def5' stroke-width='1' stroke-linecap='round' opacity='.7'%3E%3Cpath d='M30 40l-2 9M170 70l-2 9M60 210l-2 9M120 15l-2 9'/%3E%3C/g%3E%3C/svg%3E");background-size:160px 200px,220px 260px;animation:ac-rain 1.1s linear infinite}
-.ambience[data-weather=rain][data-mood=day]{background:linear-gradient(180deg,#d6dfe4,#e8eef1)}
+.ambience[data-weather=rain][data-mood=day]{background:linear-gradient(180deg,#aebcc782,#d3dcdf73)}
 .ambience-rain[data-weather=rain]{display:block}
+.ambience-particles{display:none;position:fixed;inset:-80px 0 0;pointer-events:none;overflow:hidden}
+.ambience-particles[data-effect=snow]{display:block;opacity:.9;background-image:radial-gradient(circle,#fff 0 2px,transparent 2.8px),radial-gradient(circle,#f5fbff 0 1.2px,transparent 2px),radial-gradient(circle,#fff 0 2.6px,transparent 3.3px);background-size:84px 96px,119px 137px,173px 189px;background-position:12px -10px,58px -48px,104px -92px;filter:drop-shadow(0 1px 1px #87a8bd);animation:ac-snow 9s linear infinite}
+.ambience-particles[data-effect=leaves]{display:block;opacity:.62;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='170' height='190'%3E%3Cg opacity='.9'%3E%3Cellipse cx='18' cy='22' rx='7' ry='3' fill='%23df873c' transform='rotate(32 18 22)'/%3E%3Cellipse cx='116' cy='58' rx='6' ry='3' fill='%23c8613c' transform='rotate(-28 116 58)'/%3E%3Cellipse cx='64' cy='132' rx='7' ry='3' fill='%23e7ad45' transform='rotate(55 64 132)'/%3E%3Cellipse cx='150' cy='166' rx='6' ry='3' fill='%23a95b38' transform='rotate(18 150 166)'/%3E%3C/g%3E%3C/svg%3E");background-size:170px 190px;animation:ac-falling-leaves 13s linear infinite}
+.ambience-particles[data-effect=stars]{display:block;opacity:.72;background-image:radial-gradient(circle,#fffbd0 0 1.5px,transparent 2.2px),radial-gradient(circle,#d8edff 0 1px,transparent 1.8px);background-size:117px 101px,173px 149px;background-position:15px 8px,82px 47px;animation:ac-stars 3.8s ease-in-out infinite alternate}
+.location-pill:after{display:none}.location-pill[data-ambience]:not([data-ambience=""]):after{content:attr(data-ambience);display:block;margin-top:3px;padding-top:4px;border-top:1px solid #7c8c6b35;color:#536d5e;font-size:.68rem;font-weight:900}
 @keyframes ac-rain{from{background-position:0 0,0 0}to{background-position:0 200px,0 260px}}
-@media(prefers-reduced-motion:reduce){.ambience-rain{animation:none}}
+@keyframes ac-snow{from{background-position:12px -10px,58px -48px,104px -92px}to{background-position:55px 278px,9px 363px,166px 475px}}
+@keyframes ac-falling-leaves{from{background-position:0 -190px}to{background-position:115px 380px}}
+@keyframes ac-stars{from{opacity:.42}to{opacity:.78}}
+@media(prefers-reduced-motion:reduce){.ambience-rain,.ambience-particles{animation:none}}
 
 /* 시계 그림 (몇 시·몇 분 문제) */
 .clock-visual{display:grid;place-items:center;gap:6px;padding:12px}

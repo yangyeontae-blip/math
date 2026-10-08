@@ -1,10 +1,29 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { weatherForDate } from '../src/ambience.ts';
+import { ambienceDelay, ambienceLabel, createAmbienceScene } from '../src/ambience.ts';
 
-test('weather is stable within a day and rains only some days', () => {
-  assert.equal(weatherForDate(new Date(2026, 9, 7, 8)), weatherForDate(new Date(2026, 9, 7, 22)));
-  let rainy = 0;
-  for (let d = 1; d <= 360; d++) if (weatherForDate(new Date(2026, 0, d)) === 'rain') rainy++;
-  assert.ok(rainy > 30 && rainy < 90, `rainy days ${rainy}`);
+function rolls(...values: number[]) {
+  let index = 0;
+  return () => values[index++] ?? .5;
+}
+
+test('ambience is created from random rolls instead of the device clock', () => {
+  assert.deepEqual(createAmbienceScene(rolls(.2, .2, .8)), { season: 'green', mood: 'day', weather: 'clear' });
+  assert.deepEqual(createAmbienceScene(rolls(.7, .7, .8)), { season: 'autumn', mood: 'dusk', weather: 'clear' });
+  assert.deepEqual(createAmbienceScene(rolls(.9, .9, .2)), { season: 'winter', mood: 'night', weather: 'snow' });
+});
+
+test('snow belongs to winter and scene labels explain the event', () => {
+  const winter = createAmbienceScene(rolls(.9, .1, .1));
+  const autumn = createAmbienceScene(rolls(.7, .1, .1));
+  assert.equal(winter.weather, 'snow');
+  assert.notEqual(autumn.weather, 'snow');
+  assert.match(ambienceLabel(winter), /겨울.*눈 내림/);
+  assert.match(ambienceLabel(autumn), /가을/);
+});
+
+test('each ambience scene lasts two to four minutes', () => {
+  assert.equal(ambienceDelay(() => 0), 120_000);
+  const latest = ambienceDelay(() => .99999);
+  assert.ok(latest >= 120_000 && latest <= 240_000, `delay ${latest}`);
 });
