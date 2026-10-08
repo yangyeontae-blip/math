@@ -33,6 +33,7 @@ let current: AmbienceScene = DEFAULT_SCENE;
 let layer: HTMLDivElement | null = null;
 let rain: HTMLDivElement | null = null;
 let particles: HTMLDivElement | null = null;
+type ParticleEffect = 'none' | 'snow' | 'leaves' | 'stars';
 
 export function currentAmbience(): AmbienceScene { return { ...current }; }
 export function randomizeAmbience(random: () => number = Math.random): AmbienceScene { current = createAmbienceScene(random); return currentAmbience(); }
@@ -41,6 +42,27 @@ function removeLayers(host: HTMLElement) {
   layer?.remove(); rain?.remove(); particles?.remove();
   layer = rain = particles = null;
   host.ownerDocument.querySelectorAll('.ambience, .ambience-rain, .ambience-particles').forEach(el => el.remove());
+}
+
+/** 반복 배경을 통째로 움직이지 않고, 가벼운 입자를 서로 다른 속도로 떨어뜨려요. */
+function drawParticles(host: HTMLDivElement, effect: ParticleEffect) {
+  if (host.dataset.effect === effect) return;
+  host.replaceChildren(); host.dataset.effect = effect;
+  const count = effect === 'snow' ? 18 : effect === 'leaves' ? 11 : 0;
+  for (let i = 0; i < count; i++) {
+    const particle = document.createElement('i');
+    const duration = effect === 'snow' ? 8 + (i * 7 % 7) : 11 + (i * 5 % 8);
+    const drift = -42 + (i * 37 % 85), sway = -26 + (i * 29 % 53);
+    particle.style.setProperty('--x', `${3 + (i * 47 % 94)}%`);
+    particle.style.setProperty('--size', `${effect === 'snow' ? 3 + (i * 5 % 5) : 7 + (i * 3 % 6)}px`);
+    particle.style.setProperty('--duration', `${duration}s`);
+    particle.style.setProperty('--delay', `${-(i * 1.73 % duration)}s`);
+    particle.style.setProperty('--drift', `${drift}px`);
+    particle.style.setProperty('--sway', `${sway}px`);
+    particle.style.setProperty('--sway-end', `${Math.round((drift + sway) * .55)}px`);
+    particle.style.setProperty('--particle-color', ['#d9793d', '#e7a643', '#b85f3e', '#d58a3f'][i % 4]);
+    host.append(particle);
+  }
 }
 
 /** 현재 무작위 장면을 게임 화면에 입혀요. HUD보다 뒤에 들어가 글자와 버튼은 선명하게 유지돼요. */
@@ -56,7 +78,7 @@ export function applyAmbience(host: HTMLElement, before: Element | null, scene =
   }
   layer.dataset.mood = current.mood; layer.dataset.season = current.season; layer.dataset.weather = current.weather;
   if (rain) rain.dataset.weather = current.weather;
-  if (particles) particles.dataset.effect = current.weather === 'snow' ? 'snow' : current.season === 'autumn' ? 'leaves' : current.mood === 'night' ? 'stars' : 'none';
+  if (particles) drawParticles(particles, current.weather === 'snow' ? 'snow' : current.season === 'autumn' ? 'leaves' : current.mood === 'night' ? 'stars' : 'none');
   return currentAmbience();
 }
 
