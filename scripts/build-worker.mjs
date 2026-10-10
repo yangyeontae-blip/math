@@ -32,6 +32,9 @@ async function files(directory) {
 const manifest = {};
 for (const file of await files(dist)) {
   const pathname = `/${relative(dist, file).split(sep).join('/')}`;
+  // The five-minute promo is served by GitHub Pages for the Sites build.
+  // Keeping it out of the Worker bundle preserves room for the game APIs.
+  if (pathname === '/promo.mp4') continue;
   const extension = extname(file), text = textTypes.has(extension);
   manifest[pathname] = { body: await readFile(file, text ? 'utf8' : 'base64'), type: types[extension] ?? 'application/octet-stream', ...(text ? {} : { base64: true }) };
 }

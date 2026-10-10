@@ -181,6 +181,9 @@ export { normalizeNickname, validPlayerId, isBlockedNickname, allowedCompleted, 
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
+    if (url.pathname === '/promo.mp4') {
+      return Response.redirect('https://yangyeontae-blip.github.io/math/promo.mp4', 302);
+    }
     if (url.pathname === '/api/rankings') {
       if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: corsHeaders(request) });
       if (!env.DB) return json(request, { error: '전체 랭킹 서버를 준비하는 중이에요.' }, 503);
