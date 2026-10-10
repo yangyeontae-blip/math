@@ -48,13 +48,14 @@ function removeLayers(host: HTMLElement) {
 function drawParticles(host: HTMLDivElement, effect: ParticleEffect) {
   if (host.dataset.effect === effect) return;
   host.replaceChildren(); host.dataset.effect = effect;
-  const count = effect === 'snow' ? 18 : effect === 'leaves' ? 11 : 0;
+  // 눈은 배경을 가리지 않도록 몇 송이만 천천히 흘려보내요.
+  const count = effect === 'snow' ? 10 : effect === 'leaves' ? 11 : 0;
   for (let i = 0; i < count; i++) {
     const particle = document.createElement('i');
-    const duration = effect === 'snow' ? 8 + (i * 7 % 7) : 11 + (i * 5 % 8);
+    const duration = effect === 'snow' ? 16 + (i * 7 % 11) : 11 + (i * 5 % 8);
     const drift = -42 + (i * 37 % 85), sway = -26 + (i * 29 % 53);
     particle.style.setProperty('--x', `${3 + (i * 47 % 94)}%`);
-    particle.style.setProperty('--size', `${effect === 'snow' ? 3 + (i * 5 % 5) : 7 + (i * 3 % 6)}px`);
+    particle.style.setProperty('--size', `${effect === 'snow' ? 2 + (i * 3 % 3) : 7 + (i * 3 % 6)}px`);
     particle.style.setProperty('--duration', `${duration}s`);
     particle.style.setProperty('--delay', `${-(i * 1.73 % duration)}s`);
     particle.style.setProperty('--drift', `${drift}px`);
