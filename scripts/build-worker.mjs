@@ -24,7 +24,7 @@ async function files(directory) {
     if (entry.name === 'server' || entry.name === '.openai') continue;
     const absolute = join(directory, entry.name);
     if (entry.isDirectory()) found.push(...await files(absolute));
-    else if (entry.isFile()) found.push(absolute);
+    else if (entry.isFile() && extname(entry.name) !== '.mp4') found.push(absolute); // 소개 영상은 GitHub Pages에만 두고 워커에는 넣지 않아요.
   }
   return found;
 }

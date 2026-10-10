@@ -34,6 +34,8 @@ self.addEventListener('fetch', event => {
   const { request } = event;
   const url = new URL(request.url);
   if (request.method !== 'GET' || url.origin !== self.location.origin || url.pathname.includes('/api/')) return;
+  // 소개 영상은 크고 구간(range)으로 받아서 캐시에 넣지 않아요.
+  if (url.pathname.endsWith('.mp4') || request.headers.has('range')) return;
   if (request.mode === 'navigate') event.respondWith(networkFirst(request));
   else if (url.pathname.includes('/assets/')) event.respondWith(cacheFirst(request));
   else event.respondWith(networkFirst(request));

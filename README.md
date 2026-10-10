@@ -2,6 +2,12 @@
 
 베리를 모으고 숲을 탐험하며 **초등학교 1~6학년 수학**을 배우는 포근한 3D 학습 RPG입니다. 2022 개정 교육과정의 학년별 흐름을 바탕으로, 계산뿐 아니라 도형·측정·분수·소수·자료 영역을 각각의 모험 지역과 문제 그림으로 구성했습니다.
 
+## 소개 영상
+
+[![베리숲 모험학교 소개 영상 (5분) — 눌러서 보기](./docs/promo-poster.jpg)](https://yangyeontae-blip.github.io/math/promo.mp4)
+
+▶ [소개 영상 보기 (5분)](https://yangyeontae-blip.github.io/math/promo.mp4) — 숲 모험, 베리 상점과 꾸미기, 학년별 수학 임무, 학습 리포트까지 한 번에 볼 수 있어요.
+
 ![베리숲 모험학교](./public/og-image.png)
 
 ## 바로 플레이
