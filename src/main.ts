@@ -7,7 +7,7 @@ import { mathTextHtml } from './math-format';
 import { VILLAGE_THEMES, villageThemeId } from './villages';
 import { DAILY_MISSIONS, DAILY_STAMPS, DAILY_ALL_CLEAR_BONUS, claimDaily, dailyReady, dailyStampsShown, ensureDaily } from './daily';
 import type { World, AvatarPreview, GuideKind } from './world';
-import { formatScaled, type CurriculumMistake, newSave, validateSave, CHARACTERS, MONSTERS, OUTFITS, PETS, POTIONS, RIDES, WEAPONS, HAIRSTYLES, FACES, WEAPON_UPGRADES, OUTFIT_UPGRADES, ROOM_GRID_COLUMNS, ROOM_GRID_ROWS, HERO_BREAD_PET_ID, Encounter, grantReward, rewardFor, potionEffects, buy, upgrade, buyRide, dismount, buyPet, unequipPet, buyLook, buyPotion, usePotion, applyTeacherCode, collectBerry, finishHunt, fellTree, treeDamage, canEnter, monsterBattleRounds, recordWrongAnswer, recordCorrectAnswer, STAGE_STORIES, journeyFor, multiplicationUsesStory, startMultiplicationFinal, answerMultiplicationFinal, questionAnswerText, curriculumUnitComplete, canStartCurriculumMission, recordCurriculumAttempt, completeCurriculumMission, curriculumGraduationAvailable, claimCurriculumGraduation, addRoomFurniture, removeRoomFurniture, placeRoomFurniture, roomFurniturePosition, defaultRoomFurniturePosition, OPERATIONS, NEW_CURRICULUM_UNITS, OPERATION_INFO, PRACTICE_TIER_NAMES, type CurriculumUnitId, type NewCurriculumUnitId, type ForestKind, type Operation, type PracticeTier, type SchoolGrade, type Save } from './rules';
+import { formatScaled, type CurriculumMistake, newSave, validateSave, CHARACTERS, MONSTERS, OUTFITS, PETS, POTIONS, RIDES, WEAPONS, HAIRSTYLES, FACES, WEAPON_UPGRADES, OUTFIT_UPGRADES, ROOM_GRID_COLUMNS, ROOM_GRID_ROWS, HERO_BREAD_PET_ID, Encounter, grantReward, rewardFor, battleRewardReason, potionEffects, buy, upgrade, buyRide, dismount, buyPet, unequipPet, buyLook, buyPotion, usePotion, applyTeacherCode, collectBerry, finishHunt, fellTree, treeDamage, canEnter, monsterBattleRounds, recordWrongAnswer, recordCorrectAnswer, STAGE_STORIES, journeyFor, multiplicationUsesStory, startMultiplicationFinal, answerMultiplicationFinal, questionAnswerText, curriculumUnitComplete, canStartCurriculumMission, recordCurriculumAttempt, completeCurriculumMission, curriculumGraduationAvailable, claimCurriculumGraduation, addRoomFurniture, removeRoomFurniture, placeRoomFurniture, roomFurniturePosition, defaultRoomFurniturePosition, OPERATIONS, NEW_CURRICULUM_UNITS, OPERATION_INFO, PRACTICE_TIER_NAMES, type CurriculumUnitId, type NewCurriculumUnitId, type ForestKind, type Operation, type PracticeTier, type SchoolGrade, type Save } from './rules';
 import { gradeRegions, gradeMissions, generateGradeQuestion, type GradeRegion } from './grade-content';
 import { STAGES, stageMonsters, stageBerries, berryValue, clearBonus } from './stages';
 import { Sound } from './audio';
@@ -72,7 +72,7 @@ $('#quest-toggle').onclick = () => setQuestCollapsed(!questCard.classList.contai
 let state: Save | null = null, saved: Save | null = null, preview: AvatarPreview | null = null, startPreview: AvatarPreview | null = null;
 let startPreviewRequest = 0, startPortraits: string[] | null = null;
 let selected = 0, selectedGrade: SchoolGrade = 3, pendingImport: Save | null = null, toastTimer: ReturnType<typeof setTimeout>, modalOpener: HTMLElement | null = null;
-let battle: { encounter: Encounter; id: string; kind: 'normal' | 'expMonster' | 'expGate' | 'multiplicationGate'; round: number; goalRounds?: number; score: number; result: ReturnType<typeof grantReward> | null; newTitle?: number; story?: boolean; missedCurrent?: boolean; practice?: { operation: Operation; tier: PracticeTier } } | null = null;
+let battle: { encounter: Encounter; id: string; kind: 'normal' | 'expMonster' | 'expGate' | 'multiplicationGate'; round: number; goalRounds?: number; score: number; result: ReturnType<typeof grantReward> | null; newTitle?: number; story?: boolean; missedCurrent?: boolean; hintUsed?: boolean; practice?: { operation: Operation; tier: PracticeTier } } | null = null;
 type CurriculumModule = typeof import('./curriculum');
 type CurriculumQuestion = import('./curriculum').CurriculumQuestion;
 let curriculumModulePromise: Promise<CurriculumModule> | null = null;
@@ -356,7 +356,7 @@ function recordAdaptive(correct: boolean) {
 }
 function practicePickerHtml() {
   const choice = state!.settings.practice, ops: [string, string, string][] = [['auto', '🎲', '자동'], ...OPERATIONS.map(op => [op, OPERATION_INFO[op].icon, OPERATION_INFO[op].name] as [string, string, string])];
-  return `<div class="practice-picker"><p class="practice-title">어떤 계산을 연습할까요?</p><div class="practice-chips" role="radiogroup" aria-label="연습할 계산">${ops.map(([id, icon, name]) => `<button type="button" class="practice-chip ${choice.operation === id ? 'selected' : ''}" data-practice-op="${id}" role="radio" aria-checked="${choice.operation === id}"><span aria-hidden="true">${icon}</span>${name}</button>`).join('')}</div><div class="practice-tiers" ${choice.operation === 'auto' ? 'hidden' : ''}><p class="practice-title">난이도는요?</p><div class="practice-chips" role="radiogroup" aria-label="난이도">${PRACTICE_TIER_NAMES.map((name, tier) => `<button type="button" class="practice-chip tier ${!adaptiveEnabled() && choice.tier === tier ? 'selected' : ''}" data-practice-tier="${tier}" role="radio" aria-checked="${!adaptiveEnabled() && choice.tier === tier}">${['🌱', '🌿', '🌳'][tier]} ${name}</button>`).join('')}<button type="button" class="practice-chip tier ${adaptiveEnabled() ? 'selected' : ''}" data-practice-adaptive role="radio" aria-checked="${adaptiveEnabled()}">✨ 자동</button></div></div><p class="practice-note" id="practice-note">${practiceNote(choice)}</p></div>`;
+  return `<div class="practice-picker"><p class="practice-title">어떤 계산을 연습할까요?</p><div class="practice-chips" role="radiogroup" aria-label="연습할 계산">${ops.map(([id, icon, name]) => `<button type="button" class="practice-chip ${choice.operation === id ? 'selected' : ''}" data-practice-op="${id}" role="radio" aria-checked="${choice.operation === id}"><span aria-hidden="true">${icon}</span>${name}</button>`).join('')}</div><div class="practice-tiers" ${choice.operation === 'auto' ? 'hidden' : ''}><p class="practice-title">난이도는요?</p><div class="practice-chips" role="radiogroup" aria-label="난이도">${PRACTICE_TIER_NAMES.map((name, tier) => `<button type="button" class="practice-chip tier ${!adaptiveEnabled() && choice.tier === tier ? 'selected' : ''}" data-practice-tier="${tier}" role="radio" aria-checked="${!adaptiveEnabled() && choice.tier === tier}">${['🌱', '🌿', '🌳'][tier]} ${name}</button>`).join('')}<button type="button" class="practice-chip tier ${adaptiveEnabled() ? 'selected' : ''}" data-practice-adaptive role="radio" aria-checked="${adaptiveEnabled()}">✨ 자동</button></div></div><p class="practice-note" id="practice-note">${practiceNote(choice)}</p><p class="practice-note">힌트를 보고 푼 대련은 통과하지만 베리·경험치·점수는 받지 않아요.${state!.grade >= 3 ? " 100보다 작은 덧셈·뺄셈도 보상 없는 연습이에요." : ""}</p></div>`;
 }
 function bindPracticePicker(root: ParentNode) {
   if (!state) return;
@@ -606,7 +606,7 @@ async function submitCurriculumAnswer(value: string) {
     audio.play('wrong'); persist(); return;
   }
   sessionCorrect++;
-  if (!run.missedCurrent) { state.learning.correct++; recordCurriculumAttempt(state, q.unit, true, run.mission, q.skill); if (!run.review) addBossDamage(localStorage); }
+  if (!run.missedCurrent) { state.learning.correct++; recordCurriculumAttempt(state, q.unit, true, run.mission, q.skill); if (!run.review && run.hintLevel === 0) addBossDamage(localStorage); }
   document.querySelectorAll<HTMLButtonElement>('[data-curriculum-answer],[data-curriculum-number],[data-pizza-slice],[data-pizza-submit],[data-circle-adjust],[data-circle-submit]').forEach(button => { button.disabled = true; if (button.dataset.curriculumAnswer === value) button.classList.add('correct'); });
   const input = document.querySelector<HTMLInputElement>('#curriculum-answer'); if (input) input.disabled = true;
   const numberEntry = document.querySelector<HTMLElement>('.curriculum-number');
@@ -620,7 +620,7 @@ async function submitCurriculumAnswer(value: string) {
     const defeated = run.shadow, waiting = shadowList.some(item => item.unit === defeated.unit && item.skill === defeated.skill);
     state.curriculum.wrongSkills = state.curriculum.wrongSkills.filter(item => !(item.unit === defeated.unit && item.skill === defeated.skill));
     syncShadows();
-    if (waiting) { state.berries += SHADOW_REWARD; refresh(); toast(`🌟 그림자 몬스터를 물리쳤어요! 🍓 +${SHADOW_REWARD}`); }
+    if (waiting && run.hints === 0) { state.berries += SHADOW_REWARD; refresh(); toast(`🌟 그림자 몬스터를 물리쳤어요! 🍓 +${SHADOW_REWARD}`); }
   }
   audio.play('correct'); persist(); $('#curriculum-next').onclick = finishCurriculumQuestion;
 }
@@ -713,7 +713,7 @@ function startExpeditionGate() {
   battle = { encounter, id: 'expGate', kind: 'expGate', round: 1, score: 0, result: null }; renderBattle();
 }
 function renderBattle() {
-  if (!battle || !state) return; const b = battle, e = b.encounter, m = MONSTERS[e.monster], q = e.question, reward = rewardFor(state, e.monster, e.arena), op = q.operation ?? 'division', info = OPERATION_INFO[op], multiplication = op === 'multiplication', symbol = info.symbol, operationName = info.name;
+  if (!battle || !state) return; const b = battle, e = b.encounter, m = MONSTERS[e.monster], q = e.question, rewardReason = battleRewardReason(state, q, !!b.hintUsed, b.practice?.operation === q.operation ? b.practice?.tier : undefined), reward = rewardFor(state, e.monster, e.arena, Date.now(), !rewardReason), op = q.operation ?? 'division', info = OPERATION_INFO[op], multiplication = op === 'multiplication', symbol = info.symbol, operationName = info.name;
   const dp = q.places, da = dp ? formatScaled(q.dividend, dp[0]) : String(q.dividend), db = dp ? formatScaled(q.divisor, dp[1]) : String(q.divisor);
   const story = !b.story ? '' : dp ? `<p class="expedition-story">${decimalStory(op, da, db)}</p>` : op === 'addition'
     ? `<p class="expedition-story">사과 바구니에 사과가 ${q.dividend}개, 다른 바구니에 ${q.divisor}개 있어요. 모두 합하면 몇 개일까요?</p>`
@@ -729,7 +729,7 @@ function renderBattle() {
   const questionMarkup = q.remainder
     ? `<div class="question remainder-question" aria-label="${q.dividend} 나누기 ${q.divisor}의 몫과 나머지"><b>${q.dividend}</b><span>÷</span><b>${q.divisor}</b><span>=</span><label>몫<input id="answer" class="active" data-answer-part="answer" aria-label="몫" inputmode="numeric" autocomplete="off" maxlength="3" placeholder="?" readonly></label><label>나머지<input id="remainder" data-answer-part="remainder" aria-label="나머지" inputmode="numeric" autocomplete="off" maxlength="1" placeholder="?" readonly></label></div>`
     : `<div class="question" aria-label="${da} ${info.aria} ${db}"><b>${da}</b><span>${symbol}</span><b>${db}</b><span>=</span><input id="answer" class="active" data-answer-part="answer" aria-label="${operationName}의 답" inputmode="${dp ? 'decimal' : 'numeric'}" autocomplete="off" maxlength="${dp ? 6 : 4}" placeholder="?" readonly></div>`;
-  openModal(title(e.arena ? `신비의 대련장 · ${b.round} / 5` : b.kind === 'multiplicationGate' ? '구구단 햇살문' : challenge ? `연속 수학 대련 · ${b.round} / ${b.goalRounds}` : `숲속 친구와 ${operationName}`, m.name) + `<div class="battle-top"><span>${info.icon} ${e.arena ? `이번 도전 ${b.score}점` : challenge ? `${b.goalRounds}문제를 모두 풀면 통과해요` : `${e.stage ? `${e.stage}단계 난이도` : '마을 연습 문제'} · 천천히 생각해요`}</span><span>🍓 ${reward.berries} · 경험치 ${reward.xp}</span></div><div class="monster-portrait ${multiplication ? 'multiplication-portrait' : ''}" id="monster-portrait" style="--monster-color:#${m.color.toString(16).padStart(6, '0')}"><span class="battle-spark one">✦</span><span class="battle-spark two">✦</span><div class="monster-icon" aria-hidden="true">${b.kind === 'multiplicationGate' ? '🌻' : m.icon}</div><div class="monster-speech"><strong>${b.kind === 'multiplicationGate' ? '햇살문의 안내자' : m.name}</strong><span>${challenge ? `문제 ${b.round}/${b.goalRounds} · 끝까지 같이 풀어 봐!` : `${operationName}으로 힘을 보여 줘!`}</span></div></div>${linked}${story}${questionMarkup}<p class="answer-message" id="answer-message" role="status">${q.remainder ? '몫과 나머지를 차례로 적어 볼까요?' : info.ask}</p><div id="hint" hidden></div><div class="number-pad" aria-label="숫자판">${(dp ? [1, 2, 3, 4, 5, 6, 7, 8, 9, '.', 0, '지우기'] : [1, 2, 3, 4, 5, 6, 7, 8, 9, '지우기', 0, '확인']).map(n => `<button data-number="${n}" class="${n === '확인' ? 'primary' : ''}" ${n === '.' ? 'aria-label="소수점"' : ''}>${n}</button>`).join('')}${dp ? '<button data-number="확인" class="primary" style="grid-column:1/-1">확인</button>' : ''}</div><div class="battle-footer"><button id="show-hint" class="text-button">💡 힌트 보기</button><button class="text-button" data-close>잠깐 쉬기</button></div><div id="battle-result" hidden></div>`, 'battle-modal');
+  openModal(title(e.arena ? `신비의 대련장 · ${b.round} / 5` : b.kind === 'multiplicationGate' ? '구구단 햇살문' : challenge ? `연속 수학 대련 · ${b.round} / ${b.goalRounds}` : `숲속 친구와 ${operationName}`, m.name) + `<div class="battle-top"><span>${info.icon} ${e.arena ? `이번 도전 ${b.score}점` : challenge ? `${b.goalRounds}문제를 모두 풀면 통과해요` : `${e.stage ? `${e.stage}단계 난이도` : '마을 연습 문제'} · 천천히 생각해요`}</span><span id="battle-reward">${rewardReason === 'hint' ? '힌트 연습 · 베리와 경험치 없음' : rewardReason === 'easy' ? '쉬운 계산 연습 · 베리와 경험치 없음' : `🍓 ${reward.berries} · 경험치 ${reward.xp}`}</span></div><div class="monster-portrait ${multiplication ? 'multiplication-portrait' : ''}" id="monster-portrait" style="--monster-color:#${m.color.toString(16).padStart(6, '0')}"><span class="battle-spark one">✦</span><span class="battle-spark two">✦</span><div class="monster-icon" aria-hidden="true">${b.kind === 'multiplicationGate' ? '🌻' : m.icon}</div><div class="monster-speech"><strong>${b.kind === 'multiplicationGate' ? '햇살문의 안내자' : m.name}</strong><span>${challenge ? `문제 ${b.round}/${b.goalRounds} · 끝까지 같이 풀어 봐!` : `${operationName}으로 힘을 보여 줘!`}</span></div></div>${linked}${story}${questionMarkup}<p class="answer-message" id="answer-message" role="status">${q.remainder ? '몫과 나머지를 차례로 적어 볼까요?' : info.ask}</p><div id="hint" hidden></div><div class="number-pad" aria-label="숫자판">${(dp ? [1, 2, 3, 4, 5, 6, 7, 8, 9, '.', 0, '지우기'] : [1, 2, 3, 4, 5, 6, 7, 8, 9, '지우기', 0, '확인']).map(n => `<button data-number="${n}" class="${n === '확인' ? 'primary' : ''}" ${n === '.' ? 'aria-label="소수점"' : ''}>${n}</button>`).join('')}${dp ? '<button data-number="확인" class="primary" style="grid-column:1/-1">확인</button>' : ''}</div><div class="battle-footer"><button id="show-hint" class="text-button">💡 힌트 보기</button><button class="text-button" data-close>잠깐 쉬기</button></div><div id="battle-result" hidden></div>`, 'battle-modal');
   if (b.kind === 'multiplicationGate') {
     $('.modal-heading .eyebrow').textContent = `곱셈의 숲 마지막 문 · ${b.round}/2`;
     $('.modal-heading h2').textContent = b.round === 1 ? '곱셈으로 햇살을 밝혀요' : '나눗셈으로 짝을 찾아요';
@@ -748,7 +748,7 @@ function renderBattle() {
   }
   document.querySelectorAll<HTMLButtonElement>('[data-number]').forEach(button => button.onclick = () => enterAnswer(button.dataset.number!));
   document.querySelectorAll<HTMLInputElement>('[data-answer-part]').forEach(input => input.onclick = () => { document.querySelectorAll<HTMLInputElement>('[data-answer-part]').forEach(item => item.classList.toggle('active', item === input)); });
-  $('#show-hint').onclick = showHint; $('#answer').focus();
+  $('#show-hint').onclick = () => showHint(true); $('#answer').focus();
 }
 const DECIMAL_STORIES = {
   addition: (a: string, b: string) => `리본이 ${a} m와 ${b} m 있어요. 모두 합하면 몇 m일까요?`,
@@ -774,8 +774,21 @@ function arithmeticHint(q: { dividend: number; divisor: number; answer: number; 
   const steps = parts.map(part => { const next = add ? current + part : current - part, text = `${current} ${sign} ${part} = ${next}`; current = next; return `<span>${text}</span>`; });
   return `<p>${b}를 <b>${parts.join(', ')}</b>으로 나누어 차례로 ${add ? '더해' : '빼'} 봐요.</p><div class="split-hint">${steps.join('')}</div><b>${a} ${sign} ${b} = ${q.answer}</b>`;
 }
-function showHint() {
+function showHint(manual = false) {
   if (!battle) return; const q = battle.encounter.question;
+  if (!manual && !battle.hintUsed) {
+    $('#hint').hidden = false;
+    $('#hint').innerHTML = q.operation === 'addition' ? '<p>큰 수부터 세며 작은 수를 조금씩 더해 보세요. 10이 넘으면 다음 자리로 묶어요.</p>'
+      : q.operation === 'subtraction' ? '<p>큰 수에서 작은 수를 차례로 빼 보세요. 일의 자리부터 생각해요.</p>'
+      : q.operation === 'multiplication' ? `<p>${q.dividend}이(가) ${q.divisor}번 있는 모습을 떠올려 보세요. 같은 수를 여러 번 더해도 돼요.</p>`
+      : `<p>${q.dividend}개를 ${q.divisor}씩 묶어 보세요. ${q.divisor} × □가 ${q.dividend}에 가까워지는 수를 찾아요.</p>`;
+    return;
+  }
+  if (manual) {
+    battle.hintUsed = true;
+    $('#battle-reward').textContent = '힌트 연습 · 베리와 경험치 없음';
+    $('#answer-message').textContent = '힌트를 보며 풀어도 통과할 수 있어요. 이번 대련의 베리와 경험치는 받지 않아요.';
+  }
   $('#hint').hidden = false;
   if (q.places) { $('#hint').innerHTML = decimalHint(q); return; }
   if (q.operation === 'addition' || q.operation === 'subtraction') { $('#hint').innerHTML = arithmeticHint(q); return; }
@@ -830,7 +843,7 @@ function submitAnswer() {
   const outcome = b.encounter.answer(submitted);
   if (outcome === 'ignored') return;
   if (outcome === 'wrong') { if (!b.missedCurrent) { b.missedCurrent = true; recordAdaptive(false); recordWrongAnswer(state, b.encounter.question); recordCurriculumAttempt(state, b.encounter.question.operation ?? 'division', false); sessionWrong++; } audio.play('wrong'); persist(); $('#answer-message').textContent = '괜찮아요! 묶음을 살펴보고 다시 풀어 볼까요?'; input.value = ''; if (remainderInput) remainderInput.value = ''; showHint(); return; }
-  sessionCorrect++; recordCorrectAnswer(state, b.encounter.monster, !b.missedCurrent); if (!b.missedCurrent) { recordCurriculumAttempt(state, b.encounter.question.operation ?? 'division', true); addBossDamage(localStorage); recordAdaptive(true); } state.discoveries.outfits.includes(state.outfit) || state.discoveries.outfits.push(state.outfit); if (state.pet >= 0 && !state.discoveries.pets.includes(state.pet)) state.discoveries.pets.push(state.pet);
+  sessionCorrect++; recordCorrectAnswer(state, b.encounter.monster, !b.missedCurrent && !b.hintUsed); if (!b.missedCurrent) { recordCurriculumAttempt(state, b.encounter.question.operation ?? 'division', true); if (!b.hintUsed) { addBossDamage(localStorage); recordAdaptive(true); } } state.discoveries.outfits.includes(state.outfit) || state.discoveries.outfits.push(state.outfit); if (state.pet >= 0 && !state.discoveries.pets.includes(state.pet)) state.discoveries.pets.push(state.pet);
   if (!b.encounter.arena && !['multiplicationGate', 'expGate'].includes(b.kind) && b.round < (b.goalRounds ?? 1)) {
     audio.play('correct'); world.celebrate(); persist();
     $('#answer-message').textContent = '정답이에요! 다음 문제도 함께 풀어요.'; $('#monster-portrait').classList.add('defeated'); $('.number-pad').hidden = true; $('.battle-footer').hidden = true; $('#hint').hidden = true; $('#battle-result').hidden = false;
@@ -850,7 +863,10 @@ function submitAnswer() {
     if (!completed) return;
     b.newTitle = completed.newTitle;
     b.result = { berries: completed.berries, xp: 0, score: 0, levels: 0, milestones: [] };
-  } else b.result = b.encounter.arena ? grantReward(state, b.encounter.monster, true) : finishHunt(state, Number(b.id.slice(7)));
+  } else {
+    const rewardEligible = !battleRewardReason(state, b.encounter.question, !!b.hintUsed, b.practice?.operation === b.encounter.question.operation ? b.practice?.tier : undefined);
+    b.result = b.encounter.arena ? grantReward(state, b.encounter.monster, true, Date.now(), rewardEligible) : finishHunt(state, Number(b.id.slice(7)), rewardEligible);
+  }
   if (!b.result) return;
   b.score += b.result.score;
   if (b.encounter.arena) state.best = Math.max(state.best, b.score); else if (b.kind === 'normal' || b.kind === 'expMonster') world.defeat(b.id);
@@ -859,6 +875,8 @@ function submitAnswer() {
   $('.number-pad').hidden = true; $('.battle-footer').hidden = true; $('#hint').hidden = true;
   $('#battle-result').hidden = false;
   const clearReward = (b.result as ReturnType<typeof grantReward> & { clearReward?: number }).clearReward ?? 0, completionReward = (b.result as ReturnType<typeof grantReward> & { completionReward?: number }).completionReward ?? 0;
+  const rewardReason = battleRewardReason(state, b.encounter.question, !!b.hintUsed, b.practice?.operation === b.encounter.question.operation ? b.practice?.tier : undefined);
+  const practiceMessage = rewardReason === 'hint' ? '힌트를 보며 푼 대련이라 이번 베리·경험치·점수는 없어요. 통과 기록은 남아요.' : rewardReason === 'easy' ? '지금 학년보다 쉬운 계산은 보상 없는 연습이에요. 더 어려운 문제에 도전해 보세요.' : '';
   if (b.kind === 'multiplicationGate') {
     $('#battle-result').innerHTML = `<div class="reward-banner multiplication-reward"><strong>🌻 곱셈의 숲 완전 정복!</strong><p>「곱셈숲 탐험가」 칭호를 얻었어요.</p><p>나의 방에 놓을 수 있는 <b>구구단 해바라기 화분</b>도 받았어요!</p><p>두 식이 서로 도와주는 곱셈과 나눗셈의 짝을 찾아냈어요.</p></div><button class="primary wide" id="next-battle">마을로 돌아가기 →</button>`;
     $('#next-battle').onclick = nextBattle; $('#next-battle').focus(); return;
@@ -867,7 +885,7 @@ function submitAnswer() {
     $('#battle-result').innerHTML = `<div class="reward-banner"><strong>${b.kind === 'expGate' ? '🌟 별빛 원정 완수!' : '✦ 별빛 대련 성공!'}</strong><p>${b.kind === 'expGate' ? `🍓 완주 보상 +${b.result.berries}베리! 원정 ${state.expedition.completed}번을 완료했어요. ${b.newTitle && b.newTitle > 0 ? `새 칭호 「${EXPEDITION_TITLES[b.newTitle].name}」도 얻었어요!` : '다음 원정도 바로 떠날 수 있어요.'}` : `대련 ${state.expedition.active?.monsters.length ?? 2} / 2 · 출구까지 가 볼까요?`}</p><p>${b.kind === 'expGate' ? '별빛 원정의 새 완주 보상만 받아요. 예전에 받은 사냥터 보상은 다시 받지 않아요.' : '출구 문제까지 풀면 원정 완주 베리를 받아요.'}</p></div><button class="primary wide" id="next-battle">${b.kind === 'expGate' ? '다음 원정 고르기 →' : '숲으로 돌아가기'}</button>`;
     $('#next-battle').onclick = nextBattle; $('#next-battle').focus(); return;
   }
-  $('#battle-result').innerHTML = `<div class="reward-banner"><strong>${OPERATION_INFO[b.encounter.question.operation ?? 'division'].icon} 멋진 ${OPERATION_INFO[b.encounter.question.operation ?? 'division'].name}!</strong><p>🍓 +${b.result.berries}베리 · 경험치 +${b.result.xp}${b.encounter.arena ? ` · +${b.result.score}점` : ''}</p>${!b.encounter.arena && clearReward ? `<p class="level-up">사냥터 통과! 추가 +${clearReward}베리와 다음 길을 받았어요.</p>` : ''}${completionReward ? `<p class="level-up">🎉 ${FOREST_INFO[state.forest].name} 완주 선물 +${completionReward}베리!</p>` : ''}${b.result.levels ? `<p class="level-up">레벨 ${state.level}! 선물 ${b.result.levels * 20}베리도 받았어요.</p>` : ''}${b.result.milestones.map(gift => `<p class="level-easter-egg">🎁 비밀 선물 발견! 레벨 ${gift.level} 달성 · ${gift.berries.toLocaleString()}베리를 받았어요!</p>`).join('')}</div><button class="primary wide" id="next-battle">${b.encounter.arena ? b.round < 5 ? '다음 친구 만나기 →' : '대련 결과 보기' : '숲으로 돌아가기'}</button>`;
+  $('#battle-result').innerHTML = `<div class="reward-banner"><strong>${OPERATION_INFO[b.encounter.question.operation ?? 'division'].icon} 멋진 ${OPERATION_INFO[b.encounter.question.operation ?? 'division'].name}!</strong><p>🍓 +${b.result.berries}베리 · 경험치 +${b.result.xp}${b.encounter.arena ? ` · +${b.result.score}점` : ''}</p>${practiceMessage ? `<p class="note">${practiceMessage}</p>` : ''}${!b.encounter.arena && clearReward ? `<p class="level-up">사냥터 통과! 추가 +${clearReward}베리와 다음 길을 받았어요.</p>` : ''}${completionReward ? `<p class="level-up">🎉 ${FOREST_INFO[state.forest].name} 완주 선물 +${completionReward}베리!</p>` : ''}${b.result.levels ? `<p class="level-up">레벨 ${state.level}! 선물 ${b.result.levels * 20}베리도 받았어요.</p>` : ''}${b.result.milestones.map(gift => `<p class="level-easter-egg">🎁 비밀 선물 발견! 레벨 ${gift.level} 달성 · ${gift.berries.toLocaleString()}베리를 받았어요!</p>`).join('')}</div><button class="primary wide" id="next-battle">${b.encounter.arena ? b.round < 5 ? '다음 친구 만나기 →' : '대련 결과 보기' : '숲으로 돌아가기'}</button>`;
   $('#next-battle').onclick = nextBattle; $('#next-battle').focus();
 }
 function nextBattle() {
@@ -877,7 +895,7 @@ function nextBattle() {
   if (battle.kind === 'expGate') { battle = null; switchStage(0); openExpeditionBoard(); return; }
   if (!battle.encounter.arena) { battle = null; closeModal(); return; }
   if (battle.round === 5) { const score = battle.score; battle = null; openModal(title('오늘도 한 뼘 자랐어요', '대련을 마쳤어요!') + `<div class="arena-intro"><div class="arena-symbol">🏆</div><h3>${score}점</h3><p>다섯 친구와의 수학 대련 성공!<br>나의 최고 기록은 ${state.best}점이에요.</p><button class="primary wide" data-close>마을로 돌아가기</button></div>`); return; }
-  const previous = battle.encounter.question, difficultyStage = battle.encounter.stage; battle.round++; battle.encounter = new Encounter(Math.floor(Math.random() * MONSTERS.length), true, state.level, previous, difficultyStage, state.settings.maxDividend, 'division', state.settings.multiplicationRange, practiceFor(battle.practice), state.grade); battle.result = null; battle.missedCurrent = false; battle.story = battle.round % 3 === 0; renderBattle();
+  const previous = battle.encounter.question, difficultyStage = battle.encounter.stage; battle.round++; battle.encounter = new Encounter(Math.floor(Math.random() * MONSTERS.length), true, state.level, previous, difficultyStage, state.settings.maxDividend, 'division', state.settings.multiplicationRange, practiceFor(battle.practice), state.grade); battle.result = null; battle.missedCurrent = false; battle.hintUsed = false; battle.story = battle.round % 3 === 0; renderBattle();
 }
 function continueFriendBattle() {
   if (!battle || !state || !battle.encounter.solved || battle.round >= (battle.goalRounds ?? 1)) return;

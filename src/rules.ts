@@ -346,10 +346,10 @@ export function fellTree(s: Save, id: number, reward: 2 | 3 | 4) {
   if (!Number.isInteger(id) || !stageTrees(journey.stage)[id] || map.trees.includes(id) || ![2, 3, 4].includes(reward)) return 0;
   map.trees.push(id); s.berries += reward; return reward;
 }
-export function finishHunt(s: Save, id: number) {
+export function finishHunt(s: Save, id: number, rewardEligible = true) {
   const journey = journeyFor(s), stage = journey.stage, map = journey.maps[stage], monsters = stageMonsters(stage);
   if (!Number.isInteger(id) || !monsters[id] || map.monsters.includes(id)) return null;
-  map.monsters.push(id); const reward = grantReward(s, monsters[id].type, false);
+  map.monsters.push(id); const reward = grantReward(s, monsters[id].type, false, Date.now(), rewardEligible);
   let clearReward = 0;
   if (stage > 0 && map.monsters.length === monsters.length && !map.cleared) { map.cleared = true; clearReward = clearBonus(stage) + OUTFITS[s.outfit].clearBonus; s.berries += clearReward; }
   let completionReward = 0;
@@ -575,15 +575,22 @@ export function potionEffects(s: Save, now = Date.now()) {
     xpSeconds: Math.max(0, Math.ceil((s.potions.xpUntil - now) / 1000)),
   } as const;
 }
-export function rewardFor(s: Save, monster: number, arena: boolean, now = Date.now()) {
+/** 학년보다 쉬운 반복 계산과 힌트로 정답을 확인한 대련은 연습으로만 인정해요. */
+export function battleRewardReason(s: Save, question: Question, usedHint: boolean, practiceTier?: PracticeTier): 'hint' | 'easy' | null {
+  if (usedHint) return 'hint';
+  if (s.grade >= 3 && !question.places && (question.operation === 'addition' || question.operation === 'subtraction')
+    && (practiceTier !== undefined && practiceTier < 2 || question.dividend < 100 && question.divisor < 100 && question.answer < 100)) return 'easy';
+  return null;
+}
+export function rewardFor(s: Save, monster: number, arena: boolean, now = Date.now(), eligible = true) {
   const m = MONSTERS[monster], w = WEAPONS[s.weapon];
   const { berryMultiplier, xpMultiplier } = potionEffects(s, now);
-  return { berries: (m.berry + w.bonus + (arena ? 0 : 2 + journeyFor(s).stage * 2)) * berryMultiplier, xp: (m.xp + OUTFITS[s.outfit].xpBonus) * xpMultiplier, score: arena ? Math.round(m.score * (w.multiplier + s.weapons[s.weapon] * 0.1)) : 0 };
+  return { berries: eligible ? (m.berry + w.bonus + (arena ? 0 : 2 + journeyFor(s).stage * 2)) * berryMultiplier : 0, xp: eligible ? (m.xp + OUTFITS[s.outfit].xpBonus) * xpMultiplier : 0, score: eligible && arena ? Math.round(m.score * (w.multiplier + s.weapons[s.weapon] * 0.1)) : 0 };
 }
-export function grantReward(s: Save, monster: number, arena: boolean, now = Date.now()) {
-  const reward = rewardFor(s, monster, arena, now); let levels = 0;
+export function grantReward(s: Save, monster: number, arena: boolean, now = Date.now(), eligible = true) {
+  const reward = rewardFor(s, monster, arena, now, eligible); let levels = 0;
   const milestones: { level: number; berries: number }[] = [];
-  s.berries += reward.berries; s.xp += reward.xp; s.tutorial.battle = true; recordDaily(s, 'monster');
+  s.berries += reward.berries; s.xp += reward.xp; s.tutorial.battle = true; if (eligible) recordDaily(s, 'monster');
   while (s.xp >= s.level * 40) {
     s.xp -= s.level * 40; s.level++; s.berries += 20; levels++;
     const gift = s.level === 30 ? 30_000 : s.level === 50 ? 50_000 : s.level === 100 ? 100_000 : 0;
