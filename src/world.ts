@@ -4,6 +4,7 @@ import { CHARACTERS, MONSTERS, OUTFITS, PETS, RIDES, WEAPONS, PLAYER_MOVE_SPEED,
 import { STAGES, stageBerries, stageMonsters, stagePlatforms, stageTrees, stageSize, isVillagePond } from './stages';
 import { EXPEDITION_STAR_SPOTS, expeditionLayout } from './expedition';
 import { VILLAGE_THEMES, villageThemeId, type VillageTheme } from './villages';
+import type { AmbienceScene } from './ambience';
 
 type Entity = { id: string; name: string; x: number; z: number; mesh: T.Group; label: HTMLDivElement };
 export type GuideKind = 'berry' | 'monster' | 'shop' | 'journey' | 'next' | 'star' | 'expMonster' | 'roomExit';
@@ -658,6 +659,11 @@ export class World {
   private colliders: { x: number; z: number; r: number; id?: string }[] = []; private platforms = stagePlatforms(0); stage = 0; forest: ForestKind = 'division';
   private keys = new Set<string>(); private stick = { x: 0, z: 0 }; private clock = new T.Clock(); private time = 0; private vy = 0; private grounded = true;
   private particles: { mesh: T.Mesh; v: T.Vector3; life: number }[] = []; private lastSafe = new T.Vector3(0, 0, 8); private follow = new T.Vector3(0, 0, 1);
+  private weatherKind: 'none' | 'rain' | 'snow' | 'leaves' | 'fireflies' = 'none';
+  private lowQuality = false;
+  private weatherMesh: T.InstancedMesh | null = null;
+  private weatherDrops: { x: number; y: number; z: number; speed: number; sway: number; phase: number }[] = [];
+  private weatherDummy = new T.Object3D();
   private sun: T.DirectionalLight; private labelLayer: HTMLDivElement; private selectedId: string | null = null;
   private guideTarget: { object: T.Object3D; name: string; arrivalDistance: number } | null = null; private guideElement: HTMLDivElement;
   private swingUntil = 0; private rideIndex = -1; private petIndex = -1; private petModel: T.Group | null = null; private petTargetId: number | null = null; private animationRunning = false;
@@ -809,7 +815,7 @@ export class World {
   }
   private clearMap() {
     this.clearGuide(); this.selectedId = null; this.petTargetId = null; this.onNear(null, null); this.entities.forEach(e => e.label.remove()); this.stars.forEach(star => star.label.remove()); this.entities = []; this.coins = []; this.stars = []; this.colliders = [];
-    for (const child of [...this.scene.children]) if (child !== this.player && child !== this.petModel && !(child instanceof T.Light)) { this.scene.remove(child); if (child instanceof T.Mesh && child.userData.mergedScenery) child.geometry.dispose(); }
+    for (const child of [...this.scene.children]) if (child !== this.player && child !== this.petModel && child !== this.weatherMesh && !(child instanceof T.Light)) { this.scene.remove(child); if (child instanceof T.Mesh && child.userData.mergedScenery) child.geometry.dispose(); }
     this.furnitureRoot = null;
   }
   /**
@@ -989,6 +995,62 @@ export class World {
   }
   private placePetNearPlayer() { if (this.petModel) this.petModel.position.set(this.player.position.x - 1.05, this.player.position.y + .02, this.player.position.z - .7); }
   private disposeModel(g: T.Group) { g.traverse(o => { if (o instanceof T.Mesh && !sharedGeometries.has(o.geometry)) o.geometry.dispose(); }); }
+  /** 날씨는 화면 위 필터가 아니라 캐릭터 주변 3D 공간에서 움직여 글자와 지형을 가리지 않아요. */
+  setWeather(scene: AmbienceScene | null) {
+    const kind = !scene || matchMedia('(prefers-reduced-motion: reduce)').matches ? 'none' : scene.weather === 'rain' ? 'rain' : scene.weather === 'snow' ? 'snow' : scene.season === 'autumn' ? 'leaves' : scene.mood === 'night' ? 'fireflies' : 'none';
+    if (kind === this.weatherKind) return;
+    this.weatherKind = kind;
+    this.container.dataset.weatherEffect = kind;
+    if (this.weatherMesh) {
+      this.scene.remove(this.weatherMesh);
+      this.weatherMesh.geometry.dispose();
+      (this.weatherMesh.material as T.Material).dispose();
+      this.weatherMesh = null;
+    }
+    this.weatherDrops = [];
+    if (kind === 'none') { this.renderOnce(); return; }
+    const count = this.lowQuality ? (kind === 'rain' ? 12 : kind === 'snow' ? 16 : kind === 'fireflies' ? 6 : 7)
+      : matchMedia('(pointer: coarse)').matches ? (kind === 'rain' ? 28 : kind === 'snow' ? 38 : kind === 'fireflies' ? 10 : 14) : (kind === 'rain' ? 48 : kind === 'snow' ? 60 : kind === 'fireflies' ? 16 : 22);
+    const geometry = kind === 'rain' ? new T.CylinderGeometry(.014, .014, .38, 3) : kind === 'snow' ? new T.OctahedronGeometry(.14) : kind === 'fireflies' ? new T.SphereGeometry(.07, 6, 4) : new T.PlaneGeometry(.28, .19);
+    const material = new T.MeshBasicMaterial({ color: kind === 'rain' ? 0xc3deee : kind === 'snow' ? 0xdbeaf1 : kind === 'fireflies' ? 0xffdc79 : 0xd59042, transparent: true, opacity: kind === 'rain' ? .48 : .78, depthWrite: false, side: T.DoubleSide });
+    this.weatherMesh = new T.InstancedMesh(geometry, material, count);
+    this.weatherMesh.frustumCulled = false;
+    this.weatherMesh.castShadow = false;
+    this.weatherMesh.receiveShadow = false;
+    this.scene.add(this.weatherMesh);
+    this.weatherDrops = Array.from({ length: count }, (_, i) => ({
+      x: this.player.position.x + (Math.random() - .5) * 26,
+      y: kind === 'fireflies' ? .5 + Math.random() * 2 : .5 + Math.random() * 8,
+      z: this.player.position.z + (Math.random() - .5) * 26,
+      speed: kind === 'rain' ? 10 + Math.random() * 4 : kind === 'snow' ? .8 + Math.random() * .65 : kind === 'fireflies' ? .08 + Math.random() * .1 : 1.2 + Math.random() * .8,
+      sway: (Math.random() - .5) * (kind === 'rain' ? .5 : 1.3),
+      phase: i * 2.4 + Math.random() * 3,
+    }));
+    this.updateWeather(0);
+  }
+  private updateWeather(dt: number) {
+    const mesh = this.weatherMesh;
+    if (!mesh) return;
+    mesh.visible = !this.inRoom;
+    if (this.inRoom) return;
+    const p = this.player.position, kind = this.weatherKind;
+    for (let i = 0; i < this.weatherDrops.length; i++) {
+      const drop = this.weatherDrops[i];
+      drop.y += (kind === 'fireflies' ? 1 : -1) * drop.speed * dt;
+      drop.x += (kind === 'rain' ? -.5 : drop.sway + Math.sin(this.time * 1.2 + drop.phase) * .3) * dt;
+      if (drop.y < .15 || (kind === 'fireflies' && drop.y > 3.2) || Math.abs(drop.x - p.x) > 17 || Math.abs(drop.z - p.z) > 17) {
+        drop.x = p.x + (Math.random() - .5) * 26;
+        drop.y = kind === 'fireflies' ? .5 + Math.random() : 8 + Math.random() * 3;
+        drop.z = p.z + (Math.random() - .5) * 26;
+      }
+      this.weatherDummy.position.set(drop.x, drop.y, drop.z);
+      this.weatherDummy.rotation.set(kind === 'leaves' ? this.time * .8 + drop.phase : 0, kind === 'leaves' ? this.time * 1.4 + drop.phase : 0, kind === 'rain' ? -.15 : 0);
+      this.weatherDummy.scale.setScalar(kind === 'snow' ? .75 + Math.sin(drop.phase) * .2 : kind === 'fireflies' ? .65 + .35 * Math.sin(this.time * 2 + drop.phase) : 1);
+      this.weatherDummy.updateMatrix();
+      mesh.setMatrixAt(i, this.weatherDummy.matrix);
+    }
+    mesh.instanceMatrix.needsUpdate = true;
+  }
   setActive(active: boolean) { this.active = active; this.paused = !active; if (!active) this.clearInput(); this.syncAnimation(); }
   setPaused(paused: boolean) { this.paused = paused; if (paused) this.clearInput(); this.syncAnimation(); }
   private syncAnimation() {
@@ -998,7 +1060,7 @@ export class World {
   }
   private renderOnce() { if (!document.hidden) this.renderer.render(this.scene, this.camera); }
   restore(s: Save) { this.setAvatar(s.character, s.outfit, s.weapon, s.outfits[s.outfit], s.weapons[s.weapon], s.ride, s.pet, s.hairstyle, s.face); if (s.room.inside) this.enterRoom(s); else this.loadStage(s); this.quality(s.settings.lowQuality); }
-  quality(low: boolean) { const touchDevice = matchMedia('(pointer: coarse)').matches; this.renderer.setPixelRatio(Math.min(devicePixelRatio, low || touchDevice ? 1 : 1.25)); this.renderer.shadowMap.enabled = !low; this.sun.castShadow = !low; }
+  quality(low: boolean) { this.lowQuality = low; const touchDevice = matchMedia('(pointer: coarse)').matches; this.renderer.setPixelRatio(Math.min(devicePixelRatio, low || touchDevice ? 1 : 1.25)); this.renderer.shadowMap.enabled = !low; this.sun.castShadow = !low; }
   clearInput() { this.keys.clear(); this.stick = { x: 0, z: 0 }; }
   guideTo(kind: GuideKind) {
     const entityMatch = (entity: Entity) => kind === 'monster' ? entity.id.startsWith('monster') : kind === 'expMonster' ? entity.id.startsWith('expMonster') : kind === 'shop' ? ['weapon', 'outfit', 'ride', 'pet', 'potion', 'beauty'].includes(entity.id) : entity.id === kind;
@@ -1045,6 +1107,7 @@ export class World {
     const dt = Math.min(this.clock.getDelta(), .04); this.time += dt;
     if (this.shadowSweep++ % 45 === 0) this.trimSmallShadows(); // 새로 생긴 펫·탈것·몬스터도 곧 정리돼요.
     const p = this.player.position;
+    this.updateWeather(dt);
     if (this.active && !this.paused) {
       let dx = Number(this.keys.has('d') || this.keys.has('arrowright')) - Number(this.keys.has('a') || this.keys.has('arrowleft')) + this.stick.x;
       let dz = Number(this.keys.has('s') || this.keys.has('arrowdown')) - Number(this.keys.has('w') || this.keys.has('arrowup')) + this.stick.z;

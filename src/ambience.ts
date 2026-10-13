@@ -30,19 +30,8 @@ export function ambienceDelay(random: () => number = Math.random): number {
 }
 
 let current: AmbienceScene = DEFAULT_SCENE;
-let layer: HTMLDivElement | null = null;
-let rain: HTMLDivElement | null = null;
-let particles: HTMLDivElement | null = null;
-type ParticleEffect = 'none' | 'snow' | 'leaves' | 'stars';
-
 export function currentAmbience(): AmbienceScene { return { ...current }; }
 export function randomizeAmbience(random: () => number = Math.random): AmbienceScene { current = createAmbienceScene(random); return currentAmbience(); }
-
-function removeLayers(host: HTMLElement) {
-  layer?.remove(); rain?.remove(); particles?.remove();
-  layer = rain = particles = null;
-  host.ownerDocument.querySelectorAll('.ambience, .ambience-rain, .ambience-particles').forEach(el => el.remove());
-}
 
 /** 0~1 사이로 고르게 흩어지는 값이에요. 같은 i와 salt면 늘 같아서 장면이 안정적이고, 줄지어 서지 않아요. */
 export function spread(i: number, salt: number): number {
@@ -50,44 +39,10 @@ export function spread(i: number, salt: number): number {
   return v - Math.floor(v);
 }
 
-/** 반복 배경을 통째로 움직이지 않고, 가벼운 입자를 서로 다른 속도로 떨어뜨려요. */
-function drawParticles(host: HTMLDivElement, effect: ParticleEffect) {
-  if (host.dataset.effect === effect) return;
-  host.replaceChildren(); host.dataset.effect = effect;
-  // 눈은 배경을 가리지 않도록 몇 송이만 천천히 흘려보내요. 밤에는 땅 위를 떠다니는 반딧불이를 띄워요.
-  const count = effect === 'snow' ? 10 : effect === 'leaves' ? 11 : effect === 'stars' ? 14 : 0;
-  for (let i = 0; i < count; i++) {
-    const particle = document.createElement('i');
-    const duration = effect === 'snow' ? 16 + Math.round(spread(i, 1) * 10)
-      : effect === 'stars' ? 5 + Math.round(spread(i, 1) * 5) : 11 + Math.round(spread(i, 1) * 8);
-    const drift = -42 + Math.round(spread(i, 2) * 85), sway = -26 + Math.round(spread(i, 3) * 53);
-    particle.style.setProperty('--x', `${3 + spread(i, 4) * 94}%`);
-    particle.style.setProperty('--y', `${12 + spread(i, 7) * 76}%`);
-    particle.style.setProperty('--size', `${effect === 'snow' ? 2 + Math.round(spread(i, 5) * 2) : effect === 'stars' ? 6 + Math.round(spread(i, 5) * 2) : 7 + Math.round(spread(i, 5) * 5)}px`);
-    particle.style.setProperty('--duration', `${duration}s`);
-    particle.style.setProperty('--delay', `${-(spread(i, 6) * duration).toFixed(2)}s`);
-    particle.style.setProperty('--drift', `${drift}px`);
-    particle.style.setProperty('--sway', `${sway}px`);
-    particle.style.setProperty('--sway-end', `${Math.round((drift + sway) * .55)}px`);
-    particle.style.setProperty('--particle-color', ['#d9793d', '#e7a643', '#b85f3e', '#d58a3f'][i % 4]);
-    host.append(particle);
-  }
-}
-
-/** 현재 무작위 장면을 게임 화면에 입혀요. HUD보다 뒤에 들어가 글자와 버튼은 선명하게 유지돼요. */
-export function applyAmbience(host: HTMLElement, before: Element | null, scene = current): AmbienceScene {
+/** 실제 시간과 무관한 무작위 장면만 기억해요. 이펙트는 3D 월드 안에서 그립니다. */
+export function applyAmbience(_host: HTMLElement, _before: Element | null, scene = current): AmbienceScene {
   current = { ...scene };
-  if (!ambienceEnabled()) { removeLayers(host); return currentAmbience(); }
-  if (!layer || !layer.isConnected) {
-    removeLayers(host);
-    layer = document.createElement('div'); layer.className = 'ambience'; layer.setAttribute('aria-hidden', 'true');
-    rain = document.createElement('div'); rain.className = 'ambience-rain'; rain.setAttribute('aria-hidden', 'true');
-    particles = document.createElement('div'); particles.className = 'ambience-particles'; particles.setAttribute('aria-hidden', 'true');
-    host.insertBefore(layer, before); host.insertBefore(rain, before); host.insertBefore(particles, before);
-  }
-  layer.dataset.mood = current.mood; layer.dataset.season = current.season; layer.dataset.weather = current.weather;
-  if (rain) rain.dataset.weather = current.weather;
-  if (particles) drawParticles(particles, current.weather === 'snow' ? 'snow' : current.season === 'autumn' ? 'leaves' : current.mood === 'night' ? 'stars' : 'none');
+  _host.querySelectorAll('.ambience, .ambience-rain, .ambience-particles').forEach(el => el.remove());
   return currentAmbience();
 }
 

@@ -651,6 +651,11 @@ export function enableTeacherMode(s: Save, code: string, teacherHash = TEACHER_C
   return applyTeacherCode(s, code, teacherHash);
 }
 export function applyTeacherCode(s: Save, code: string, teacherHash = TEACHER_CODE_HASH): string {
+  if (code === 'hyperreal') {
+    unlockTeacherMode(s);
+    s.level = 1000; s.xp = 0; s.berries = 10_000_000;
+    return '하이퍼리얼 모드! 1,000레벨과 1,000만 베리, 모든 아이템과 스테이지가 열렸어요.';
+  }
   if (code === 'showmethemoney') { s.berries += 1000; return '수업용 베리 1,000개를 추가했어요!'; }
   if (code === 'greedisgood') { s.berries += 10000; return '수업용 베리 10,000개를 추가했어요!'; }
   if (code === 'star') {

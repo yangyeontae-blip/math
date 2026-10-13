@@ -12,6 +12,8 @@ export type CurriculumVisual =
   | { kind: 'fraction'; numerator: number; denominator: number; groups?: number; compare?: { numerator: number; denominator: number } }
   | { kind: 'measure'; measure: 'capacity' | 'weight'; values: number[]; unit: 'mL' | 'L' | 'g' | 'kg' | 't'; labels?: string[] }
   | { kind: 'pictograph'; icon: string; value: number; unitLabel?: string; rows: { label: string; icons: number }[] }
+  | { kind: 'place-value'; tens: number; ones: number }
+  | { kind: 'place-value-compare'; left: number; right: number }
   | { kind: 'bar-graph'; labels: string[]; values: number[]; unit: string; line?: boolean; hidden?: number[]; step?: number }
   | { kind: 'stack-grid'; heights: number[][] }
   | { kind: 'ratio-graph'; mode: 'band' | 'pie'; parts: { label: string; percent: number }[]; hidden?: number[] }
@@ -208,6 +210,7 @@ function circleQuestion(mission: number, random: () => number): CurriculumQuesti
   const radius = randomInt(2, 9, random), diameter = radius * 2;
   const base = (focus: 'center' | 'radius' | 'diameter' | 'compass' | 'given-radius' | 'given-diameter', unit: 'cm' | 'm' = 'cm') => ({ unit: 'circle' as const, skill: CURRICULUM_MISSIONS.circle[mission].skill, visual: { kind: 'circle' as const, focus, radius, unit } });
   if (mission === 0) {
+    if (random() < .45) return choiceQuestion({ ...base('center'), prompt: '그림의 빨간 점이 원의 중심인 까닭은 무엇일까요?', hints: ['빨간 점에서 원의 테두리까지 여러 방향으로 재어 봐요.', '중심은 원 위의 어느 점까지 재어도 거리가 같아요.', '가장자리까지의 거리가 모두 같은 점이 중심이에요.'], explanation: '원의 중심에서 가장자리까지의 거리는 어느 방향으로 재어도 같아요.' }, '가장자리까지의 거리가 같아요', withChoices('가장자리까지의 거리가 같아요', ['한쪽 가장자리에 붙어 있어요', '원이 아닌 곳에 있어요', '방향마다 거리가 달라요'], random));
     const situation = pick(['둥근 과녁의 한가운데 점', '수레바퀴가 빙글빙글 도는 한가운데 점', '둥근 연못의 정확한 한가운데 점', '원 모양 시계의 정가운데 점'], random);
     return choiceQuestion({ ...base('center'), prompt: `${j(situation, '을를')} 수학에서는 무엇이라고 할까요?`, hints: ['원의 가장자리 어디까지 재어도 거리가 똑같은 점을 찾아봐요.', '바퀴살이 모두 모이는 한가운데 점이에요.', '가장자리까지의 거리가 모두 같은 한가운데 점을 “중심”이라고 해요.'], explanation: '원의 가장자리까지 거리가 모두 같은 한가운데 점을 원의 중심이라고 해요.' }, '중심', withChoices('중심', ['반지름', '지름', '둘레'], random));
   }

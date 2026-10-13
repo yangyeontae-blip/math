@@ -66,7 +66,7 @@ export const VARIANTS_G1: VariantMap = {
   },
   pictograph: {
     1: [
-      (r) => { const k = ri(2, 10, r); return numberQ('pictograph', '10개씩 묶기', `10개씩 묶음이 ${k}개이면 모두 몇 개일까요?`, k * 10, dots('🔟', [{ label: '묶음', icons: k }]), `10개씩 ${k}묶음이므로 ${k * 10}개예요.`); },
+      (r) => { const k = ri(2, 10, r); return numberQ('pictograph', '10개씩 묶기', `10개씩 묶음이 ${k}개이면 모두 몇 개일까요?`, k * 10, dots('🔟', [{ label: '묶음', icons: k }], 10, '개'), `10개씩 ${k}묶음이므로 ${k * 10}개예요.`); },
       (r) => { const k = ri(2, 9, r); return numberQ('pictograph', '10개씩 묶기', `사탕이 ${k * 10}개 있어요. 10개씩 묶으면 몇 묶음이 될까요?`, k, dots('🍬', [{ label: '묶음', icons: k }]), `${j(k * 10, '은는')} 10개씩 ${k}묶음이에요.`); },
     ],
   },

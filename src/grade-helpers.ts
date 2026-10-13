@@ -36,7 +36,7 @@ export function numberQ(unit: NewCurriculumUnitId, skill: string, prompt: string
   return { unit, skill, prompt, detail: opts.detail, kind: 'number', answer: String(answer), visual, hints: opts.hints ? distinctHints(opts.hints, skill, explanation) : defaultHints(skill, explanation), explanation };
 }
 
-export const dots = (icon: string, rows: { label: string; icons: number }[]): CurriculumVisual => ({ kind: 'pictograph', icon, value: 1, rows });
+export const dots = (icon: string, rows: { label: string; icons: number }[], value = 1, unitLabel?: string): CurriculumVisual => ({ kind: 'pictograph', icon, value, unitLabel, rows });
 export const fracBar = (n: number, d: number): CurriculumVisual => ({ kind: 'fraction', numerator: n, denominator: d });
 export const nums = (list: number[]) => list.map(String);
 export const near = (n: number, offsets: number[], min = 0) => offsets.map(o => String(Math.max(min, n + o)));
