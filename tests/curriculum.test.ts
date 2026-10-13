@@ -1,0 +1,165 @@
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import {
+  newUnitsForGrade, canStartCurriculumMission, claimCurriculumGraduation,
+  completeCurriculumMission, curriculumGraduationAvailable, curriculumUnitComplete,
+  newSave, recordCurriculumAttempt, validateSave,
+} from '../src/rules.ts';
+import { CURRICULUM_MISSIONS, answerCurriculumQuestion, generateCurriculumQuestion, generateReviewQuestion } from '../src/curriculum.ts';
+import { stageMonsters } from '../src/stages.ts';
+
+test('all seven activity regions have ten missions and generate self-consistent questions', () => {
+  for (const unit of newUnitsForGrade(3)) {
+    assert.equal(CURRICULUM_MISSIONS[unit].length, 10);
+    for (let mission = 0; mission < 10; mission++) {
+      for (let sample = 0; sample < 80; sample++) {
+        const question = generateCurriculumQuestion(unit, mission);
+        assert.equal(question.unit, unit);
+        assert.ok(question.prompt.length > 5);
+        assert.equal(question.hints.length, 3);
+        assert.equal(answerCurriculumQuestion(question, question.answer), true);
+        assert.equal(answerCurriculumQuestion(question, `${question.answer}x`), false);
+        if (question.kind === 'number') assert.match(question.answer, /^\d{1,4}$/);
+        else assert.ok(question.choices?.some(choice => choice.value === question.answer));
+      }
+    }
+  }
+});
+
+test('mixed review covers all eleven curriculum regions', () => {
+  for (const unit of ['multiplication', 'division', ...newUnitsForGrade(3)] as const) {
+    for (let sample = 0; sample < 100; sample++) {
+      const question = generateReviewQuestion(unit);
+      assert.equal(question.unit, unit);
+      assert.equal(answerCurriculumQuestion(question, question.answer), true);
+      if (unit === 'division') assert.ok(question.choices?.some(choice => choice.value === question.answer));
+    }
+  }
+});
+
+test('concept missions vary their representations instead of repeating one answer pattern', () => {
+  const circleSteps = new Set<string>(), fractionClasses = new Set<string>(), fractionDirections = new Set<string>();
+  const weightUnits = new Set<string>(), capacityKinds = new Set<string>(), graphIcons = new Set<string>();
+  for (let sample = 0; sample < 400; sample++) {
+    circleSteps.add(generateCurriculumQuestion('circle', 5).answer);
+    fractionClasses.add(generateCurriculumQuestion('fraction', 3).answer);
+    fractionDirections.add(generateCurriculumQuestion('fraction', 4).prompt.includes('대분수로') ? 'to-mixed' : 'to-improper');
+    weightUnits.add(generateCurriculumQuestion('measurement', 1).answer);
+    capacityKinds.add(generateCurriculumQuestion('measurement', 3).kind);
+    const graph = generateCurriculumQuestion('pictograph', 1).visual;
+    if (graph.kind === 'pictograph') graphIcons.add(graph.icon);
+  }
+  assert.deepEqual(circleSteps, new Set(['중심 정하기', '반지름만큼 벌리기', '중심에 고정하기', '그대로 유지하기', '중심→벌리기→돌리기']));
+  assert.deepEqual(fractionClasses, new Set(['진분수', '가분수']));
+  assert.deepEqual(fractionDirections, new Set(['to-mixed', 'to-improper']));
+  assert.deepEqual(weightUnits, new Set(['g', 'kg', 't']));
+  assert.deepEqual(capacityKinds, new Set(['number', 'choice']));
+  assert.equal(graphIcons.size, 8);
+});
+
+test('every non-arithmetic mission has enough distinct child-friendly situations', () => {
+  let seed = 123456;
+  const random = () => ((seed = (seed * 1664525 + 1013904223) >>> 0) / 4294967296);
+  const minimums = {
+    circle: [4, 4, 4, 20, 20, 5, 20, 20],
+    fraction: [30, 15, 30, 20, 30, 20, 30, 30],
+    measurement: [6, 6, 8, 30, 30, 30, 30, 25],
+    pictograph: [20, 30, 30, 30, 30, 30, 15, 30],
+  } as const;
+  for (const unit of ['circle', 'fraction', 'measurement', 'pictograph'] as const) {
+    for (let mission = 0; mission < 8; mission++) {
+      const signatures = new Set<string>();
+      for (let sample = 0; sample < 120; sample++) {
+        const question = generateCurriculumQuestion(unit, mission, random);
+        signatures.add(`${question.prompt}|${question.detail ?? ''}|${question.answer}`);
+        assert.ok(!question.prompt.includes('undefined'));
+        assert.ok(!question.explanation.includes('undefined'));
+        if (question.choices) {
+          assert.equal(new Set(question.choices.map(choice => choice.value)).size, question.choices.length);
+          assert.ok(question.choices.some(choice => choice.value === question.answer));
+        }
+      }
+      assert.ok(signatures.size >= minimums[unit][mission], `${unit} mission ${mission + 1} only made ${signatures.size} situations`);
+    }
+  }
+});
+
+test('missions unlock in order, keep the best stars and never duplicate berry rewards', () => {
+  const save = newSave('단원', 0), unit = 'circle' as const;
+  assert.equal(canStartCurriculumMission(save, unit, 0), true);
+  assert.equal(canStartCurriculumMission(save, unit, 1), false);
+  const first = completeCurriculumMission(save, unit, 0, 2);
+  assert.deepEqual(first, { firstCompletion: true, unitCompleted: false, unitRewarded: false, berries: 30 });
+  assert.equal(canStartCurriculumMission(save, unit, 1), true);
+  assert.equal(completeCurriculumMission(save, unit, 0, 3).berries, 0);
+  assert.equal(save.curriculum.units.circle.stars[0], 3);
+  for (let mission = 1; mission < 10; mission++) completeCurriculumMission(save, unit, mission, 1);
+  assert.equal(curriculumUnitComplete(save, unit), true);
+  assert.equal(save.curriculum.units.circle.rewardClaimed, true);
+  assert.equal(save.berries, 825);
+  assert.equal(completeCurriculumMission(save, unit, 9, 3).berries, 0);
+  assert.equal(save.berries, 825);
+  assert.deepEqual(validateSave(JSON.parse(JSON.stringify(save))), save);
+});
+
+test('the graduation gift unlocks after all eleven regions and is paid once', () => {
+  const save = newSave('졸업', 1);
+  for (const journey of [save.journey, save.multiplicationJourney, save.additionJourney, save.subtractionJourney]) {
+    for (let stage = 1; stage <= 10; stage++) {
+      journey.maps[stage].monsters = stageMonsters(stage).map((_, id) => id);
+      journey.maps[stage].cleared = true;
+    }
+  }
+  save.multiplicationCompleted = true; save.multiplicationRewardClaimed = true;
+  save.additionCompleted = true; save.subtractionCompleted = true;
+  for (const unit of newUnitsForGrade(3)) for (let mission = 0; mission < 10; mission++) completeCurriculumMission(save, unit, mission, 3);
+  assert.equal(curriculumGraduationAvailable(save), true);
+  const before = save.berries;
+  assert.equal(claimCurriculumGraduation(save), 1500);
+  assert.equal(save.berries, before + 1500);
+  assert.equal(claimCurriculumGraduation(save), 0);
+  assert.equal(save.berries, before + 1500);
+  assert.deepEqual(validateSave(JSON.parse(JSON.stringify(save))), save);
+});
+
+test('unit attempts keep local strengths, hints and one review tag per skill', () => {
+  const save = newSave('기록', 2);
+  recordCurriculumAttempt(save, 'fraction', false, 2, '분수만큼');
+  recordCurriculumAttempt(save, 'fraction', false, 2, '분수만큼');
+  recordCurriculumAttempt(save, 'fraction', true, 2, '분수만큼', true);
+  assert.equal(save.curriculum.units.fraction.correct, 1);
+  assert.equal(save.curriculum.units.fraction.wrong, 2);
+  assert.equal(save.curriculum.units.fraction.hints, 1);
+  assert.deepEqual(save.curriculum.wrongSkills, [{ unit: 'fraction', mission: 2, skill: '분수만큼' }]);
+  assert.deepEqual(validateSave(JSON.parse(JSON.stringify(save))), save);
+});
+
+test('version 9 saves inherit an empty curriculum without losing previous progress', () => {
+  const old = structuredClone(newSave('이어하기', 3)) as unknown as Record<string, unknown>;
+  old.version = 9; delete old.curriculum;
+  const settings = old.settings as Record<string, unknown>; delete settings.focusUnit; delete settings.spiralReview;
+  const restored = validateSave(old);
+  assert.equal(restored.version, 14);
+  assert.equal(restored.settings.focusUnit, 'all');
+  assert.equal(restored.settings.spiralReview, true);
+  assert.ok(newUnitsForGrade(3).every(unit => restored.curriculum.units[unit].completedMissions.length === 0));
+});
+
+test('version 11 saves keep finished second-semester regions and gain the first-semester maps', () => {
+  const old = structuredClone(newSave('기존기록', 0)) as unknown as Record<string, any>;
+  old.version = 11;
+  delete old.curriculum.units.plane; delete old.curriculum.units.lengthTime; delete old.curriculum.units.fractionDecimal;
+  for (const unit of ['addition', 'subtraction', 'multiplication', 'division', 'circle', 'fraction', 'measurement', 'pictograph']) old.curriculum.units[unit].stars = Array(9).fill(0);
+  old.curriculum.units.circle.completedMissions = Array.from({ length: 9 }, (_, id) => id);
+  old.curriculum.units.circle.stars = Array(9).fill(3);
+  old.curriculum.units.circle.rewardClaimed = true;
+  old.curriculum.graduationClaimed = true;
+  const restored = validateSave(old);
+  assert.equal(restored.version, 14);
+  assert.deepEqual(restored.curriculum.units.circle.completedMissions, Array.from({ length: 10 }, (_, id) => id));
+  assert.equal(restored.curriculum.units.circle.stars.length, 10);
+  assert.equal(restored.curriculum.units.circle.rewardClaimed, true);
+  assert.equal(restored.curriculum.units.plane.completedMissions.length, 0);
+  assert.equal(restored.curriculum.units.lengthTime.stars.length, 10);
+  assert.equal(restored.curriculum.graduationClaimed, false);
+});
