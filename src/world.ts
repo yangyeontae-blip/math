@@ -725,7 +725,7 @@ export class World {
     this.addEntity('ride', '나현이 · 라이딩 상점', 14, -5.5, makeCharacter(0, 10, 6));
     this.addEntity('pet', '윤준 · 펫 상점', 18.5, -3.5, makeCharacter(1, 12, 10));
     this.addEntity('potion', '박준우 · 물약 상점', 8, -1.8, makeCharacter(0, 16, 12));
-    this.addEntity('beauty', '가영이 · 헤어와 성형', -15.5, -4.2, makeCharacter(2, 15, 2));
+    this.addEntity('beauty', '가영이 · 헤어와 얼굴 꾸미기', -15.5, -4.2, makeCharacter(2, 15, 2));
     this.addEntity('arena', '신비 · 대련장', 0, -9, makeCharacter(3, 5, 3));
     this.addEntity('room', '나의 집 · 들어가기', 9, -4.5, this.gate(0xe5ad79));
     stageMonsters(0).forEach((m, i) => this.addEntity(`monster${i}`, MONSTERS[m.type].name, m.x, m.z, makeMonster(m.type)));

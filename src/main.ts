@@ -291,10 +291,10 @@ function showSessionSummary() {
 }
 function learningInsight(s: Save) {
   const attempted = curriculumRegions().map(region => { const p = s.curriculum.units[region.id], total = p.correct + p.wrong; return { name: region.name, total, rate: total ? p.correct / total : -1 }; }).filter(item => item.total > 0);
-  const strong = attempted.length ? [...attempted].sort((a, b) => b.rate - a.rate)[0].name : '처음 만난 문제를 차분히 살펴보는 힘';
+  const strong = attempted.filter(item => item.total >= 3 && item.rate >= .8).sort((a, b) => b.rate - a.rate)[0]?.name ?? '조금 더 풀면 잘 이해한 내용을 찾을 수 있어요';
   const needs = attempted.filter(item => item.rate < .8).sort((a, b) => a.rate - b.rate)[0];
   const next = curriculumRegions().find(region => !curriculumUnitComplete(s, region.id));
-  return { strong, review: needs?.name ?? '아직 꼭 다시 연습해야 할 단원이 없어요', recommend: next ? `${next.name}의 다음 열린 단계` : `${s.grade}학년 졸업 모험 다시 도전하기` };
+  return { strong, review: needs?.name ?? '틀린 문제 기록이 쌓이면 알려 줄게요', recommend: next ? `${next.name}의 다음 열린 단계` : `${s.grade}학년 졸업 모험 다시 도전하기` };
 }
 const GRADE_OVERVIEW: Record<SchoolGrade, string> = {
   1: '9까지와 100까지의 수, 모으기와 가르기, 덧셈과 뺄셈, 여러 가지 모양, 시계, 규칙 찾기',
@@ -305,7 +305,7 @@ const GRADE_OVERVIEW: Record<SchoolGrade, string> = {
   6: '분수와 소수의 나눗셈, 비와 비율, 비례식, 원의 넓이, 입체도형, 띠그래프와 원그래프'
 };
 function openGuide() {
-  openModal(title('마을 대장 · 연태쌤', '베리숲에 온 걸 환영해요!') + `<div class="guide-content"><p>나는 연태쌤이야. 모험의 문에서 <strong>${state!.grade}학년 1·2학기 수학 지역</strong>을 골라 보렴. 모든 지역에는 차근차근 열리는 10개의 모험 단계가 있단다.</p><ol><li><b>🍓 스테이지 베리</b><span>한 번 모은 베리는 같은 사냥터에서 다시 나타나지 않아. 다른 숲과 새 단계에는 새로운 베리가 있어!</span></li><li><b>🌳 베리나무</b><span>나무 가까이에서 F 또는 나무 베기를 눌러 보렴. 다 베면 2~4베리가 나오고, 좋은 무기일수록 빨라!</span></li><li><b>🗺 ${state!.grade}학년 수학 지도</b><span>${GRADE_OVERVIEW[state!.grade]} 단원을 그림과 이야기로 배워요.</span></li><li><b>✨ 마을 상점과 인벤토리</b><span>강지후의 무기, 오지후의 옷, 나현이의 라이딩, 윤준의 펫을 모아 봐. 가영이에게는 헤어와 성형을 바꿀 수 있어.</span></li></ol><p class="note">키보드는 WASD·방향키 이동, Space 점프, E 대화, F 나무 베기예요.<br>휴대폰과 태블릿은 화면 아래 조이스틱과 버튼을 사용해요.</p><button class="primary wide" data-close>좋아, 모험을 떠나자!</button></div>`);
+  openModal(title('마을 대장 · 연태쌤', '베리숲에 온 걸 환영해요!') + `<div class="guide-content"><p>나는 연태쌤이야. 모험의 문에서 <strong>${state!.grade}학년 1·2학기 수학 지역</strong>을 골라 보렴. 모든 지역에는 차근차근 열리는 10개의 모험 단계가 있단다.</p><ol><li><b>🍓 스테이지 베리</b><span>한 번 모은 베리는 같은 사냥터에서 다시 나타나지 않아. 다른 숲과 새 단계에는 새로운 베리가 있어!</span></li><li><b>🌳 베리나무</b><span>나무 가까이에서 F 또는 나무 베기를 눌러 보렴. 다 베면 2~4베리가 나오고, 좋은 무기일수록 빨라!</span></li><li><b>🗺 ${state!.grade}학년 수학 지도</b><span>${GRADE_OVERVIEW[state!.grade]} 단원을 그림과 이야기로 배워요.</span></li><li><b>✨ 마을 상점과 인벤토리</b><span>강지후의 무기, 오지후의 옷, 나현이의 라이딩, 윤준의 펫을 모아 봐. 가영이에게는 헤어와 얼굴 꾸미기를 바꿀 수 있어.</span></li></ol><p class="note">키보드는 WASD·방향키 이동, Space 점프, E 대화, F 나무 베기예요.<br>휴대폰과 태블릿은 화면 아래 조이스틱과 버튼을 사용해요.</p><button class="primary wide" data-close>좋아, 모험을 떠나자!</button></div>`);
 }
 async function loadWorld() {
   if (world!) return;
@@ -1088,7 +1088,7 @@ function openPotionShop() {
 
 function openBeauty(kind: 'hairstyle' | 'face' = 'hairstyle', selectedId?: number) {
   if (!state) return; const s = state, items = kind === 'hairstyle' ? HAIRSTYLES : FACES, owned = kind === 'hairstyle' ? s.hairstyles : s.faces, id = selectedId ?? s[kind];
-  openModal(title('가영이의 꾸밈방', '헤어스타일과 성형') + `<div class="inventory-tabs"><button data-beauty-tab="hairstyle" class="${kind === 'hairstyle' ? 'active' : ''}">💇 헤어</button><button data-beauty-tab="face" class="${kind === 'face' ? 'active' : ''}">✨ 얼굴</button></div><p class="shop-explainer">구매한 스타일은 언제든 무료로 다시 바꿀 수 있어요. <b>🍓 ${s.berries.toLocaleString()}베리</b></p><div class="shop-layout"><div class="item-grid">${items.map((item, i) => `<button class="item-card ${id === i ? 'selected' : ''}" data-look="${i}"><span class="item-swatch">${item.icon}</span><strong>${item.name}</strong><small>${owned[i] ? s[kind] === i ? '✓ 지금 모습' : '보유 중' : `🍓 ${item.price}베리`}</small></button>`).join('')}</div><div class="item-detail"><div id="shop-avatar"></div><span class="preview-tag">미리 보기</span><h3>${items[id].name}</h3><button id="buy-look" class="primary wide" ${s[kind] === id ? 'disabled' : ''}>${s[kind] === id ? '지금 모습이에요' : owned[id] ? '이 모습으로 바꾸기' : `${items[id].price}베리로 구매`}</button><p class="error" id="beauty-error" role="alert"></p></div></div>`, 'shop-modal');
+  openModal(title('가영이의 꾸밈방', '헤어스타일과 얼굴 꾸미기') + `<div class="inventory-tabs"><button data-beauty-tab="hairstyle" class="${kind === 'hairstyle' ? 'active' : ''}">💇 헤어</button><button data-beauty-tab="face" class="${kind === 'face' ? 'active' : ''}">✨ 얼굴</button></div><p class="shop-explainer">구매한 스타일은 언제든 무료로 다시 바꿀 수 있어요. <b>🍓 ${s.berries.toLocaleString()}베리</b></p><div class="shop-layout"><div class="item-grid">${items.map((item, i) => `<button class="item-card ${id === i ? 'selected' : ''}" data-look="${i}"><span class="item-swatch">${item.icon}</span><strong>${item.name}</strong><small>${owned[i] ? s[kind] === i ? '✓ 지금 모습' : '보유 중' : `🍓 ${item.price}베리`}</small></button>`).join('')}</div><div class="item-detail"><div id="shop-avatar"></div><span class="preview-tag">미리 보기</span><h3>${items[id].name}</h3><button id="buy-look" class="primary wide" ${s[kind] === id ? 'disabled' : ''}>${s[kind] === id ? '지금 모습이에요' : owned[id] ? '이 모습으로 바꾸기' : `${items[id].price}베리로 구매`}</button><p class="error" id="beauty-error" role="alert"></p></div></div>`, 'shop-modal');
   preview = new AvatarPreviewRuntime($('#shop-avatar')); preview.show(s.character, s.outfit, s.weapon, s.outfits[s.outfit], s.weapons[s.weapon], kind === 'hairstyle' ? id : s.hairstyle, kind === 'face' ? id : s.face);
   document.querySelectorAll<HTMLButtonElement>('[data-beauty-tab]').forEach(button => button.onclick = () => openBeauty(button.dataset.beautyTab as 'hairstyle' | 'face'));
   document.querySelectorAll<HTMLButtonElement>('[data-look]').forEach(button => button.onclick = () => openBeauty(kind, Number(button.dataset.look)));
