@@ -170,7 +170,7 @@ function serveAsset(request, pathname) {
     'content-type': asset.type,
     'x-content-type-options': 'nosniff',
     'referrer-policy': 'strict-origin-when-cross-origin',
-    'cache-control': ['/index.html', '/sw.js', '/manifest.webmanifest'].includes(path) ? 'no-cache' : path.startsWith('/assets/') ? 'public, max-age=31536000, immutable' : 'public, max-age=3600',
+    'cache-control': ['/index.html', '/sw.js', '/manifest.webmanifest'].includes(path) ? 'no-store' : path.startsWith('/assets/') ? 'public, max-age=31536000, immutable' : 'public, max-age=3600',
   };
   const body = asset.base64 ? Uint8Array.from(atob(asset.body), ch => ch.charCodeAt(0)) : asset.body;
   return new Response(request.method === 'HEAD' ? null : body, { headers });
