@@ -142,7 +142,7 @@ function outfitEffectBadges(id: number) {
 function rideEffectBadges(id: number) { const item = RIDES[id]; return `<div class="stat-chips"><span class="stat-chip speed">➜ 걷기보다 ${item.speed}배 빠름</span><span class="stat-chip ${item.flying ? 'fly' : 'ground'}">${item.flying ? '🪽 물과 장애물 위로 비행' : '🐾 땅 위를 빠르게 달림'}</span></div>`; }
 function petEffectBadges(id: number) { const item = PETS[id]; return `<div class="stat-chips"><span class="stat-chip pet-range">🍓 ${item.radius}칸 안의 베리 발견</span><span class="stat-chip pet-move">🐾 직접 가서 한 번만 수집</span>${item.flying ? '<span class="stat-chip pet-fly">🪽 땅 위를 둥실 날아서 따라와요</span>' : ''}${id === HERO_BREAD_PET_ID ? '<span class="stat-chip pet-hero">✨ 캐릭터 주위에 황금빛 광채</span><span class="stat-chip pet-hero">👑 현재 가장 넓은 수집 범위</span>' : ''}</div>`; }
 function itemColor(color: number) { return `#${color.toString(16).padStart(6, '0')}`; }
-function toast(message: string) { $('#toast').textContent = message; $('#toast').classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => $('#toast').classList.remove('show'), 3500); }
+function toast(message: string) { $('#toast').textContent = message; $('#toast').classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => $('#toast').classList.remove('show'), 2400); }
 function persist() {
   if (!state) return;
   if (!world.inRoom) { const p = world.player.position; state.position = { x: p.x, z: p.z }; }
@@ -390,6 +390,7 @@ function openArena() {
   bindPracticePicker($('#modal-content'));
   $('#arena-start').onclick = () => startBattle(Math.floor(Math.random() * MONSTERS.length), true, 'arena');
 }
+let mapSemester: 1 | 2 = 1;
 function openStageMap(forest?: ForestKind) {
   if (!state) return; const s = state;
   if (!forest) {
@@ -400,11 +401,16 @@ function openStageMap(forest?: ForestKind) {
     const card = (region: CurriculumRegion) => {
       const complete = curriculumUnitComplete(s, region.id), focus = s.settings.focusUnit === region.id;
       const action = isForest(region.id) ? `data-forest="${region.id}"` : `data-curriculum-unit="${region.id}"`;
-      return `<button class="forest-card curriculum-region ${region.className} ${complete ? 'complete' : ''} ${focus ? 'focus-unit' : ''}" ${action}><span>${region.icon}</span><strong>${region.name}</strong><small>${region.short}</small>${stampRow(region.id)}<b>${complete ? '✓ 단원 완료' : progress(region.id)}${focus ? ' · 오늘의 단원' : ''}</b></button>`;
+      return `<button class="forest-card curriculum-region ${region.className} ${complete ? 'complete' : ''} ${focus ? 'focus-unit' : ''}" ${action}><span>${region.icon}</span><strong>${region.name}</strong><small>${region.short}</small>${stampRow(region.id)}<i class="region-progress" style="--region-progress:${Math.min(10, stampCount(region.id)) * 10}%" aria-hidden="true"></i><b>${complete ? '✓ 단원 완료' : progress(region.id)}${focus ? ' · 오늘의 단원' : ''}</b></button>`;
     };
-    const sets = curriculumRegionSets(s.grade), firstCards = sets.first.map(card).join(''), secondCards = sets.second.map(card).join('');
+    const sets = curriculumRegionSets(s.grade);
+    const visibleRegions = mapSemester === 1 ? sets.first : sets.second;
+    const nextRegion = visibleRegions.find(region => !curriculumUnitComplete(s, region.id)) ?? visibleRegions[0];
     const graduateReady = curriculumGraduationAvailable(s) || s.teacherMode;
-    openModal(title('연태쌤의 수학 모험 지도', `${s.grade}학년 수학 · 1학기와 2학기`) + `<p class="shop-explainer">모든 지역은 10단계예요. 베리·레벨·장비는 함께 사용하고, 학습 기록은 지역별로 따로 저장돼요.</p><h3 class="semester-heading">🌱 ${s.grade}학년 1학기 모험</h3><div class="curriculum-overview">${firstCards}</div><h3 class="semester-heading">🍁 ${s.grade}학년 2학기 모험</h3><div class="curriculum-overview">${secondCards}</div>${graduateReady ? `<button id="graduation-start" class="primary wide graduation-entry">🎓 ${s.curriculum.graduationClaimed ? `${s.grade}학년 졸업 모험 다시 하기` : `${s.grade}학년 졸업 모험 시작하기`}</button>` : `<p class="graduation-lock">🔒 모든 수학 지역을 통과하면 ${s.grade}학년 졸업 모험이 열려요.</p>`}${s.grade >= 3 && expeditionUnlocked(s) ? '<button id="map-expedition" class="secondary wide">✦ 나눗셈 숲 별빛 재탐험과 칭호</button>' : ''}`);
+    openModal(title('연태쌤의 수학 모험 지도', `${s.grade}학년 수학 · 1학기와 2학기`) + `<p class="shop-explainer">지역마다 10단계예요. 베리와 장비는 함께 쓰고, 통과 기록은 따로 저장돼요.</p><button id="map-continue" class="primary wide map-continue">▶ 이어서 모험하기 · ${nextRegion.name}</button><div class="semester-tabs" role="group" aria-label="학기 선택"><button data-semester="1" class="${mapSemester === 1 ? 'active' : ''}" aria-pressed="${mapSemester === 1}">🌱 1학기</button><button data-semester="2" class="${mapSemester === 2 ? 'active' : ''}" aria-pressed="${mapSemester === 2}">🍁 2학기</button></div><h3 class="semester-heading">${mapSemester === 1 ? '🌱' : '🍁'} ${s.grade}학년 ${mapSemester}학기 모험</h3><div class="curriculum-overview">${visibleRegions.map(card).join('')}</div>${graduateReady ? `<button id="graduation-start" class="primary wide graduation-entry">🎓 ${s.curriculum.graduationClaimed ? `${s.grade}학년 졸업 모험 다시 하기` : `${s.grade}학년 졸업 모험 시작하기`}</button>` : `<p class="graduation-lock">🔒 모든 수학 지역을 통과하면 ${s.grade}학년 졸업 모험이 열려요.</p>`}${s.grade >= 3 && expeditionUnlocked(s) ? '<button id="map-expedition" class="secondary wide">✦ 나눗셈 숲 별빛 재탐험과 칭호</button>' : ''}`);
+    const openRegion = (id: CurriculumUnitId) => { if (isForest(id)) openStageMap(id as ForestKind); else void openCurriculumUnit(id as NewCurriculumUnitId); };
+    $('#map-continue').onclick = () => openRegion(nextRegion.id);
+    document.querySelectorAll<HTMLButtonElement>('[data-semester]').forEach(button => button.onclick = () => { mapSemester = Number(button.dataset.semester) as 1 | 2; openStageMap(); });
     document.querySelectorAll<HTMLButtonElement>('[data-forest]').forEach(button => button.onclick = () => openStageMap(button.dataset.forest as ForestKind));
     document.querySelectorAll<HTMLButtonElement>('[data-curriculum-unit]').forEach(button => button.onclick = () => void openCurriculumUnit(button.dataset.curriculumUnit as NewCurriculumUnitId));
     const graduation = document.querySelector<HTMLButtonElement>('#graduation-start'); if (graduation) graduation.onclick = () => void startGraduationAdventure();
@@ -930,9 +936,15 @@ function openInventory(tab: 'weapon' | 'outfit' | 'ride' | 'pet' = 'weapon', sel
   const tabs = `<div class="inventory-tabs"><button data-inventory-tab="weapon" class="${tab === 'weapon' ? 'active' : ''}">⚔ 무기</button><button data-inventory-tab="outfit" class="${tab === 'outfit' ? 'active' : ''}">👗 옷</button><button data-inventory-tab="ride" class="${tab === 'ride' ? 'active' : ''}" aria-label="라이딩">🪽 탈것</button><button data-inventory-tab="pet" class="${tab === 'pet' ? 'active' : ''}">🐾 펫</button></div>`;
   const summary = `<p class="inventory-summary"><span>무기 ${Object.keys(s.weapons).length} · 옷 ${Object.keys(s.outfits).length} · 라이딩 ${Object.keys(s.rides).length} · 펫 ${Object.keys(s.pets).length}</span><b>🍓 ${s.berries.toLocaleString()}베리</b></p>`;
   if (tab === 'weapon') {
-    const cards = Object.keys(s.weapons).map(Number).map(id => { const item = WEAPONS[id]; return `<article class="inventory-item ${s.weapon === id ? 'equipped' : ''}"><span class="inventory-icon" style="--item-color:${itemColor(item.color)}">${item.icon}</span><div><strong>${item.name} +${s.weapons[id]}</strong><small>몬스터마다 베리 +${item.bonus} · 대련장 점수 ${(item.multiplier + s.weapons[id] * .1).toFixed(1)}배 · 나무를 약 ${Math.ceil(7 / (item.treePower + s.weapons[id]))}번 때리면 성공</small></div><button class="${s.weapon === id ? 'equipped-button' : 'secondary'}" data-equip="weapon" data-id="${id}" ${s.weapon === id ? 'disabled' : ''}>${s.weapon === id ? '장착 중' : '장착'}</button></article>`; }).join('');
-    openModal(title('나의 인벤토리', '내가 모은 무기') + `${tabs}${summary}<div class="inventory-list">${cards}</div>`, 'inventory-modal');
-    document.querySelectorAll<HTMLButtonElement>('[data-equip]').forEach(button => button.onclick = () => { s.weapon = Number(button.dataset.id); audio.play('buy'); syncAvatar(); refresh(); persist(); openInventory('weapon'); toast('새 무기를 장착했어요!'); });
+    const ownedIds = Object.keys(s.weapons).map(Number).sort((a, b) => a === s.weapon ? -1 : b === s.weapon ? 1 : a - b);
+    const id = selectedId !== undefined && ownedIds.includes(selectedId) ? selectedId : s.weapon;
+    const item = WEAPONS[id];
+    const cards = ownedIds.map(itemId => { const weapon = WEAPONS[itemId], active = s.weapon === itemId; return `<button class="collection-card ${itemId === id ? 'selected' : ''} ${active ? 'active' : ''}" data-collection-item="${itemId}" aria-pressed="${itemId === id}"><span class="collection-icon" style="--item-color:${itemColor(weapon.color)}">${weapon.icon}</span><strong>${weapon.name} +${s.weapons[itemId]}</strong><small>${active ? '장착 중' : '보유 중'}</small></button>`; }).join('');
+    openModal(title('나의 인벤토리', '내가 모은 무기') + `${tabs}${summary}<div class="collection-showcase"><div class="collection-picker" role="list">${cards}</div><section class="collection-detail"><div id="collection-preview" class="collection-preview" style="--item-color:${itemColor(item.color)}"></div><span class="preview-tag">3D로 무기 보기</span><h3>${item.icon} ${item.name} +${s.weapons[id]}</h3><p>몬스터를 이기면 기본 보상에 베리 ${item.bonus}개를 더 받아요.<br>대련장 점수는 ${(item.multiplier + s.weapons[id] * .1).toFixed(1)}배가 돼요.<br>나무는 약 ${Math.ceil(7 / (item.treePower + s.weapons[id]))}번 때리면 벨 수 있어요.</p><button class="primary wide" id="collection-action" ${s.weapon === id ? 'disabled' : ''}>${s.weapon === id ? '지금 장착 중이에요' : '이 무기 장착하기'}</button></section></div>`, 'inventory-modal collection-modal weapon-collection');
+    preview = new AvatarPreviewRuntime($('#collection-preview'));
+    preview.show(s.character, s.outfit, id, s.outfits[s.outfit], s.weapons[id], s.hairstyle, s.face);
+    document.querySelectorAll<HTMLButtonElement>('[data-collection-item]').forEach(button => button.onclick = () => openInventory('weapon', Number(button.dataset.collectionItem)));
+    $('#collection-action').onclick = () => { s.weapon = id; audio.play('buy'); syncAvatar(); refresh(); persist(); openInventory('weapon', id); toast('새 무기를 장착했어요!'); };
   } else {
     const ownedIds = tab === 'outfit' ? Object.keys(s.outfits).map(Number) : tab === 'pet' ? Object.keys(s.pets).map(Number) : RIDES.map((_, id) => id).sort((a, b) => RIDES[a].price - RIDES[b].price);
     const current = tab === 'outfit' ? s.outfit : tab === 'ride' ? s.ride : s.pet;

@@ -986,7 +986,7 @@ export class World {
   }
   setAvatar(character: number, outfit: number, weapon: number, outfitLevel = 0, weaponLevel = 0, ride = -1, pet = -1, hairstyle = 0, face = 0) {
     const position = this.player.position.clone(), rotation = this.player.rotation.y;
-    this.scene.remove(this.player); this.disposeModel(this.player); this.player = makeCharacter(character, outfit, weapon, outfitLevel, weaponLevel, hairstyle, face); this.player.position.copy(position); this.player.rotation.y = rotation; this.scene.add(this.player);
+    this.scene.remove(this.player); this.disposeModel(this.player); this.player = makeCharacter(character, outfit, weapon, outfitLevel, weaponLevel, hairstyle, face); this.player.position.copy(position); this.player.rotation.y = rotation; this.player.scale.setScalar(matchMedia('(max-width: 600px)').matches ? 1.08 : 1); this.scene.add(this.player);
     if (this.petModel) { this.scene.remove(this.petModel); this.disposeModel(this.petModel); }
     this.rideIndex = ride; this.petIndex = pet; this.petModel = null; this.petTargetId = null; this.rideAnimated = [];
     if (ride >= 0 && RIDES[ride]) { const body = this.player.userData.body as T.Group; body.position.y = riderHeight(ride); const rideModel = makeRide(ride); rideModel.traverse(o => { if (o.userData.rideWing || o.userData.ridePropeller || o.userData.rideGlow) this.rideAnimated.push(o); }); this.player.add(rideModel); }
@@ -1088,8 +1088,8 @@ export class World {
     return { fell: e.mesh.userData.hp === 0, remaining: e.mesh.userData.hp as number };
   }
   defeat(id: string) { const e = this.entities.find(e => e.id === id); if (e) { const type = id.startsWith('expMonster') ? Number(e.mesh.userData.monsterType) : stageMonsters(this.stage)[Number(id.slice(7))].type; this.burst(e.mesh.position, MONSTERS[type].color); e.mesh.visible = false; } }
-  celebrate() { this.burst(this.player.position, 0xffd371, 30); }
-  private burst(pos: T.Vector3, color: number, count = 14) { for (let i = 0; i < count; i++) { const m = mesh(particleGeometry, color, pos.x, pos.y + .9, pos.z, this.scene); this.particles.push({ mesh: m, v: new T.Vector3((Math.random() - .5) * 5, 2 + Math.random() * 3, (Math.random() - .5) * 5), life: 1 }); } }
+  celebrate() { this.burst(this.player.position, 0xffd371, 10); }
+  private burst(pos: T.Vector3, color: number, count = 14) { if (matchMedia('(prefers-reduced-motion: reduce)').matches) return; const available = Math.max(0, 48 - this.particles.length); for (let i = 0; i < Math.min(count, available); i++) { const m = mesh(particleGeometry, color, pos.x, pos.y + .9, pos.z, this.scene); this.particles.push({ mesh: m, v: new T.Vector3((Math.random() - .5) * 3.5, 1.5 + Math.random() * 2, (Math.random() - .5) * 3.5), life: .75 }); } }
   private water(x: number, z: number) { return !this.inRoom && isVillagePond(this.stage, x, z); }
   private resize() { const w = this.container.clientWidth, h = this.container.clientHeight; const span = w < 700 ? 13 : 14.5; this.camera.left = -span * w / h; this.camera.right = span * w / h; this.camera.top = span; this.camera.bottom = -span; this.camera.updateProjectionMatrix(); this.renderer.setSize(w, h); }
   /** 베리·꽃·눈알처럼 작은 조각은 그림자가 거의 보이지 않아요. 그림자 그리기에서 빼서 태블릿의 그리기 횟수를 크게 줄여요. */
@@ -1179,7 +1179,11 @@ export class World {
       placeLabel(e.label, v, !this.active || !e.mesh.visible || Math.abs(v.x) > 1.15 || Math.abs(v.y) > 1.1);
       const isNear = d < 2.8; if (e.label.classList.contains('near') !== isNear) e.label.classList.toggle('near', isNear);
     }
-    if ((near?.id ?? null) !== this.selectedId) { this.selectedId = near?.id ?? null; this.onNear(near?.name ?? null, near?.id ?? null); }
+    if ((near?.id ?? null) !== this.selectedId) {
+      this.entities.find(e => e.id === this.selectedId)?.label.classList.remove('is-target');
+      near?.label.classList.add('is-target');
+      this.selectedId = near?.id ?? null; this.onNear(near?.name ?? null, near?.id ?? null);
+    }
     for (const butterfly of this.butterflies) { butterfly.position.y += Math.sin(this.time * 4 + butterfly.position.x) * .0015; butterfly.rotation.y += dt * .7; }
     const weapon = this.player.userData.weapon as T.Group | undefined; if (weapon) weapon.rotation.z = -.28 + (this.swingUntil > this.time ? Math.sin((this.swingUntil - this.time) / .28 * Math.PI) * -1.35 : 0);
     for (const o of this.rideAnimated) {
