@@ -4,6 +4,8 @@ import { CHARACTERS, MONSTERS, OUTFITS, PETS, RIDES, WEAPONS, PLAYER_MOVE_SPEED,
 import { STAGES, stageBerries, stageMonsters, stagePlatforms, stageTrees, stageSize, isVillagePond } from './stages';
 import { EXPEDITION_STAR_SPOTS, expeditionLayout } from './expedition';
 import { storyHere, storySpot } from './story';
+import { activitySpec, type StoryActivity } from './story-activities';
+import type { PetReaction } from './pet-care';
 import { VILLAGE_THEMES, villageThemeId, type VillageTheme } from './villages';
 import type { AmbienceScene } from './ambience';
 
@@ -402,8 +404,8 @@ function buildPet(id: number) {
   const g = new T.Group(), pet = PETS[id];
   const body = new T.Group(); g.add(body);
   const eye = (side: number, x: number, y: number, z: number, color = 0x35423e, scale = 1) => {
-    ball(body, color, side * x, y, z, .04 * scale, .058 * scale, .024);
-    ball(body, 0xffffff, side * (x - .012), y + .023 * scale, z + .018, .012 * scale, .016 * scale, .008);
+    ball(body, color, side * x, y, z, .04 * scale, .058 * scale, .024).userData.petEye = true;
+    ball(body, 0xffffff, side * (x - .012), y + .023 * scale, z + .018, .012 * scale, .016 * scale, .008).userData.petEye = true;
   };
   const cheek = (side: number, x: number, y: number, z: number, color = 0xf3a6b5) => ball(body, color, side * x, y, z, .065, .032, .018);
   const paw = (side: number, color: number, x = .21, y = .16, z = .22) => {
@@ -669,6 +671,13 @@ export class World {
   private guideTarget: { object: T.Object3D; name: string; arrivalDistance: number } | null = null; private guideElement: HTMLDivElement;
   private swingUntil = 0; private rideIndex = -1; private petIndex = -1; private petModel: T.Group | null = null; private petTargetId: number | null = null; private animationRunning = false;
   private rideAnimated: T.Object3D[] = []; private butterflies: T.Object3D[] = []; private furnitureRoot: T.Group | null = null;
+  private storyScenery: T.Group | null = null; private restoredBridge = false;
+  private storyActivityRoot: T.Group | null = null; private activityMarkers: { at: T.Vector3; label: HTMLDivElement }[] = [];
+  private storyActivityFocus: T.Vector3 | null = null; private craftAnimated: T.Object3D[] = [];
+  private petIdle = 0; private petWalk = 0; private petMotion = false; private petEating = false;
+  private petReaction: PetReaction | null = null; private petReactUntil = 0; private petCharm: T.Group | null = null;
+  private petAnimated: T.Object3D[] = [];
+  onPetWalk = (_distance: number) => {};
   private shadowSweep = 0; private tempScale = new T.Vector3(); private tempSphere = new T.Sphere();
   private tempProjection = new T.Vector3(); private tempTarget = new T.Vector3(); private tempWorld = new T.Vector3(); private cameraTarget = new T.Vector3();
   active = false; paused = true; inRoom = false; onCollect = (_id: number) => {}; onStar = (_id: number) => {}; onInteract = (_id: string) => {}; onAttack = (_id: string | null) => {}; onNear = (_name: string | null, _id: string | null) => {}; onJump = () => {}; onRescue = () => {}; onStageLoaded = (_stage: number) => {};
@@ -686,7 +695,7 @@ export class World {
     document.addEventListener('visibilitychange', () => { if (document.hidden) this.clearInput(); this.syncAnimation(); });
     // 한글 입력 상태에서는 W가 'ㅈ'으로 들어와요. 글자(e.key) 대신 자판 위치(e.code)로 읽어 한/영 상태와 상관없이 움직여요.
     const keyOf = (e: KeyboardEvent) => ({ KeyW: 'w', KeyA: 'a', KeyS: 's', KeyD: 'd', KeyE: 'e', KeyF: 'f', ArrowUp: 'arrowup', ArrowDown: 'arrowdown', ArrowLeft: 'arrowleft', ArrowRight: 'arrowright', Space: ' ' } as Record<string, string>)[e.code] ?? e.key.toLowerCase();
-    window.addEventListener('keydown', e => { if (!this.active || this.paused || /INPUT|TEXTAREA|SELECT/.test((e.target as HTMLElement).tagName)) return; const key = keyOf(e); if (['arrowup', 'arrowdown', 'arrowleft', 'arrowright', ' '].includes(key)) e.preventDefault(); this.keys.add(key); if (!e.repeat && key === ' ') this.jump(); if (!e.repeat && key === 'e') this.interact(); if (!e.repeat && key === 'f') this.attack(); });
+    window.addEventListener('keydown', e => { if (!this.active || this.paused || this.storyActivityFocus || /INPUT|TEXTAREA|SELECT/.test((e.target as HTMLElement).tagName)) return; const key = keyOf(e); if (['arrowup', 'arrowdown', 'arrowleft', 'arrowright', ' '].includes(key)) e.preventDefault(); this.keys.add(key); if (!e.repeat && key === ' ') this.jump(); if (!e.repeat && key === 'e') this.interact(); if (!e.repeat && key === 'f') this.attack(); });
     window.addEventListener('keyup', e => this.keys.delete(keyOf(e))); window.addEventListener('blur', () => this.clearInput()); document.addEventListener('visibilitychange', () => { if (document.hidden) this.clearInput(); });
     this.renderOnce();
   }
@@ -815,6 +824,9 @@ export class World {
     this.addBerries();
   }
   private clearMap() {
+    this.endStoryActivity();
+    if (this.storyScenery) this.disposeModel(this.storyScenery);
+    this.storyScenery = null; this.craftAnimated = []; this.restoredBridge = false; this.butterflies = []; this.particles = [];
     this.clearGuide(); this.selectedId = null; this.petTargetId = null; this.onNear(null, null); this.entities.forEach(e => e.label.remove()); this.stars.forEach(star => star.label.remove()); this.entities = []; this.coins = []; this.stars = []; this.colliders = [];
     for (const child of [...this.scene.children]) if (child !== this.player && child !== this.petModel && child !== this.weatherMesh && !(child instanceof T.Light)) { this.scene.remove(child); if (child instanceof T.Mesh && child.userData.mergedScenery) child.geometry.dispose(); }
     this.furnitureRoot = null;
@@ -866,6 +878,7 @@ export class World {
     this.clearInput(); this.clearMap(); this.inRoom = false; s.room.inside = false; this.forest = s.forest; const journey = journeyFor(s); this.stage = journey.stage;
     this.scene.background = new T.Color(0xd0eade); this.scene.fog = new T.Fog(0xd0eade, 58, 112); this.platforms = stagePlatforms(this.stage);
     if (this.stage === 0) this.buildVillage(VILLAGE_THEMES[villageThemeId(s)]); else this.buildHunt(this.stage);
+    if (this.stage === 0) this.updateStoryVillage(s);
     this.mergeStaticScenery();
     if (this.stage > 0 && storyHere(s)) {
       for (let clue = 0; clue < 3; clue++) {
@@ -894,6 +907,95 @@ export class World {
       if (!visible && this.selectedId === e.id) { this.selectedId = null; this.onNear(null, null); }
     }
     this.clearGuide(); this.renderOnce();
+  }
+  updateStoryVillage(s: Save) {
+    if (this.stage !== 0 || this.inRoom) return;
+    if (this.storyScenery) { this.scene.remove(this.storyScenery); this.disposeModel(this.storyScenery); }
+    this.craftAnimated = []; this.restoredBridge = s.story.completed.includes(1);
+    const oldFriend = this.entities.find(e => e.id === 'storyFriend');
+    if (oldFriend) { oldFriend.label.remove(); this.scene.remove(oldFriend.mesh); this.disposeModel(oldFriend.mesh); this.entities = this.entities.filter(e => e !== oldFriend); }
+    const g = new T.Group(); g.userData.storyScenery = true; this.scene.add(g); this.storyScenery = g;
+    if (s.story.completed.includes(0)) {
+      const friend = makePet(1); friend.scale.setScalar(1.4);
+      this.addEntity('storyFriend', '편지 친구 · 솜이', -4.2, -3, friend);
+      for (const side of [-1, 1]) { cylinder(g, 0xbb8f62, -4.2 + side * .9, .25, -3, .3, .35, .5); ball(g, 0xf4b6cd, -4.2 + side * .9, .7, -3, .4); }
+    }
+    if (this.restoredBridge) {
+      this.buildCraftBridge(g, 19, 8, 9.5);
+      const wheel = this.buildCraftWheel(g, 21.5, 4.5); this.craftAnimated.push(wheel);
+      box(g, 0xf6e4c1, 22.5, .55, 4.5, 1.3, 1.1, 1.4);
+      const roof = cylinder(g, 0xcd8d79, 22.5, 1.5, 4.5, 0, 1.2, .9, 4); roof.rotation.y = Math.PI / 4;
+    }
+    if (s.story.completed.includes(2)) {
+      cylinder(g, 0xd8c9a6, -13, .05, 8.5, 3, 3, .1, 24);
+      cylinder(g, 0x8f7059, -13, 1.1, 8.5, .22, .38, 2.2, 8);
+      for (const [x, y, z] of [[0, 2.8, 0], [-.8, 2.4, .2], [.8, 2.5, -.2]]) ball(g, 0xa2cbaa, -13 + x, y, 8.5 + z, 1.15, .85, .9);
+      for (let i = 0; i < 8; i++) { const a = i * Math.PI / 4; const light = mesh(particleGeometry, 0xffd980, -13 + Math.cos(a) * 1.2, 2.4 + Math.sin(a) * .6, 8.8 + Math.sin(a) * .5, g); light.scale.setScalar(1.6); light.userData.storySparkle = i; this.craftAnimated.push(light); }
+      for (const x of [-15, -11]) { box(g, 0xbe9568, x, .42, 10, 1.6, .18, .7); for (const side of [-1, 1]) box(g, 0x8e7352, x + side * .5, .2, 10, .12, .4, .45); }
+      cylinder(g, 0xecd2b1, -13, .55, 11, .8, .8, .16); cylinder(g, 0xae8a62, -13, .27, 11, .1, .22, .55);
+    }
+    this.renderOnce();
+  }
+  private buildCraftBridge(g: T.Group, x: number, z: number, length: number) {
+    for (let i = 0; i < 14; i++) box(g, i % 2 ? 0xc79862 : 0xd9b17d, x - length / 2 + (i + .5) * length / 14, .1, z, length / 14 - .035, .16, 2.1);
+    for (const side of [-1, 1]) { box(g, 0xba9066, x, .72, z + side, length, .12, .13); for (let i = 0; i < 5; i++) cylinder(g, 0xa47c53, x - length / 2 + i * length / 4, .4, z + side, .065, .085, .8, 6); }
+  }
+  private buildCraftWheel(parent: T.Group, x: number, z: number) {
+    const wheel = new T.Group(); wheel.position.set(x, 1.1, z); parent.add(wheel); wheel.userData.storyWheel = true;
+    const rim = mesh(new T.TorusGeometry(.8, .09, 6, 20), 0xa47851, 0, 0, 0, wheel);
+    for (let i = 0; i < 8; i++) { const a = i * Math.PI / 4, spoke = box(wheel, 0xc49c6b, Math.cos(a) * .4, Math.sin(a) * .4, 0, .85, .08, .1); spoke.rotation.z = a; const paddle = box(wheel, 0xcca671, Math.cos(a) * .8, Math.sin(a) * .8, 0, .3, .14, .5); paddle.rotation.z = a; }
+    rim.castShadow = false; return wheel;
+  }
+  beginStoryActivity(s: Save) {
+    const active = s.story.active; if (!active?.activity || !storyHere(s)) return;
+    this.clearInput(); this.clearGuide(); this.selectedId = null; this.onNear(null, null);
+    const spot = storySpot(active.chapter, 2); this.storyActivityFocus = new T.Vector3(spot.x, .5, spot.z);
+    const sign = this.entities.find(e => e.id === 'storyPuzzle'); if (sign) sign.mesh.visible = false;
+    this.renderStoryActivity(s); this.resize();
+  }
+  renderStoryActivity(s: Save) {
+    const a = s.story.active; if (!a?.activity || !this.storyActivityFocus) return;
+    if (this.storyActivityRoot) { this.scene.remove(this.storyActivityRoot); this.disposeModel(this.storyActivityRoot); }
+    this.activityMarkers.forEach(m => m.label.remove()); this.activityMarkers = [];
+    const spec = activitySpec(a.chapter, a.activity.grade), values = a.activity.values;
+    const g = new T.Group(); g.position.copy(this.storyActivityFocus); g.position.y = .1; g.userData.storyActivity = true; g.userData.waterSolved = a.solved; this.scene.add(g); this.storyActivityRoot = g;
+    box(g, 0xf5e7c8, 0, -.04, 0, 8.8, .14, 4.5);
+    const colors = [0xe8a296, 0x95c4a1, 0x94bad6, 0xc4a3d1];
+    if (spec.kind === 'water') {
+      const tankHeight = 2.5, fraction = values[0] / spec.total;
+      box(g, 0xa4c8b9, -1.3, .08, 0, 2.5, .15, 1.8);
+      box(g, 0xb6d9d2, -1.3, tankHeight / 2, -.82, 2.5, tankHeight, .12);
+      for (const side of [-1, 1]) box(g, 0xd0e6d5, -1.3 + side * 1.2, tankHeight / 2, 0, .1, tankHeight, 1.8);
+      if (fraction > 0) box(g, 0x6cbfd0, -1.3, fraction * tankHeight / 2 + .1, 0, 2.25, fraction * tankHeight, 1.6);
+      for (let n = 0; n <= spec.total; n += spec.step) box(g, n === spec.target ? 0xd57f5c : 0xfaf6da, -2.28, .1 + n / spec.total * tankHeight, .88, n === spec.target ? .65 : .3, .04, .05);
+      this.buildCraftWheel(g, 2.1, 0);
+      this.activityMarker(g, -1.3, 3.2, 0, `${values[0]} ${spec.unit} / 목표 ${spec.target} ${spec.unit}`);
+      cylinder(g, 0xe9bc77, .6, .4, 1.1, .32, .25, .7, 12);
+    } else {
+      const positions = Array.from({ length: spec.groups }, (_, i) => (i - (spec.groups - 1) / 2) * 2);
+      for (let i = 0; i < spec.groups; i++) {
+        const x = positions[i]; cylinder(g, colors[i], x, .1, .3, .8, .8, .15, 16);
+        if (spec.kind === 'bridge') {
+          for (let p = 0; p < values[i]; p++) box(g, p % 2 ? 0xc9965e : 0xe4b87d, x, .25 + p * .13, .3, 1.15, .11, .45);
+        } else {
+          for (let p = 0; p < values[i]; p++) { const angle = p * Math.PI * 2 / spec.total; const slice = new T.CylinderGeometry(.65, .65, .28, 12, 1, false, angle, Math.PI * 2 / spec.total - .04); mesh(slice, 0xf3b0c3, x, .34, .3, g); }
+          const friend = makePet([0, 1, 16][i]); friend.position.set(x, 0, -1.4); friend.scale.setScalar(.8); g.add(friend);
+        }
+        this.activityMarker(g, x, spec.kind === 'bridge' ? 2.2 : 1.5, .3, `${i + 1}번 · ${values[i]}${spec.unit}`);
+      }
+      if (a.solved && spec.kind === 'bridge') this.buildCraftBridge(g, 0, -1.3, 7.7);
+    }
+    if (a.solved) { this.burst(g.position, 0xffd67d, 12); this.reactPet('happy'); }
+    this.renderOnce();
+  }
+  private activityMarker(g: T.Group, x: number, y: number, z: number, text: string) {
+    const label = document.createElement('div'); label.className = 'activity-marker'; label.textContent = text; this.labelLayer.append(label);
+    this.activityMarkers.push({ at: g.position.clone().add(new T.Vector3(x, y, z)), label });
+  }
+  endStoryActivity() {
+    this.storyActivityFocus = null;
+    if (this.storyActivityRoot) { this.scene.remove(this.storyActivityRoot); this.disposeModel(this.storyActivityRoot); this.storyActivityRoot = null; }
+    this.activityMarkers.forEach(m => m.label.remove()); this.activityMarkers = []; this.clearInput(); this.resize();
   }
   enterRoom(s: Save, preservePosition = false) {
     const roomPosition = preservePosition ? this.player.position.clone() : new T.Vector3(0, 0, 2.7);
@@ -1013,10 +1115,20 @@ export class World {
     const position = this.player.position.clone(), rotation = this.player.rotation.y;
     this.scene.remove(this.player); this.disposeModel(this.player); this.player = makeCharacter(character, outfit, weapon, outfitLevel, weaponLevel, hairstyle, face); this.player.position.copy(position); this.player.rotation.y = rotation; this.player.scale.setScalar(matchMedia('(max-width: 600px)').matches ? 1.08 : 1); this.scene.add(this.player);
     if (this.petModel) { this.scene.remove(this.petModel); this.disposeModel(this.petModel); }
-    this.rideIndex = ride; this.petIndex = pet; this.petModel = null; this.petTargetId = null; this.rideAnimated = [];
+    this.rideIndex = ride; this.petIndex = pet; this.petModel = null; this.petTargetId = null; this.rideAnimated = []; this.petAnimated = []; this.petIdle = 0; this.petReaction = null; this.petCharm = null;
     if (ride >= 0 && RIDES[ride]) { const body = this.player.userData.body as T.Group; body.position.y = riderHeight(ride); const rideModel = makeRide(ride); rideModel.traverse(o => { if (o.userData.rideWing || o.userData.ridePropeller || o.userData.rideGlow) this.rideAnimated.push(o); }); this.player.add(rideModel); }
     if (pet === HERO_BREAD_PET_ID) { const aura = makeHeroPetAura(ride); this.player.add(aura); this.player.userData.heroPetAura = aura; }
-    if (pet >= 0 && PETS[pet]) { this.petModel = makePet(pet); this.scene.add(this.petModel); this.placePetNearPlayer(); }
+    if (pet >= 0 && PETS[pet]) {
+      this.petModel = makePet(pet); this.scene.add(this.petModel); this.placePetNearPlayer();
+      this.petModel.traverse(o => { if (Object.keys(o.userData).some(k => ['petEye', 'petWing', 'petEar', 'petTail', 'petPaw', 'petCharm'].includes(k))) { o.userData.restRotation = o.rotation.clone(); o.userData.restScale = o.scale.clone(); this.petAnimated.push(o); } });
+      this.petCharm = new T.Group(); const ribbon = box(this.petCharm, 0xf19eb7, 0, .7, .48, .2, .1, .04); ribbon.rotation.z = .2; ball(this.petCharm, 0xffd888, 0, .63, .5, .06); this.petCharm.visible = false; (this.petModel.userData.petBody as T.Group).add(this.petCharm);
+    }
+  }
+  dressPet(show: boolean) { if (this.petCharm) this.petCharm.visible = show; }
+  reactPet(reaction: PetReaction) {
+    if (!this.petModel) return;
+    this.petReaction = reaction; this.petReactUntil = this.time + (reaction === 'sleep' ? 8 : reaction === 'sit' ? 5 : 2.6); this.petIdle = 0;
+    if (reaction === 'happy' || reaction === 'discover') this.burst(this.petModel.position, 0xf4a3bc, 5);
   }
   private placePetNearPlayer() { if (this.petModel) this.petModel.position.set(this.player.position.x - 1.05, this.player.position.y + .02, this.player.position.z - .7); }
   private disposeModel(g: T.Group) { g.traverse(o => { if (o instanceof T.Mesh && !sharedGeometries.has(o.geometry)) o.geometry.dispose(); }); }
@@ -1103,9 +1215,9 @@ export class World {
   }
   private clearGuide() { this.guideTarget = null; this.guideElement.hidden = true; }
   moveStick(x: number, z: number) { this.stick = { x, z }; }
-  jump() { if (this.active && !this.paused && this.grounded) { this.vy = 7.4; this.grounded = false; this.onJump(); } }
-  interact() { if (this.active && !this.paused && this.selectedId) this.onInteract(this.selectedId); }
-  attack() { if (!this.active || this.paused) return; this.swingUntil = this.time + .28; this.onAttack(this.selectedId?.startsWith('tree') ? this.selectedId : null); }
+  jump() { if (this.active && !this.paused && !this.storyActivityFocus && this.grounded) { this.vy = 7.4; this.grounded = false; this.onJump(); } }
+  interact() { if (this.active && !this.paused && !this.storyActivityFocus && this.selectedId) this.onInteract(this.selectedId); }
+  attack() { if (!this.active || this.paused || this.storyActivityFocus) return; this.swingUntil = this.time + .28; this.onAttack(this.selectedId?.startsWith('tree') ? this.selectedId : null); }
   hitTree(id: string, damage: number) {
     const e = this.entities.find(e => e.id === id && e.mesh.visible); if (!e || !id.startsWith('tree')) return null;
     e.mesh.userData.hp = Math.max(0, Number(e.mesh.userData.hp) - damage); e.mesh.userData.shakeUntil = this.time + .28; this.burst(e.mesh.position, 0xc5e88b, 5);
@@ -1115,8 +1227,16 @@ export class World {
   defeat(id: string) { const e = this.entities.find(e => e.id === id); if (e) { const type = id.startsWith('expMonster') ? Number(e.mesh.userData.monsterType) : stageMonsters(this.stage)[Number(id.slice(7))].type; this.burst(e.mesh.position, MONSTERS[type].color); e.mesh.visible = false; } }
   celebrate() { this.burst(this.player.position, 0xffd371, 10); }
   private burst(pos: T.Vector3, color: number, count = 14) { if (matchMedia('(prefers-reduced-motion: reduce)').matches) return; const available = Math.max(0, 48 - this.particles.length); for (let i = 0; i < Math.min(count, available); i++) { const m = mesh(particleGeometry, color, pos.x, pos.y + .9, pos.z, this.scene); this.particles.push({ mesh: m, v: new T.Vector3((Math.random() - .5) * 3.5, 1.5 + Math.random() * 2, (Math.random() - .5) * 3.5), life: .75 }); } }
-  private water(x: number, z: number) { return !this.inRoom && isVillagePond(this.stage, x, z); }
-  private resize() { const w = this.container.clientWidth, h = this.container.clientHeight; const span = w < 700 ? 13 : 14.5; this.camera.left = -span * w / h; this.camera.right = span * w / h; this.camera.top = span; this.camera.bottom = -span; this.camera.updateProjectionMatrix(); this.renderer.setSize(w, h); }
+  private water(x: number, z: number) { return !this.inRoom && !(this.stage === 0 && this.restoredBridge && x > 14 && x < 24 && Math.abs(z - 8) < 1) && isVillagePond(this.stage, x, z); }
+  private resize() {
+    const w = this.container.clientWidth, h = this.container.clientHeight, span = w < 700 ? 13 : 14.5;
+    if (this.storyActivityFocus) {
+      const landscape = w / h > 1.6 && h < 600, width = landscape ? 19 : 11.8, height = width * h / w;
+      this.camera.left = landscape ? -6 : -width / 2; this.camera.right = landscape ? 13 : width / 2;
+      this.camera.top = height * (landscape ? .5 : .34); this.camera.bottom = -height * (landscape ? .5 : .66);
+    } else { this.camera.left = -span * w / h; this.camera.right = span * w / h; this.camera.top = span; this.camera.bottom = -span; }
+    this.camera.updateProjectionMatrix(); this.renderer.setSize(w, h);
+  }
   /** 베리·꽃·눈알처럼 작은 조각은 그림자가 거의 보이지 않아요. 그림자 그리기에서 빼서 태블릿의 그리기 횟수를 크게 줄여요. */
   private trimSmallShadows() {
     this.scene.traverse(o => {
@@ -1133,7 +1253,8 @@ export class World {
     if (this.shadowSweep++ % 45 === 0) this.trimSmallShadows(); // 새로 생긴 펫·탈것·몬스터도 곧 정리돼요.
     const p = this.player.position;
     this.updateWeather(dt);
-    if (this.active && !this.paused) {
+    if (this.active && !this.paused && !this.storyActivityFocus) {
+      const oldX = p.x, oldZ = p.z;
       let dx = Number(this.keys.has('d') || this.keys.has('arrowright')) - Number(this.keys.has('a') || this.keys.has('arrowleft')) + this.stick.x;
       let dz = Number(this.keys.has('s') || this.keys.has('arrowdown')) - Number(this.keys.has('w') || this.keys.has('arrowup')) + this.stick.z;
       const n = Math.hypot(dx, dz); if (n > 1) { dx /= n; dz /= n; }
@@ -1147,6 +1268,7 @@ export class World {
       const bounds = this.inRoom ? { x: 6.8, z: 5.2 } : stageSize(this.stage);
       if (Math.abs(p.x) > bounds.x - .5 || Math.abs(p.z) > bounds.z - .5 || (!flying && this.water(p.x, p.z) && p.y <= .2)) { p.copy(this.lastSafe); this.vy = 0; this.onRescue(); }
       else if (this.grounded && (flying || !this.water(p.x, p.z)) && Math.abs(p.x) < bounds.x - 2 && Math.abs(p.z) < bounds.z - 2) this.lastSafe.copy(p);
+      if (this.petModel) { const walked = Math.hypot(p.x - oldX, p.z - oldZ); if (walked < 4) this.petWalk += walked; if (this.petWalk >= 1) { this.onPetWalk(this.petWalk); this.petWalk = 0; } }
       // 베리는 바닥의 수평 거리로 판정해 발판·점프·라이딩 높이에서도 눈에 닿으면 수집됩니다.
       for (const c of this.coins) if (c.mesh.visible && berryWithinReach(p.x, p.z, c.mesh.position.x, c.mesh.position.z)) { c.mesh.visible = false; this.burst(c.mesh.position, 0xff9fb4, 6); this.onCollect(c.id); }
       for (const star of this.stars) if (star.mesh.visible && Math.hypot(p.x - star.mesh.position.x, p.z - star.mesh.position.z) < 1.35) { star.mesh.visible = false; star.label.hidden = true; this.burst(star.mesh.position, 0xffdf83, 8); this.onStar(star.id); }
@@ -1155,24 +1277,40 @@ export class World {
         if (!target) {
           this.petTargetId = null; let best: number = PETS[this.petIndex].radius;
           for (const c of this.coins) { if (!c.mesh.visible) continue; const d = Math.hypot(p.x - c.mesh.position.x, p.z - c.mesh.position.z); if (d < best) { target = c; best = d; } }
-          if (target) this.petTargetId = target.id;
+          if (target) { this.petTargetId = target.id; this.reactPet('discover'); }
         }
         if (target) { this.tempTarget.copy(target.mesh.position); this.tempTarget.y -= .46; }
         else this.tempTarget.set(-1.05, .12, -.7).applyQuaternion(this.player.quaternion).add(p);
         this.tempWorld.set(this.tempTarget.x - this.petModel.position.x, 0, this.tempTarget.z - this.petModel.position.z); const distanceToTarget = this.tempWorld.length();
-        if (distanceToTarget > .04) this.petModel.rotation.y = Math.atan2(this.tempWorld.x, this.tempWorld.z);
+        if (distanceToTarget > .06) { const angle = Math.atan2(this.tempWorld.x, this.tempWorld.z), turn = Math.atan2(Math.sin(angle - this.petModel.rotation.y), Math.cos(angle - this.petModel.rotation.y)); this.petModel.rotation.y += turn * Math.min(1, dt * 12); }
         const rideSpeed = this.rideIndex >= 0 ? RIDES[this.rideIndex].speed : 1;
         const step = petChaseSpeed(rideSpeed) * dt;
         if (distanceToTarget > step) this.petModel.position.addScaledVector(this.tempWorld, step / distanceToTarget); else this.petModel.position.copy(this.tempTarget);
-        const petMoving = distanceToTarget > .06;
+        const petMoving = distanceToTarget > .15;
+        this.petMotion = petMoving; this.petEating = !!target && distanceToTarget < .9;
+        this.petIdle = petMoving || target ? 0 : this.petIdle + dt;
+        if (this.petReactUntil <= this.time) this.petReaction = null;
+        if (petMoving && this.petReaction === 'sleep') this.petReaction = null;
         const petBaseY = target ? target.mesh.position.y - .46 : p.y;
         const petFlying = PETS[this.petIndex].flying;
-        this.petModel.position.y = petBaseY + (petFlying ? .5 + Math.sin(this.time * (petMoving ? 5.4 : 3.2)) * .11 : petMoving ? Math.abs(Math.sin(this.time * 12)) * .11 : Math.sin(this.time * 2.4) * .025);
+        const hop = this.petIndex === 1 ? Math.max(0, Math.sin(this.time * 8)) * .24 : Math.abs(Math.sin(this.time * 12)) * .09;
+        const perched = petFlying && this.petIdle > 5;
+        const height = petBaseY + (petFlying ? (perched ? .08 : .65) + Math.sin(this.time * 3.2) * .035 : petMoving ? hop : .02 + Math.sin(this.time * 2.4) * .012);
+        this.petModel.position.y += (height - this.petModel.position.y) * Math.min(1, dt * 12);
+        if (!petMoving && !target) { const angle = Math.atan2(p.x - this.petModel.position.x, p.z - this.petModel.position.z); this.petModel.rotation.y += Math.atan2(Math.sin(angle - this.petModel.rotation.y), Math.cos(angle - this.petModel.rotation.y)) * Math.min(1, dt * 3); }
         const petBody = this.petModel.userData.petBody as T.Object3D | undefined;
-        if (petBody) { petBody.scale.y = target && distanceToTarget < .9 ? .78 + Math.abs(Math.sin(this.time * 13)) * .35 : petMoving ? .9 + Math.abs(Math.sin(this.time * 11)) * .15 : 1; }
+        if (petBody) {
+          const sleeping = !petMoving && (this.petReaction === 'sleep' || this.petIdle > 12), sitting = !petMoving && this.petReaction === 'sit';
+          petBody.scale.y = sleeping ? .68 : sitting ? .78 : this.petEating ? .86 + Math.sin(this.time * 13) * .1 : petMoving ? .96 + Math.sin(this.time * 11) * .04 : 1;
+          petBody.rotation.x = sleeping ? -.15 : sitting ? -.08 : this.petEating ? .18 : 0;
+          petBody.rotation.y = this.petReaction === 'spin' ? (this.time - this.petReactUntil + 2.6) * Math.PI * 2 : 0;
+          petBody.position.y = this.petReaction === 'happy' ? Math.abs(Math.sin(this.time * 7)) * .17 : 0;
+        }
         if (target && distanceToTarget < .55 && target.mesh.visible) { target.mesh.visible = false; this.petTargetId = null; this.burst(target.mesh.position, 0xff9fb4, 6); this.onCollect(target.id); }
       }
     }
+    if (this.storyActivityFocus && this.storyActivityRoot) this.storyActivityRoot.traverse(o => { if (o.userData.storyWheel && o.parent?.userData.storyActivity) { const water = this.storyActivityRoot!.userData.waterSolved; if (water) o.rotation.z -= dt; } });
+    for (const o of this.craftAnimated) { if (o.userData.storyWheel) o.rotation.z -= dt * .7; else { o.rotation.y += dt * .6; o.scale.setScalar(1.5 + Math.sin(this.time * 1.7 + Number(o.userData.storySparkle)) * .12); } }
     for (const c of this.coins) { c.mesh.rotation.y += dt; c.mesh.position.y = c.y + Math.sin(this.time * 2.8 + c.mesh.position.x) * .12; }
     // 화면 크기는 한 프레임에 한 번만 읽어요. 이름표마다 읽으면 그때마다 페이지 배치를 다시 계산해 태블릿에서 버벅여요.
     const viewW = this.container.clientWidth, viewH = this.container.clientHeight;
@@ -1182,6 +1320,7 @@ export class World {
       const transform = `translate(-50%, -100%) translate(${Math.round((v.x * .5 + .5) * viewW)}px, ${Math.round((-v.y * .5 + .5) * viewH)}px)`;
       if (label.style.transform !== transform) label.style.transform = transform;
     };
+    for (const marker of this.activityMarkers) placeLabel(marker.label, this.tempProjection.copy(marker.at).project(this.camera), false);
     for (const star of this.stars) {
       star.mesh.rotation.y += dt * 1.9; star.mesh.position.y = star.y + Math.sin(this.time * 3 + star.id) * .16;
       const v = this.tempProjection.set(star.mesh.position.x, 2, star.mesh.position.z).project(this.camera);
@@ -1201,10 +1340,10 @@ export class World {
       }); }
       const d = Math.hypot(p.x - e.x, p.z - e.z); if (e.mesh.visible && d < distance) { near = e; distance = d; }
       const v = this.tempProjection.set(e.x, e.id.startsWith('monster') ? 2 : 2.6, e.z).project(this.camera);
-      placeLabel(e.label, v, !this.active || !e.mesh.visible || Math.abs(v.x) > 1.15 || Math.abs(v.y) > 1.1);
+      placeLabel(e.label, v, !!this.storyActivityFocus || !this.active || !e.mesh.visible || Math.abs(v.x) > 1.15 || Math.abs(v.y) > 1.1);
       const isNear = d < 2.8; if (e.label.classList.contains('near') !== isNear) e.label.classList.toggle('near', isNear);
     }
-    if ((near?.id ?? null) !== this.selectedId) {
+    if (!this.storyActivityFocus && (near?.id ?? null) !== this.selectedId) {
       this.entities.find(e => e.id === this.selectedId)?.label.classList.remove('is-target');
       near?.label.classList.add('is-target');
       this.selectedId = near?.id ?? null; this.onNear(near?.name ?? null, near?.id ?? null);
@@ -1216,13 +1355,15 @@ export class World {
       if (o.userData.ridePropeller) o.rotation.z += dt * 11;
       if (o.userData.rideGlow) { o.rotation.z += dt * .9; o.userData.baseScale ??= o.scale.clone(); o.scale.copy(o.userData.baseScale as T.Vector3).multiplyScalar(1 + Math.sin(this.time * 3.5) * .09); } // 원래 크기를 기준으로 반짝여요(작은 별가루가 커다란 공이 되지 않게)
     }
-    if (this.petModel) this.petModel.traverse(o => {
+    if (this.petModel) for (const o of this.petAnimated) {
+      const rest = o.userData.restRotation as T.Euler, sleeping = !this.petMotion && (this.petReaction === 'sleep' || this.petIdle > 12);
       if (o.userData.petCharm) { o.rotation.y += dt * 3; const pulse = 1 + Math.sin(this.time * 6) * .12; o.userData.baseScale ??= o.scale.clone(); o.scale.copy(o.userData.baseScale as T.Vector3).multiplyScalar(pulse); }
-      if (o.userData.petWing) o.rotation.z = Number(o.userData.petWing) * (.38 + Math.sin(this.time * 11) * .2);
-      if (o.userData.petEar) o.rotation.z = Number(o.userData.petEar) * (-.14 + Math.sin(this.time * 2.8 + Number(o.userData.petEar)) * .035);
-      if (o.userData.petTail) o.rotation.y = Math.sin(this.time * 4.6 + Number(o.userData.petTail)) * .36;
-      if (o.userData.petPaw) o.rotation.z = Number(o.userData.petPaw) * (.08 + Math.sin(this.time * 8 + Number(o.userData.petPaw)) * .08);
-    });
+      if (o.userData.petWing) o.rotation.z = rest.z + Number(o.userData.petWing) * (sleeping || this.petIdle > 5 ? .06 : Math.sin(this.time * 9) * .2);
+      if (o.userData.petEar) o.rotation.z = rest.z + Math.sin(this.time * (this.petIndex === 1 ? 3.6 : 2) + Number(o.userData.petEar)) * (sleeping ? .015 : .06);
+      if (o.userData.petTail) o.rotation.y = rest.y + Math.sin(this.time * (this.petIndex === 16 || this.petReaction === 'happy' ? 13 : 4.6)) * (sleeping ? .03 : .4);
+      if (o.userData.petPaw) o.rotation.x = rest.x + (this.petMotion ? Math.sin(this.time * 12 + Number(o.userData.petPaw) * Math.PI / 2) * .3 : 0);
+      if (o.userData.petEye) { const scale = o.userData.restScale as T.Vector3; o.scale.y = scale.y * (sleeping || Math.sin(this.time * 1.7) > .995 ? .13 : 1); }
+    }
     const heroAura = this.player.userData.heroPetAura as T.Group | undefined;
     if (heroAura) {
       heroAura.rotation.y += dt * 1.35;
@@ -1233,8 +1374,8 @@ export class World {
     }
     if (this.player.userData.sparkles) this.player.userData.sparkles.rotation.y += dt;
     for (let i = this.particles.length - 1; i >= 0; i--) { const q = this.particles[i]; q.life -= dt; q.v.y -= dt * 5; q.mesh.position.addScaledVector(q.v, dt); q.mesh.scale.setScalar(Math.max(0, q.life)); if (q.life <= 0) { this.scene.remove(q.mesh); this.particles.splice(i, 1); } }
-    const target = this.active ? p : this.cameraTarget.set(0, 0, -1); this.follow.lerp(target, 1 - Math.exp(-dt * 3));
-    this.camera.position.copy(this.follow).add(this.inRoom ? ROOM_CAMERA_OFFSET : CAMERA_OFFSET); this.camera.lookAt(this.follow); this.updateGuide(); this.renderer.render(this.scene, this.camera);
+    const target = this.storyActivityFocus ?? (this.active ? p : this.cameraTarget.set(0, 0, -1)); this.follow.lerp(target, 1 - Math.exp(-dt * (this.storyActivityFocus ? 8 : 3)));
+    this.camera.position.copy(this.follow).add(this.storyActivityFocus ? this.cameraTarget.set(0, 13, 16) : this.inRoom ? ROOM_CAMERA_OFFSET : CAMERA_OFFSET); this.camera.lookAt(this.follow); this.updateGuide(); this.renderer.render(this.scene, this.camera);
   }
   private updateGuide() {
     const target = this.guideTarget;

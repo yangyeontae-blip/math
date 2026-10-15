@@ -1,6 +1,7 @@
 import type { ForestKind, Save } from './rules';
 import { canEnter, journeyFor } from './rules';
 import { EXPEDITION_STAR_SPOTS } from './expedition';
+import { activitySolved, type StoryActivity } from './story-activities';
 
 export const STORY_CHAPTERS = [
   { title: '잃어버린 숲 편지', stage: 1, gift: '숲 편지 액자', icon: '✉️', clues: ['바람에 날린 편지의 첫 장이에요. 숲 친구가 누군가를 기다리고 있대요.', '두 번째 장에는 작은 발자국이 그려져 있어요. 길을 따라가 볼까요?', '마지막 장에 수학으로 여는 봉인이 있어요. 친구의 마음을 찾아줘요!'], ending: '흩어진 편지를 다시 모아 숲 친구에게 전했어요.' },
@@ -9,7 +10,7 @@ export const STORY_CHAPTERS = [
 ] as const;
 export interface StoryProgress {
   completed: number[];
-  active: null | { chapter: number; forest: ForestKind; found: number[]; solved: boolean; seed: number };
+  active: null | { chapter: number; forest: ForestKind; found: number[]; solved: boolean; seed: number; activity: StoryActivity | null };
 }
 export function emptyStory(): StoryProgress { return { completed: [], active: null }; }
 export function storySpot(chapter: number, clue: number) {
@@ -22,7 +23,7 @@ export function storyHere(s: Save) {
 export function startStory(s: Save, chapter: number, seed = Math.floor(Math.random() * 0x7fffffff)) {
   const info = STORY_CHAPTERS[chapter];
   if (!info || s.story.active || s.expedition.active || s.room.inside || journeyFor(s).stage !== 0 || !canEnter(s, info.stage, s.forest)) return false;
-  s.story.active = { chapter, forest: s.forest, found: [], solved: false, seed: Math.max(0, Math.min(0x7fffffff, Math.floor(seed))) };
+  s.story.active = { chapter, forest: s.forest, found: [], solved: false, seed: Math.max(0, Math.min(0x7fffffff, Math.floor(seed))), activity: null };
   return true;
 }
 export function findStoryClue(s: Save, clue: number) {
@@ -33,7 +34,7 @@ export function findStoryClue(s: Save, clue: number) {
 }
 export function solveStory(s: Save) {
   const a = s.story.active;
-  if (!a || !storyHere(s) || a.found.length !== 3 || a.solved) return false;
+  if (!a || !storyHere(s) || a.found.length !== 3 || a.solved || !a.activity || !activitySolved(a.activity, a.chapter)) return false;
   a.solved = true;
   return true;
 }

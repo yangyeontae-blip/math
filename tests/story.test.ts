@@ -5,6 +5,12 @@ import { emptyStory, STORY_CHAPTERS, storyHere, storySpot, startStory, findStory
 import { gradeRegions, generateGradeQuestion } from '../src/grade-content';
 import { generateCurriculumQuestion, answerCurriculumQuestion } from '../src/curriculum';
 import { stageMonsters } from '../src/stages';
+import { newActivity, activitySpec } from '../src/story-activities';
+
+function prepareSolvedActivity(s: ReturnType<typeof newSave>) {
+  const active = s.story.active!; active.activity = newActivity(active.chapter, s.grade);
+  active.activity.values.fill(activitySpec(active.chapter, s.grade).target);
+}
 
 test('old version 14 save keeps progress and items while adding story state', () => {
   const before = newSave('아이', 0);
@@ -12,7 +18,7 @@ test('old version 14 save keeps progress and items while adding story state', ()
   const old = structuredClone(before) as unknown as Record<string, unknown>;
   old.version = 14; delete old.story;
   const after = validateSave(old);
-  assert.equal(after.version, 15); assert.equal(after.berries, 521);
+  assert.equal(after.version, 16); assert.equal(after.berries, 521);
   assert.equal(after.weapons[2], 1); assert.equal(after.journey.maps[1].cleared, true);
   assert.deepEqual(after.story, emptyStory());
 });
@@ -26,6 +32,7 @@ test('chapters unlock at stages 1, 4, 7 and clues require ordered interaction', 
   assert.equal(findStoryClue(s, 1), false);
   for (let clue = 0; clue < 3; clue++) assert.equal(findStoryClue(s, clue), true);
   assert.equal(findStoryClue(s, 2), false);
+  assert.equal(solveStory(s), false); prepareSolvedActivity(s);
   assert.equal(solveStory(s), true); assert.equal(solveStory(s), false);
   s.journey.stage = 0;
   const reward = finishStory(s);
@@ -35,7 +42,7 @@ test('chapters unlock at stages 1, 4, 7 and clues require ordered interaction', 
   assert.equal(startStory(s, 0, 42), true);
   s.journey.stage = 1;
   for (let clue = 0; clue < 3; clue++) findStoryClue(s, clue);
-  solveStory(s); s.journey.stage = 0;
+  prepareSolvedActivity(s); solveStory(s); s.journey.stage = 0;
   assert.equal(finishStory(s)?.first, false);
   assert.deepEqual(s.story.completed, [0]);
   for (let stage = 1; stage <= 6; stage++) s.journey.maps[stage].cleared = true;
