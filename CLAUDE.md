@@ -7,7 +7,7 @@
 - 교사용 코드는 `teacher`입니다(`src/rules.ts`의 `TEACHER_CODE_HASH`는 이 코드의 SHA-256).
 - `levelup`, `levelup1`, `levelup10`, `showmethemoney`, `greedisgood`은 교사 모드 없이도 누구나 쓸 수 있습니다. 교사 모드 뒤로 숨기지 마세요.
 - 오답·대련 중단에 손실이 없고, 몬스터 보상과 레벨업은 바로 저장됩니다.
-- 저장 키 `berry-forest-save-v1`과 저장 파일 구조(version 17)는 마이그레이션 없이 바꾸지 마세요.
+- 저장 키 `berry-forest-save-v1`과 저장 파일 구조(version 18)는 마이그레이션 없이 바꾸지 마세요.
 - 이 동작들은 `tests/protected-behavior.test.ts`가 고정합니다. 테스트를 고쳐서 통과시키지 마세요.
 
 ## 작업 방식

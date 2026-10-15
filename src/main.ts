@@ -25,12 +25,12 @@ import { speak, speechSupported, stopSpeech, autoReadEnabled, setAutoRead } from
 import { STORY_CHAPTERS, startStory, findStoryClue, solveStory, finishStory, storyHere } from './story';
 import { activitySpec, newActivity, adjustActivity, activitySolved } from './story-activities';
 import { PET_TRICKS, petFriend, strokePet, walkWithPet, type PetReaction } from './pet-care';
-
-import { VILLAGE_PROJECTS, RECOVERY_STEPS, recommendAdventure, beginProject, projectSpec, adjustProject, finishProject, recoveryQuestions, markRecovered, calculationRecoveryQuestion } from './adventure';
+import { VILLAGE_PROJECTS, RECOVERY_STEPS, workSpec, designOptions, changeDesign, redesignProject, moveFruit, recommendAdventure, beginProject, projectSpec, adjustProject, finishProject, recoveryQuestions, markRecovered, calculationRecoveryQuestion } from './adventure';
 import type { Question } from './rules';
 import './adventure.css';
+import { toolSpec, toolHtml, adjustTool } from './learning-tools';
 
-const CLIENT_BUILD = '2026-10-15.1';
+const CLIENT_BUILD = '2026-10-15.2';
 document.documentElement.dataset.clientBuild = CLIENT_BUILD;
 
 const $ = <T extends HTMLElement = HTMLElement>(selector: string) => document.querySelector<T>(selector)!;
@@ -52,6 +52,12 @@ const todayButton = document.createElement('button'); todayButton.id = 'today-ad
 $('.quest-card').prepend(todayButton); todayButton.onclick = openTodayAdventure;
 const villageButton = document.createElement('button'); villageButton.id = 'village-projects'; villageButton.className = 'text-button codex-open'; villageButton.textContent = '🌷 우리 마을 만들기';
 $('#codex-open').before(villageButton); villageButton.onclick = openVillageProjects;
+const adventureMenu = document.createElement('button'); adventureMenu.id = 'adventure-menu'; adventureMenu.className = 'secondary wide'; adventureMenu.textContent = '🧭 모험 메뉴'; $('.quest-card').append(adventureMenu);
+for (const id of ['daily-open', 'codex-open', 'village-projects']) document.getElementById(id)!.hidden = true;
+adventureMenu.onclick = () => {
+  openModal(title('나의 베리숲', '어떤 모험을 해 볼까요?') + '<div class="adventure-menu-grid"><button data-menu="today-adventure">🧭 오늘의 모험<small>다음 한 걸음과 길 안내</small></button><button data-menu="village-projects">🌷 마을 만들기<small>내가 설계하는 우리 마을</small></button><button data-menu="daily-open">📅 오늘의 미션<small>짧은 목표를 하나씩</small></button><button data-menu="codex-open">📖 모험 발견 도감<small>학습 기록과 모은 친구들</small></button></div><button class="text-button wide" data-close>숲으로 돌아가기</button>', 'adventure-modal');
+  document.querySelectorAll<HTMLButtonElement>('[data-menu]').forEach(b => b.onclick = () => document.getElementById(b.dataset.menu!)!.click());
+};
 let storyActivityOpen = false;
 const petCareButton = document.createElement('button'); petCareButton.id = 'pet-care-open'; petCareButton.className = 'text-button'; petCareButton.textContent = '🐾 내 펫과 놀기'; petCareButton.hidden = true; $('#codex-open').before(petCareButton); petCareButton.onclick = () => { if (state && state.pet >= 0) openPetCare(state.pet); };
 const storyPanel = document.createElement('section'); storyPanel.id = 'story-activity'; storyPanel.hidden = true;
@@ -82,7 +88,7 @@ function setQuestCollapsed(collapsed: boolean) {
   $('#quest-toggle').setAttribute('aria-expanded', String(!collapsed));
   $('#quest-body').hidden = collapsed;
 }
-setQuestCollapsed(matchMedia('(max-width: 600px), (max-height: 500px)').matches);
+setQuestCollapsed(true);
 $('#quest-toggle').onclick = () => setQuestCollapsed(!questCard.classList.contains('is-collapsed'));
 let state: Save | null = null, saved: Save | null = null, preview: AvatarPreview | null = null, startPreview: AvatarPreview | null = null;
 let startPreviewRequest = 0, startPortraits: string[] | null = null;
@@ -356,13 +362,14 @@ function openVillageProjects() {
   const s = state, blocked = !!s.expedition.active || !!s.story.active;
   openModal(title('🌷 수학으로 달라지는 숲', '우리 마을 만들기') + `<p>직접 세고, 길이를 맞추고, 똑같이 나누면 마을에 새 장소가 생겨요.</p>${blocked ? '<p class="note">진행 중인 편지나 별빛 원정을 마친 뒤 마을 만들기를 시작해요.</p>' : ''}<div class="village-project-list">${VILLAGE_PROJECTS.map((project, id) => {
     const done = s.adventure.completed.includes(id), active = s.adventure.active?.project === id, available = id === s.adventure.completed.length;
-    return `<section class="village-project-card"><span>${project.icon}</span><div><strong>${project.name}</strong><small>${done ? project.result : active ? '만들던 모습이 저장되어 있어요' : available ? '지금 함께 만들 수 있어요' : '앞의 장소를 먼저 완성해요'}</small></div><button data-project="${id}" ${!done && (blocked || !available) ? 'disabled' : ''}>${done ? '구경' : active ? '이어 하기' : '만들기'}</button></section>`;
+    return `<section class="village-project-card"><span>${project.icon}</span><div><strong>${project.name}</strong><small>${done ? project.result : active ? '만들던 모습이 저장되어 있어요' : available ? '지금 함께 만들 수 있어요' : '앞의 장소를 먼저 완성해요'}</small></div><button data-project="${id}" ${!done && (blocked || !available) ? 'disabled' : ''}>${done ? '다시 꾸미기' : active ? '이어 하기' : '만들기'}</button></section>`;
   }).join('')}</div><button class="text-button wide" data-close>마을로 돌아가기</button>`, 'adventure-modal');
   document.querySelectorAll<HTMLButtonElement>('[data-project]').forEach(button => button.onclick = () => {
     const id = Number(button.dataset.project); if (!state) return;
     if (state.adventure.completed.includes(id)) {
       if (state.expedition.active || state.story.active) { toast('진행 중인 모험을 마친 뒤 마을에서 구경해요.'); return; }
-      switchStage(0); world.guideTo(`villageProject${id}` as GuideKind); toast(VILLAGE_PROJECTS[id].result); return;
+      if (state.adventure.active) { toast('만들던 장소를 먼저 마쳐 주세요.'); return; }
+      if (!redesignProject(state, id)) return; switchStage(0); persist(); renderVillageProject(); return;
     }
     if (blocked || (!state.adventure.active && !beginProject(state, id))) return;
     if (journeyFor(state).stage !== 0 || world.inRoom) switchStage(0);
@@ -371,24 +378,53 @@ function openVillageProjects() {
 }
 function renderVillageProject(message = '', hint = false) {
   if (!state?.adventure.active) return;
-  const work = state.adventure.active, project = VILLAGE_PROJECTS[work.project], spec = projectSpec(work.project, work.grade), sum = work.values.reduce((a, b) => a + b, 0);
+  const work = state.adventure.active, project = VILLAGE_PROJECTS[work.project], spec = workSpec(work), sum = work.values.reduce((a, b) => a + b, 0);
   const focused = document.activeElement?.id;
-  const visual = work.project === 0 ? `<div class="project-grid" style="--columns:${spec.columns}" role="img" aria-label="${spec.rows}줄에 ${spec.columns}칸인 꽃밭">${Array.from({ length: spec.target }, (_, i) => `<span class="${i < sum ? 'filled' : ''}">${i < sum ? '🌷' : '·'}</span>`).join('')}</div>`
-    : work.project === 1 ? `<div class="project-path" role="img" aria-label="${sum}개로 만든 길 ${sum * spec.step}미터">${Array.from({ length: Math.min(sum, spec.max) }, () => '<span>🪨</span>').join('') || '🌱'}<strong>만든 길 ${sum * spec.step} m</strong></div>`
-    : `<div class="project-baskets">${work.values.map((n, i) => `<div><b>${i + 1}번 바구니</b><p>${'🍎'.repeat(n) || '🧺'}</p></div>`).join('')}</div>`;
-  openModal(title(`${project.icon} 우리 마을 만들기`, project.name) + `<p class="project-task">${spec.task}</p>${visual}<div class="project-controls">${work.values.map((value, i) => `<section><label>${spec.groups > 1 ? `${i + 1}번 바구니` : '필요한 수'}<output>${value}${spec.unit}</output></label><div><button id="project-minus-${i}" data-project-group="${i}" data-project-direction="-1" aria-label="${i + 1}번 수 1 줄이기" ${value === 0 ? 'disabled' : ''}>−</button><button id="project-plus-${i}" data-project-group="${i}" data-project-direction="1" aria-label="${i + 1}번 수 1 늘리기" ${value >= spec.max || spec.groups > 1 && sum >= spec.max ? 'disabled' : ''}>＋</button></div></section>`).join('')}</div>${spec.groups > 1 ? `<p>남은 과일 ${spec.max - sum}개</p>` : ''}<p class="project-feedback" role="status">${message || '더하고 덜어내며 생각해요. 중간 모습도 바로 저장돼요.'}</p>${hint ? `<p class="recovery-help">💡 ${spec.hint}</p>` : ''}<button id="project-check" class="primary wide">이렇게 완성하기</button><button id="project-hint" class="text-button wide">💡 다른 방법으로 생각하기</button><button id="project-back" class="text-button wide">저장하고 다음에 이어 하기</button>`, 'adventure-modal');
-  document.querySelectorAll<HTMLButtonElement>('[data-project-group]').forEach(button => button.onclick = () => { if (!state || !adjustProject(state, Number(button.dataset.projectGroup), Number(button.dataset.projectDirection))) return; persist(); renderVillageProject('', hint); });
+  const focusedDesign = (document.activeElement as HTMLElement)?.dataset.design, focusedValue = (document.activeElement as HTMLElement)?.dataset.value;
+  const focusedFlower = (document.activeElement as HTMLElement)?.dataset.flowerCell, focusedBasket = (document.activeElement as HTMLElement)?.dataset.fruitBasket;
+  const visual = work.project === 0 ? `<div class="project-grid" style="--columns:${spec.columns}" aria-label="${spec.rows}줄에 ${spec.columns}칸인 꽃밭">${Array.from({ length: spec.target }, (_, i) => `<button data-flower-cell="${i}" aria-label="${i + 1}번째 꽃 자리까지 심기" class="${i < sum ? 'filled' : ''}">${i < sum ? ['🌷', '🌼', '🪻'][work.design.color] : '·'}</button>`).join('')}</div>`
+    : work.project === 1 ? `<div class="project-path ${work.design.curved ? 'curved' : 'straight'}" role="img" aria-label="${sum}개로 만든 길 ${sum * spec.step}미터">${Array.from({ length: Math.min(sum, spec.max) }, () => '<span>🪨</span>').join('') || '🌱'}<strong>만든 길 ${sum * spec.step} m</strong></div>`
+    : `<div class="project-baskets">${work.values.map((n, i) => `<div><button data-fruit-basket="${i}" draggable="${n > 0}" aria-label="${i + 1}번 바구니 선택 또는 과일 놓기"><b>${i + 1}번 바구니</b><p>${'🍎'.repeat(n) || '🧺'}</p></button></div>`).join('')}</div>`;
+  const designControls = work.project === 0 ? `<fieldset class="design-options"><legend>꽃밭 모양</legend>${designOptions(0, work.grade).map(rows => `<button data-design="rows" data-value="${rows}" aria-pressed="${work.design.rows === rows}">${rows}줄 · ${spec.target / rows}칸</button>`).join('')}<div>${['분홍 꽃', '노란 꽃', '보라 꽃'].map((color, id) => `<button data-design="color" data-value="${id}" aria-pressed="${work.design.color === id}">${color}</button>`).join('')}</div></fieldset>`
+    : work.project === 1 ? `<fieldset class="design-options"><legend>길 모양 · 길이와 돌 수는 같아요</legend>${[false, true].map(curved => `<button data-design="curved" data-value="${curved}" aria-pressed="${work.design.curved === curved}">${curved ? '굽은 길' : '곧은 길'}</button>`).join('')}</fieldset>`
+    : `<fieldset class="design-options"><legend>바구니 수</legend>${designOptions(2, work.grade).map(count => `<button data-design="baskets" data-value="${count}" aria-pressed="${work.design.baskets === count}">${count}개</button>`).join('')}</fieldset><button id="fruit-source" draggable="true">🍎 남은 과일 ${spec.max - sum}개 · 선택하기</button><p class="note">과일이나 바구니를 선택하고 다른 바구니를 누르면 하나를 옮겨요. 끌어 놓거나 아래 ＋·− 버튼을 써도 돼요.</p>`;
+  openModal(title(`${project.icon} 우리 마을 만들기`, project.name) + `<p class="project-task">${spec.task}</p>${designControls}${work.project === 0 ? '<p class="note">꽃 자리를 눌러 그 자리까지 심거나, 꽃을 끌어 놓아 보세요. 아래 ＋·−로 한 송이씩 세어도 좋아요.</p><button id="flower-source" draggable="true">🌱 꽃 선택하기</button>' : ''}${visual}<div class="project-controls">${work.values.map((value, i) => `<section><label>${spec.groups > 1 ? `${i + 1}번 바구니` : '필요한 수'}<output>${value}${spec.unit}</output></label><div><button id="project-minus-${i}" data-project-group="${i}" data-project-direction="-1" aria-label="${i + 1}번 수 1 줄이기" ${value === 0 ? 'disabled' : ''}>−</button><button id="project-plus-${i}" data-project-group="${i}" data-project-direction="1" aria-label="${i + 1}번 수 1 늘리기" ${value >= spec.max || spec.groups > 1 && sum >= spec.max ? 'disabled' : ''}>＋</button></div></section>`).join('')}</div>${spec.groups > 1 ? `<p>남은 과일 ${spec.max - sum}개</p>` : ''}<p class="project-feedback" role="status">${message || '더하고 덜어내며 생각해요. 중간 모습도 바로 저장돼요.'}</p>${hint ? `<p class="recovery-help">💡 ${spec.hint}</p>` : ''}<button id="project-check" class="primary wide">이렇게 완성하기</button><button id="project-hint" class="text-button wide">💡 다른 방법으로 생각하기</button><button id="project-back" class="text-button wide">저장하고 다음에 이어 하기</button>`, 'adventure-modal');
+  const flowerSource = document.querySelector<HTMLButtonElement>('#flower-source'); if (flowerSource) { flowerSource.onclick = () => { $('.project-feedback').textContent = '꽃을 놓을 자리를 골라요.'; }; flowerSource.ondragstart = e => { e.dataTransfer?.setData('text/plain', 'flower'); }; }
+  const updateProject = () => { if (!state) return; persist(); world.updateStoryVillage(state); renderVillageProject('', hint); };
+  document.querySelectorAll<HTMLButtonElement>('[data-design]').forEach(b => b.onclick = () => { if (state && changeDesign(state, b.dataset.design as 'rows' | 'color' | 'curved' | 'baskets', b.dataset.design === 'curved' ? b.dataset.value === 'true' : Number(b.dataset.value))) updateProject(); });
+  document.querySelectorAll<HTMLButtonElement>('[data-flower-cell]').forEach(b => {
+    const plant = () => { if (!state?.adventure.active) return; const target = Number(b.dataset.flowerCell) + 1; while (state.adventure.active.values[0] !== target) if (!adjustProject(state, 0, state.adventure.active.values[0] < target ? 1 : -1)) break; audio.play('berry'); updateProject(); };
+    b.onclick = plant; b.ondragover = e => e.preventDefault(); b.ondrop = e => { e.preventDefault(); plant(); };
+  });
+  let selectedFruit = -2;
+  const chooseFruit = (from: number) => {
+    if (from >= 0 && !work.values[from]) { selectedFruit = -2; $('.project-feedback').textContent = '남은 과일이나 과일이 있는 바구니를 먼저 골라요.'; return; }
+    selectedFruit = from; $('.project-feedback').textContent = from === -2 ? '남은 과일이나 과일이 있는 바구니를 골라요.' : from === -1 ? '남은 과일 하나를 놓을 바구니를 골라요.' : `${from + 1}번에서 옮길 바구니를 골라요.`;
+  };
+  const source = document.querySelector<HTMLButtonElement>('#fruit-source');
+  if (source) { source.onclick = () => chooseFruit(-1); source.ondragstart = e => { selectedFruit = -1; e.dataTransfer?.setData('text/plain', 'fruit'); }; }
+  document.querySelectorAll<HTMLButtonElement>('[data-fruit-basket]').forEach(b => {
+    const to = Number(b.dataset.fruitBasket);
+    const place = () => { if (!state) return; const moved = selectedFruit === -1 ? adjustProject(state, to, 1) : moveFruit(state, selectedFruit, to); if (moved) { audio.play('berry'); updateProject(); } else chooseFruit(to); };
+    b.onclick = () => { if (selectedFruit === -2) chooseFruit(to); else if (selectedFruit === to) chooseFruit(-2); else place(); };
+    b.ondragstart = e => { chooseFruit(to); e.dataTransfer?.setData('text/plain', 'fruit'); };
+    b.ondragover = e => e.preventDefault(); b.ondrop = e => { e.preventDefault(); place(); };
+  });
+  document.querySelectorAll<HTMLButtonElement>('[data-project-group]').forEach(button => button.onclick = () => { if (!state || !adjustProject(state, Number(button.dataset.projectGroup), Number(button.dataset.projectDirection))) return; audio.play(work.project === 1 ? 'chop' : 'berry'); updateProject(); });
   $('#project-hint').onclick = () => renderVillageProject('', true);
   $('#project-back').onclick = openVillageProjects;
   $('#project-check').onclick = () => {
     if (!state) return;
     if (!finishProject(state)) { renderVillageProject(work.project === 2 ? '모든 바구니의 양과 남은 과일을 비교해요. 하나씩 옮겨도 좋아요.' : work.project === 1 ? '만든 길의 길이가 목표와 같은지 확인해요.' : '꽃밭의 모든 칸에 한 송이씩 놓을 수 있는 수인지 다시 세어 봐요.', hint); return; }
-    persist(); refresh(); world.updateStoryVillage(state); world.celebrate(); audio.play('level');
+    persist(); refresh(); world.updateStoryVillage(state); if (!matchMedia('(prefers-reduced-motion: reduce)').matches) world.celebrate(); audio.play('level');
     openModal(title('🌟 우리가 바꾼 마을', project.name + ' 완성!') + `<div class="adventure-intro"><span>${project.icon}</span><p>${spec.explanation}</p><p>${project.result}</p></div><button id="project-look" class="primary wide">달라진 장소 보러 가기 →</button><button id="project-more" class="secondary wide">다음 마을 만들기 보기</button>`, 'adventure-modal');
     $('#project-look').onclick = () => { closeModal(); world.guideTo(`villageProject${work.project}` as GuideKind); };
     $('#project-more').onclick = openVillageProjects;
   };
-  if (focused?.startsWith('project-')) document.getElementById(focused)?.focus();
+  if (focused) document.getElementById(focused)?.focus();
+  else if (focusedDesign) document.querySelector<HTMLElement>(`[data-design="${focusedDesign}"][data-value="${focusedValue}"]`)?.focus();
+  else if (focusedFlower !== undefined) document.querySelector<HTMLElement>(`[data-flower-cell="${focusedFlower}"]`)?.focus();
+  else if (focusedBasket !== undefined) document.querySelector<HTMLElement>(`[data-fruit-basket="${focusedBasket}"]`)?.focus();
 }
 function openGuide() {
   openModal(title('마을 대장 · 연태쌤', '베리숲에 온 걸 환영해요!') + `<div class="guide-content"><p>나는 연태쌤이야. 모험의 문에서 <strong>${state!.grade}학년 1·2학기 수학 지역</strong>을 골라 보렴. 모든 지역에는 차근차근 열리는 10개의 모험 단계가 있단다.</p><ol><li><b>🍓 스테이지 베리</b><span>한 번 모은 베리는 같은 사냥터에서 다시 나타나지 않아. 다른 숲과 새 단계에는 새로운 베리가 있어!</span></li><li><b>🌳 베리나무</b><span>나무 가까이에서 F 또는 나무 베기를 눌러 보렴. 다 베면 2~4베리가 나오고, 좋은 무기일수록 빨라!</span></li><li><b>🗺 ${state!.grade}학년 수학 지도</b><span>${GRADE_OVERVIEW[state!.grade]} 단원을 그림과 이야기로 배워요.</span></li><li><b>✨ 마을 상점과 인벤토리</b><span>강지후의 무기, 오지후의 옷, 나현이의 라이딩, 윤준의 펫을 모아 봐. 가영이에게는 헤어와 얼굴 꾸미기를 바꿀 수 있어.</span></li></ol><p class="note">키보드는 WASD·방향키 이동, Space 점프, E 대화, F 나무 베기예요.<br>휴대폰과 태블릿은 화면 아래 조이스틱과 버튼을 사용해요.</p><button class="primary wide" data-close>좋아, 모험을 떠나자!</button></div>`);
@@ -696,6 +732,8 @@ async function startCurriculumReview(unit: CurriculumUnitId, shadow?: Curriculum
   if (!mistake || !NEW_CURRICULUM_UNITS.includes(unit as NewCurriculumUnitId)) { openReview(); return; }
   const questions = recoveryQuestions(mistake, index => curriculumQuestionFor(module, unit as NewCurriculumUnitId, index));
   if (!questions.length) { toast('이 개념의 복습 문제를 준비하지 못했어요. 기록은 그대로 남겨 두었어요.'); return; }
+  const savedTool = state.adventure.tool;
+  if (savedTool?.key === `concept:${unit}:${mistake.skill}`) questions[0] = structuredClone(savedTool.question);
   const question = questions[0];
   const run = { unit, mission, question, index: 0, total: 3, wrong: 0, hints: 0, hintLevel: 0, seenQuestions: new Set([curriculumQuestionKey(question)]), review: true, shadow, recoveryQuestions: questions, recoveryTarget: mistake } satisfies NonNullable<typeof curriculumRun>;
   curriculumRun = run; renderCurriculumQuestion();
@@ -709,6 +747,7 @@ function startCalculationRecovery(original: Question) {
     if (phase) previous = new Encounter(0, false, state!.level, previous, stage, state!.settings.maxDividend, operation, state!.settings.multiplicationRange, undefined, state!.grade).question;
     return calculationRecoveryQuestion(previous, phase);
   });
+  if (state.adventure.tool?.key === `calculation:${JSON.stringify(original)}`) questions[0] = structuredClone(state.adventure.tool.question);
   curriculumRun = { unit: operation, mission: 0, question: questions[0], index: 0, total: 3, wrong: 0, hints: 0, hintLevel: 0, seenQuestions: new Set(), review: true, recoveryQuestions: questions, originalCalculation: original };
   renderCurriculumQuestion();
 }
@@ -720,14 +759,15 @@ function renderCurriculumQuestion() {
     ? `<div class="curriculum-answers">${q.choices!.map(choice => `<button data-curriculum-answer="${escape(choice.value)}">${mathTextHtml(choice.label)}</button>`).join('')}</div>`
     : `<div class="curriculum-number"><input id="curriculum-answer" inputmode="numeric" maxlength="4" readonly aria-label="답"><div class="number-pad">${[1, 2, 3, 4, 5, 6, 7, 8, 9, '지우기', 0, '확인'].map(n => `<button data-curriculum-number="${n}" class="${n === '확인' ? 'primary' : ''}">${n}</button>`).join('')}</div></div>`;
   const activity = curriculumActivityHtml(q);
-  openModal(title(`${region.icon} ${missionName} · ${run.index + 1}/${run.total}`, titleLeaksAnswer(q) ? NEUTRAL_TITLE : q.skill) + `<div class="curriculum-question-card"><div class="curriculum-step"><span>${run.index + 1}</span>${Array.from({ length: run.total }, (_, id) => `<i class="${id < run.index ? 'done' : id === run.index ? 'now' : ''}"></i>`).join('')}</div>${activity || curriculumQuestionVisual(q)}${q.detail ? `<p class="question-detail">${mathTextHtml(q.detail)}</p>` : ''}<h3>${mathTextHtml(q.prompt)}</h3>${answers}<p id="curriculum-message" class="answer-message" role="status">${activity ? '활동판을 직접 움직여 답을 만들어 보세요. 틀려도 잃는 것은 없어요.' : '천천히 보고 답을 골라요. 틀려도 잃는 것은 없어요.'}</p><div id="curriculum-hint" class="curriculum-hint" hidden></div>${speechSupported() ? '<button id="curriculum-read" class="text-button wide" aria-label="문제 읽어주기">🔊 문제 읽어주기</button>' : ''}<button id="curriculum-hint-button" class="text-button wide">💡 단계별 힌트 보기</button><button class="text-button wide" data-close>잠깐 쉬기</button><div id="curriculum-result" hidden></div></div>`, 'curriculum-play-modal');
+  openModal(title(`${region.icon} ${missionName} · ${run.index + 1}/${run.total}`, titleLeaksAnswer(q) ? NEUTRAL_TITLE : q.skill) + `<div class="curriculum-question-card"><div class="curriculum-step"><span>${run.index + 1}</span>${Array.from({ length: run.total }, (_, id) => `<i class="${id < run.index ? 'done' : id === run.index ? 'now' : ''}"></i>`).join('')}</div><h3>${mathTextHtml(q.prompt)}</h3>${q.detail ? `<p class="question-detail">${mathTextHtml(q.detail)}</p>` : ''}${run.review && run.index === 0 && toolSpec(q) ? "" : activity || curriculumQuestionVisual(q)}<div id="learning-tool-slot"></div>${answers}<p id="curriculum-message" class="answer-message" role="status">${activity ? '활동판을 직접 움직여 답을 만들어 보세요. 틀려도 잃는 것은 없어요.' : '천천히 보고 답을 골라요. 틀려도 잃는 것은 없어요.'}</p><div id="curriculum-hint" class="curriculum-hint" hidden></div>${speechSupported() ? '<button id="curriculum-read" class="text-button wide" aria-label="문제 읽어주기">🔊 문제 읽어주기</button>' : ''}<button id="curriculum-hint-button" class="text-button wide">💡 단계별 힌트 보기</button><button class="text-button wide" data-close>잠깐 쉬기</button><div id="curriculum-result" hidden></div></div>`, 'curriculum-play-modal');
   document.querySelectorAll<HTMLButtonElement>('[data-curriculum-answer]').forEach(button => button.onclick = () => submitCurriculumAnswer(button.dataset.curriculumAnswer!));
   document.querySelectorAll<HTMLButtonElement>('[data-curriculum-number]').forEach(button => button.onclick = () => enterCurriculumNumber(button.dataset.curriculumNumber!));
   setupCurriculumActivity();
+  if (run.review && run.index === 0) setupLearningTool();
   if (run.review) {
     $('.curriculum-question-card').insertAdjacentHTML('afterbegin', `<div class="recovery-path" aria-label="재도전 ${run.index + 1}단계">${RECOVERY_STEPS.map((step, index) => `<span class="${index === run.index ? 'current' : index < run.index ? 'done' : ''}">${index < run.index ? '✓' : index + 1} ${step}</span>`).join('')}</div>${run.index === 0 ? `<p class="recovery-help">🧩 ${mathTextHtml(q.hints[0])}</p>` : ''}`);
     if (run.index === 0) { run.hints++; state.curriculum.units[q.unit].hints++; persist(); }
-    if (run.index === 0 && Number.isInteger(Number(q.answer)) && Number(q.answer) >= 0 && Number(q.answer) <= 30 && ['array', 'groups', 'pictograph', 'scene'].includes(q.visual.kind)) {
+    if (run.index === 0 && !toolSpec(q) && Number.isInteger(Number(q.answer)) && Number(q.answer) >= 0 && Number(q.answer) <= 30 && ['array', 'groups', 'pictograph', 'scene'].includes(q.visual.kind)) {
       $('#curriculum-message').insertAdjacentHTML('beforebegin', '<section class="recovery-counting"><p>그림을 보며 셈돌을 하나씩 놓아 세어 보세요.</p><div id="recovery-stones" role="status" aria-live="polite">셈돌 0개</div><div><button id="recovery-remove" class="secondary" disabled>한 개 치우기</button><button id="recovery-add" class="secondary">셈돌 하나 놓기</button></div></section>');
       let stones = 0;
       const drawStones = () => { $('#recovery-stones').textContent = `${'🟡'.repeat(stones)} 셈돌 ${stones}개`; ($('#recovery-remove') as HTMLButtonElement).disabled = stones === 0; ($('#recovery-add') as HTMLButtonElement).disabled = stones === 30; };
@@ -740,6 +780,35 @@ function renderCurriculumQuestion() {
   const readButton = document.querySelector<HTMLButtonElement>('#curriculum-read');
   if (readButton) readButton.onclick = () => { readButton.textContent = '🔊 읽는 중…'; if (!speak(readText(), () => { readButton.textContent = '🔊 문제 읽어주기'; })) readButton.textContent = '🔊 문제 읽어주기'; };
   if (readButton && autoReadEnabled()) readButton.click();
+}
+
+function setupLearningTool() {
+  if (!state || !curriculumRun || curriculumRun.answered) return;
+  const run = curriculumRun, q = run.question, spec = toolSpec(q); if (!spec) return;
+  const key = run.originalCalculation ? `calculation:${JSON.stringify(run.originalCalculation)}` : `concept:${q.unit}:${run.recoveryTarget?.skill ?? q.skill}`;
+  if (state.adventure.tool?.key !== key) state.adventure.tool = { key, question: structuredClone(q), values: spec.limits.map(() => 0) };
+  const tool = state.adventure.tool; persist();
+  const slot = $('#learning-tool-slot'); slot.innerHTML = toolHtml(tool);
+  const update = (group: number, delta: number) => {
+    if (curriculumRun !== run || run.answered || !state || !adjustTool(tool, group, delta)) return;
+    const focused = document.activeElement as HTMLElement | null, index = focused ? [...slot.querySelectorAll('button,input')].indexOf(focused) : -1;
+    persist(); setupLearningTool(); (slot.querySelectorAll<HTMLElement>('button,input')[index])?.focus();
+  };
+  slot.querySelectorAll<HTMLButtonElement>('[data-tool-group]').forEach(b => b.onclick = () => update(Number(b.dataset.toolGroup), Number(b.dataset.toolDelta)));
+  slot.querySelectorAll<HTMLButtonElement>('[data-tool-cell]').forEach(b => b.onclick = () => {
+    const group = Number(b.dataset.toolCell), position = Number(b.dataset.toolPosition), target = position < tool.values[group] ? position : position + 1;
+    while (tool.values[group] !== target) if (!adjustTool(tool, group, target > tool.values[group] ? 1 : -1)) break;
+    persist(); setupLearningTool();
+    slot.querySelector<HTMLElement>(`[data-tool-cell="${group}"][data-tool-position="${position}"]`)?.focus();
+  });
+  slot.querySelectorAll<HTMLInputElement>('[data-tool-range]').forEach(input => input.oninput = () => {
+    const group = Number(input.dataset.toolRange), target = Number(input.value);
+    while (tool.values[group] !== target) if (!adjustTool(tool, group, target > tool.values[group] ? 1 : -1)) break;
+    persist(); setupLearningTool(); slot.querySelector<HTMLInputElement>(`[data-tool-range="${group}"]`)?.focus();
+  });
+  const source = slot.querySelector<HTMLButtonElement>('#tool-source'); let selected = false;
+  if (source) { source.onclick = () => { selected = true; $('#tool-status').textContent = '물건 하나를 놓을 묶음을 골라요.'; }; source.ondragstart = e => { selected = true; e.dataTransfer?.setData('text/plain', 'counter'); }; }
+  slot.querySelectorAll<HTMLButtonElement>('[data-tool-drop]').forEach(b => { b.onclick = () => { if (selected) update(Number(b.dataset.toolDrop), 1); else if (source) source.click(); }; b.ondragover = e => e.preventDefault(); b.ondrop = e => { e.preventDefault(); if (selected) update(Number(b.dataset.toolDrop), 1); }; });
 }
 
 function setupCurriculumActivity() {
@@ -799,6 +868,8 @@ async function submitCurriculumAnswer(value: string) {
   }
   sessionCorrect++;
   run.answered = true;
+  document.querySelectorAll<HTMLButtonElement | HTMLInputElement>('.learning-tool button,.learning-tool input').forEach(b => b.disabled = true);
+  if (run.review && run.index === 0) state.adventure.tool = null;
   if (!run.missedCurrent) { state.learning.correct++; recordCurriculumAttempt(state, q.unit, true, run.mission, q.skill); if (!run.review && !run.story && run.hintLevel === 0) addBossDamage(localStorage); }
   if (run.story) { solveStory(state); world.refreshStoryObjects(state); refresh(); }
   document.querySelectorAll<HTMLButtonElement>('[data-curriculum-answer],[data-curriculum-number],[data-pizza-slice],[data-pizza-submit],[data-circle-adjust],[data-circle-submit]').forEach(button => { button.disabled = true; if (button.dataset.curriculumAnswer === value) button.classList.add('correct'); });

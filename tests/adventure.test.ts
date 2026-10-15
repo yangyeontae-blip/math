@@ -5,12 +5,12 @@ import { beginProject, adjustProject, finishProject, projectSpec, recommendAdven
 import { generateGradeQuestion } from '../src/grade-content';
 import { generateCurriculumQuestion, answerCurriculumQuestion } from '../src/curriculum';
 
-test('version 16 migrates to 17 without losing progress, purchases, wrong answers or pet friendships', () => {
+test('version 16 migrates to 18 without losing progress, purchases, wrong answers or pet friendships', () => {
   const current = newSave('모험가', 0), old = JSON.parse(JSON.stringify(current));
   old.version = 16; delete old.adventure; old.berries = 345; old.story.completed = [0]; old.tutorial.collected = true;
   const restored = validateSave(old);
-  assert.equal(restored.version, 17); assert.equal(restored.berries, 345); assert.deepEqual(restored.story.completed, [0]);
-  assert.equal(restored.tutorial.collected, true); assert.deepEqual(restored.adventure, { completed: [], active: null, recovered: [] });
+  assert.equal(restored.version, 18); assert.equal(restored.berries, 345); assert.deepEqual(restored.story.completed, [0]);
+  assert.equal(restored.tutorial.collected, true); assert.deepEqual(restored.adventure.completed, []); assert.equal(restored.adventure.designs.length, 3); assert.equal(restored.adventure.tool, null);
 });
 
 test('projects work for every grade, retain partial work, and cannot grant repeat currency', () => {

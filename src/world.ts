@@ -953,25 +953,30 @@ export class World {
       cylinder(marker, 0x94734e, 0, .45, 0, .06, .08, .9, 6);
       box(marker, done ? 0xa6d18e : 0xe5cea3, 0, .98, 0, 1.1, .6, .12);
       this.addEntity(`villageProject${id}`, `${project.icon} ${project.name} · ${done ? '완성한 장소' : '함께 만들기'}`, positions[id][0], positions[id][1], marker);
-      if (!done) return;
-      const spec = projectSpec(id, s.grade);
+      const active = s.adventure.active?.project === id ? s.adventure.active : null;
+      if (!done && !active) return;
+      const design = s.adventure.active?.project === id ? s.adventure.active.design : s.adventure.designs[id];
+      const spec = projectSpec(id, design.grade);
+      if (id === 0) { spec.rows = design.rows; spec.columns = spec.target / design.rows; }
+      if (id === 2) { spec.groups = design.baskets; spec.target = spec.max / design.baskets; }
       if (id === 0) {
         box(g, 0x916849, -8, .035, 13, spec.columns * .65 + .3, .07, spec.rows * .65 + .3);
         for (let row = 0; row < spec.rows; row++) for (let column = 0; column < spec.columns; column++) {
+          if (active && row * spec.columns + column >= active.values[0]) continue;
           const x = -8 + (column - (spec.columns - 1) / 2) * .65, z = 13 + (row - (spec.rows - 1) / 2) * .65;
           cylinder(g, 0x608f46, x, .2, z, .03, .03, .4, 5);
-          for (let petal = 0; petal < 5; petal++) { const a = petal * Math.PI * 2 / 5; ball(g, [0xeeb0c6, 0xe8ca6f, 0xc0afd9][row % 3], x + Math.cos(a) * .1, .42, z + Math.sin(a) * .1, .1, .06, .1); }
+          for (let petal = 0; petal < 5; petal++) { const a = petal * Math.PI * 2 / 5; ball(g, [0xeeb0c6, 0xe8ca6f, 0xc0afd9][design.color], x + Math.cos(a) * .1, .42, z + Math.sin(a) * .1, .1, .06, .1); }
           ball(g, 0xf7e5a3, x, .46, z, .07);
         }
       } else if (id === 1) {
-        for (let i = 0; i < spec.target; i++) cylinder(g, i % 2 ? 0xcac4af : 0xdbd0b5, -4.8 + i * 8 / spec.target, .05, 15.7 + Math.sin(i * Math.PI / spec.target) * .6, .27, .32, .1, 7);
+        for (let i = 0; i < (active ? active.values[0] : spec.target); i++) cylinder(g, i % 2 ? 0xcac4af : 0xdbd0b5, -4.8 + i * 8 / spec.target, .05, 15.7 + (design.curved ? Math.sin(i * Math.PI / spec.target) * .6 : 0), .27, .32, .1, 7);
       } else {
         box(g, 0xbd9268, 5, .75, 16.3, 3, .18, 1.5);
         for (const x of [3.9, 6.1]) for (const z of [15.8, 16.8]) box(g, 0x97704d, x, .35, z, .13, .7, .13);
         for (let basket = 0; basket < spec.groups; basket++) {
           const x = 4 + basket * 2 / Math.max(1, spec.groups - 1);
           cylinder(g, 0xd1ae72, x, .97, 16.3, .28, .2, .3, 8);
-          for (let fruit = 0; fruit < spec.target; fruit++) ball(g, fruit % 2 ? 0xe8be64 : 0xd98076, x + Math.cos(fruit * 2.4) * .12, 1.15, 16.3 + Math.sin(fruit * 2.4) * .12, .085);
+          for (let fruit = 0; fruit < (active ? active.values[basket] : spec.target); fruit++) ball(g, fruit % 2 ? 0xe8be64 : 0xd98076, x + Math.cos(fruit * 2.4) * .12, 1.15, 16.3 + Math.sin(fruit * 2.4) * .12, .085);
         }
         for (const x of [3.2, 6.8]) cylinder(g, 0xae8d62, x, 1.5, 16.6, .04, .05, 3, 6);
         for (let i = 0; i < 7; i++) box(g, [0xe6b8cb, 0xd3dca0, 0xb9c9e0][i % 3], 3.3 + i * .56, 2.75, 16.6, .3, .28, .06);

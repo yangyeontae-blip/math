@@ -4,3 +4,40 @@
 .project-task{padding:14px;border-radius:12px;background:#f2f6e9;line-height:1.8}.project-grid{display:grid;grid-template-columns:repeat(var(--columns),1fr);gap:5px;max-width:350px;margin:18px auto}.project-grid span{display:grid;place-items:center;aspect-ratio:1;background:#f1e3cd;border:1px dashed #b8a180;border-radius:8px;font-size:24px}.project-grid .filled{background:#e4f0d7;border-style:solid}.project-path{display:flex;flex-wrap:wrap;justify-content:center;gap:5px;min-height:64px;padding:14px;border-radius:14px;background:#e7efdf}.project-path span{font-size:24px}.project-path strong{flex-basis:100%;text-align:center}.project-baskets{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.project-baskets>div{padding:10px;border:1px solid #ded5bc;border-radius:12px;background:#fff8eb}.project-baskets p{overflow-wrap:anywhere;line-height:1.6;margin:6px 0}.project-controls{display:flex;flex-wrap:wrap;justify-content:center;gap:12px;margin:16px 0}.project-controls section{flex:1;min-width:110px;max-width:220px;text-align:center}.project-controls label,.project-controls output{display:block}.project-controls output{font-size:25px;color:#345c35;margin:5px}.project-controls section>div{display:flex;gap:8px;justify-content:center}.project-controls button{min-width:48px;min-height:48px;border-radius:12px;border:1px solid #b8cfa8;background:#e7f0df;font:inherit;font-size:24px}.project-controls button:disabled{opacity:.4}.project-feedback{min-height:44px;line-height:1.6;color:#466245}.recovery-path{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}.recovery-path span{flex:1;min-width:85px;padding:8px;border-radius:10px;background:#f0eee7;color:#68665b;text-align:center;font-size:12px}.recovery-path .current{background:#e0efd6;color:#355a28;border:1px solid #93b878}.recovery-path .done{background:#ecf4e6;color:#537443}.recovery-help,.recovered-concepts{padding:12px 14px;border-radius:12px;background:#f5f1df;line-height:1.8}.recovered-concepts{margin:12px 0;background:#edf5e6}.recovered-concepts h3{margin:0}.recovered-concepts ul{margin-bottom:0}
 @media(max-width:600px),(max-height:500px){.adventure-launch{font-size:11px;padding:7px 8px;margin-bottom:3px}.quest-card.is-collapsed .adventure-launch{max-width:185px}.village-project-card{gap:8px;padding:10px}.village-project-card>span{font-size:24px}.project-grid{max-width:260px}.project-controls{gap:8px}.project-controls section{min-width:95px}.project-grid span{font-size:20px}.recovery-path span{font-size:11px}}
 .recovery-counting{margin:12px 0;padding:12px;border-radius:12px;border:1px solid #d6e0bd;background:#faf9ed}.recovery-counting p{margin-bottom:8px;font-size:13px}.recovery-counting>div{overflow-wrap:anywhere;line-height:1.8}.recovery-counting>div:last-child{display:flex;gap:8px;margin-top:8px}.recovery-counting button{flex:1;min-height:44px;font-size:12px}
+
+/* One quiet forest palette, with space for small hands and visible keyboard focus. */
+:root{--forest-ink:#294c39;--forest-line:#c7d8bd;--forest-paper:#fffdf5}
+button:focus-visible,input:focus-visible{outline:3px solid #48794d;outline-offset:3px}
+#modal-content button,.top-actions button,.touch-actions button,.quest-toggle,.adventure-launch{min-height:48px}
+#modal-content button{border-radius:14px;touch-action:manipulation}
+#modal-content{color:var(--forest-ink);line-height:1.65}
+.quest-card{max-width:290px}.quest-card .adventure-launch{font-size:14px;padding:12px;background:#edf5e4;border-color:var(--forest-line)}
+.quest-card .quest-toggle{font-size:13px}.quest-card #quest-list{font-size:13px}
+.adventure-menu-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:20px 0}
+.adventure-menu-grid button{padding:20px 12px;text-align:left;background:#f1f6e9;border:1px solid var(--forest-line);font:inherit;font-weight:bold;color:var(--forest-ink)}
+.adventure-menu-grid small{display:block;font-size:12px;font-weight:normal;margin-top:7px}
+.design-options{border:1px solid var(--forest-line);border-radius:16px;padding:12px;margin:12px 0}.design-options legend{font-weight:bold;padding:0 6px}
+.design-options button{margin:3px;padding:8px 12px;font:inherit;border:1px solid var(--forest-line);background:#fffdf5;color:var(--forest-ink)}
+.design-options button[aria-pressed=true]{background:#dfeecf;border:2px solid #547e45}
+.project-grid{grid-template-columns:repeat(var(--columns),minmax(0,1fr))}.project-grid span{font-size:clamp(13px,4vw,25px);animation:plant-in .18s ease-out}
+.project-path.curved span:nth-child(3n){transform:translateY(6px)}
+.project-baskets button{width:100%;border:1px solid #d8c7a5;background:#fff8e9;color:var(--forest-ink);font:inherit;padding:10px;min-height:80px}
+#fruit-source,#tool-source{width:100%;padding:12px;background:#f5edcf;border:1px solid #dbcba4;color:var(--forest-ink);font:inherit}
+.learning-tool{padding:16px;margin:16px 0;background:#f3f7eb;border:1px solid var(--forest-line);border-radius:18px}
+.learning-tool h4{margin:0 0 8px;font-size:17px}.learning-tool p{font-size:14px}.tool-boards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin:12px 0}
+.tool-boards>section{min-width:0}.tool-boards strong,.tool-boards output{display:block;text-align:center;margin:6px 0}.tool-adjust{display:flex;justify-content:center;gap:8px}
+.tool-adjust button{min-width:48px;font:inherit;font-size:22px;border:1px solid var(--forest-line);background:#fffdf5}
+.tool-bars>div{display:grid;grid-template-columns:repeat(var(--cells),minmax(0,1fr));gap:1px;margin:5px 0;border:1px solid #8ca077;background:#8ca077}
+.tool-bars button{min-width:0;min-height:48px!important;padding:0;border:0;border-radius:0!important;background:#fffdf5}.tool-bars button.filled{background:#83b687}
+.tool-group{width:100%;min-height:80px;background:#fff8e6;border:1px dashed #b8a378;overflow-wrap:anywhere;font-size:18px;padding:8px}.tool-group small{display:block}
+.tool-numberline{display:flex;align-items:center;gap:4px;font-size:13px}.tool-numberline input{min-width:0;width:100%;height:48px;accent-color:#48794d}
+.curriculum-question-card h3{font-size:clamp(18px,3vw,23px);line-height:1.65;margin:10px 0 18px}.curriculum-answers{margin-top:18px}.curriculum-answers button{min-height:56px!important;padding:12px!important}
+.curriculum-play-modal{max-height:calc(100dvh - 24px);overflow-y:auto}.curriculum-question-card .curriculum-visual{max-width:100%}
+@keyframes plant-in{from{opacity:.4;transform:scale(.85)}to{opacity:1;transform:scale(1)}}
+@media(max-width:600px){.quest-card{max-width:240px}.quest-card .adventure-launch{font-size:12px;padding:8px}.quest-card.is-collapsed .adventure-launch{max-width:none}.adventure-menu-grid{gap:8px}.adventure-menu-grid button{padding:14px 10px}.tool-boards{grid-template-columns:1fr}.learning-tool{padding:12px}.project-controls section{min-width:90px}.top-actions{gap:4px}.top-actions button{min-width:48px}.brand-mini{display:none}}
+@media(prefers-reduced-motion:reduce){.project-grid span{animation:none}.project-path span{transform:none!important}}
+.project-grid{grid-template-columns:repeat(var(--columns),minmax(48px,1fr));overflow-x:auto;max-width:100%;padding:4px 0}
+.project-grid button{aspect-ratio:1;min-width:48px;padding:0;display:grid;place-items:center;background:#f1e3cd;border:1px dashed #b8a180;font:inherit;font-size:24px;animation:plant-in .18s ease-out}
+.project-grid button.filled{background:#e4f0d7;border-style:solid}
+#flower-source{width:100%;background:#ecf4df;border:1px solid var(--forest-line);font:inherit;color:var(--forest-ink)}
+@media(prefers-reduced-motion:reduce){.project-grid button{animation:none}}
