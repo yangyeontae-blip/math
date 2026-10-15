@@ -6,11 +6,12 @@ import { EXPEDITION_STAR_SPOTS, expeditionLayout } from './expedition';
 import { storyHere, storySpot } from './story';
 import { activitySpec, type StoryActivity } from './story-activities';
 import type { PetReaction } from './pet-care';
+import { VILLAGE_PROJECTS, projectSpec } from './adventure';
 import { VILLAGE_THEMES, villageThemeId, type VillageTheme } from './villages';
 import type { AmbienceScene } from './ambience';
 
 type Entity = { id: string; name: string; x: number; z: number; mesh: T.Group; label: HTMLDivElement };
-export type GuideKind = 'berry' | 'monster' | 'shop' | 'journey' | 'next' | 'star' | 'expMonster' | 'roomExit' | 'storyClue' | 'storyPuzzle' | 'storyMailbox' | 'village';
+export type GuideKind = 'berry' | 'monster' | 'shop' | 'journey' | 'next' | 'star' | 'expMonster' | 'roomExit' | 'storyClue' | 'storyPuzzle' | 'storyMailbox' | 'village' | 'villageProject0' | 'villageProject1' | 'villageProject2';
 const mat = (color: number, roughness = .86) => new T.MeshStandardMaterial({ color, roughness });
 const materials = new Map<number, T.MeshStandardMaterial>();
 const sharedGeometries = new Set<T.BufferGeometry>();
@@ -915,6 +916,7 @@ export class World {
     const oldFriend = this.entities.find(e => e.id === 'storyFriend');
     if (oldFriend) { oldFriend.label.remove(); this.scene.remove(oldFriend.mesh); this.disposeModel(oldFriend.mesh); this.entities = this.entities.filter(e => e !== oldFriend); }
     const g = new T.Group(); g.userData.storyScenery = true; this.scene.add(g); this.storyScenery = g;
+    this.buildVillageProjects(g, s);
     if (s.story.completed.includes(0)) {
       const friend = makePet(1); friend.scale.setScalar(1.4);
       this.addEntity('storyFriend', '편지 친구 · 솜이', -4.2, -3, friend);
@@ -939,6 +941,42 @@ export class World {
   private buildCraftBridge(g: T.Group, x: number, z: number, length: number) {
     for (let i = 0; i < 14; i++) box(g, i % 2 ? 0xc79862 : 0xd9b17d, x - length / 2 + (i + .5) * length / 14, .1, z, length / 14 - .035, .16, 2.1);
     for (const side of [-1, 1]) { box(g, 0xba9066, x, .72, z + side, length, .12, .13); for (let i = 0; i < 5; i++) cylinder(g, 0xa47c53, x - length / 2 + i * length / 4, .4, z + side, .065, .085, .8, 6); }
+  }
+  private buildVillageProjects(g: T.Group, s: Save) {
+    for (const e of this.entities.filter(entity => entity.id.startsWith('villageProject'))) {
+      e.label.remove(); this.scene.remove(e.mesh); this.disposeModel(e.mesh);
+    }
+    this.entities = this.entities.filter(entity => !entity.id.startsWith('villageProject'));
+    const positions = [[-7, 11], [0, 14], [5, 15]];
+    VILLAGE_PROJECTS.forEach((project, id) => {
+      const done = s.adventure.completed.includes(id), marker = new T.Group();
+      cylinder(marker, 0x94734e, 0, .45, 0, .06, .08, .9, 6);
+      box(marker, done ? 0xa6d18e : 0xe5cea3, 0, .98, 0, 1.1, .6, .12);
+      this.addEntity(`villageProject${id}`, `${project.icon} ${project.name} · ${done ? '완성한 장소' : '함께 만들기'}`, positions[id][0], positions[id][1], marker);
+      if (!done) return;
+      const spec = projectSpec(id, s.grade);
+      if (id === 0) {
+        box(g, 0x916849, -8, .035, 13, spec.columns * .65 + .3, .07, spec.rows * .65 + .3);
+        for (let row = 0; row < spec.rows; row++) for (let column = 0; column < spec.columns; column++) {
+          const x = -8 + (column - (spec.columns - 1) / 2) * .65, z = 13 + (row - (spec.rows - 1) / 2) * .65;
+          cylinder(g, 0x608f46, x, .2, z, .03, .03, .4, 5);
+          for (let petal = 0; petal < 5; petal++) { const a = petal * Math.PI * 2 / 5; ball(g, [0xeeb0c6, 0xe8ca6f, 0xc0afd9][row % 3], x + Math.cos(a) * .1, .42, z + Math.sin(a) * .1, .1, .06, .1); }
+          ball(g, 0xf7e5a3, x, .46, z, .07);
+        }
+      } else if (id === 1) {
+        for (let i = 0; i < spec.target; i++) cylinder(g, i % 2 ? 0xcac4af : 0xdbd0b5, -4.8 + i * 8 / spec.target, .05, 15.7 + Math.sin(i * Math.PI / spec.target) * .6, .27, .32, .1, 7);
+      } else {
+        box(g, 0xbd9268, 5, .75, 16.3, 3, .18, 1.5);
+        for (const x of [3.9, 6.1]) for (const z of [15.8, 16.8]) box(g, 0x97704d, x, .35, z, .13, .7, .13);
+        for (let basket = 0; basket < spec.groups; basket++) {
+          const x = 4 + basket * 2 / Math.max(1, spec.groups - 1);
+          cylinder(g, 0xd1ae72, x, .97, 16.3, .28, .2, .3, 8);
+          for (let fruit = 0; fruit < spec.target; fruit++) ball(g, fruit % 2 ? 0xe8be64 : 0xd98076, x + Math.cos(fruit * 2.4) * .12, 1.15, 16.3 + Math.sin(fruit * 2.4) * .12, .085);
+        }
+        for (const x of [3.2, 6.8]) cylinder(g, 0xae8d62, x, 1.5, 16.6, .04, .05, 3, 6);
+        for (let i = 0; i < 7; i++) box(g, [0xe6b8cb, 0xd3dca0, 0xb9c9e0][i % 3], 3.3 + i * .56, 2.75, 16.6, .3, .28, .06);
+      }
+    });
   }
   private buildCraftWheel(parent: T.Group, x: number, z: number) {
     const wheel = new T.Group(); wheel.position.set(x, 1.1, z); parent.add(wheel); wheel.userData.storyWheel = true;

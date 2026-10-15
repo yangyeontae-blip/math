@@ -49,7 +49,7 @@ test('version 15 solved letters and village milestones migrate without progress 
   s.story.completed = [1, 2]; s.berries = 345;
   const old = JSON.parse(JSON.stringify(s)); old.version = 15; delete old.petFriends; delete old.story.active.activity;
   const restored = validateSave(old);
-  assert.equal(restored.version, 16); assert.equal(restored.story.active!.solved, true);
+  assert.equal(restored.version, 17); assert.equal(restored.story.active!.solved, true);
   assert.equal(finishStory(restored)?.first, true); assert.deepEqual(restored.story.completed, [1, 2, 0]); assert.equal(restored.berries, 345);
 });
 
