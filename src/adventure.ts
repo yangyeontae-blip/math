@@ -1,5 +1,5 @@
 import { validTool, type LearningTool } from './learning-tools';
-import { formatScaled, questionAnswerText, type Question, type CurriculumMistake, type CurriculumUnitId, type Save, type SchoolGrade } from './rules';
+import { formatScaled, operationsForGrade, questionAnswerText, type Question, type CurriculumMistake, type CurriculumUnitId, type Save, type SchoolGrade } from './rules';
 import type { CurriculumQuestion } from './curriculum';
 
 export const VILLAGE_PROJECTS = [
@@ -115,7 +115,7 @@ export function recommendAdventure(s: Save, regions: readonly { id: CurriculumUn
   if (!s.tutorial.shop) return { kind: 'guide', guide: 'shop', title: '내 모험가를 꾸며 볼까요?', detail: '상점을 구경해요. 구매하지 않고 돌아와도 괜찮아요.' };
   const mistake = s.curriculum.wrongSkills.find(m => regions.some(r => r.id === m.unit) && allowed(m.unit));
   if (mistake) return { kind: 'review', unit: mistake.unit, title: `${mistake.skill} 다시 만나기`, detail: '도움받기 → 다시 풀기 → 새 문제에 적용하기, 세 걸음으로 도전해요.' };
-  if (s.learning.wrongQuestions.length) return { kind: 'calculation', title: '다시 풀면 달라지는 계산', detail: '그림과 함께 계산을 살피고, 다른 상황에도 써 봐요.' };
+  if (s.learning.wrongQuestions.some(q => operationsForGrade(s.grade).includes(q.operation ?? 'division'))) return { kind: 'calculation', title: '다시 풀면 달라지는 계산', detail: '그림과 함께 계산을 살피고, 다른 상황에도 써 봐요.' };
   if (s.adventure.completed.length < 3) return { kind: 'project', title: VILLAGE_PROJECTS[s.adventure.completed.length].name, detail: '수학으로 마을에 오래 남을 새 장소를 만들어요.' };
   const next = regions.find(r => allowed(r.id) && s.curriculum.units[r.id].completedMissions.length < 10);
   if (next) return { kind: 'region', unit: next.id, title: `${next.name}의 다음 모험`, detail: '열린 단계에서 새로운 개념을 만나 봐요.' };

@@ -35,7 +35,7 @@ export type ExpeditionProgress = {
 };
 
 export function emptyExpedition(): ExpeditionProgress { return { completed: 0, selectedTitle: 0, active: null }; }
-export function expeditionUnlocked(s: Save) { return s.teacherMode || s.journey.maps.slice(1).every(map => map.cleared); }
+export function expeditionUnlocked(s: Save) { return s.grade >= 3 && (s.teacherMode || s.journey.maps.slice(1).every(map => map.cleared)); }
 export function expeditionLayout(completed: number) {
   const stage = completed % 10 + 1;
   const stars = [0, 3, 6].map(offset => (completed * 2 + offset) % EXPEDITION_STAR_SPOTS.length);

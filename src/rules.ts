@@ -272,6 +272,15 @@ export function curriculumUnitsForGrade(grade: SchoolGrade): CurriculumUnitId[] 
   if (grade === 2) return common.filter(unit => unit !== 'division');
   return [...common];
 }
+/** 계산 선택도 모험 지도와 같은 학년 범위를 따릅니다. */
+export function operationsForGrade(grade: SchoolGrade): Operation[] { return OPERATIONS.filter(op => curriculumUnitsForGrade(grade).includes(op)); }
+/** Forest encounters always use that forest. Only the village arena uses a selected operation. */
+export function battleMode(s: Save, arena: boolean): { operation: Operation; practice?: { operation: Operation; tier: PracticeTier } } {
+  const allowed = operationsForGrade(s.grade), choice = s.settings.practice;
+  const forest = allowed.includes(s.forest) ? s.forest : allowed[0];
+  const operation = arena && choice.operation !== 'auto' && allowed.includes(choice.operation) ? choice.operation : forest;
+  return { operation, practice: arena && choice.operation !== 'auto' ? { operation, tier: choice.tier } : undefined };
+}
 export const NEW_CURRICULUM_UNITS: NewCurriculumUnitId[] = ['plane', 'lengthTime', 'fractionDecimal', 'circle', 'fraction', 'measurement', 'pictograph', 'triangle'];
 /** 학년마다 실제로 열려 있는 새 지역(삼각형 지역은 4학년에만 있어요). */
 export function newUnitsForGrade(grade: SchoolGrade): NewCurriculumUnitId[] { return NEW_CURRICULUM_UNITS.filter(unit => grade === 4 || !GRADE4_ONLY_UNITS.includes(unit)); }
@@ -329,7 +338,7 @@ export function journeyFor(s: Save, forest: ForestKind = s.forest): Journey {
     default: return s.journey;
   }
 }
-export function canEnter(s: Save, stage: number, forest: ForestKind = s.forest) { const journey = journeyFor(s, forest); return Number.isInteger(stage) && stage >= 0 && stage <= 10 && (s.teacherMode || stage <= 1 || journey.maps[stage - 1].cleared); }
+export function canEnter(s: Save, stage: number, forest: ForestKind = s.forest) { const journey = journeyFor(s, forest); return operationsForGrade(s.grade).includes(forest) && Number.isInteger(stage) && stage >= 0 && stage <= 10 && (s.teacherMode || stage <= 1 || journey.maps[stage - 1].cleared); }
 export function collectBerry(s: Save, id: number) {
   const journey = journeyFor(s), stage = journey.stage, map = journey.maps[stage];
   if (!Number.isInteger(id) || !stageBerries(stage)[id] || map.berries.includes(id)) return 0;
@@ -860,7 +869,9 @@ export function validateSave(value: unknown): Save {
   }
   if ((s.multiplicationCompleted || s.multiplicationFinal) && !s.teacherMode && !s.multiplicationJourney.maps[10].cleared) return fail();
   if (expedition.active && !s.teacherMode && !s.journey.maps.slice(1).every(map => map.cleared)) return fail();
-  if (!canEnter(s, journeyFor(s).stage)) return fail();
+  // Validate the original unlocked progress before normalizing an old, unavailable forest below.
+  const currentJourney = journeyFor(s);
+  if (!s.teacherMode && currentJourney.stage > 1 && !currentJourney.maps[currentJourney.stage - 1].cleared) return fail();
   const bounds = stageSize(journeyFor(s).stage);
   if (!s.position || !Number.isFinite(s.position.x) || !Number.isFinite(s.position.z) || Math.abs(s.position.x) > bounds.x || Math.abs(s.position.z) > bounds.z) return fail();
   if (!s.tutorial || ['collected', 'battle', 'shop'].some(k => typeof s.tutorial[k as keyof Save['tutorial']] !== 'boolean')) return fail();
@@ -900,6 +911,11 @@ export function validateSave(value: unknown): Save {
     if (DAILY_MISSIONS.some((m, i) => !integer(d.progress[i], 0, m.goal) || typeof d.claimed[i] !== 'boolean' || (d.claimed[i] && d.progress[i] < m.goal)) || d.allClaimed !== d.claimed.every(Boolean)) return fail();
   }
   for (const [key, max] of [['monsters', MONSTERS.length], ['pets', PETS.length], ['outfits', OUTFITS.length]] as const) if (!Array.isArray(s.discoveries[key]) || s.discoveries[key].some(id => !integer(id, 0, max - 1))) return fail();
+  // Old saves may contain an arena choice or current forest unavailable to this grade.
+  // Keep all earned progress and inventory; return to a grade-appropriate village.
+  const available = operationsForGrade(s.grade);
+  if (s.settings.practice.operation !== 'auto' && !available.includes(s.settings.practice.operation)) s.settings.practice.operation = 'auto';
+  if (!available.includes(s.forest)) { s.forest = available[0]; journeyFor(s).stage = 0; s.position = { x: 0, z: 8 }; }
   return structuredClone(s);
 }
 export class Encounter {
