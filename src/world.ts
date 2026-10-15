@@ -3,11 +3,12 @@ import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js
 import { CHARACTERS, MONSTERS, OUTFITS, PETS, RIDES, WEAPONS, PLAYER_MOVE_SPEED, HERO_BREAD_PET_ID, berryWithinReach, petChaseSpeed, riderHeight, journeyFor, roomFurniturePosition, type ForestKind, type Save } from './rules';
 import { STAGES, stageBerries, stageMonsters, stagePlatforms, stageTrees, stageSize, isVillagePond } from './stages';
 import { EXPEDITION_STAR_SPOTS, expeditionLayout } from './expedition';
+import { storyHere, storySpot } from './story';
 import { VILLAGE_THEMES, villageThemeId, type VillageTheme } from './villages';
 import type { AmbienceScene } from './ambience';
 
 type Entity = { id: string; name: string; x: number; z: number; mesh: T.Group; label: HTMLDivElement };
-export type GuideKind = 'berry' | 'monster' | 'shop' | 'journey' | 'next' | 'star' | 'expMonster' | 'roomExit';
+export type GuideKind = 'berry' | 'monster' | 'shop' | 'journey' | 'next' | 'star' | 'expMonster' | 'roomExit' | 'storyClue' | 'storyPuzzle' | 'storyMailbox' | 'village';
 const mat = (color: number, roughness = .86) => new T.MeshStandardMaterial({ color, roughness });
 const materials = new Map<number, T.MeshStandardMaterial>();
 const sharedGeometries = new Set<T.BufferGeometry>();
@@ -708,7 +709,7 @@ export class World {
     for (let row = 0; row < 3; row++) for (let col = 0; col < 5; col++) { cylinder(this.scene, 0x4c9555, -19.2 + col * 1.1, .28, -11.2 + row * 1.15, .035, .055, .5, 5); ball(this.scene, [0xf28fa8, 0xf4d66a, 0x9dcfe5][row], -19.2 + col * 1.1, .55, -11.2 + row * 1.15, .13); }
     for (let i = 0; i < 7; i++) { box(this.scene, 0xe4c18c, -20.4 + i * 1.1, .42, -12.75, 1, .12, .12); cylinder(this.scene, 0xba8a58, -20.9 + i * 1.1, .4, -12.75, .045, .055, .8, 6); }
     box(this.scene, 0x8f6949, 5.5, .55, 5.5, 2.2, .18, .65); box(this.scene, 0x8f6949, 5.5, .95, 5.75, 2.2, .18, .18); for (const x of [4.7, 6.3]) cylinder(this.scene, 0x76523d, x, .3, 5.5, .08, .08, .6, 6);
-    box(this.scene, 0xe59687, -6.1, 1.1, -4.9, .72, .95, .5); cylinder(this.scene, 0x81624b, -6.1, .45, -4.9, .09, .11, .9, 7); box(this.scene, 0xffe6a3, -5.85, 1.1, -4.62, .12, .12, .04);
+    const mailbox = new T.Group(); box(mailbox, 0xe59687, 0, 1.1, 0, .72, .95, .5); cylinder(mailbox, 0x81624b, 0, .45, 0, .09, .11, .9, 7); box(mailbox, 0xffe6a3, .25, 1.1, .28, .12, .12, .04); ball(mailbox, 0xfff1b1, 0, 1.66, 0, .15); this.addEntity('storyMailbox', '숲속 우체통 · 편지 대모험', -6.1, -4.9, mailbox);
     for (const [x, z] of [[-5, 11], [6, 11], [-5, -1], [6, -1]]) { cylinder(this.scene, 0x755a43, x, .65, z, .06, .08, 1.3, 7); ball(this.scene, 0xffe99a, x, 1.35, z, .22); }
     // Pastel bunting, tiny mushrooms and butterflies make the square feel festive.
     for (let i = 0; i < 9; i++) { const flag = mesh(new T.ConeGeometry(.18, .38, 3), [0xf6a7bc, 0xf5d37b, 0x92d4cc][i % 3], -5 + i * 1.25, 2.3 + Math.sin(i * .7) * .12, -2.2, this.scene); flag.rotation.z = Math.PI; }
@@ -866,12 +867,33 @@ export class World {
     this.scene.background = new T.Color(0xd0eade); this.scene.fog = new T.Fog(0xd0eade, 58, 112); this.platforms = stagePlatforms(this.stage);
     if (this.stage === 0) this.buildVillage(VILLAGE_THEMES[villageThemeId(s)]); else this.buildHunt(this.stage);
     this.mergeStaticScenery();
+    if (this.stage > 0 && storyHere(s)) {
+      for (let clue = 0; clue < 3; clue++) {
+        const spot = storySpot(s.story.active!.chapter, clue), model = new T.Group();
+        box(model, 0xfff6cf, 0, .75, 0, .74, .5, .09); ball(model, 0xf3a9bb, .31, 1, .05, .13);
+        this.addEntity(`storyClue${clue}`, `✉️ 편지 단서 ${clue + 1}/3`, spot.x, spot.z, model);
+      }
+      const spot = storySpot(s.story.active!.chapter, 2), puzzle = new T.Group();
+      cylinder(puzzle, 0xa0b7d9, 0, .12, 0, .9, .9, .22, 12); mesh(expeditionStarGeometry, 0xffde8b, 0, 1.1, 0, puzzle);
+      this.addEntity('storyPuzzle', '✦ 편지 속 수학 문제', spot.x, spot.z, puzzle);
+      this.refreshStoryObjects(s);
+    }
     const map = journey.maps[this.stage], expedition = s.forest === 'division' && !!s.expedition.active && s.expedition.active.stage === this.stage;
     this.coins.forEach(c => c.mesh.visible = !expedition && !map.berries.includes(c.id));
     this.entities.forEach(e => { if (e.id.startsWith('monster')) e.mesh.visible = !expedition && !map.monsters.includes(Number(e.id.slice(7))); if (e.id.startsWith('tree')) e.mesh.visible = !expedition && !map.trees.includes(Number(e.id.slice(4))); });
     if (expedition) this.addExpeditionObjects(s);
     const spawn = this.stage === 0 ? { x: 0, z: 8 } : { x: 0, z: stageSize(this.stage).z - 9 }; const p = fresh ? spawn : s.position; this.player.position.set(p.x, 0, p.z); this.placePetNearPlayer(); this.lastSafe.copy(this.player.position); this.follow.copy(this.player.position);
     this.onStageLoaded(this.stage);
+  }
+  refreshStoryObjects(s: Save) {
+    const a = s.story.active;
+    for (const e of this.entities) {
+      if (!e.id.startsWith('storyClue') && e.id !== 'storyPuzzle') continue;
+      const visible = !!a && storyHere(s) && (e.id === 'storyPuzzle' ? a.found.length === 3 && !a.solved : Number(e.id.slice('storyClue'.length)) === a.found.length);
+      e.mesh.visible = visible; e.label.hidden = !visible;
+      if (!visible && this.selectedId === e.id) { this.selectedId = null; this.onNear(null, null); }
+    }
+    this.clearGuide(); this.renderOnce();
   }
   enterRoom(s: Save, preservePosition = false) {
     const roomPosition = preservePosition ? this.player.position.clone() : new T.Vector3(0, 0, 2.7);
@@ -925,7 +947,10 @@ export class World {
       else if (id === 13) { box(g, 0xd9b36d, 0, 1.25, 0, 1.7, 1.5, .16); box(g, 0xfff7dc, 0, 1.25, .1, 1.42, 1.22, .05); const ribbon = mesh(new T.TorusGeometry(.22, .055, 7, 18), 0xb58bd3, 0, 1.45, .17, g); ribbon.rotation.x = Math.PI / 2; for (let p = 0; p < 6; p++) ball(g, 0xf2c85b, Math.cos(p * Math.PI / 3) * .34, 1.45 + Math.sin(p * Math.PI / 3) * .34, .17, .08); }
       else if (id === 14) { box(g, 0xa57959, 0, 1.3, 0, 1.65, 1.55, .16); box(g, 0xf8efd0, 0, 1.3, .1, 1.38, 1.28, .05); const triangle = mesh(new T.ConeGeometry(.42, .7, 3), 0xe98983, -.38, 1.35, .18, g); triangle.rotation.z = Math.PI; box(g, 0x75a9a0, .38, 1.35, .18, .62, .62, .08); }
       else if (id === 15) { cylinder(g, 0x9a704d, 0, .72, 0, .34, .42, 1.35, 10); const face = cylinder(g, 0xf5db8c, 0, 1.62, .08, .72, .72, .16, 18); face.rotation.x = Math.PI / 2; box(g, 0x5f7058, 0, 1.72, .22, .06, .48, .05); const hand = box(g, 0xd66f70, .12, 1.58, .23, .35, .05, .04); hand.rotation.z = -.65; }
-      else { cylinder(g, 0xa6c879, 0, .04, 0, 1.5, 1.5, .08, 18); for (let p = 0; p < 10; p++) ball(g, [0xf19aa1, 0xf4cd6a, 0x80bca8, 0xa98ac7, 0xf0a86e][p % 5], Math.cos(p * Math.PI / 5) * .95, .13, Math.sin(p * Math.PI / 5) * .95, .15, .08, .15); }
+      else if (id === 16) { cylinder(g, 0xa6c879, 0, .04, 0, 1.5, 1.5, .08, 18); for (let p = 0; p < 10; p++) ball(g, [0xf19aa1, 0xf4cd6a, 0x80bca8, 0xa98ac7, 0xf0a86e][p % 5], Math.cos(p * Math.PI / 5) * .95, .13, Math.sin(p * Math.PI / 5) * .95, .15, .08, .15); }
+      else if (id === 17) { box(g, 0xa77858, 0, 1.12, 0, 1.65, 1.35, .16); box(g, 0xfff2d3, 0, 1.12, .1, 1.35, 1.05, .06); box(g, 0xe9a2ad, 0, 1.1, .16, .72, .42, .035); box(g, 0xffdf99, 0, 1.1, .19, .13, .13, .04); }
+      else if (id === 18) { cylinder(g, 0xb8875f, 0, .22, 0, .55, .6, .4, 12); cylinder(g, 0x96c9dc, 0, .85, 0, .38, .3, .92, 14); ball(g, 0xd9f5ff, 0, 1.32, 0, .32, .14, .32); for (const side of [-1, 1]) ball(g, 0xffe9b5, side * .22, .93, .3, .09); }
+      else if (id === 19) { cylinder(g, 0xb58c63, 0, .23, 0, .56, .62, .38, 10); cylinder(g, 0x8a6850, 0, .68, 0, .11, .13, .55, 7); ball(g, 0x8fc386, 0, 1.2, 0, .52, .48, .4); for (let p = 0; p < 5; p++) ball(g, 0xffe7a5, Math.cos(p * 1.26) * .4, 1.27 + Math.sin(p * 1.26) * .3, .32, .1); }
     }
     if (render) this.renderOnce();
   }
@@ -1063,7 +1088,7 @@ export class World {
   quality(low: boolean) { this.lowQuality = low; const touchDevice = matchMedia('(pointer: coarse)').matches; this.renderer.setPixelRatio(Math.min(devicePixelRatio, low || touchDevice ? 1 : 1.25)); this.renderer.shadowMap.enabled = !low; this.sun.castShadow = !low; }
   clearInput() { this.keys.clear(); this.stick = { x: 0, z: 0 }; }
   guideTo(kind: GuideKind) {
-    const entityMatch = (entity: Entity) => kind === 'monster' ? entity.id.startsWith('monster') : kind === 'expMonster' ? entity.id.startsWith('expMonster') : kind === 'shop' ? ['weapon', 'outfit', 'ride', 'pet', 'potion', 'beauty'].includes(entity.id) : entity.id === kind;
+    const entityMatch = (entity: Entity) => kind === 'monster' ? entity.id.startsWith('monster') : kind === 'expMonster' ? entity.id.startsWith('expMonster') : kind === 'storyClue' ? entity.id.startsWith('storyClue') : kind === 'shop' ? ['weapon', 'outfit', 'ride', 'pet', 'potion', 'beauty'].includes(entity.id) : entity.id === kind;
     const candidates: { object: T.Object3D; name: string; arrivalDistance: number }[] = kind === 'berry'
       ? this.coins.filter(coin => coin.mesh.visible).map(coin => ({ object: coin.mesh, name: '길 위의 베리', arrivalDistance: .9 }))
       : kind === 'star'

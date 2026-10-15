@@ -76,7 +76,7 @@ test('version 7 saves become division progress and teacher mode previews everyth
   const old = structuredClone(newSave('예전숲', 0)) as unknown as Record<string, unknown>; old.version = 7;
   delete old.forest; delete old.multiplicationJourney; delete old.multiplicationFinal; delete old.multiplicationCompleted; delete old.multiplicationRewardClaimed; delete old.potions;
   const settings = old.settings as Record<string, unknown>; delete settings.multiplicationRange;
-  const migrated = validateSave(old); assert.equal(migrated.version, 14); assert.equal(migrated.forest, 'division'); assert.equal(migrated.multiplicationJourney.maps[1].cleared, false);
+  const migrated = validateSave(old); assert.equal(migrated.version, 15); assert.equal(migrated.forest, 'division'); assert.equal(migrated.multiplicationJourney.maps[1].cleared, false);
   assert.deepEqual(migrated.potions, { stock: POTIONS.map(() => 0), berryMultiplier: 1, berryUntil: 0, xpMultiplier: 1, xpUntil: 0 });
   applyTeacherCode(migrated, 'teacher', sha256Hex('teacher'));
   assert.equal(canEnter(migrated, 10, 'multiplication'), true); assert.equal(migrated.multiplicationCompleted, true); assert.equal(migrated.multiplicationRewardClaimed, true);
