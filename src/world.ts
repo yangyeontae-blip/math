@@ -1,3 +1,4 @@
+import { fieldHere, fieldSpec, FIELD_INFO, FIELD_SPOTS } from './forest-activities';
 import { trailHere, trailPair, TRAIL_SEEDS, TRAIL_LAMPS } from './forest-trail';
 import * as T from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
@@ -12,7 +13,7 @@ import { VILLAGE_THEMES, villageThemeId, type VillageTheme } from './villages';
 import type { AmbienceScene } from './ambience';
 
 type Entity = { id: string; name: string; x: number; z: number; mesh: T.Group; label: HTMLDivElement };
-export type GuideKind = 'trailSeed' | 'trailLamp' | 'berry' | 'monster' | 'shop' | 'journey' | 'next' | 'star' | 'expMonster' | 'roomExit' | 'storyClue' | 'storyPuzzle' | 'storyMailbox' | 'village' | 'villageProject0' | 'villageProject1' | 'villageProject2';
+export type GuideKind = 'forestWork' | 'trailSeed' | 'trailLamp' | 'berry' | 'monster' | 'shop' | 'journey' | 'next' | 'star' | 'expMonster' | 'roomExit' | 'storyClue' | 'storyPuzzle' | 'storyMailbox' | 'village' | 'villageProject0' | 'villageProject1' | 'villageProject2';
 const mat = (color: number, roughness = .86) => new T.MeshStandardMaterial({ color, roughness });
 const materials = new Map<number, T.MeshStandardMaterial>();
 const sharedGeometries = new Set<T.BufferGeometry>();
@@ -885,6 +886,7 @@ export class World {
     if (this.stage === 0) this.updateStoryVillage(s);
     this.mergeStaticScenery();
     if (trailHere(s)) this.buildForestTrail(s);
+    if (fieldHere(s)) this.buildForestWork(s);
     if (this.stage > 0 && storyHere(s)) {
       for (let clue = 0; clue < 3; clue++) {
         const spot = storySpot(s.story.active!.chapter, clue), model = new T.Group();
@@ -902,6 +904,66 @@ export class World {
     if (expedition) this.addExpeditionObjects(s);
     const spawn = this.stage === 0 ? { x: 0, z: 8 } : { x: 0, z: stageSize(this.stage).z - 9 }; const p = fresh ? spawn : s.position; this.player.position.set(p.x, 0, p.z); this.placePetNearPlayer(); this.lastSafe.copy(this.player.position); this.follow.copy(this.player.position);
     this.onStageLoaded(this.stage);
+  }
+  private buildForestWork(s: Save) {
+    if (!fieldHere(s)) return;
+    const forest = s.forest, info = FIELD_INFO[forest], scenery = new T.Group();
+    scenery.userData.forestWork = true; this.scene.add(scenery); this.trailScenery = scenery;
+    FIELD_SPOTS.forEach((spot, step) => {
+      const g = new T.Group(), { a, b } = fieldSpec(forest,s.grade,step);
+      cylinder(g, forest === 'division' ? 0x81bccc : 0x9fa578, 0,.08,0, .85,.9,.16,12);
+      const sign = new T.Group(); cylinder(sign,0xa38359,-1.8,.7,0,.07,.1,1.4,7); ball(sign,forest === 'division' ? 0x8ed9ed : forest === 'multiplication' ? 0xf8c980 : 0x9bbc75,-1.8,1.5,0,.36); g.add(sign);
+      if (forest === 'subtraction') {
+        for (let i=0;i<a;i++) { const thorn = new T.Group(); thorn.userData.fieldSlot=i;
+          box(thorn,0x87664f,0,.38,0,.65,.12,.12).rotation.z=.4;
+          box(thorn,0xa38b65,0,.55,0,.12,.44,.12).rotation.z=-.35;
+          thorn.position.set((i%6-2.5)*.65,0,-1-Math.floor(i/6)*.65); g.add(thorn);
+        }
+      } else if (forest === 'multiplication') {
+        for (let row=0;row<a;row++) { const flowers = new T.Group(); flowers.userData.fieldSlot=row; flowers.position.z=-1.2-row*1.25;
+          box(flowers,0xcbb58a,0,.1,0,b*.65+.3,.2,.9);
+          for(let col=0;col<b;col++) { const x=(col-(b-1)/2)*.65; cylinder(flowers,0x7da968,x,.4,0,.035,.04,.6,6); ball(flowers,0xffd67d,x,.75,0,.23); ball(flowers,0xf1acb7,x,.76,.12,.11); }
+          g.add(flowers);
+        }
+      } else {
+        for(let channel=0;channel<b;channel++) { const x=(channel-(b-1)/2)*1.05;
+          box(g,0xc8b895,x,.15,-1,.9,.3,2.6); const water=box(g,0x71c5e2,x,.4,-1,.65,.4,2.35); water.userData.fieldWater=channel;
+          box(g,0x9bd3e3,x,.04,-3,.18,.08,1.5);
+        }
+      }
+      this.addEntity(`forestWork${step}`,`${info.icon} ${step+1}번 ${info.place} · ${info.verb}`,spot.x,spot.z,g);
+      for(let n=0;n<7;n++) { const stone=new T.Group(); stone.userData.fieldStep=step; stone.name='fieldPath'; cylinder(stone,forest === 'division' ? 0x8acddc : 0xb6cc85,0,.06,spot.z-n*1.2,.52,.6,.12,8); scenery.add(stone); }
+    });
+    const final=new T.Group(); final.name='fieldFinal'; final.position.z=-16;
+    if(forest === 'division') {
+      box(final,0xbcb398,0,.4,0,4,.8,2.8); box(final,0x71c5e2,0,.83,0,3.5,.12,2.3);
+      const wheel=new T.Group(); wheel.position.set(0,1.7,-.4); wheel.userData.fieldWheel=true; final.add(wheel); this.craftAnimated.push(wheel);
+      for(let i=0;i<8;i++) { const paddle=box(wheel,0x9a7852,Math.cos(i*Math.PI/4),Math.sin(i*Math.PI/4),0,.65,.22,.3); paddle.rotation.z=i*Math.PI/4; }
+      box(final,0x72c6dc,-1.65,1.5,0,.22,2.4,.3);
+    } else {
+      for(const x of [-1.8,1.8]) cylinder(final,0x9a8060,x,1.1,0,.15,.2,2.2,8);
+      for(let i=0;i<9;i++) ball(final,forest === 'multiplication' ? [0xf2b3ca,0xffd67d,0xc1b4e7][i%3] : 0xa7c779,-1.8+i*.45,2.3+Math.sin(i/8*Math.PI)*.5,0,.36);
+      box(final,0xd2b991,0,.28,1,2.8,.3,.8);
+    }
+    scenery.add(final); this.refreshForestWork(s);
+  }
+  refreshForestWork(s: Save) {
+    if(!fieldHere(s)) return;
+    const forest=s.forest, work=s.forestActivities[forest], info=FIELD_INFO[forest]; this.trailNext=Math.min(2,work.done.length);
+    for(const entity of this.entities) if(entity.id.startsWith('forestWork')) {
+      const step=Number(entity.id.slice(10)), values=work.values[step], done=work.done.includes(step), {a,b}=fieldSpec(forest,s.grade,step);
+      entity.name=`${info.icon} ${step+1}번 ${info.place} · ${done ? '완성했어요!' : step === work.done.length ? info.verb : '앞 장소부터 해 봐요'}`; entity.label.textContent=entity.name;
+      entity.mesh.children.forEach(part => {
+        if(typeof part.userData.fieldSlot === 'number') {
+          const slot=part.userData.fieldSlot;
+          if(forest === 'subtraction') { part.visible=!values.includes(slot); if(done) part.position.set(slot%2 ? 2.6 : -2.6,0,-1-Math.floor(slot/2)*.35); }
+          if(forest === 'multiplication') part.visible=values.includes(slot);
+        }
+        if(typeof part.userData.fieldWater === 'number') { const count=values[part.userData.fieldWater]; part.visible=count>0; part.scale.y=Math.min(1.5,Math.max(.08,count/(a/b))); }
+      });
+      if(this.selectedId===entity.id) this.onNear(entity.name,entity.id);
+    }
+    this.trailScenery?.children.forEach(part => { if(part.name==='fieldPath') part.visible=work.done.includes(part.userData.fieldStep); if(part.name==='fieldFinal') part.visible=work.done.length===3; });
   }
   private buildForestTrail(s: Save) {
     const scenery = new T.Group(); scenery.userData.forestTrail = true; this.scene.add(scenery); this.trailScenery = scenery;
@@ -933,6 +995,7 @@ export class World {
         const id = Number(entity.id.slice(9)), lit = s.forestTrail.lit.includes(id);
         entity.name = `🌳 ${id + 1}번 나무 등불 · ${lit ? '밝아졌어요!' : id === s.forestTrail.lit.length ? '빛 합치기' : '앞 등불부터 밝혀요'}`;
         entity.label.textContent = entity.name;
+        if (this.selectedId === entity.id) this.onNear(entity.name, entity.id);
         entity.mesh.traverse(o => { if (o instanceof T.Mesh && o.name === 'trailGlow') o.material = material(lit ? 0xffdd78 : 0x8d9c80); });
       }
     }
@@ -1282,7 +1345,7 @@ export class World {
   quality(low: boolean) { this.lowQuality = low; const touchDevice = matchMedia('(pointer: coarse)').matches; this.renderer.setPixelRatio(Math.min(devicePixelRatio, low || touchDevice ? 1 : 1.25)); this.renderer.shadowMap.enabled = !low; this.sun.castShadow = !low; }
   clearInput() { this.keys.clear(); this.stick = { x: 0, z: 0 }; }
   guideTo(kind: GuideKind) {
-    const entityMatch = (entity: Entity) => kind === 'trailSeed' ? entity.id.startsWith('trailSeed') && Math.floor(Number(entity.id.slice(9)) / 2) === this.trailNext : kind === 'trailLamp' ? entity.id === `trailLamp${this.trailNext}` : kind === 'monster' ? entity.id.startsWith('monster') : kind === 'expMonster' ? entity.id.startsWith('expMonster') : kind === 'storyClue' ? entity.id.startsWith('storyClue') : kind === 'shop' ? ['weapon', 'outfit', 'ride', 'pet', 'potion', 'beauty'].includes(entity.id) : entity.id === kind;
+    const entityMatch = (entity: Entity) => kind === 'forestWork' ? entity.id === `forestWork${this.trailNext}` : kind === 'trailSeed' ? entity.id.startsWith('trailSeed') && Math.floor(Number(entity.id.slice(9)) / 2) === this.trailNext : kind === 'trailLamp' ? entity.id === `trailLamp${this.trailNext}` : kind === 'monster' ? entity.id.startsWith('monster') : kind === 'expMonster' ? entity.id.startsWith('expMonster') : kind === 'storyClue' ? entity.id.startsWith('storyClue') : kind === 'shop' ? ['weapon', 'outfit', 'ride', 'pet', 'potion', 'beauty'].includes(entity.id) : entity.id === kind;
     const candidates: { object: T.Object3D; name: string; arrivalDistance: number }[] = kind === 'berry'
       ? this.coins.filter(coin => coin.mesh.visible).map(coin => ({ object: coin.mesh, name: '길 위의 베리', arrivalDistance: .9 }))
       : kind === 'star'
@@ -1392,7 +1455,7 @@ export class World {
       }
     }
     if (this.storyActivityFocus && this.storyActivityRoot) this.storyActivityRoot.traverse(o => { if (o.userData.storyWheel && o.parent?.userData.storyActivity) { const water = this.storyActivityRoot!.userData.waterSolved; if (water) o.rotation.z -= dt; } });
-    for (const o of this.craftAnimated) { if (o.userData.storyWheel) o.rotation.z -= dt * .7; else { o.rotation.y += dt * .6; o.scale.setScalar(1.5 + Math.sin(this.time * 1.7 + Number(o.userData.storySparkle)) * .12); } }
+    for (const o of this.craftAnimated) { if (o.userData.fieldWheel) { if (!matchMedia('(prefers-reduced-motion: reduce)').matches) o.rotation.z -= dt * .7; } else if (o.userData.storyWheel) o.rotation.z -= dt * .7; else { o.rotation.y += dt * .6; o.scale.setScalar(1.5 + Math.sin(this.time * 1.7 + Number(o.userData.storySparkle)) * .12); } }
     for (const c of this.coins) { c.mesh.rotation.y += dt; c.mesh.position.y = c.y + Math.sin(this.time * 2.8 + c.mesh.position.x) * .12; }
     // 화면 크기는 한 프레임에 한 번만 읽어요. 이름표마다 읽으면 그때마다 페이지 배치를 다시 계산해 태블릿에서 버벅여요.
     const viewW = this.container.clientWidth, viewH = this.container.clientHeight;

@@ -12,7 +12,7 @@ test('17 saves retain completed and partial projects, grade, inventory and wrong
     const s = newSave('탐험가', 0, grade); s.berries = 123; s.adventure.completed = [0]; beginProject(s, 1); adjustProject(s, 0, 1);
     const old = JSON.parse(JSON.stringify(s)); old.version = 17; delete old.adventure.designs; delete old.adventure.tool; delete old.adventure.active.design; delete old.adventure.active.editing;
     const restored = validateSave(old);
-    assert.equal(restored.version, 19); assert.equal(restored.berries, 123); assert.equal(restored.adventure.designs[0].grade, grade); assert.equal(restored.adventure.active!.values[0], 1);
+    assert.equal(restored.version, 20); assert.equal(restored.berries, 123); assert.equal(restored.adventure.designs[0].grade, grade); assert.equal(restored.adventure.active!.values[0], 1);
     assert.deepEqual(restored.curriculum, s.curriculum); assert.deepEqual(restored.weapons, s.weapons);
   }
 });

@@ -11,3 +11,17 @@
 .trail-keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 12px; }
 .trail-status { min-height: 3em; }
 @media (max-width: 420px) { .trail-bundles { gap: 8px; } .trail-bundles button { padding: 8px; } }
+.field-thorns { display: grid; grid-template-columns: repeat(auto-fit, minmax(48px, 1fr)); gap: 8px; margin: 14px 0; }
+.field-thorns button { font-size: 22px; min-width: 48px; padding: 8px; }
+.field-thorns button[aria-pressed="true"] { background: #dce9cf; border: 2px solid #50743f; opacity: .8; }
+.field-rows { display: grid; gap: 10px; margin: 14px 0; }
+.field-rows button { min-height: 72px; width: 100%; white-space: normal; }
+.field-rows span { display: block; }
+.field-row-flowers { font-size: 23px; letter-spacing: 3px; min-height: 30px; }
+.field-rows button[aria-pressed="true"] { border: 3px solid #547b34; background: #f2edc8; }
+.field-channels { display: grid; grid-template-columns: repeat(auto-fit, minmax(112px, 1fr)); gap: 10px; margin: 14px 0; }
+.field-channels section { background: #eef6f6; border: 2px solid #b1cece; border-radius: 14px; padding: 8px; text-align: center; min-width: 0; }
+.field-channels h3 { font-size: 16px; margin: 4px 0 8px; }
+.field-channels button { display: block; width: 100%; margin: 6px 0; white-space: normal; }
+.field-water { height: 64px; border: 2px solid #86b4c8; border-radius: 6px; background: linear-gradient(to top, #72c8e0 var(--water, 0%), #fff var(--water, 0%)); }
+#field-progress { background: #f0f4e5; padding: 12px; border-radius: 12px; }
