@@ -1,0 +1,13 @@
+.trail-intro { background: #eef6e3; border-radius: 18px; padding: 12px 16px; }
+.trail-bundles { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 16px 0; }
+.trail-bundles button { min-height: 86px; padding: 12px; white-space: normal; }
+.trail-bundles button[aria-pressed="true"] { background: #d4edb4; border: 3px solid #547b34; }
+.trail-bundles b, .trail-bundles span { display: block; margin: 4px 0; }
+.trail-bowl { text-align: center; padding: 16px; border: 2px dashed #7c9754; border-radius: 16px; min-height: 60px; }
+.trail-answer { display: block; margin: 16px 0; }
+.trail-answer input { display: block; box-sizing: border-box; width: 100%; min-height: 52px; margin-top: 8px; font-size: 24px; }
+.trail-modal button { min-height: 48px; touch-action: manipulation; }
+.trail-modal button:focus-visible, .trail-modal input:focus-visible { outline: 3px solid #295f97; outline-offset: 3px; }
+.trail-keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 12px; }
+.trail-status { min-height: 3em; }
+@media (max-width: 420px) { .trail-bundles { gap: 8px; } .trail-bundles button { padding: 8px; } }

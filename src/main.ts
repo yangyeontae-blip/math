@@ -1,3 +1,5 @@
+import './forest-trail.css';
+import { trailHere, trailPair, trailGoal, collectTrailSeed, moveTrailBundle, lightTrailLamp } from './forest-trail';
 import './style.css';
 import { NEUTRAL_TITLE, titleLeaksAnswer } from './leak-guard';
 import './garden.css';
@@ -30,7 +32,7 @@ import type { Question } from './rules';
 import './adventure.css';
 import { toolSpec, toolHtml, adjustTool } from './learning-tools';
 
-const CLIENT_BUILD = '2026-10-16.1';
+const CLIENT_BUILD = '2026-10-17.1';
 document.documentElement.dataset.clientBuild = CLIENT_BUILD;
 
 const $ = <T extends HTMLElement = HTMLElement>(selector: string) => document.querySelector<T>(selector)!;
@@ -54,8 +56,15 @@ const villageButton = document.createElement('button'); villageButton.id = 'vill
 $('#codex-open').before(villageButton); villageButton.onclick = openVillageProjects;
 const adventureMenu = document.createElement('button'); adventureMenu.id = 'adventure-menu'; adventureMenu.className = 'secondary wide'; adventureMenu.textContent = '🧭 모험 메뉴'; $('.quest-card').append(adventureMenu);
 for (const id of ['daily-open', 'codex-open', 'village-projects']) document.getElementById(id)!.hidden = true;
+const trailOpen = document.createElement('button'); trailOpen.id = 'forest-trail-open'; trailOpen.hidden = true; root.append(trailOpen);
+trailOpen.onclick = () => {
+  if (!state) return;
+  if (state.expedition.active) { toast('진행 중인 별빛 원정을 마치고 빛씨앗을 만나러 가요.'); return; }
+  openModal(title('덧셈숲 1단계', '✦ 빛씨앗 오솔길') + '<p>흩어진 빛씨앗 두 묶음을 찾아 나무 등불에서 합쳐 보세요. 등불 세 곳을 밝히면 길과 큰 나무에 빛이 돌아와요.</p><p>중간에 쉬어도 찾은 빛과 입력한 답은 남아요. 다른 모험도 자유롭게 즐겨요.</p><button id="trail-go" class="primary wide">빛씨앗 찾으러 가기</button><button class="text-button wide" data-close>돌아가기</button>', 'trail-modal');
+  $('#trail-go').onclick = () => { if (!state) return; if (!trailHere(state)) switchStage(1, 'addition'); else closeModal(); const goal = trailGoal(state); world.guideTo(goal.guide); toast(goal.label); };
+};
 adventureMenu.onclick = () => {
-  openModal(title('나의 베리숲', '어떤 모험을 해 볼까요?') + '<div class="adventure-menu-grid"><button data-menu="today-adventure">🧭 오늘의 모험<small>다음 한 걸음과 길 안내</small></button><button data-menu="village-projects">🌷 마을 만들기<small>내가 설계하는 우리 마을</small></button><button data-menu="daily-open">📅 오늘의 미션<small>짧은 목표를 하나씩</small></button><button data-menu="codex-open">📖 모험 발견 도감<small>학습 기록과 모은 친구들</small></button></div><button class="text-button wide" data-close>숲으로 돌아가기</button>', 'adventure-modal');
+  openModal(title('나의 베리숲', '어떤 모험을 해 볼까요?') + '<div class="adventure-menu-grid"><button data-menu="forest-trail-open">✦ 빛씨앗 오솔길<small>덧셈숲의 빛을 되찾는 탐험</small></button><button data-menu="today-adventure">🧭 오늘의 모험<small>다음 한 걸음과 길 안내</small></button><button data-menu="village-projects">🌷 마을 만들기<small>내가 설계하는 우리 마을</small></button><button data-menu="daily-open">📅 오늘의 미션<small>짧은 목표를 하나씩</small></button><button data-menu="codex-open">📖 모험 발견 도감<small>학습 기록과 모은 친구들</small></button></div><button class="text-button wide" data-close>숲으로 돌아가기</button>', 'adventure-modal');
   document.querySelectorAll<HTMLButtonElement>('[data-menu]').forEach(b => b.onclick = () => document.getElementById(b.dataset.menu!)!.click());
 };
 let storyActivityOpen = false;
@@ -194,6 +203,7 @@ function refresh() {
     : stage && !world?.inRoom
       ? [[map.cleared, `${FOREST_INFO[s.forest].op} 대련 ${map.monsters.length} / ${stageMonsters(stage).length}`, 'monster'], [map.berries.length === stageBerries(stage).length, `숲 베리 ${map.berries.length} / ${stageBerries(stage).length}`, 'berry'], [false, map.cleared ? (stage === 10 && s.forest === 'multiplication' ? '출구의 구구단 햇살문 풀기' : '출구에서 다음 숲으로 가기') : STAGE_STORIES[stage - 1], map.cleared ? 'next' : null]]
       : world?.inRoom ? [[false, '방의 문으로 나가 마을로 돌아가기', 'roomExit']] : tasks.every(task => task[0]) ? [[false, `모험의 문에서 ${forestName} 고르기`, 'journey']] : tasks;
+  if (trailHere(s)) { const goal = trailGoal(s); goals.unshift([s.forestTrail.lit.length === 3, `✦ 빛씨앗 오솔길 · ${goal.label}`, goal.guide]); }
   $('#quest-list').innerHTML = goals.map(([done, label, guide]) => `<div class="quest ${done ? 'done' : ''}"><span>${done ? '✓' : '○'}</span><span>${label}</span>${done || !guide ? '' : `<button class="quest-guide" data-guide="${guide}" aria-label="${escape(label)} 위치 안내">안내</button>`}</div>`).join('');
   document.querySelectorAll<HTMLButtonElement>('[data-guide]').forEach(button => button.onclick = () => {
     const name = world.guideTo(button.dataset.guide as GuideKind);
@@ -441,7 +451,7 @@ async function loadWorld() {
     world.onNear = (name, id) => { nearNpcName = name || nearNpcName; $('#interact').hidden = !name; $('#interact').textContent = name ? id?.startsWith('tree') ? `${name} · F로 휘두르기` : `${name} · 대화하기 E` : ''; $('#touch-talk').textContent = name?.includes('그림자') || name?.includes('슬라임') || name?.includes('요정') || name?.includes('토끼') || name?.includes('정령') ? '대련' : '대화'; };
     world.onAttack = id => { if (!state) return; if (!id) { audio.play('swing'); return; } const result = world.hitTree(id, treeDamage(state)); if (!result) return; audio.play('chop'); if (!result.fell) { toast(`통통! 나무가 흔들렸어요 · ${result.remaining}만큼 남았어요`); return; } const reward = (2 + Math.floor(Math.random() * 3)) as 2 | 3 | 4, value = fellTree(state, Number(id.slice(4)), reward); if (!value) return; audio.play('berry'); refresh(); persist(); toast(`🌳 나무를 베었어요! 🍓 +${value}베리`); };
     world.onInteract = id => { if (!state || bubbleOpen()) return; if (id === 'storyFriend') { openModal(title('편지 친구 · 솜이', '네 편지를 받고 찾아왔어!') + '<p>흩어진 편지를 모아 줘서 고마워. 이제 마을에서 자주 만나자! 호수 다리와 별빛 쉼터도 함께 구경하고 싶어.</p><button class="primary wide" data-close>또 만나!</button>'); return; } const line = greetingFor(id, Math.random, lineContext()); if (line) { world.setPaused(true); world.clearInput(); showBubble(nearNpcName || '마을 친구', line, () => { world.setPaused(!state); world.clearInput(); handleInteract(id); }, index => audio.talk(index)); return; } handleInteract(id); };
-    const handleInteract = (id: string) => { if (!state) return; const journey = journeyFor(state); if (id.startsWith('tree')) world.attack(); else if (id.startsWith('villageProject')) openVillageProjects(); else if (id === 'storyMailbox') openStoryBoard(); else if (id.startsWith('storyClue')) collectStoryClue(Number(id.slice('storyClue'.length))); else if (id === 'storyPuzzle') void startStoryQuestion(); else if (id === 'guide') openGuide(); else if (id === 'shepherd') openGarden(); else if (id === 'weapon' || id === 'outfit') openShop(id); else if (id === 'ride') openInventory('ride'); else if (id === 'pet') openPetShop(); else if (id === 'potion') openPotionShop(); else if (id === 'beauty') openBeauty(); else if (id === 'arena') openArena(); else if (id === 'journey') openStageMap(); else if (id === 'room') { world.enterRoom(state); refresh(); persist(); toast('나의 포근한 방에 도착했어요. 문으로 가면 마을로 돌아가요!'); } else if (id === 'roomDecor') openRoom(); else if (id === 'roomExit') { state.position = { x: 0, z: 8 }; world.loadStage(state, true); refresh(); persist(); toast('베리숲 마을로 돌아왔어요!'); } else if (id === 'village') switchStage(0); else if (id === 'unit') openVillageBoard(); else if (id === 'next') openNextGate(); else if (id.startsWith('expMonster')) { const monsterId = Number(id.slice('expMonster'.length)), monster = stageMonsters(state.journey.stage)[monsterId]; if (state.forest === 'division' && state.expedition.active && monster) startBattle(monster.type, false, id); } else if (id.startsWith('shadow')) { const mistake = shadowList[Number(id.slice(6))]; if (mistake) void startCurriculumReview(mistake.unit, mistake); } else if (id.startsWith('monster')) { const huntId = Number(id.slice(7)); beginHuntBattle(stageMonsters(journey.stage)[huntId].type, id); } };
+    const handleInteract = (id: string) => { if (!state) return; const journey = journeyFor(state); if (id.startsWith('trailSeed')) { if (collectTrailSeed(state, Number(id.slice(9)))) { persist(); world.refreshForestTrail(state); refresh(); audio.play('berry'); toast(`✦ 빛씨앗 묶음 ${state.forestTrail.seeds.length}/6 · 나무 등불로 가져가요!`); } } else if (id.startsWith('trailLamp')) openTrailLamp(Number(id.slice(9))); else if (id.startsWith('tree')) world.attack(); else if (id.startsWith('villageProject')) openVillageProjects(); else if (id === 'storyMailbox') openStoryBoard(); else if (id.startsWith('storyClue')) collectStoryClue(Number(id.slice('storyClue'.length))); else if (id === 'storyPuzzle') void startStoryQuestion(); else if (id === 'guide') openGuide(); else if (id === 'shepherd') openGarden(); else if (id === 'weapon' || id === 'outfit') openShop(id); else if (id === 'ride') openInventory('ride'); else if (id === 'pet') openPetShop(); else if (id === 'potion') openPotionShop(); else if (id === 'beauty') openBeauty(); else if (id === 'arena') openArena(); else if (id === 'journey') openStageMap(); else if (id === 'room') { world.enterRoom(state); refresh(); persist(); toast('나의 포근한 방에 도착했어요. 문으로 가면 마을로 돌아가요!'); } else if (id === 'roomDecor') openRoom(); else if (id === 'roomExit') { state.position = { x: 0, z: 8 }; world.loadStage(state, true); refresh(); persist(); toast('베리숲 마을로 돌아왔어요!'); } else if (id === 'village') switchStage(0); else if (id === 'unit') openVillageBoard(); else if (id === 'next') openNextGate(); else if (id.startsWith('expMonster')) { const monsterId = Number(id.slice('expMonster'.length)), monster = stageMonsters(state.journey.stage)[monsterId]; if (state.forest === 'division' && state.expedition.active && monster) startBattle(monster.type, false, id); } else if (id.startsWith('shadow')) { const mistake = shadowList[Number(id.slice(6))]; if (mistake) void startCurriculumReview(mistake.unit, mistake); } else if (id.startsWith('monster')) { const huntId = Number(id.slice(7)); beginHuntBattle(stageMonsters(journey.stage)[huntId].type, id); } };
   } catch (e) {
     root.innerHTML = `<div class="fallback"><h1>숲을 그리지 못했어요</h1><p>3D 화면을 지원하는 최신 Chrome 또는 Edge에서 열어 주세요. 브라우저의 그래픽 가속이 켜져 있는지도 확인해 주세요.</p><button onclick="location.reload()">다시 열기</button></div>`; throw e;
   }
@@ -1482,3 +1492,39 @@ if (context?.registerTool) {
 }
 window.addEventListener('pagehide', () => lifecycle.abort(), { once: true });
 showStart();
+
+function openTrailLamp(lamp: number) {
+  if (!state || !trailHere(state) || !Number.isInteger(lamp) || lamp < 0 || lamp > 2) return;
+  const s = state, t = s.forestTrail;
+  if (t.lit.includes(lamp)) { openModal(title('빛씨앗 오솔길', t.lit.length === 3 ? '우리 손으로 숲을 밝혔어요!' : '나무 등불이 환하게 빛나요') + `<p>${t.lit.length === 3 ? '세 나무 등불과 오솔길 끝의 큰 나무가 빛나고 있어요. 숲을 걸으며 달라진 모습을 구경해요!' : '다음 빛씨앗 묶음을 찾아 오솔길을 이어 볼까요?'}</p><button class="primary wide" data-close>숲 구경하기</button>`, 'trail-modal'); return; }
+  if (lamp !== t.lit.length) { toast(`${t.lit.length + 1}번 나무 등불부터 차례로 밝혀요.`); return; }
+  const [a, b] = trailPair(s.grade, lamp), prompt = `빛씨앗 ${a}개와 ${b}개를 합치면 모두 몇 개일까요?`;
+  const dots = (count: number) => s.grade === 1 ? `<span aria-label="빛씨앗 ${count}개">${'✦ '.repeat(count)}</span>` : '';
+  openModal(title(`빛씨앗 오솔길 · ${lamp + 1}/3`, '두 묶음의 빛으로 나무를 밝혀요') + `<p class="trail-intro">흩어진 빛을 모으면 어두운 오솔길이 환해져요. ${lamp === 0 ? '이 활동은 자유롭게 쉬었다가 이어 할 수 있어요.' : '다음 나무까지 빛을 이어 주세요.'}</p><p id="trail-prompt">${prompt}</p><div class="trail-bundles">${[a, b].map((count, side) => `<button class="secondary" data-trail-side="${side}"><b>${side ? '오른쪽' : '왼쪽'} 묶음 · ${count}개</b>${dots(count)}<span data-trail-action="${side}"></span></button>`).join('')}</div><div id="trail-bowl" class="trail-bowl" role="status" aria-live="polite"></div><label class="trail-answer">${a} + ${b} = ?<input id="trail-answer" inputmode="numeric" pattern="[0-9]*" maxlength="3" autocomplete="off" aria-label="합친 빛씨앗의 수"></label><div class="trail-keypad">${['1','2','3','4','5','6','7','8','9','지우기','0','←'].map(key => `<button class="secondary" data-trail-key="${key}" aria-label="${key}">${key}</button>`).join('')}</div><button id="trail-check" class="primary wide">빛 합치고 나무 밝히기</button><p id="trail-status" class="trail-status" role="status" aria-live="polite"></p><button id="trail-hint" class="secondary wide">💡 도움말</button>${speechSupported() ? '<button id="trail-read" class="text-button wide">🔊 문제 읽어주기</button>' : ''}<button class="text-button wide" data-close>숲으로 돌아가기 · 자동 저장</button>`, 'trail-modal');
+  const input = $('#trail-answer') as HTMLInputElement; input.value = t.drafts[lamp];
+  const draw = () => {
+    document.querySelectorAll<HTMLButtonElement>('[data-trail-side]').forEach(button => {
+      const side = Number(button.dataset.trailSide), found = t.seeds.includes(lamp * 2 + side), placed = !!(t.placed[lamp] & (1 << side));
+      button.disabled = !found; button.setAttribute('aria-pressed', String(placed));
+      button.querySelector('[data-trail-action]')!.textContent = !found ? '숲에서 먼저 찾아요' : placed ? '그릇에 놓았어요 · 다시 누르면 꺼내기' : '눌러서 빛 그릇에 놓기';
+    });
+    const placed = t.placed[lamp]; $('#trail-bowl').textContent = !placed ? '빛 그릇 · 두 묶음을 옮겨 보세요' : placed === 3 ? '✦ 두 묶음이 모였어요. 모두 몇 개인지 답해 주세요.' : '✦ 한 묶음을 놓았어요. 나머지 묶음도 놓아 볼까요?';
+  };
+  const saveDraft = () => { input.value = input.value.replace(/[^0-9]/g, '').slice(0, 3); t.drafts[lamp] = input.value; persist(); };
+  input.oninput = saveDraft;
+  document.querySelectorAll<HTMLButtonElement>('[data-trail-key]').forEach(button => button.onclick = () => { const key = button.dataset.trailKey!; input.value = key === '지우기' ? '' : key === '←' ? input.value.slice(0, -1) : (input.value + key).slice(0, 3); saveDraft(); });
+  document.querySelectorAll<HTMLButtonElement>('[data-trail-side]').forEach(button => button.onclick = () => { if (moveTrailBundle(s, lamp, Number(button.dataset.trailSide))) { persist(); draw(); audio.play('berry'); } });
+  $('#trail-hint').onclick = () => { $('#trail-status').textContent = s.grade === 1 ? `첫 묶음 ${a}개에서 시작해 두 번째 묶음의 별을 하나씩 이어 세어 보세요.` : '각 묶음의 십과 일을 살펴보세요. 일끼리 더해 열 개가 되면 십 하나로 묶을 수 있어요.'; };
+  if (speechSupported()) $('#trail-read').onclick = () => { speak(prompt); };
+  $('#trail-check').onclick = () => {
+    if (state !== s || !trailHere(s) || t.lit.includes(lamp)) return;
+    saveDraft();
+    if (t.placed[lamp] !== 3) { $('#trail-status').textContent = '숲에서 찾은 두 묶음을 먼저 빛 그릇에 놓아 주세요.'; return; }
+    if (!lightTrailLamp(s, lamp)) { $('#trail-status').textContent = '두 묶음을 함께 세어 볼까요? 빛씨앗은 그대로 있으니 다시 해 봐요.'; audio.play('wrong'); return; }
+    persist(); world.refreshForestTrail(s); refresh(); audio.play('correct');
+    if (!matchMedia('(prefers-reduced-motion: reduce)').matches) world.celebrate();
+    openModal(title('빛씨앗 오솔길', lamp === 2 ? '숲에 빛이 돌아왔어요!' : `${lamp + 1}번 나무 등불이 켜졌어요!`) + `<p>${a} + ${b} = ${a + b}. 모은 빛으로 ${lamp === 2 ? '오솔길 끝의 큰 나무까지 환하게 밝혔어요!' : '길이 밝아졌어요. 다음 빛씨앗을 찾아볼까요?'}</p><button class="primary wide" data-close>빛나는 숲으로 돌아가기</button>`, 'trail-modal');
+  };
+  input.onkeydown = event => { if (event.key === 'Enter') { event.preventDefault(); $('#trail-check').click(); } };
+  draw(); if (autoReadEnabled()) speak(prompt);
+}

@@ -1,3 +1,4 @@
+import { trailHere, trailPair, TRAIL_SEEDS, TRAIL_LAMPS } from './forest-trail';
 import * as T from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { CHARACTERS, MONSTERS, OUTFITS, PETS, RIDES, WEAPONS, PLAYER_MOVE_SPEED, HERO_BREAD_PET_ID, berryWithinReach, petChaseSpeed, riderHeight, journeyFor, roomFurniturePosition, type ForestKind, type Save } from './rules';
@@ -11,7 +12,7 @@ import { VILLAGE_THEMES, villageThemeId, type VillageTheme } from './villages';
 import type { AmbienceScene } from './ambience';
 
 type Entity = { id: string; name: string; x: number; z: number; mesh: T.Group; label: HTMLDivElement };
-export type GuideKind = 'berry' | 'monster' | 'shop' | 'journey' | 'next' | 'star' | 'expMonster' | 'roomExit' | 'storyClue' | 'storyPuzzle' | 'storyMailbox' | 'village' | 'villageProject0' | 'villageProject1' | 'villageProject2';
+export type GuideKind = 'trailSeed' | 'trailLamp' | 'berry' | 'monster' | 'shop' | 'journey' | 'next' | 'star' | 'expMonster' | 'roomExit' | 'storyClue' | 'storyPuzzle' | 'storyMailbox' | 'village' | 'villageProject0' | 'villageProject1' | 'villageProject2';
 const mat = (color: number, roughness = .86) => new T.MeshStandardMaterial({ color, roughness });
 const materials = new Map<number, T.MeshStandardMaterial>();
 const sharedGeometries = new Set<T.BufferGeometry>();
@@ -672,6 +673,7 @@ export class World {
   private guideTarget: { object: T.Object3D; name: string; arrivalDistance: number } | null = null; private guideElement: HTMLDivElement;
   private swingUntil = 0; private rideIndex = -1; private petIndex = -1; private petModel: T.Group | null = null; private petTargetId: number | null = null; private animationRunning = false;
   private rideAnimated: T.Object3D[] = []; private butterflies: T.Object3D[] = []; private furnitureRoot: T.Group | null = null;
+  private trailScenery: T.Group | null = null; private trailNext = 0;
   private storyScenery: T.Group | null = null; private restoredBridge = false;
   private storyActivityRoot: T.Group | null = null; private activityMarkers: { at: T.Vector3; label: HTMLDivElement }[] = [];
   private storyActivityFocus: T.Vector3 | null = null; private craftAnimated: T.Object3D[] = [];
@@ -826,6 +828,7 @@ export class World {
   }
   private clearMap() {
     this.endStoryActivity();
+    if (this.trailScenery) this.disposeModel(this.trailScenery); this.trailScenery = null;
     if (this.storyScenery) this.disposeModel(this.storyScenery);
     this.storyScenery = null; this.craftAnimated = []; this.restoredBridge = false; this.butterflies = []; this.particles = [];
     this.clearGuide(); this.selectedId = null; this.petTargetId = null; this.onNear(null, null); this.entities.forEach(e => e.label.remove()); this.stars.forEach(star => star.label.remove()); this.entities = []; this.coins = []; this.stars = []; this.colliders = [];
@@ -881,6 +884,7 @@ export class World {
     if (this.stage === 0) this.buildVillage(VILLAGE_THEMES[villageThemeId(s)]); else this.buildHunt(this.stage);
     if (this.stage === 0) this.updateStoryVillage(s);
     this.mergeStaticScenery();
+    if (trailHere(s)) this.buildForestTrail(s);
     if (this.stage > 0 && storyHere(s)) {
       for (let clue = 0; clue < 3; clue++) {
         const spot = storySpot(s.story.active!.chapter, clue), model = new T.Group();
@@ -898,6 +902,41 @@ export class World {
     if (expedition) this.addExpeditionObjects(s);
     const spawn = this.stage === 0 ? { x: 0, z: 8 } : { x: 0, z: stageSize(this.stage).z - 9 }; const p = fresh ? spawn : s.position; this.player.position.set(p.x, 0, p.z); this.placePetNearPlayer(); this.lastSafe.copy(this.player.position); this.follow.copy(this.player.position);
     this.onStageLoaded(this.stage);
+  }
+  private buildForestTrail(s: Save) {
+    const scenery = new T.Group(); scenery.userData.forestTrail = true; this.scene.add(scenery); this.trailScenery = scenery;
+    TRAIL_SEEDS.forEach((spot, id) => {
+      const g = new T.Group(); cylinder(g, 0x91ad65, 0, .1, 0, .6, .65, .2, 8);
+      mesh(expeditionStarGeometry, 0xffdf7c, 0, .95, 0, g); ball(g, 0xfff7c9, 0, 1.45, 0, .16);
+      this.addEntity(`trailSeed${id}`, `✦ ${Math.floor(id / 2) + 1}번 등불` + ` · 빛씨앗 ${trailPair(s.grade, Math.floor(id / 2))[id % 2]}개 묶음`, spot.x, spot.z, g);
+    });
+    TRAIL_LAMPS.forEach((spot, id) => {
+      const g = new T.Group(); cylinder(g, 0x9a7852, 0, .65, 0, .22, .3, 1.3, 8);
+      ball(g, 0x8d9c80, 0, 1.7, 0, .75).name = 'trailGlow';
+      this.addEntity(`trailLamp${id}`, `🌳 ${id + 1}번 나무 등불 · 빛 합치기`, spot.x, spot.z, g);
+      for (let n = 0; n < 6; n++) {
+        const stone = new T.Group(); stone.userData.trailSegment = id;
+        const z = spot.z - n * 1.45; cylinder(stone, 0x9fa58c, Math.sin(n) * .35, .08, z, .65, .72, .16, 8).name = 'trailGlow'; scenery.add(stone);
+      }
+    });
+    const tree = new T.Group(); tree.userData.trailSegment = 2;
+    cylinder(tree, 0x8b6c50, 0, 1.3, -16, .4, .6, 2.6, 9);
+    for (const [x, y, z] of [[0, 3.7, -16], [-1, 2.9, -16], [1, 2.9, -16]]) ball(tree, 0x8d9c80, x, y, z, 1.25).name = 'trailGlow';
+    scenery.add(tree); this.refreshForestTrail(s);
+  }
+  refreshForestTrail(s: Save) {
+    if (!trailHere(s)) return;
+    this.trailNext = Math.min(2, s.forestTrail.lit.length);
+    for (const entity of this.entities) {
+      if (entity.id.startsWith('trailSeed')) entity.mesh.visible = !s.forestTrail.seeds.includes(Number(entity.id.slice(9)));
+      if (entity.id.startsWith('trailLamp')) {
+        const id = Number(entity.id.slice(9)), lit = s.forestTrail.lit.includes(id);
+        entity.name = `🌳 ${id + 1}번 나무 등불 · ${lit ? '밝아졌어요!' : id === s.forestTrail.lit.length ? '빛 합치기' : '앞 등불부터 밝혀요'}`;
+        entity.label.textContent = entity.name;
+        entity.mesh.traverse(o => { if (o instanceof T.Mesh && o.name === 'trailGlow') o.material = material(lit ? 0xffdd78 : 0x8d9c80); });
+      }
+    }
+    this.trailScenery?.children.forEach(child => child.traverse(o => { if (o instanceof T.Mesh && o.name === 'trailGlow') o.material = material(s.forestTrail.lit.includes(child.userData.trailSegment) ? 0xffdd78 : 0x9fa58c); }));
   }
   refreshStoryObjects(s: Save) {
     const a = s.story.active;
@@ -1243,7 +1282,7 @@ export class World {
   quality(low: boolean) { this.lowQuality = low; const touchDevice = matchMedia('(pointer: coarse)').matches; this.renderer.setPixelRatio(Math.min(devicePixelRatio, low || touchDevice ? 1 : 1.25)); this.renderer.shadowMap.enabled = !low; this.sun.castShadow = !low; }
   clearInput() { this.keys.clear(); this.stick = { x: 0, z: 0 }; }
   guideTo(kind: GuideKind) {
-    const entityMatch = (entity: Entity) => kind === 'monster' ? entity.id.startsWith('monster') : kind === 'expMonster' ? entity.id.startsWith('expMonster') : kind === 'storyClue' ? entity.id.startsWith('storyClue') : kind === 'shop' ? ['weapon', 'outfit', 'ride', 'pet', 'potion', 'beauty'].includes(entity.id) : entity.id === kind;
+    const entityMatch = (entity: Entity) => kind === 'trailSeed' ? entity.id.startsWith('trailSeed') && Math.floor(Number(entity.id.slice(9)) / 2) === this.trailNext : kind === 'trailLamp' ? entity.id === `trailLamp${this.trailNext}` : kind === 'monster' ? entity.id.startsWith('monster') : kind === 'expMonster' ? entity.id.startsWith('expMonster') : kind === 'storyClue' ? entity.id.startsWith('storyClue') : kind === 'shop' ? ['weapon', 'outfit', 'ride', 'pet', 'potion', 'beauty'].includes(entity.id) : entity.id === kind;
     const candidates: { object: T.Object3D; name: string; arrivalDistance: number }[] = kind === 'berry'
       ? this.coins.filter(coin => coin.mesh.visible).map(coin => ({ object: coin.mesh, name: '길 위의 베리', arrivalDistance: .9 }))
       : kind === 'star'
