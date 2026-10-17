@@ -28,7 +28,7 @@ export function fieldSpec(forest: FieldForest, grade: SchoolGrade, step: number)
   return { a, b, answer, equation, prompt };
 }
 export function fieldHere(s: Save): s is Save & { forest: FieldForest } {
-  return FIELD_FORESTS.includes(s.forest as FieldForest) && operationsForGrade(s.grade).includes(s.forest) && journeyFor(s).stage === 1 && !s.room.inside && !s.expedition.active;
+  return FIELD_FORESTS.includes(s.forest as FieldForest) && operationsForGrade(s.grade).includes(s.forest) && journeyFor(s).stage === 1 && !s.room.inside && !s.homestead?.inside && !s.expedition.active;
 }
 export function fieldReady(forest: FieldForest, grade: SchoolGrade, step: number, values: number[]) {
   const { a, b } = fieldSpec(forest, grade, step);

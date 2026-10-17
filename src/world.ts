@@ -1,3 +1,6 @@
+import { homeScenery } from './homestead-models';
+import { HOME_ITEMS, objectCells, visitorTargets, homeRoute, type HomeObject } from './homestead';
+import { discoveryHere, discoveryInfo, discoverySpot, discoveryId } from './exploration';
 import { fieldHere, fieldSpec, FIELD_INFO, FIELD_SPOTS } from './forest-activities';
 import { trailHere, trailPair, TRAIL_SEEDS, TRAIL_LAMPS } from './forest-trail';
 import * as T from 'three';
@@ -13,7 +16,7 @@ import { VILLAGE_THEMES, villageThemeId, type VillageTheme } from './villages';
 import type { AmbienceScene } from './ambience';
 
 type Entity = { id: string; name: string; x: number; z: number; mesh: T.Group; label: HTMLDivElement };
-export type GuideKind = 'forestWork' | 'trailSeed' | 'trailLamp' | 'berry' | 'monster' | 'shop' | 'journey' | 'next' | 'star' | 'expMonster' | 'roomExit' | 'storyClue' | 'storyPuzzle' | 'storyMailbox' | 'village' | 'villageProject0' | 'villageProject1' | 'villageProject2';
+export type GuideKind = 'homeEditor' | 'homeExit' | 'homeVisitor' | 'discovery' | 'forestWork' | 'trailSeed' | 'trailLamp' | 'berry' | 'monster' | 'shop' | 'journey' | 'next' | 'star' | 'expMonster' | 'roomExit' | 'storyClue' | 'storyPuzzle' | 'storyMailbox' | 'village' | 'villageProject0' | 'villageProject1' | 'villageProject2';
 const mat = (color: number, roughness = .86) => new T.MeshStandardMaterial({ color, roughness });
 const materials = new Map<number, T.MeshStandardMaterial>();
 const sharedGeometries = new Set<T.BufferGeometry>();
@@ -684,6 +687,8 @@ export class World {
   onPetWalk = (_distance: number) => {};
   private shadowSweep = 0; private tempScale = new T.Vector3(); private tempSphere = new T.Sphere();
   private tempProjection = new T.Vector3(); private tempTarget = new T.Vector3(); private tempWorld = new T.Vector3(); private cameraTarget = new T.Vector3();
+  inHomestead=false; private homeRoot:T.Group|null=null; private homeSave:Save|null=null; private homeTargets:ReturnType<typeof visitorTargets>=[]; private discoveryRoot:T.Group|null=null;
+  private homeVisitors:{entity:Entity;cell:number;path:number[];pause:number;turn:number;kind:number}[]=[];
   active = false; paused = true; inRoom = false; onCollect = (_id: number) => {}; onStar = (_id: number) => {}; onInteract = (_id: string) => {}; onAttack = (_id: string | null) => {}; onNear = (_name: string | null, _id: string | null) => {}; onJump = () => {}; onRescue = () => {}; onStageLoaded = (_stage: number) => {};
   constructor(private container: HTMLElement) {
     this.scene.background = new T.Color(0xd0eade); this.scene.fog = new T.Fog(0xd0eade, 58, 112);
@@ -829,6 +834,8 @@ export class World {
   }
   private clearMap() {
     this.endStoryActivity();
+    if(this.discoveryRoot)this.disposeModel(this.discoveryRoot);this.discoveryRoot=null;this.homeTargets=[];this.homeVisitors.forEach(v=>this.disposeModel(v.entity.mesh));
+    if(this.homeRoot)this.disposeModel(this.homeRoot);this.homeRoot=null;this.homeVisitors=[];this.homeSave=null;this.inHomestead=false;
     if (this.trailScenery) this.disposeModel(this.trailScenery); this.trailScenery = null;
     if (this.storyScenery) this.disposeModel(this.storyScenery);
     this.storyScenery = null; this.craftAnimated = []; this.restoredBridge = false; this.butterflies = []; this.particles = [];
@@ -880,13 +887,14 @@ export class World {
     }
   }
   loadStage(s: Save, fresh = false) {
-    this.clearInput(); this.clearMap(); this.inRoom = false; s.room.inside = false; this.forest = s.forest; const journey = journeyFor(s); this.stage = journey.stage;
+    this.clearInput(); this.clearMap(); this.inRoom = false; s.room.inside = false; s.homestead.inside=false; this.forest = s.forest; const journey = journeyFor(s); this.stage = journey.stage;
     this.scene.background = new T.Color(0xd0eade); this.scene.fog = new T.Fog(0xd0eade, 58, 112); this.platforms = stagePlatforms(this.stage);
     if (this.stage === 0) this.buildVillage(VILLAGE_THEMES[villageThemeId(s)]); else this.buildHunt(this.stage);
-    if (this.stage === 0) this.updateStoryVillage(s);
+    if (this.stage === 0) { this.updateStoryVillage(s); const gate=new T.Group();box(gate,0xd3b985,0,.8,0,1.4,1.6,.2);ball(gate,0xa8c98c,0,1.9,0,.5);this.addEntity('homesteadGate','🏡 나의 마을 · 들어가기',-9,6,gate); }
     this.mergeStaticScenery();
     if (trailHere(s)) this.buildForestTrail(s);
     if (fieldHere(s)) this.buildForestWork(s);
+    if (discoveryHere(s)) this.buildDiscovery(s);
     if (this.stage > 0 && storyHere(s)) {
       for (let clue = 0; clue < 3; clue++) {
         const spot = storySpot(s.story.active!.chapter, clue), model = new T.Group();
@@ -905,6 +913,45 @@ export class World {
     const spawn = this.stage === 0 ? { x: 0, z: 8 } : { x: 0, z: stageSize(this.stage).z - 9 }; const p = fresh ? spawn : s.position; this.player.position.set(p.x, 0, p.z); this.placePetNearPlayer(); this.lastSafe.copy(this.player.position); this.follow.copy(this.player.position);
     this.onStageLoaded(this.stage);
   }
+  enterHomestead(s:Save,preserve=false){
+    const pos=preserve?s.homestead.position:{x:0,z:12};this.clearInput();this.clearMap();this.inRoom=false;this.inHomestead=true;s.room.inside=false;s.homestead.inside=true;this.stage=0;this.platforms=[];this.homeSave=s;
+    this.scene.background=new T.Color(0xd5eddb);this.scene.fog=new T.Fog(0xd5eddb,40,85);
+    box(this.scene,0xa9c78c,0,-.5,0,27,1,27);box(this.scene,0xe5d0a5,0,.02,12,4,.04,2);box(this.scene,0x8daf76,0,.2,-12.7,26,.4,.5);for(const side of [-1,1]){box(this.scene,0x8daf76,side*12.7,.2,0,.5,.4,26);box(this.scene,0x8daf76,side*8,.2,12.7,10,.4,.5);}
+    for(let i=0;i<=12;i++){box(this.scene,0xbed29e,-12+i*2,.015,0,.025,.025,24);box(this.scene,0xbed29e,0,.015,-12+i*2,24,.025,.025);}
+    const built=homeScenery(s.homestead.objects);this.homeRoot=built.root;this.scene.add(built.root);this.craftAnimated.push(...built.rotors);
+    for(const o of s.homestead.objects){const item=HOME_ITEMS[o.kind],cells=objectCells(o),w=o.rotation%2?item.h:item.w,h=o.rotation%2?item.w:item.h,x=(o.column+(w-1)/2-5.5)*2,z=(o.row+(h-1)/2-5.5)*2;
+      if(item.solid)cells.forEach(c=>this.colliders.push({x:(c.column-5.5)*2,z:(c.row-5.5)*2,r:.72}));
+      if(item.interactive)this.addEntity(`homeObject${o.uid}`,`${item.icon} ${item.name}`,x,z,new T.Group());
+    }
+    const editor=new T.Group();cylinder(editor,0xb98a62,0,.55,0,.6,.6,1.1,8);box(editor,0xf8ebbe,0,1.2,0,1.4,.12,1);this.addEntity('homeEditor','📐 나의 마을 설계 수첩',-3,12,editor);
+    const exit=new T.Group();cylinder(exit,0xc3a774,0,.5,0,.08,.1,1,8);box(exit,0xf1e2ad,0,1.2,0,1.5,.7,.15);this.addEntity('homeExit','🚪 원래 모험으로 돌아가기',3,12,exit);
+    const names=["연태쌤", "가현이", "오지후"];
+    this.homeTargets=visitorTargets(s);if(this.homeTargets.length)for(let i=0;i<3;i++){const model=makeCharacter(i,0,0),cell=137+i%2;this.addEntity(`homeVisitor${i}`,`${names[i]} · 정원 구경`,(cell%12-5.5)*2,(Math.floor(cell/12)-5.5)*2,model);const entity=this.entities[this.entities.length-1];entity.mesh.visible=i<(s.settings.lowQuality?1:3);this.homeVisitors.push({entity,cell,path:[],pause:i,turn:i,kind:6});}
+    this.player.position.set(pos.x,0,pos.z);this.placePetNearPlayer();this.lastSafe.set(0,0,12);this.follow.copy(this.player.position);this.quality(s.settings.lowQuality);
+  }
+  private animateHomeVisitors(dt:number){
+    const s=this.homeSave;if(!s)return;const targets=this.homeTargets;
+    for(const visitor of this.homeVisitors){if(!visitor.entity.mesh.visible)continue;const model=visitor.entity.mesh;
+      if(visitor.pause>0){visitor.pause-=dt;continue;}
+      if(!visitor.path.length){const turn=visitor.turn++,target=s.homestead.memories.includes(3)&&turn%3===0?targets.filter(t=>t.kind===14)[turn%Math.max(1,targets.filter(t=>t.kind===14).length)]??targets[turn%targets.length]:targets[turn%targets.length];if(!target)continue;visitor.kind=target.kind;visitor.path=homeRoute(s.homestead.objects,visitor.cell,target.cell).slice(1);if(!visitor.path.length){visitor.pause=s.homestead.memories.length?6:4;model.scale.y=(visitor.kind===18||visitor.kind===13)&&s.homestead.memories.some(id=>id===0||id===2)?.82:1;}continue;}
+      model.scale.y=1;const next=visitor.path[0],x=(next%12-5.5)*2,z=(Math.floor(next/12)-5.5)*2,dx=x-model.position.x,dz=z-model.position.z,d=Math.hypot(dx,dz),step=Math.min(d,dt*1.65);
+      if(d>.01){model.position.x+=dx/d*step;model.position.z+=dz/d*step;model.rotation.y=Math.atan2(dx,dz);}visitor.entity.x=model.position.x;visitor.entity.z=model.position.z;
+      if(d<.05){visitor.cell=next;visitor.path.shift();if(!visitor.path.length){visitor.pause=s.homestead.memories.length?6:4;model.scale.y=(visitor.kind===18||visitor.kind===13)&&s.homestead.memories.some(id=>id===0||id===2)?.82:1;visitor.entity.name=["연태쌤", "가현이", "오지후"][Number(visitor.entity.id.slice(11))]+' · '+(visitor.kind===18||visitor.kind===13?'잠깐 쉬는 중':visitor.kind===14?'함께 소풍 중':visitor.kind===15?'펫 놀이터 구경':'꽃과 정원 구경');visitor.entity.label.textContent=visitor.entity.name;if(visitor.kind===15&&s.homestead.memories.includes(4)&&this.petIndex>=0)this.reactPet('spin');}}
+    }
+  }
+  private buildDiscovery(s:Save){
+    const stage=journeyFor(s).stage,spot=discoverySpot(stage),info=discoveryInfo(s.forest,stage),g=new T.Group();
+    cylinder(g,0xc1a478,0,.55,0,.08,.1,1.1,7);box(g,0xf6e6ba,0,1.2,0,1.4,.7,.15);ball(g,0xf2c878,0,1.9,0,.25);this.addEntity('discovery',`${info.icon} ${info.name} · 발자국의 끝`,spot.x,spot.z,g);
+    for(let i=0;i<8;i++){const t=(i+1)/9,x=spot.x*t,z=22+(spot.z-22)*t;for(const side of [-1,1])cylinder(g,0xd9bc8e,x-spot.x+side*.16,.03,z-spot.z,.09,.1,.04,6);}
+    const scenery=new T.Group();scenery.position.set(spot.x,0,spot.z-3);this.scene.add(scenery);this.discoveryRoot=scenery;
+    const restored=new T.Group();restored.name='discoveryRestored';scenery.add(restored);
+    if(stage%3===0){for(const x of [-1.5,1.5]){cylinder(scenery,0xc1b89a,x,.8,0,.22,.28,1.6,8);ball(restored,0xffdb89,x,1.8,0,.25);}box(restored,0xd4c59f,0,1.9,0,3.5,.25,.4);}
+    else if(stage%3===1){box(scenery,0xaf8b62,0,.02,0,3,.04,2);for(let i=0;i<6;i++){const x=(i%3-1)*.85,z=Math.floor(i/3)*.7-.35;cylinder(restored,0x7ba96d,x,.4,z,.03,.04,.8,6);ball(restored,[0xf0a9bf,0xf1cf79,0xb8add8][i%3],x,.85,z,.22);}}
+    else {box(scenery,0xad8a60,0,.45,0,2.8,.2,.8);for(const x of [-1.1,1.1])cylinder(scenery,0x977552,x,.2,0,.08,.1,.4,6);for(const x of [-1.4,1.4])cylinder(restored,0x88af76,x,1.1,-.6,.12,.15,2.2,8);box(restored,0xb7cd91,0,2.2,-.6,3.2,.22,1.8);}
+    const dormant=new T.Group();dormant.name='discoveryDormant';for(let i=0;i<3;i++)ball(dormant,0xa1a28b,-1+i,.18,.5,.25);scenery.add(dormant);
+    this.refreshDiscovery(s);
+  }
+  refreshDiscovery(s:Save){const entity=this.entities.find(e=>e.id==='discovery');if(!entity)return;const done=s.exploration.solved.includes(discoveryId(s.forest,journeyFor(s).stage));entity.mesh.traverse(o=>{if(o instanceof T.Mesh&&(o.geometry instanceof T.SphereGeometry))o.material=material(done?0x94bd7b:0xf2c878);});entity.name=`${discoveryInfo(s.forest,journeyFor(s).stage).name} · ${done?'되살린 장소':'발자국의 끝'}`;entity.label.textContent=entity.name;this.discoveryRoot?.children.forEach(o=>{if(o.name==='discoveryRestored')o.visible=done;if(o.name==='discoveryDormant')o.visible=!done;});}
   private buildForestWork(s: Save) {
     if (!fieldHere(s)) return;
     const forest = s.forest, info = FIELD_INFO[forest], scenery = new T.Group();
@@ -1341,11 +1388,11 @@ export class World {
     else if (!shouldRun && this.animationRunning) { this.animationRunning = false; this.renderer.setAnimationLoop(null); if (!document.hidden) this.renderOnce(); }
   }
   private renderOnce() { if (!document.hidden) this.renderer.render(this.scene, this.camera); }
-  restore(s: Save) { this.setAvatar(s.character, s.outfit, s.weapon, s.outfits[s.outfit], s.weapons[s.weapon], s.ride, s.pet, s.hairstyle, s.face); if (s.room.inside) this.enterRoom(s); else this.loadStage(s); this.quality(s.settings.lowQuality); }
-  quality(low: boolean) { this.lowQuality = low; const touchDevice = matchMedia('(pointer: coarse)').matches; this.renderer.setPixelRatio(Math.min(devicePixelRatio, low || touchDevice ? 1 : 1.25)); this.renderer.shadowMap.enabled = !low; this.sun.castShadow = !low; }
+  restore(s: Save) { this.setAvatar(s.character, s.outfit, s.weapon, s.outfits[s.outfit], s.weapons[s.weapon], s.ride, s.pet, s.hairstyle, s.face); if (s.homestead.inside) this.enterHomestead(s,true); else if (s.room.inside) this.enterRoom(s); else this.loadStage(s); this.quality(s.settings.lowQuality); }
+  quality(low: boolean) { this.lowQuality = low; const touchDevice = matchMedia('(pointer: coarse)').matches; this.renderer.setPixelRatio(Math.min(devicePixelRatio, low || touchDevice ? 1 : 1.25)); this.renderer.shadowMap.enabled = !low; this.sun.castShadow = !low;this.homeVisitors.forEach((v,i)=>v.entity.mesh.visible=i<(low?1:3)); }
   clearInput() { this.keys.clear(); this.stick = { x: 0, z: 0 }; }
   guideTo(kind: GuideKind) {
-    const entityMatch = (entity: Entity) => kind === 'forestWork' ? entity.id === `forestWork${this.trailNext}` : kind === 'trailSeed' ? entity.id.startsWith('trailSeed') && Math.floor(Number(entity.id.slice(9)) / 2) === this.trailNext : kind === 'trailLamp' ? entity.id === `trailLamp${this.trailNext}` : kind === 'monster' ? entity.id.startsWith('monster') : kind === 'expMonster' ? entity.id.startsWith('expMonster') : kind === 'storyClue' ? entity.id.startsWith('storyClue') : kind === 'shop' ? ['weapon', 'outfit', 'ride', 'pet', 'potion', 'beauty'].includes(entity.id) : entity.id === kind;
+    const entityMatch = (entity: Entity) => kind === 'homeVisitor' ? entity.id.startsWith('homeVisitor') : kind === 'forestWork' ? entity.id === `forestWork${this.trailNext}` : kind === 'trailSeed' ? entity.id.startsWith('trailSeed') && Math.floor(Number(entity.id.slice(9)) / 2) === this.trailNext : kind === 'trailLamp' ? entity.id === `trailLamp${this.trailNext}` : kind === 'monster' ? entity.id.startsWith('monster') : kind === 'expMonster' ? entity.id.startsWith('expMonster') : kind === 'storyClue' ? entity.id.startsWith('storyClue') : kind === 'shop' ? ['weapon', 'outfit', 'ride', 'pet', 'potion', 'beauty'].includes(entity.id) : entity.id === kind;
     const candidates: { object: T.Object3D; name: string; arrivalDistance: number }[] = kind === 'berry'
       ? this.coins.filter(coin => coin.mesh.visible).map(coin => ({ object: coin.mesh, name: '길 위의 베리', arrivalDistance: .9 }))
       : kind === 'star'
@@ -1372,7 +1419,7 @@ export class World {
   defeat(id: string) { const e = this.entities.find(e => e.id === id); if (e) { const type = id.startsWith('expMonster') ? Number(e.mesh.userData.monsterType) : stageMonsters(this.stage)[Number(id.slice(7))].type; this.burst(e.mesh.position, MONSTERS[type].color); e.mesh.visible = false; } }
   celebrate() { this.burst(this.player.position, 0xffd371, 10); }
   private burst(pos: T.Vector3, color: number, count = 14) { if (matchMedia('(prefers-reduced-motion: reduce)').matches) return; const available = Math.max(0, 48 - this.particles.length); for (let i = 0; i < Math.min(count, available); i++) { const m = mesh(particleGeometry, color, pos.x, pos.y + .9, pos.z, this.scene); this.particles.push({ mesh: m, v: new T.Vector3((Math.random() - .5) * 3.5, 1.5 + Math.random() * 2, (Math.random() - .5) * 3.5), life: .75 }); } }
-  private water(x: number, z: number) { return !this.inRoom && !(this.stage === 0 && this.restoredBridge && x > 14 && x < 24 && Math.abs(z - 8) < 1) && isVillagePond(this.stage, x, z); }
+  private water(x: number, z: number) { return !this.inHomestead && !this.inRoom && !(this.stage === 0 && this.restoredBridge && x > 14 && x < 24 && Math.abs(z - 8) < 1) && isVillagePond(this.stage, x, z); }
   private resize() {
     const w = this.container.clientWidth, h = this.container.clientHeight, span = w < 700 ? 13 : 14.5;
     if (this.storyActivityFocus) {
@@ -1395,6 +1442,7 @@ export class World {
   private frame() {
     if (document.hidden || this.paused || !this.active) return;
     const dt = Math.min(this.clock.getDelta(), .04); this.time += dt;
+    if(this.inHomestead)this.animateHomeVisitors(dt);
     if (this.shadowSweep++ % 45 === 0) this.trimSmallShadows(); // 새로 생긴 펫·탈것·몬스터도 곧 정리돼요.
     const p = this.player.position;
     this.updateWeather(dt);
@@ -1410,7 +1458,7 @@ export class World {
       if (n > .05) { this.player.rotation.y = Math.atan2(vx, vz); this.player.userData.feet?.forEach((f: T.Mesh, i: number) => { f.position.y = .18 + Math.max(0, Math.sin(this.time * 13 + i * Math.PI)) * .12; }); }
       const platform = flying ? undefined : this.platforms.find(t => Math.abs(p.x - t.x) < t.w / 2 + .15 && Math.abs(p.z - t.z) < t.d / 2 + .15); const floor = flying ? 1.65 + Math.sin(this.time * 2.2) * .08 : platform?.h ?? 0;
       this.vy -= 18 * dt; p.y += this.vy * dt; if (p.y <= floor && this.vy <= 0) { p.y = floor; this.vy = 0; this.grounded = true; } else this.grounded = false;
-      const bounds = this.inRoom ? { x: 6.8, z: 5.2 } : stageSize(this.stage);
+      const bounds = this.inHomestead ? { x: 13.4, z: 13.4 } : this.inRoom ? { x: 6.8, z: 5.2 } : stageSize(this.stage);
       if (Math.abs(p.x) > bounds.x - .5 || Math.abs(p.z) > bounds.z - .5 || (!flying && this.water(p.x, p.z) && p.y <= .2)) { p.copy(this.lastSafe); this.vy = 0; this.onRescue(); }
       else if (this.grounded && (flying || !this.water(p.x, p.z)) && Math.abs(p.x) < bounds.x - 2 && Math.abs(p.z) < bounds.z - 2) this.lastSafe.copy(p);
       if (this.petModel) { const walked = Math.hypot(p.x - oldX, p.z - oldZ); if (walked < 4) this.petWalk += walked; if (this.petWalk >= 1) { this.onPetWalk(this.petWalk); this.petWalk = 0; } }
@@ -1455,7 +1503,7 @@ export class World {
       }
     }
     if (this.storyActivityFocus && this.storyActivityRoot) this.storyActivityRoot.traverse(o => { if (o.userData.storyWheel && o.parent?.userData.storyActivity) { const water = this.storyActivityRoot!.userData.waterSolved; if (water) o.rotation.z -= dt; } });
-    for (const o of this.craftAnimated) { if (o.userData.fieldWheel) { if (!matchMedia('(prefers-reduced-motion: reduce)').matches) o.rotation.z -= dt * .7; } else if (o.userData.storyWheel) o.rotation.z -= dt * .7; else { o.rotation.y += dt * .6; o.scale.setScalar(1.5 + Math.sin(this.time * 1.7 + Number(o.userData.storySparkle)) * .12); } }
+    for (const o of this.craftAnimated) { if (o.userData.homeRotor) { if(!matchMedia('(prefers-reduced-motion: reduce)').matches)o.rotation.z-=dt*.8; } else if (o.userData.fieldWheel) { if (!matchMedia('(prefers-reduced-motion: reduce)').matches) o.rotation.z -= dt * .7; } else if (o.userData.storyWheel) o.rotation.z -= dt * .7; else { o.rotation.y += dt * .6; o.scale.setScalar(1.5 + Math.sin(this.time * 1.7 + Number(o.userData.storySparkle)) * .12); } }
     for (const c of this.coins) { c.mesh.rotation.y += dt; c.mesh.position.y = c.y + Math.sin(this.time * 2.8 + c.mesh.position.x) * .12; }
     // 화면 크기는 한 프레임에 한 번만 읽어요. 이름표마다 읽으면 그때마다 페이지 배치를 다시 계산해 태블릿에서 버벅여요.
     const viewW = this.container.clientWidth, viewH = this.container.clientHeight;
@@ -1494,6 +1542,7 @@ export class World {
       this.selectedId = near?.id ?? null; this.onNear(near?.name ?? null, near?.id ?? null);
     }
     for (const butterfly of this.butterflies) { butterfly.position.y += Math.sin(this.time * 4 + butterfly.position.x) * .0015; butterfly.rotation.y += dt * .7; }
+    if(this.inHomestead)this.homeVisitors.forEach(v=>v.entity.label.hidden=v.entity.id!==this.selectedId||!v.entity.mesh.visible);
     const weapon = this.player.userData.weapon as T.Group | undefined; if (weapon) weapon.rotation.z = -.28 + (this.swingUntil > this.time ? Math.sin((this.swingUntil - this.time) / .28 * Math.PI) * -1.35 : 0);
     for (const o of this.rideAnimated) {
       if (o.userData.rideWing) o.rotation.z = Number(o.userData.rideWing) * (-.72 + Math.sin(this.time * 7) * .18);

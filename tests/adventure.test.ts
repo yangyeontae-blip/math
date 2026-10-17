@@ -9,7 +9,7 @@ test('version 16 migrates to 18 without losing progress, purchases, wrong answer
   const current = newSave('모험가', 0), old = JSON.parse(JSON.stringify(current));
   old.version = 16; delete old.adventure; old.berries = 345; old.story.completed = [0]; old.tutorial.collected = true;
   const restored = validateSave(old);
-  assert.equal(restored.version, 20); assert.equal(restored.berries, 345); assert.deepEqual(restored.story.completed, [0]);
+  assert.equal(restored.version, 21); assert.equal(restored.berries, 345); assert.deepEqual(restored.story.completed, [0]);
   assert.equal(restored.tutorial.collected, true); assert.deepEqual(restored.adventure.completed, []); assert.equal(restored.adventure.designs.length, 3); assert.equal(restored.adventure.tool, null);
 });
 

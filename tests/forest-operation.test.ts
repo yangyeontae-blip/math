@@ -32,7 +32,7 @@ test('old wrong forest and arena preferences normalize without losing progress o
   for(const grade of [1,2] as const){
     const s=newSave('모험가',0,grade);s.forest='division';s.journey.stage=1;s.journey.maps[1].berries=[0];s.berries=432;s.settings.practice={operation:'division',tier:2,skipPicker:true};
     const restored=validateSave(JSON.parse(JSON.stringify(s)));
-    assert.equal(restored.version,20);assert.equal(restored.forest,'addition');assert.equal(restored.additionJourney.stage,0);assert.equal(restored.settings.practice.operation,'auto');
+    assert.equal(restored.version,21);assert.equal(restored.forest,'addition');assert.equal(restored.additionJourney.stage,0);assert.equal(restored.settings.practice.operation,'auto');
     assert.equal(restored.berries,432);assert.deepEqual(restored.journey,s.journey);assert.deepEqual(restored.weapons,s.weapons);assert.deepEqual(restored.curriculum,s.curriculum);
     assert.deepEqual(restored.position,{x:0,z:8});
   }

@@ -13,7 +13,7 @@ function prepare(s: ReturnType<typeof start>, step: number) {
 test('version 19 migration preserves the completed and partial addition trail, inventories, village and learning', () => {
   const s=start('subtraction'); s.berries=87; s.forestTrail={seeds:[0,1,2],lit:[0],placed:[3,1,0],drafts:['22','1','']};
   const old={...structuredClone(s),version:19} as Record<string,unknown>; delete old.forestActivities;
-  const after=validateSave(old); assert.equal(after.version,20); assert.deepEqual(after.forestActivities,emptyForestActivities());
+  const after=validateSave(old); assert.equal(after.version,21); assert.deepEqual(after.forestActivities,emptyForestActivities());
   for(const key of ['forestTrail','weapons','adventure','learning','berries','additionJourney'] as const) assert.deepEqual(after[key],s[key]);
 });
 test('all new activities respect grades, first-stage bounds, room and expedition exclusion', () => {
