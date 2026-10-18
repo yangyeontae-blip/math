@@ -755,7 +755,7 @@ export class World {
     for (let i = 0; i < 65; i++) { const x = Math.sin(i * 12.97) * 23, z = Math.cos(i * 4.67) * 18; if (Math.abs(x) < 3 || Math.hypot(x - 10.5, z - 13.5) < 7 || (z < -2 && z > -11) || (x > 5 && z > 2 && z < 14)) continue; for (let j = 0; j < 3; j++) { const fx = x + j * .14; cylinder(this.scene, 0x538c50, fx, .14, z, .025, .025, .3, 5); ball(this.scene, [0xffe8ae, 0xf4aec4, 0xeae3ff][i % 3], fx, .32, z, .1, .09, .1); } }
     for (const side of [-1, 1]) for (let i = 0; i < 7; i++) { const x = side * 22, z = -15 + i * 4.7; cylinder(this.scene, 0xd4bb88, x, .5, z, .08, .09, 1, 8); box(this.scene, 0xe7d3a3, x, .65, z + 2, .12, .11, 4.7); }
     this.villageDecor(theme);
-    if (theme !== VILLAGE_THEMES.division) this.addEntity('unit', `${theme.name} 안내판 · 입장하기`, -10, 9.5, this.gate(theme.gate));
+    if (theme !== VILLAGE_THEMES.division) this.addEntity('unit', theme === VILLAGE_THEMES.addition ? '마을 공지판 · 소식 읽기' : `${theme.name} 안내판 · 입장하기`, -10, 9.5, this.gate(theme.gate));
     this.addBerries();
   }
   // 숲마다 다른 분위기를 만드는 장식. 걷는 길과 상점 앞은 비워 둬요.

@@ -1,3 +1,5 @@
+import { VILLAGE_NOTICES, noticeListHtml, noticeDetailHtml } from './notices';
+import './notices.css';
 import { showHomestead, showHomeRequests, homeHeading, type HomeHooks } from './homestead-view';
 import { HOME_ITEMS, HOME_REQUESTS } from './homestead';
 import { showDiscoveryMap, showDiscovery } from './discovery-view';
@@ -38,7 +40,7 @@ import type { Question } from './rules';
 import './adventure.css';
 import { toolSpec, toolHtml, adjustTool } from './learning-tools';
 
-const CLIENT_BUILD = '2026-10-17.3';
+const CLIENT_BUILD = '2026-10-18.1';
 document.documentElement.dataset.clientBuild = CLIENT_BUILD;
 
 const $ = <T extends HTMLElement = HTMLElement>(selector: string) => document.querySelector<T>(selector)!;
@@ -615,7 +617,23 @@ function beginHuntBattle(monster: number, id: string) {
   if (!state || !operationsForGrade(state.grade).includes(state.forest)) return;
   startBattle(monster, false, id);
 }
-function openVillageBoard() { if (!state) return; if (state.hub) void openCurriculumUnit(state.hub); else openStageMap(state.forest); }
+function openVillageBoard() {
+  if (!state) return;
+  if (state.hub) { void openCurriculumUnit(state.hub); return; }
+  if (state.forest !== 'addition') { openStageMap(state.forest); return; }
+  const show = (id?: string) => {
+    const notice = VILLAGE_NOTICES.find(n => n.id === id);
+    openModal(title('사과 마을', '마을 공지판') + (notice ? noticeDetailHtml(notice) : noticeListHtml()) + '<button class="primary wide" id="notice-map">🌳 덧셈숲 단계 지도</button>', 'notice-modal');
+    document.querySelectorAll<HTMLButtonElement>('[data-notice]').forEach(button => button.onclick = () => show(button.dataset.notice));
+    const back = document.getElementById('notice-back');
+    if (back) back.onclick = () => { show(); Array.from(document.querySelectorAll<HTMLButtonElement>('[data-notice]')).find(b => b.dataset.notice === id)?.focus(); };
+    $('#notice-map').onclick = () => openStageMap('addition');
+    if (notice) $('#notice-title').focus();
+    else document.querySelector<HTMLButtonElement>('[data-notice]')?.focus();
+    $('#modal-content').scrollTop = 0;
+  };
+  show();
+}
 function openArena() {
   if (!state) return;
   openModal(title('신비의 대련장', '다섯 번의 작은 도전') + `<div class="arena-intro"><div class="arena-symbol">✦</div><p>몬스터 5마리와 차례로 수학 대련을 해요.<br>시간제한 없이, 천천히 생각해도 괜찮아요.</p>${practicePickerHtml()}<div class="stat-row"><div><small>나의 최고 점수</small><strong>${state.best}점</strong></div><div><small>지금 무기의 점수 배율</small><strong>×${(WEAPONS[state.weapon].multiplier + state.weapons[state.weapon] * .1).toFixed(1)}</strong></div></div><p class="note">도중에 쉬어도 이미 얻은 베리와 경험치는 그대로예요.</p><button class="primary wide" id="arena-start">대련 시작하기</button></div>`);
