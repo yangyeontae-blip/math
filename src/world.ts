@@ -1,3 +1,4 @@
+import { VILLAGE_SPOTS, villageWelcomeClear, villageTreeSpot, villageMonsterSpot } from './village-layout';
 import { homeScenery } from './homestead-models';
 import { HOME_ITEMS, objectCells, visitorTargets, homeRoute, type HomeObject } from './homestead';
 import { discoveryHere, discoveryInfo, discoverySpot, discoveryId } from './exploration';
@@ -747,20 +748,26 @@ export class World {
     this.addEntity('beauty', '가영이 · 헤어와 얼굴 꾸미기', -15.5, -4.2, makeCharacter(2, 15, 2));
     this.addEntity('arena', '신비 · 대련장', 0, -9, makeCharacter(3, 5, 3));
     this.addEntity('room', '나의 집 · 들어가기', 9, -4.5, this.gate(0xe5ad79));
-    stageMonsters(0).forEach((m, i) => this.addEntity(`monster${i}`, MONSTERS[m.type].name, m.x, m.z, makeMonster(m.type)));
+    stageMonsters(0).forEach((m, i) => { const at = villageMonsterSpot(i, m.x, m.z); this.addEntity(`monster${i}`, MONSTERS[m.type].name, at.x, at.z, makeMonster(m.type)); });
     this.addEntity('journey', '수학 모험의 문 · 1~6학년 지도', 10.5, 13.5, this.gate(0x9e78c9));
     // Keep the walking areas clear; peripheral trees frame the miniature world.
-    for (let i = 0; i < 48; i++) { const a = i * 2.39996, r = 17 + (i % 4) * 1.65; const x = Math.cos(a) * r, z = Math.sin(a) * r * .77; if ((x > 14 && z > 1) || Math.hypot(x - 10.5, z - 13.5) < 7 || Math.hypot(x - 18.5, z + 3.5) < 7 || (Math.abs(x) < 5 && z < -12)) continue; this.tree(x, z, .85 + (i % 3) * .16, theme.pinkTrees ? i % 3 === 0 : i % 6 === 0, theme.foliage); }
-    stageTrees(0).forEach(({ x, z }, i) => { if (Math.hypot(x - 18.5, z + 3.5) >= 8) this.addChoppableTree(i, x, z, 1, theme.pinkTrees || i % 2 === 0, theme.foliage); });
-    for (let i = 0; i < 65; i++) { const x = Math.sin(i * 12.97) * 23, z = Math.cos(i * 4.67) * 18; if (Math.abs(x) < 3 || Math.hypot(x - 10.5, z - 13.5) < 7 || (z < -2 && z > -11) || (x > 5 && z > 2 && z < 14)) continue; for (let j = 0; j < 3; j++) { const fx = x + j * .14; cylinder(this.scene, 0x538c50, fx, .14, z, .025, .025, .3, 5); ball(this.scene, [0xffe8ae, 0xf4aec4, 0xeae3ff][i % 3], fx, .32, z, .1, .09, .1); } }
+    for (let i = 0; i < 48; i++) { const a = i * 2.39996, r = 17 + (i % 4) * 1.65; const x = Math.cos(a) * r, z = Math.sin(a) * r * .77; if (villageWelcomeClear(x, z) || (x > 14 && z > 1) || Math.hypot(x - 10.5, z - 13.5) < 7 || Math.hypot(x - 18.5, z + 3.5) < 7 || (Math.abs(x) < 5 && z < -12)) continue; this.tree(x, z, .85 + (i % 3) * .16, theme.pinkTrees ? i % 3 === 0 : i % 6 === 0, theme.foliage); }
+    stageTrees(0).forEach(({ x, z }, i) => { const at = villageTreeSpot(i, x, z); if (Math.hypot(at.x - 18.5, at.z + 3.5) >= 8) this.addChoppableTree(i, at.x, at.z, 1, theme.pinkTrees || i % 2 === 0, theme.foliage); });
+    for (let i = 0; i < 65; i++) { const x = Math.sin(i * 12.97) * 23, z = Math.cos(i * 4.67) * 18; if (villageWelcomeClear(x, z) || Math.abs(x) < 3 || Math.hypot(x - 10.5, z - 13.5) < 7 || (z < -2 && z > -11) || (x > 5 && z > 2 && z < 14)) continue; for (let j = 0; j < 3; j++) { const fx = x + j * .14; cylinder(this.scene, 0x538c50, fx, .14, z, .025, .025, .3, 5); ball(this.scene, [0xffe8ae, 0xf4aec4, 0xeae3ff][i % 3], fx, .32, z, .1, .09, .1); } }
     for (const side of [-1, 1]) for (let i = 0; i < 7; i++) { const x = side * 22, z = -15 + i * 4.7; cylinder(this.scene, 0xd4bb88, x, .5, z, .08, .09, 1, 8); box(this.scene, 0xe7d3a3, x, .65, z + 2, .12, .11, 4.7); }
     this.villageDecor(theme);
-    if (theme !== VILLAGE_THEMES.division) this.addEntity('unit', theme === VILLAGE_THEMES.addition ? '마을 공지판 · 소식 읽기' : `${theme.name} 안내판 · 입장하기`, -10, 9.5, this.gate(theme.gate));
+    if (theme === VILLAGE_THEMES.addition) {
+      const board = new T.Group();
+      for (const x of [-.65,.65]) cylinder(board, 0x886445, x, .8, 0, .07, .09, 1.6, 7);
+      box(board, 0xc99062, 0, 1.35, 0, 1.9, 1.15, .16); box(board, 0xfff8de, 0, 1.35, .1, 1.58, .88, .04);
+      for (let i=0;i<3;i++) box(board, 0xd5ae8d, -.1, 1.58-i*.23, .13, 1.1-i*.15, .045, .02);
+      this.addEntity('noticeBoard', '마을 공지판 · 소식 읽기', VILLAGE_SPOTS.notice.x, VILLAGE_SPOTS.notice.z, board);
+    } else if (theme !== VILLAGE_THEMES.division) this.addEntity('unit', `${theme.name} 안내판 · 단계 지도`, -10, 9.5, this.gate(theme.gate));
     this.addBerries();
   }
   // 숲마다 다른 분위기를 만드는 장식. 걷는 길과 상점 앞은 비워 둬요.
   private villageDecor(theme: VillageTheme) {
-    const free = (x: number, z: number) => Math.abs(x) >= 3 && !(z < -2 && z > -11) && !(x > 5 && z > 2 && z < 14) && Math.hypot(x + 10, z - 9.5) > 3 && Math.hypot(x - 10.5, z - 13.5) > 6 && Math.hypot(x - 18.5, z + 3.5) > 6 && Math.abs(x) < 24 && Math.abs(z) < 19;
+    const free = (x: number, z: number) => !villageWelcomeClear(x, z) && Math.abs(x) >= 3 && !(z < -2 && z > -11) && !(x > 5 && z > 2 && z < 14) && Math.hypot(x + 10, z - 9.5) > 3 && Math.hypot(x - 10.5, z - 13.5) > 6 && Math.hypot(x - 18.5, z + 3.5) > 6 && Math.abs(x) < 24 && Math.abs(z) < 19;
     const spots = (count: number, a: number, b: number, make: (x: number, z: number, i: number) => void) => { let made = 0; for (let i = 0; made < count && i < count * 4; i++) { const x = Math.sin(i * a) * 23, z = Math.cos(i * b) * 18; if (!free(x, z)) continue; make(x, z, made++); } };
     if (theme.deco === 'sunflower') spots(22, 4.31, 2.71, (x, z, i) => { cylinder(this.scene, 0x5d934b, x, .45, z, .04, .06, .85, 6); ball(this.scene, 0x6e512f, x, .93, z, .14); for (let p = 0; p < 8; p++) ball(this.scene, 0xf6cb42, x + Math.cos(p * Math.PI / 4) * .25, .93 + Math.sin(p * Math.PI / 4) * .25, z, .11, .15, .06); if (i % 4 === 0) { const bee = new T.Group(); bee.position.set(x + .45, 1.4, z); ball(bee, 0xf2c340, 0, 0, 0, .15, .11, .12); box(bee, 0x4b4036, 0, 0, .08, .3, .06, .08); this.scene.add(bee); this.butterflies.push(bee); } });
     else if (theme.deco === 'apple') spots(26, 3.77, 2.39, (x, z, i) => { if (i % 5 === 0) { box(this.scene, 0xb98d58, x, .22, z, .9, .44, .7); for (let k = 0; k < 4; k++) ball(this.scene, 0xe0503f, x - .28 + k * .19, .5, z + (k % 2) * .12 - .06, .13); } else { ball(this.scene, 0xe0503f, x, .22, z, .2, .19, .2); ball(this.scene, 0x5d934b, x + .08, .42, z, .09, .04, .05); } });
@@ -890,7 +897,7 @@ export class World {
     this.clearInput(); this.clearMap(); this.inRoom = false; s.room.inside = false; s.homestead.inside=false; this.forest = s.forest; const journey = journeyFor(s); this.stage = journey.stage;
     this.scene.background = new T.Color(0xd0eade); this.scene.fog = new T.Fog(0xd0eade, 58, 112); this.platforms = stagePlatforms(this.stage);
     if (this.stage === 0) this.buildVillage(VILLAGE_THEMES[villageThemeId(s)]); else this.buildHunt(this.stage);
-    if (this.stage === 0) { this.updateStoryVillage(s); const gate=new T.Group();box(gate,0xd3b985,0,.8,0,1.4,1.6,.2);ball(gate,0xa8c98c,0,1.9,0,.5);this.addEntity('homesteadGate','🏡 나의 마을 · 들어가기',-9,6,gate); }
+    if (this.stage === 0) { this.updateStoryVillage(s); const gate=new T.Group();box(gate,0xd3b985,0,.8,0,1.4,1.6,.2);ball(gate,0xa8c98c,0,1.9,0,.5);this.addEntity('homesteadGate','🏡 나의 마을 · 들어가기',VILLAGE_SPOTS.home.x,VILLAGE_SPOTS.home.z,gate); }
     this.mergeStaticScenery();
     if (trailHere(s)) this.buildForestTrail(s);
     if (fieldHere(s)) this.buildForestWork(s);
@@ -1096,7 +1103,7 @@ export class World {
       e.label.remove(); this.scene.remove(e.mesh); this.disposeModel(e.mesh);
     }
     this.entities = this.entities.filter(entity => !entity.id.startsWith('villageProject'));
-    const positions = [[-7, 11], [0, 14], [5, 15]];
+    const positions = [[VILLAGE_SPOTS.flowers.x, VILLAGE_SPOTS.flowers.z], [0, 14], [5, 15]];
     VILLAGE_PROJECTS.forEach((project, id) => {
       const done = s.adventure.completed.includes(id), marker = new T.Group();
       cylinder(marker, 0x94734e, 0, .45, 0, .06, .08, .9, 6);
@@ -1533,7 +1540,7 @@ export class World {
       }); }
       const d = Math.hypot(p.x - e.x, p.z - e.z); if (e.mesh.visible && d < distance) { near = e; distance = d; }
       const v = this.tempProjection.set(e.x, e.id.startsWith('monster') ? 2 : 2.6, e.z).project(this.camera);
-      placeLabel(e.label, v, !!this.storyActivityFocus || !this.active || !e.mesh.visible || Math.abs(v.x) > 1.15 || Math.abs(v.y) > 1.1);
+      placeLabel(e.label, v, !!this.storyActivityFocus || !this.active || !e.mesh.visible || (this.stage === 0 && !this.inRoom && !this.inHomestead && (e.id.startsWith('tree') ? d > 3.8 : e.id.startsWith('monster') ? d > 7 : false)) || Math.abs(v.x) > 1.15 || Math.abs(v.y) > 1.1);
       const isNear = d < 2.8; if (e.label.classList.contains('near') !== isNear) e.label.classList.toggle('near', isNear);
     }
     if (!this.storyActivityFocus && (near?.id ?? null) !== this.selectedId) {
@@ -1608,6 +1615,15 @@ export class AvatarPreview {
     this.camera.position.copy(center).addScaledVector(direction, distance); this.camera.lookAt(center);
   }
   show(c: number, o: number, w: number, ol = 0, wl = 0, hairstyle = 0, face = 0) { const model = makeCharacter(c, o, w, ol, wl, hairstyle, face); model.userData.previewKind = 'avatar'; this.replaceModel(model, [2.2, 1.9, 5.8], 1.1); }
+  showSalon(c: number, o: number, hairstyle: number, face: number) {
+    const model = makeCharacter(c, o, 0, 0, 0, hairstyle, face);
+    (model.userData.weapon as T.Group | undefined)?.removeFromParent();
+    this.replaceModel(model, [0, 1.62, 3.05], 1.43);
+  }
+  salonPortrait(c: number, o: number, hairstyle: number, face: number): string {
+    this.showSalon(c, o, hairstyle, face);
+    return this.renderer.domElement.toDataURL('image/png');
+  }
   showPet(id: number) { const model = makePet(id); model.position.set(0, PETS[id].flying ? -.18 : .08, 0); model.scale.setScalar(id === 10 ? 1.48 : id === HERO_BREAD_PET_ID ? 1.6 : id >= 12 ? 1.55 : 1.72); model.userData.previewKind = 'pet'; this.replaceModel(model, [2.1, 1.35, 4.15], id === 10 ? .68 : .62, true); }
   showRide(id: number, c: number, o: number, w: number, ol = 0, wl = 0, hairstyle = 0, face = 0) { const model = makeCharacter(c, o, w, ol, wl, hairstyle, face), body = model.userData.body as T.Group; body.position.y = riderHeight(id); model.add(makeRide(id)); model.userData.previewKind = 'ride'; this.replaceModel(model, [3.4, 2.35, 7.7], 1.15, true); }
   private draw() { const w = this.element.clientWidth, h = this.element.clientHeight; if (!w || !h) return; if (w !== this.drawWidth || h !== this.drawHeight) { this.drawWidth = w; this.drawHeight = h; this.renderer.setSize(w, h); this.camera.aspect = w / h; this.camera.updateProjectionMatrix(); } this.renderer.render(this.scene, this.camera); }

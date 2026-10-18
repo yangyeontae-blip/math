@@ -71,10 +71,15 @@ export const GREETINGS: Record<string, string[]> = {
     '오늘은 어디가 궁금하니? 어디든 길은 열려 있어.',
     '막힌 곳이 있으면 쉬운 곳에서 다시 시작해도 좋아.'
   ],
+  noticeBoard: [
+    '운영자가 전하는 베리숲 소식을 읽어 볼래?',
+    '마을 공지판이야. 새 소식과 이용 안내를 확인해 봐!',
+    '공지부터 읽을까? 숲 지도는 안쪽 버튼으로 열 수 있어.'
+  ],
   unit: [
-    '여기는 마을 게시판이야. 오늘의 소식을 볼래?',
-    '새로운 소식이 붙었는지 한번 살펴볼까?',
-    '게시판은 마을 사람들의 소식통이야.'
+    '이 마을에서 떠날 수 있는 수학 모험을 골라 볼래?',
+    '단계 지도를 열어 줄게. 열린 길부터 천천히 가 봐!',
+    '여기는 모험 안내판이야. 다음에 갈 단계를 살펴보자.'
   ],
   next: [
     '다음 단계로 가는 문이야. 준비됐니?',
@@ -99,7 +104,7 @@ export const RAIN_LINES = [
 export function pickLine(id: string, random: () => number = Math.random, context: LineContext = {}, previous = ''): string | null {
   const lines = GREETINGS[id]; if (!lines) return null;
   const seasonal = [...(context.night ? NIGHT_LINES : []), ...(context.rain ? RAIN_LINES : [])];
-  const pool = seasonal.length && random() < .3 ? seasonal : lines;
+  const pool = id !== 'noticeBoard' && id !== 'unit' && seasonal.length && random() < .3 ? seasonal : lines;
   const options = pool.filter(line => line !== previous);
   const list = options.length ? options : pool;
   return list[Math.min(list.length - 1, Math.floor(random() * list.length))];
