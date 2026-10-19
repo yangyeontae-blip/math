@@ -232,6 +232,7 @@ function syncShadows() {
   world.setShadows(shadowList.map((mistake, i) => ({ id: `shadow${i}`, name: `그림자 몬스터 · ${curriculumRegions().find(region => region.id === mistake.unit)?.name ?? '수학'} 다시 만나기`, type: Math.max(0, curriculumRegions().findIndex(region => region.id === mistake.unit)) % 8 })));
   if (shadowList.length && world.stage === 0 && !world.inRoom && !shadowToastShown) { shadowToastShown = true; setTimeout(() => toast('🌑 마을에 그림자 몬스터가 나타났어요! 다시 풀면 사라져요.'), 2200); }
 }
+let combo = 0; // 처음에 바로 맞힌 문제가 이어진 수(표시와 소리만 바뀌고 보상은 그대로예요)
 let storageError = false, sessionExpired = false, sessionElapsed = 0, sessionCorrect = 0, sessionWrong = 0;
 const OUTFIT_ICONS = ['🌿', '🌈', '🍃', '☁️', '🌸', '🌟', '🌙', '👑', '🍓', '🐥', '🐰', '🌰', '🐱', '🐑', '🐸', '🧚', '🌻', '🐝', '🍑', '✴️', '🛡️', '🫖', '🧑‍🚀', '🍰', '🐇', '👑'];
 type CurriculumRegion = GradeRegion;
@@ -1155,7 +1156,17 @@ function renderBattle() {
   }
   document.querySelectorAll<HTMLButtonElement>('[data-number]').forEach(button => button.onclick = () => enterAnswer(button.dataset.number!));
   document.querySelectorAll<HTMLInputElement>('[data-answer-part]').forEach(input => input.onclick = () => { document.querySelectorAll<HTMLInputElement>('[data-answer-part]').forEach(item => item.classList.toggle('active', item === input)); });
+  if (challenge) $('#monster-portrait').insertAdjacentHTML('beforeend', heartsMarkup(b.goalRounds! - b.round + 1, b.goalRounds!));
   $('#show-hint').onclick = () => showHint(true); $('#answer').focus();
+}
+/** 여러 문제 시합: 남은 문제를 하트로 보여 주고, 마지막 문제를 맞혀야 몬스터가 쓰러져요. */
+function heartsMarkup(left: number, total: number) { return `<div class="monster-hearts" id="monster-hearts" aria-label="남은 문제 ${left}개">${'❤️'.repeat(left)}${'🤍'.repeat(total - left)}</div>`; }
+function loseHeart() { const hearts = document.querySelector('#monster-hearts'); if (hearts && battle) hearts.outerHTML = heartsMarkup((battle.goalRounds ?? 1) - battle.round, battle.goalRounds ?? 1); }
+/** 정답으로 몬스터를 맞히면 흔들리고 글자가 튀어 올라요. 연속 정답일수록 소리가 높아져요. */
+function hitMonster(streak: number) {
+  audio.hit(streak); const portrait = document.querySelector<HTMLElement>('#monster-portrait'); if (!portrait) return;
+  portrait.classList.remove('hit'); void portrait.offsetWidth; portrait.classList.add('hit');
+  const pop = document.createElement('span'); pop.className = 'hit-pop'; pop.textContent = streak >= 2 ? `🔥 ${streak}연속!` : '✦ 맞았어요!'; portrait.append(pop); setTimeout(() => pop.remove(), 1000);
 }
 const DECIMAL_STORIES = {
   addition: (a: string, b: string) => `리본이 ${a} m와 ${b} m 있어요. 모두 합하면 몇 m일까요?`,
@@ -1249,11 +1260,11 @@ function submitAnswer() {
   const submitted = b.encounter.question.remainder ? `${input.value}R${remainderInput!.value}` : input.value;
   const outcome = b.encounter.answer(submitted);
   if (outcome === 'ignored') return;
-  if (outcome === 'wrong') { if (!b.missedCurrent) { b.missedCurrent = true; recordAdaptive(false); recordWrongAnswer(state, b.encounter.question); recordCurriculumAttempt(state, b.encounter.question.operation ?? 'division', false); sessionWrong++; } audio.play('wrong'); persist(); $('#answer-message').textContent = '괜찮아요! 묶음을 살펴보고 다시 풀어 볼까요?'; input.value = ''; if (remainderInput) remainderInput.value = ''; showHint(); return; }
-  sessionCorrect++; recordCorrectAnswer(state, b.encounter.monster, !b.missedCurrent && !b.hintUsed); if (!b.missedCurrent) { recordCurriculumAttempt(state, b.encounter.question.operation ?? 'division', true); if (!b.hintUsed) { addBossDamage(localStorage); recordAdaptive(true); } } state.discoveries.outfits.includes(state.outfit) || state.discoveries.outfits.push(state.outfit); if (state.pet >= 0 && !state.discoveries.pets.includes(state.pet)) state.discoveries.pets.push(state.pet);
+  if (outcome === 'wrong') { if (!b.missedCurrent) { b.missedCurrent = true; recordAdaptive(false); recordWrongAnswer(state, b.encounter.question); recordCurriculumAttempt(state, b.encounter.question.operation ?? 'division', false); sessionWrong++; } combo = 0; audio.play('wrong'); persist(); $('#answer-message').textContent = '괜찮아요! 묶음을 살펴보고 다시 풀어 볼까요?'; input.value = ''; if (remainderInput) remainderInput.value = ''; showHint(); return; }
+  sessionCorrect++; combo = b.missedCurrent ? 0 : combo + 1; hitMonster(combo); recordCorrectAnswer(state, b.encounter.monster, !b.missedCurrent && !b.hintUsed); if (!b.missedCurrent) { recordCurriculumAttempt(state, b.encounter.question.operation ?? 'division', true); if (!b.hintUsed) { addBossDamage(localStorage); recordAdaptive(true); } } state.discoveries.outfits.includes(state.outfit) || state.discoveries.outfits.push(state.outfit); if (state.pet >= 0 && !state.discoveries.pets.includes(state.pet)) state.discoveries.pets.push(state.pet);
   if (!b.encounter.arena && !['multiplicationGate', 'expGate'].includes(b.kind) && b.round < (b.goalRounds ?? 1)) {
     audio.play('correct'); world.celebrate(); persist();
-    $('#answer-message').textContent = '정답이에요! 다음 문제도 함께 풀어요.'; $('#monster-portrait').classList.add('defeated'); $('.number-pad').hidden = true; $('.battle-footer').hidden = true; $('#hint').hidden = true; $('#battle-result').hidden = false;
+    $('#answer-message').textContent = combo >= 2 ? `🔥 ${combo}문제 연속 정답! 다음 문제도 함께 풀어요.` : '정답이에요! 다음 문제도 함께 풀어요.'; loseHeart(); $('.number-pad').hidden = true; $('.battle-footer').hidden = true; $('#hint').hidden = true; $('#battle-result').hidden = false;
     $('#battle-result').innerHTML = `<div class="reward-banner"><strong>✨ ${b.round}번째 문제 성공!</strong><p>${MONSTERS[b.encounter.monster].name} 친구와 ${b.goalRounds! - b.round}문제를 더 풀면 보상을 받아요.</p></div><button class="primary wide" id="next-battle">다음 문제 풀기 →</button>`;
     $('#next-battle').onclick = continueFriendBattle; $('#next-battle').focus(); return;
   }

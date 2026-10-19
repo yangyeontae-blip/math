@@ -426,3 +426,11 @@ input:not([type=checkbox]):not([type=radio]),select,textarea{min-height:44px}
 .quest-card.is-collapsed .quest-toggle{flex-wrap:wrap}
 @media(max-width:600px){#toast{top:auto;bottom:170px}}
 .quest-card.is-collapsed > button:not(.quest-toggle){display:none}
+
+/* 시합: 맞히면 흔들리고 글자가 튀어 올라요. 남은 문제는 하트로 보여요. */
+.monster-portrait{position:relative}.monster-portrait.hit{animation:monster-hit .45s ease}
+@keyframes monster-hit{0%{transform:none}20%{transform:translateX(-8px) rotate(-4deg)}40%{transform:translateX(7px) rotate(3deg)}60%{transform:translateX(-4px)}100%{transform:none}}
+.hit-pop{position:absolute;left:50%;top:12%;transform:translateX(-50%);font-weight:900;color:#e0703a;font-size:1.1rem;pointer-events:none;white-space:nowrap;text-shadow:0 2px 0 #fff;animation:hit-pop 1s ease-out forwards}
+@keyframes hit-pop{from{opacity:1;transform:translate(-50%,0) scale(.8)}to{opacity:0;transform:translate(-50%,-34px) scale(1.15)}}
+.monster-hearts{position:absolute;right:10px;top:8px;font-size:1rem;letter-spacing:2px;line-height:1}
+@media(prefers-reduced-motion:reduce){.monster-portrait.hit,.hit-pop{animation:none}}

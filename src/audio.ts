@@ -31,6 +31,11 @@ export class Sound {
     if (!this.effects) return;
     this.note([392, 440, 494, 523, 587][Math.abs(seed) % 5], .09, .018, 0, 'triangle');
   }
+  /** 정답으로 몬스터를 맞힐 때: 연속 정답일수록 조금씩 높아져요. */
+  hit(streak: number) {
+    if (!this.effects) return; const lift = Math.min(streak, 6) * 40;
+    this.note(196, .12, .05, 0, 'square'); this.note(660 + lift, .18, .03, .05, 'triangle'); if (streak >= 3) this.note(990 + lift, .22, .02, .12);
+  }
   play(kind: 'berry' | 'correct' | 'wrong' | 'level' | 'buy' | 'jump' | 'swing' | 'chop') {
     if (!this.effects) return;
     if (kind === 'correct') { [523, 659, 784, 1047].forEach((n, i) => { this.note(n, .45, .04, i * .09, 'triangle'); this.note(n * 2, .3, .012, i * .09 + .01); }); return; }
