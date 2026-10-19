@@ -4,7 +4,7 @@ export type LineContext = { night?: boolean; rain?: boolean };
 
 export const GREETINGS: Record<string, string[]> = {
   shepherd: [
-    '안녕, 나는 목장주인 가현이야. 구름양들이 오늘도 네 도움이 필요하단다.',
+    '안녕, 나는 목장주인 가현이야. 구름양들에게 네 도움이 필요하단다.',
     '양들을 같은 수로 우리에 데려다주면 꽃씨를 선물할게!',
     '목장에서는 서두르지 말고, 한 우리씩 차근차근 세어 보자.'
   ],

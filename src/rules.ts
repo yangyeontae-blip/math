@@ -6,6 +6,7 @@ import { stageBerries, stageMonsters, stageTrees, stageSize, berryValue, clearBo
 import { emptyExpedition, expeditionLayout, EXPEDITION_TITLES, type ExpeditionProgress } from './expedition';
 import { DAILY_MISSIONS, DATE_KEY, recordDaily, type DailyState } from './daily';
 import { sha256Hex } from './sha256';
+import { j } from './grade-helpers';
 export const WEAPONS = [
   { name: '새싹 나무검', price: 0, bonus: 0, multiplier: 1, treePower: 1, icon: '🌱', color: 0x96bf6a },
   { name: '도토리 망치', price: 80, bonus: 2, multiplier: 1.2, treePower: 2, icon: '🔨', color: 0xbf8c52 },
@@ -644,14 +645,14 @@ export function buyRide(s: Save, id: number): string {
   if (!Number.isInteger(id) || !ride) throw new Error('없는 라이딩이에요.');
   if (s.rides[id]) { s.ride = id; return `${ride.name}에 탔어요!`; }
   if (s.berries < ride.price) throw new Error(`${ride.price - s.berries}베리가 더 필요해요.`);
-  s.berries -= ride.price; s.rides[id] = true; s.ride = id; return `${ride.name}을(를) 만나 함께 달려요!`;
+  s.berries -= ride.price; s.rides[id] = true; s.ride = id; return `${j(ride.name, '을를')} 만나 함께 달려요!`;
 }
 export function dismount(s: Save) { s.ride = -1; return '라이딩에서 내려 천천히 걸어요.'; }
 export function buyPet(s: Save, id: number): string {
   const pet = PETS[id]; if (!Number.isInteger(id) || !pet) throw new Error('없는 펫이에요.');
-  if (s.pets[id]) { s.pet = id; return `${pet.name}와 함께 모험해요!`; }
+  if (s.pets[id]) { s.pet = id; return `${j(pet.name, '와과')} 함께 모험해요!`; }
   if (s.berries < pet.price) throw new Error(`${pet.price - s.berries}베리가 더 필요해요.`);
-  s.berries -= pet.price; s.pets[id] = true; s.pet = id; return `${pet.name}이(가) 새 친구가 되었어요!`;
+  s.berries -= pet.price; s.pets[id] = true; s.pet = id; return `${j(pet.name, '이가')} 새 친구가 되었어요!`;
 }
 export function unequipPet(s: Save) { s.pet = -1; return '펫이 포근한 집에서 쉬어요.'; }
 export function buyLook(s: Save, kind: 'hairstyle' | 'face', id: number): string {
@@ -664,7 +665,7 @@ export function buyPotion(s: Save, id: number) {
   const potion = POTIONS[id]; if (!Number.isInteger(id) || !potion) throw new Error('없는 물약이에요.');
   if (s.potions.stock[id] >= 99) throw new Error('이 물약은 99개까지 보관할 수 있어요.');
   if (s.berries < potion.price) throw new Error(`${potion.price - s.berries}베리가 더 필요해요.`);
-  s.berries -= potion.price; s.potions.stock[id]++; return `${potion.name}을(를) 가방에 넣었어요!`;
+  s.berries -= potion.price; s.potions.stock[id]++; return `${j(potion.name, '을를')} 가방에 넣었어요!`;
 }
 export function usePotion(s: Save, id: number, now = Date.now()) {
   const potion = POTIONS[id]; if (!Number.isInteger(id) || !potion || !s.potions.stock[id]) throw new Error('가방에 이 물약이 없어요.');
@@ -674,7 +675,7 @@ export function usePotion(s: Save, id: number, now = Date.now()) {
   s.potions.stock[id]--;
   if (potion.kind === 'berry') { s.potions.berryMultiplier = potion.multiplier as 2 | 3; s.potions.berryUntil = now + potion.durationMinutes * 60_000; }
   else { s.potions.xpMultiplier = potion.multiplier as 2 | 3 | 4; s.potions.xpUntil = now + potion.durationMinutes * 60_000; }
-  return `${potion.name}을(를) 사용했어요. ${potion.durationMinutes}분 동안 효과가 있어요!`;
+  return `${j(potion.name, '을를')} 사용했어요. ${potion.durationMinutes}분 동안 효과가 있어요!`;
 }
 /** 교사용 코드(`teacher`)의 SHA-256. 더 어려운 코드로 바꾸려면 새 코드의 해시로 교체하세요(README 참고). */
 export const TEACHER_CODE_HASH = '1057a9604e04b274da5a4de0c8f4b4868d9b230989f8c8c6a28221143cc5a755';
