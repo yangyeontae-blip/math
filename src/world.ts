@@ -1,5 +1,5 @@
 import { showEntityLabel } from './navigation';
-import { VILLAGE_SPOTS, villageWelcomeClear, villageTreeSpot, villageMonsterSpot } from './village-layout';
+import { MARKET_SHOPS, VILLAGE_SPOTS, villageWelcomeClear, villageTreeSpot, villageMonsterSpot } from './village-layout';
 import { homeScenery } from './homestead-models';
 import { HOME_ITEMS, objectCells, visitorTargets, homeRoute, type HomeObject } from './homestead';
 import { discoveryHere, discoveryInfo, discoverySpot, discoveryId } from './exploration';
@@ -734,23 +734,22 @@ export class World {
     const shops = new T.Group(); cylinder(shops,0x886445,0,.7,0,.08,.1,1.4,7);box(shops,0xeec8d1,0,1.5,0,1.6,.8,.15);this.addEntity('shopStreet','상점 거리 · 구경하기',7,-1,shops);
     for (const [x, z] of [[-5, 11], [6, 11], [-5, -1], [6, -1]]) { cylinder(this.scene, 0x755a43, x, .65, z, .06, .08, 1.3, 7); ball(this.scene, 0xffe99a, x, 1.35, z, .22); }
     // Pastel bunting, tiny mushrooms and butterflies make the square feel festive.
-    for (let i = 0; i < 9; i++) { const flag = mesh(new T.ConeGeometry(.18, .38, 3), [0xf6a7bc, 0xf5d37b, 0x92d4cc][i % 3], -5 + i * 1.25, 2.3 + Math.sin(i * .7) * .12, -2.2, this.scene); flag.rotation.z = Math.PI; }
     for (const [x, z, c] of [[-4, 7, 0xf58da6], [5, 7, 0xffd66b], [-12, 1, 0xa9cceb], [13, 3, 0xd8a3e6]] as const) { cylinder(this.scene, 0xffeed6, x, .18, z, .08, .12, .36, 7); ball(this.scene, c, x, .42, z, .28, .16, .25); }
-    for (let i = 0; i < 8; i++) { const x = -8 + i * 2.2, z = 7 + Math.sin(i) * 1.8; if (Math.hypot(x - 10.5, z - 13.5) < 7) continue; const g = new T.Group(); g.position.set(x, .9 + i % 2 * .35, z); this.scene.add(g); ball(g, i % 2 ? 0xf5a9ca : 0x9bd8e0, -.1, 0, 0, .12, .08, .03); ball(g, i % 2 ? 0xf5a9ca : 0x9bd8e0, .1, 0, 0, .12, .08, .03); cylinder(g, 0x75543e, 0, 0, 0, .025, .025, .16, 5); this.butterflies.push(g); }
+    for (let i = 0; i < 3; i++) { const x = -8 + i * 2.2, z = 7 + Math.sin(i) * 1.8; if (Math.hypot(x - 10.5, z - 13.5) < 7) continue; const g = new T.Group(); g.position.set(x, .9 + i % 2 * .35, z); this.scene.add(g); ball(g, i % 2 ? 0xf5a9ca : 0x9bd8e0, -.1, 0, 0, .12, .08, .03); ball(g, i % 2 ? 0xf5a9ca : 0x9bd8e0, .1, 0, 0, .12, .08, .03); cylinder(g, 0x75543e, 0, 0, 0, .025, .025, .16, 5); this.butterflies.push(g); }
     this.addEntity('guide', '연태쌤 · 마을 대장', 1.8, 3, makeYeontae());
     this.addEntity('shepherd', '가현이 · 구름양 목장주인', -17, -9, makeCharacter(0, 21, 3, 0, 0, 6, 7));
-    this.addEntity('weapon', '강지후 · 무기 상점', 10, -3.8, makeCharacter(1, 6, 1));
-    this.addEntity('outfit', '오지후 · 의상 상점', 14, -3.8, makeCharacter(2, 4, 2));
-    this.addEntity('ride', '나현이 · 라이딩 상점', 10, -10, makeCharacter(0, 10, 6));
-    this.addEntity('pet', '윤준 · 펫 상점', 19, -3.8, makeCharacter(1, 12, 10));
-    this.addEntity('potion', '박준우 · 물약 상점', 19, -10, makeCharacter(0, 16, 12));
-    this.addEntity('beauty', '가영이 · 헤어와 얼굴 꾸미기', 14, -10, makeCharacter(2, 15, 2));
+    this.addEntity('weapon', '강지후 · 무기 상점', MARKET_SHOPS[0].x, MARKET_SHOPS[0].z+3.1, makeCharacter(1, 6, 1));
+    this.addEntity('outfit', '오지후 · 의상 상점', MARKET_SHOPS[1].x, MARKET_SHOPS[1].z+3.1, makeCharacter(2, 4, 2));
+    this.addEntity('ride', '나현이 · 라이딩 상점', MARKET_SHOPS[3].x, MARKET_SHOPS[3].z+3.1, makeCharacter(0, 10, 6));
+    this.addEntity('pet', '윤준 · 펫 상점', MARKET_SHOPS[2].x, MARKET_SHOPS[2].z+3.1, makeCharacter(1, 12, 10));
+    this.addEntity('potion', '박준우 · 물약 상점', MARKET_SHOPS[5].x, MARKET_SHOPS[5].z+3.1, makeCharacter(0, 16, 12));
+    this.addEntity('beauty', '가영이 · 헤어와 얼굴 꾸미기', MARKET_SHOPS[4].x, MARKET_SHOPS[4].z+3.1, makeCharacter(2, 15, 2));
     stageMonsters(0).forEach((m, i) => { const at = villageMonsterSpot(i, m.x, m.z); this.addEntity(`monster${i}`, MONSTERS[m.type].name, at.x, at.z, makeMonster(m.type)); });
     this.addEntity('journey', '숲으로 모험 · 지도', 8, 8, this.gate(0x9e78c9));
     // Keep the walking areas clear; peripheral trees frame the miniature world.
-    for (let i = 0; i < 48; i++) { const a = i * 2.39996, r = 17 + (i % 4) * 1.65; const x = Math.cos(a) * r, z = Math.sin(a) * r * .77; if (villageWelcomeClear(x, z) || (x > 14 && z > 1) || Math.hypot(x - 10.5, z - 13.5) < 7 || Math.hypot(x - 18.5, z + 3.5) < 7 || (Math.abs(x) < 5 && z < -12)) continue; this.tree(x, z, .85 + (i % 3) * .16, theme.pinkTrees ? i % 3 === 0 : i % 6 === 0, theme.foliage); }
+    for (let i = 0; i < 48; i+=2) { const a = i * 2.39996, r = 17 + (i % 4) * 1.65; const x = Math.cos(a) * r, z = Math.sin(a) * r * .77; if (villageWelcomeClear(x, z) || (x > 14 && z > 1) || Math.hypot(x - 10.5, z - 13.5) < 7 || Math.hypot(x - 18.5, z + 3.5) < 7 || (Math.abs(x) < 5 && z < -12)) continue; this.tree(x, z, .85 + (i % 3) * .16, theme.pinkTrees ? i % 3 === 0 : i % 6 === 0, theme.foliage); }
     stageTrees(0).forEach(({ x, z }, i) => { const at = villageTreeSpot(i, x, z); if (Math.hypot(at.x - 18.5, at.z + 3.5) >= 8) this.addChoppableTree(i, at.x, at.z, 1, theme.pinkTrees || i % 2 === 0, theme.foliage); });
-    for (let i = 0; i < 65; i++) { const x = Math.sin(i * 12.97) * 23, z = Math.cos(i * 4.67) * 18; if (villageWelcomeClear(x, z) || Math.abs(x) < 3 || Math.hypot(x - 10.5, z - 13.5) < 7 || (z < -2 && z > -11) || (x > 5 && z > 2 && z < 14)) continue; for (let j = 0; j < 3; j++) { const fx = x + j * .14; cylinder(this.scene, 0x538c50, fx, .14, z, .025, .025, .3, 5); ball(this.scene, [0xffe8ae, 0xf4aec4, 0xeae3ff][i % 3], fx, .32, z, .1, .09, .1); } }
+    for (let i = 0; i < 24; i++) { const x = Math.sin(i * 12.97) * 23, z = Math.cos(i * 4.67) * 18; if (villageWelcomeClear(x, z) || Math.abs(x) < 3 || Math.hypot(x - 10.5, z - 13.5) < 7 || (z < -2 && z > -11) || (x > 5 && z > 2 && z < 14)) continue; for (let j = 0; j < 3; j++) { const fx = x + j * .14; cylinder(this.scene, 0x538c50, fx, .14, z, .025, .025, .3, 5); ball(this.scene, [0xffe8ae, 0xf4aec4, 0xeae3ff][i % 3], fx, .32, z, .1, .09, .1); } }
     for (const side of [-1, 1]) for (let i = 0; i < 7; i++) { const x = side * 22, z = -15 + i * 4.7; cylinder(this.scene, 0xd4bb88, x, .5, z, .08, .09, 1, 8); box(this.scene, 0xe7d3a3, x, .65, z + 2, .12, .11, 4.7); }
     this.villageDecor(theme);
     { // The operator notice has the same location in every village.
@@ -762,68 +761,49 @@ export class World {
     }
     this.addBerries();
   }
-  /** Six small shops frame two walkable lanes; merchants keep their existing interaction positions. */
+  /** Different silhouettes and generous lanes make each merchant easy to recognise and approach. */
   private buildMarket() {
-    const warm=0xf6e8cd,wood=0x906647;
-    box(this.scene,0xcab68e,14.4,.025,-8.1,15.8,.08,15.8);
-    box(this.scene,0xeee0bc,14.4,.075,-8.1,15.3,.08,15.3);
-    // Setts and borders make the market a destination without filling the walking lanes.
-    for(let i=0;i<12;i++) for(const z of [-2.1,-8.5]) box(this.scene,i%2?0xd9c99f:0xe4d4af,8.2+i*1.1,.13,z,.95,.035,.46);
-    const stalls=[
-      {x:10,z:-6.1,c:0x71aaa3,kind:0}, {x:14.5,z:-6.1,c:0xdc94aa,kind:1}, {x:19,z:-6.1,c:0xd6b66c,kind:2},
-      {x:10,z:-12.5,c:0x88a9cf,kind:3}, {x:14.5,z:-12.5,c:0xb59ace,kind:4}, {x:19,z:-12.5,c:0x8cb282,kind:5},
-    ];
-    for(const {x,z,c,kind} of stalls){
+    const wood=0x886348,cream=0xf7e7c8,stone=0x9eaa9b;
+    box(this.scene,0xe3d2ad,15,.045,-8,19,.07,19.6);
+    // Two simple streets with no overhead flags, flower crates or repeated signs.
+    for(const z of [-1.4,-11.2])box(this.scene,0xf0e5ce,15,.095,z,19,.025,2.4);
+    for(const {x,z,kind}of MARKET_SHOPS){
       const g=new T.Group();g.position.set(x,0,z);this.scene.add(g);
-      box(g,0xb48a60,0,.12,0,3.7,.18,2.8);
-      box(g,warm,0,1.45,-1,3.25,2.5,.16);
-      for(const side of [-1,1]){
-        box(g,wood,side*1.62,1.6,-1,.13,3.1,.14);
-        cylinder(g,wood,side*1.62,1.42,1.12,.07,.09,2.8,7);
-        ball(g,0xf4d48b,side*1.62,2.89,1.12,.12);
+      const accent=[0x638e8b,0xda9da7,0x8cae77,0xc6a272,0xb29ac9,0x729a91][kind];
+      const block=(color:number,px:number,y:number,pz:number,w:number,h:number,d:number)=>box(g,color,px,y,pz,w,h,d);
+      const roof=(color:number,y:number)=>{for(const side of [-1,1]){const half=block(color,0,y,side*.95,4.7,.22,2.2);half.rotation.x=side*.35;}block(wood,0,y+.38,0,4.8,.14,.15);};
+      const door=()=>{block(wood,0,1.02,1.77,.9,1.95,.13);ball(g,0xf2ce78,.28,1,1.88,.07);block(0xd9c7a1,0,.16,2.1,1.6,.24,.7);};
+      const window=(px:number)=>{block(wood,px,1.65,1.8,.84,1,.12);block(0xc0dce0,px,1.65,1.88,.65,.8,.04);block(cream,px,1.65,1.92,.06,.8,.04);block(cream,px,1.65,1.92,.65,.06,.04);};
+      if(kind===0){ // Stone and timber forge, with a broad chimney and an anvil.
+        block(stone,0,1.3,0,4,2.6,3.5);for(const side of [-1,1])block(wood,side*1.94,1.5,1.76,.14,2.95,.16);roof(accent,3.1);door();window(-1.2);
+        block(0x869188,1.3,3.4,-.7,.75,2.7,.7);block(0xb1b6a6,1.3,4.82,-.7,.95,.16,.85);
+        block(wood,1.25,.38,2,.8,.65,.6);block(0x697e7f,1.25,.88,2,1.1,.25,.45);block(0x697e7f,1.25,.69,2,.38,.5,.32);
+        const blade=block(0xc7d8d2,-.3,2.55,1.82,.12,.86,.1);blade.rotation.z=-.6;block(0xe2ba6c,-.53,2.22,1.88,.48,.1,.14);
+      }else if(kind===1){ // A tall little fashion boutique, not a market tent.
+        block(cream,0,1.6,0,3.8,3.2,3.5);roof(accent,3.7);door();window(-1.2);window(1.2);
+        ball(g,0xf5d2d0,0,3.53,1.2,.4,.4,.08);ball(g,0xb6d2d5,0,3.53,1.29,.28,.28,.04);
+        const awning=block(accent,0,2.4,2.03,3.4,.16,.85);awning.rotation.x=.17;
+        block(wood,1.6,.5,2.2,.07,1,.07);ball(g,0xe3a8b7,1.6,1.07,2.2,.29,.4,.22);block(cream,1.6,.96,2.44,.54,.08,.05);
+      }else if(kind===2){ // Round woodland pet cottage and a tiny kennel.
+        cylinder(g,0xdfcc9e,0,1.23,0,1.9,1.95,2.45,12);const r=mesh(new T.ConeGeometry(2.5,1.8,10),accent,0,3.2,0,g);r.rotation.y=.3;door();window(-1.05);window(1.05);
+        ball(g,0xe8ca8c,0,2.55,1.8,.26,.2,.07);for(const px of [-.3,0,.3])ball(g,0xe8ca8c,px,2.85,1.8,.1,.12,.06);
+        block(wood,1.42,.35,2.2,.9,.7,.85);const kennel=block(accent,1.42,.8,2.2,1.15,.13,1.1);kennel.rotation.z=.15;ball(g,0x675141,1.42,.28,2.65,.21,.27,.03);
+      }else if(kind===3){ // Open stable, visible beams, hay bales and a saddle rail.
+        for(const px of [-1.9,1.9])for(const pz of [-1.6,1.6])block(wood,px,1.4,pz,.19,2.8,.2);
+        block(0xc5a67d,0,1.1,-1.65,4,2.2,.18);roof(0xc2a16d,3.05);
+        for(const px of [-1.15,1.15]){block(wood,px,.72,1.65,1.55,.13,.15);block(wood,px,1.23,1.65,1.55,.13,.15);block(wood,px,.8,1.65,.12,1.45,.15);}
+        for(let i=0;i<3;i++){block(0xe0c375,-1+i*.85,.35,-.8,.75,.65,.7);block(0xac955e,-1+i*.85,.35,-.42,.07,.65,.04);}
+        block(wood,1.1,.8,2.25,1.4,.13,.12);for(const px of [.6,1.6])block(wood,px,.4,2.25,.1,.8,.1);ball(g,0x88aebc,1.1,.93,2.25,.38,.18,.3);
+      }else if(kind===4){ // Lavender salon, curved roof, big mirror and barber pole.
+        block(0xf0dfdf,0,1.4,0,3.8,2.8,3.4);const dome=cylinder(g,accent,0,3.12,0,1.25,2.4,1,12);dome.scale.z=.9;door();window(-1.15);
+        ball(g,0xc5a477,1.2,1.63,1.8,.48,.7,.08);ball(g,0xc3e4e7,1.2,1.63,1.89,.36,.55,.04);ball(g,0xffffff,1.08,1.85,1.95,.04,.18,.01);
+        for(let i=0;i<8;i++)cylinder(g,i%2?cream:accent,-1.83,.65+i*.18,2,.16,.16,.18,10);ball(g,0xe6c887,-1.83,2.12,2,.19);
+      }else{ // Apothecary tower with a pointed roof and coloured bottle shelves.
+        cylinder(g,0xe5e1b6,0,1.4,0,1.8,1.9,2.8,10);mesh(new T.ConeGeometry(2.5,2,10),accent,0,3.65,0,g);door();
+        block(wood,-1.1,1.3,1.9,.9,1.55,.25);for(let row=0;row<2;row++){block(wood,-1.1,.85+row*.7,2.1,.95,.1,.5);for(let i=0;i<3;i++){const px=-1.4+i*.3;cylinder(g,[0xc493bc,0x89bdac,0xdfbb6e][i],px,1.04+row*.7,2.1,.09,.12,.3,8);cylinder(g,0xb69867,px,1.24+row*.7,2.1,.06,.06,.1,6);}}
+        cylinder(g,0xc6d39d,.45,4.72,0,.21,.35,.65,10);cylinder(g,0xbd966c,.45,5.1,0,.14,.14,.15,8);
       }
-      // Pitched striped canopy with a scalloped valance and a little gold ridge.
-      for(const side of [-1,1]){
-        const roof=box(g,c,0,3.25,side*.64,3.9,.18,1.55);roof.rotation.x=side*.23;
-        for(let stripe=0;stripe<5;stripe++){
-          const strip=box(g,warm,-1.52+stripe*.76,3.36,side*.64,.29,.035,1.55);strip.rotation.x=side*.23;
-        }
-      }
-      box(g,wood,0,3.49,0,4,.12,.16);
-      for(let i=0;i<9;i++)ball(g,i%2?warm:c,-1.7+i*.425,2.99,1.39,.215,.23,.07);
-      // Timber counter, cream inset panels, shelving and a framed shop emblem.
-      box(g,wood,0,.67,.83,2.95,1.12,.7);box(g,0xf2d4a4,0,1.26,.83,3.15,.14,.88);
-      for(const side of [-1,1])box(g,c,side*.76,.66,1.195,1.24,.72,.04);
-      box(g,wood,0,1.6,-.87,2.8,.11,.5);
-      box(g,wood,0,2.55,1.43,1.22,.64,.13);box(g,0xfff2cf,0,2.55,1.51,1.06,.49,.04);
-      const icon=new T.Group();icon.position.set(0,2.55,1.56);icon.scale.setScalar(.42);g.add(icon);
-      const goods=new T.Group();goods.position.set(0,1.34,.85);g.add(goods);
-      const emblem=(target:T.Group,size=1)=>{
-        target.scale.multiplyScalar(size);
-        if(kind===0){const blade=box(target,0xc8dfdf,0,.28,0,.18,.82,.1);blade.rotation.z=-.3;box(target,0xd9b363,-.1,-.1,.02,.65,.12,.14);box(target,wood,-.16,-.34,0,.13,.45,.12);}
-        else if(kind===1){box(target,0xe8a0b4,0,0,0,.66,.76,.15);for(const side of [-1,1]){const sleeve=box(target,0xe8a0b4,side*.42,.19,0,.3,.38,.17);sleeve.rotation.z=side*.55;}box(target,0xffe8b3,0,-.16,.09,.68,.09,.04);}
-        else if(kind===2){ball(target,0xb5916e,0,0,0,.4,.33,.2);for(const side of [-1,1]){ball(target,0xb5916e,side*.29,.32,0,.17);ball(target,0x393c37,side*.15,.07,.19,.045);}ball(target,0xffead1,0,-.09,.18,.2,.14,.06);}
-        else if(kind===3){ball(target,0xf5dca5,0,0,0,.43,.22,.17);for(const side of [-1,1])cylinder(target,wood,side*.25,-.25,0,.09,.09,.36,7);box(target,0x789eaf,0,.2,0,.5,.14,.35);ball(target,0xf5dca5,.36,.26,0,.16,.32,.16);}
-        else if(kind===4){ball(target,0xe8cf92,0,.07,0,.4,.46,.08);ball(target,0xc4e4ee,0,.07,.07,.3,.35,.03);box(target,wood,0,-.44,0,.12,.36,.1);ball(target,0xffffff,-.09,.19,.11,.04,.12,.02);}
-        else {cylinder(target,0xb0d7b0,0,-.04,0,.31,.26,.55,10);cylinder(target,0xedcc83,0,.37,0,.14,.16,.24,8);ball(target,0xf0d88c,0,-.03,.22,.12,.15,.04);}
-      };
-      emblem(icon);
-      for(const side of [-1,1]){const item=new T.Group();item.position.x=side*.78;goods.add(item);emblem(item,.65);}
-      for(let i=0;i<3;i++){box(g,[c,0xe7c48b,0xb9c9a7][i],-.85+i*.85,1.84,-.81,.45,.39,.24);ball(g,0xffe4a7,-.85+i*.85,1.84,-.66,.055);}
-      // One planter per shop stays behind the merchant, clear of their approach.
-      cylinder(g,0xc68e68,1.88,.28,.55,.28,.2,.48,8);ball(g,0x8eb47c,1.88,.65,.55,.36,.35,.3);ball(g,c,1.85,.9,.65,.16);
-      this.colliders.push({x,z,r:1.35});
-    }
-    // A restrained string of flags and warm lanterns connects the stalls.
-    for(const z of [-2.4,-8.8]){
-      for(const x of [7.1,21.7]){cylinder(this.scene,wood,x,1.65,z,.07,.1,3.3,7);ball(this.scene,0xffe6a0,x,3.18,z,.2,.28,.2);}
-      box(this.scene,0xa98862,14.4,3.05,z,14.6,.035,.035);
-      for(let i=0;i<12;i++){const flag=mesh(new T.ConeGeometry(.13,.32,3),[0xe7a4ae,0x91b9b0,0xe6c880][i%3],7.7+i*1.2,2.86,z,this.scene);flag.rotation.z=Math.PI;}
-    }
-    // Entrance flower boxes add a welcoming edge while the centre remains open.
-    for(const z of [-.9,-15.6])for(const x of [9,14.5,20]){
-      box(this.scene,wood,x,.27,z,1.6,.48,.52);box(this.scene,0x6c8656,x,.54,z,1.4,.08,.4);
-      for(let i=0;i<4;i++)ball(this.scene,[0xebacba,0xf4d691,0xe9d8f0][i%3],x-.54+i*.36,.69,z,.18,.16,.18);
+      this.colliders.push({x,z,r:2.15});
     }
   }
   // 숲마다 다른 분위기를 만드는 장식. 걷는 길과 상점 앞은 비워 둬요.
@@ -985,16 +965,16 @@ export class World {
     const pos=preserve?s.homestead.position:{x:0,z:12};this.clearInput();this.clearMap();this.inRoom=false;this.inHomestead=true;s.room.inside=false;s.homestead.inside=true;this.stage=0;this.platforms=[];this.homeSave=s;
     this.scene.background=new T.Color(0xd5eddb);this.scene.fog=new T.Fog(0xd5eddb,40,85);
     box(this.scene,0xa9c78c,0,-.5,8,27,1,43);box(this.scene,0xe5d0a5,0,.02,20,3.8,.04,16);box(this.scene,0xe5d0a5,0,.02,12,4,.04,2);box(this.scene,0x8daf76,0,.2,-12.7,26,.4,.5);for(const side of [-1,1]){box(this.scene,0x8daf76,side*12.7,.2,0,.5,.4,26);box(this.scene,0x8daf76,side*8,.2,12.7,10,.4,.5);}
-    for(let i=0;i<=12;i++){box(this.scene,0xbed29e,-12+i*2,.015,0,.025,.025,24);box(this.scene,0xbed29e,0,.015,-12+i*2,24,.025,.025);}
+
     const built=homeScenery(s.homestead.objects);this.homeRoot=built.root;this.scene.add(built.root);this.craftAnimated.push(...built.rotors);
     for(const o of s.homestead.objects){const item=HOME_ITEMS[o.kind],cells=objectCells(o),w=o.rotation%2?item.h:item.w,h=o.rotation%2?item.w:item.h,x=(o.column+(w-1)/2-5.5)*2,z=(o.row+(h-1)/2-5.5)*2;
       if(item.solid)cells.forEach(c=>this.colliders.push({x:(c.column-5.5)*2,z:(c.row-5.5)*2,r:.72}));
       if(item.interactive)this.addEntity(`homeObject${o.uid}`,`${item.icon} ${item.name}`,x,z,new T.Group());
     }
     const editor=new T.Group();cylinder(editor,0xb98a62,0,.55,0,.6,.6,1.1,8);box(editor,0xf8ebbe,0,1.2,0,1.4,.12,1);this.addEntity('homeEditor','📐 나의 마을 설계 수첩',-3,12,editor);
-    const room=new T.Group();box(room,0xe9c99c,0,.8,0,1.8,1.6,1.2);cylinder(room,0xb88e78,0,1.9,0,0,1.5,.9,4);this.addEntity('room','🏠 나의 집 · 집 안으로',-8,18,room);
+    this.house(-8,16.7,0x739e91,0xffedc9);box(this.scene,0xe5d0a5,-4,0.04,20,9,.06,1.8);this.addEntity('room','🏠 나의 집 · 집 안으로',-8,19.8,new T.Group());
     const projects=new T.Group();projects.position.z=10;this.scene.add(projects);this.storyScenery=projects;this.buildVillageProjects(projects,s,10);
-    const exit=new T.Group();cylinder(exit,0xc3a774,0,.5,0,.08,.1,1,8);box(exit,0xf1e2ad,0,1.2,0,1.5,.7,.15);this.addEntity('homeExit','🚪 원래 모험으로 돌아가기',3,12,exit);
+    this.addEntity('homeExit','🚪 원래 모험으로 돌아가기',3,12,new T.Group());
     const names=["연태쌤", "가현이", "오지후"];
     this.homeTargets=visitorTargets(s);if(this.homeTargets.length)for(let i=0;i<3;i++){const model=makeCharacter(i,0,0),cell=137+i%2;this.addEntity(`homeVisitor${i}`,`${names[i]} · 정원 구경`,(cell%12-5.5)*2,(Math.floor(cell/12)-5.5)*2,model);const entity=this.entities[this.entities.length-1];entity.mesh.visible=i<(s.settings.lowQuality?1:3);this.homeVisitors.push({entity,cell,path:[],pause:i,turn:i,kind:6});}
     this.player.position.set(pos.x,0,pos.z);this.placePetNearPlayer();this.lastSafe.set(0,0,12);this.follow.copy(this.player.position);this.quality(s.settings.lowQuality);
@@ -1167,14 +1147,19 @@ export class World {
       e.label.remove(); this.scene.remove(e.mesh); this.disposeModel(e.mesh);
     }
     this.entities = this.entities.filter(entity => !entity.id.startsWith('villageProject'));
-    const positions = [[-7, 11], [0, 14], [5, 15]];
+    const positions = [[-8, 13], [0, 15.7], [5, 16.3]];
     VILLAGE_PROJECTS.forEach((project, id) => {
       const done = s.adventure.completed.includes(id), marker = new T.Group();
-      cylinder(marker, 0x94734e, 0, .45, 0, .06, .08, .9, 6);
-      box(marker, done ? 0xa6d18e : 0xe5cea3, 0, .98, 0, 1.1, .6, .12);
+
       this.addEntity(`villageProject${id}`, `${project.icon} ${project.name} · ${done ? '완성한 장소' : '함께 만들기'}`, positions[id][0], positions[id][1]+offsetZ, marker);
       const active = s.adventure.active?.project === id ? s.adventure.active : null;
-      if (!done && !active) return;
+      if (!done && !active) {
+        const [x,z]=positions[id];
+        if(id===0){box(g,0x956e49,x,.18,z,3.2,.3,2.2);box(g,0x72573e,x,.35,z,2.8,.05,1.8);for(let i=0;i<3;i++)ball(g,0x5a4835,x-.8+i*.8,.39,z,.15,.03,.15);}
+        else if(id===1){for(let i=0;i<3;i++)cylinder(g,0xc6bda0,x-.8+i*.8,.08,z,.3,.36,.13,7);}
+        else{box(g,0xd4c4a2,x,.06,z,2.6,.08,1.6);cylinder(g,0xae895d,x+.6,.3,z,.3,.24,.5,9);}
+        return;
+      }
       const design = s.adventure.active?.project === id ? s.adventure.active.design : s.adventure.designs[id];
       const spec = projectSpec(id, design.grade);
       if (id === 0) { spec.rows = design.rows; spec.columns = spec.target / design.rows; }

@@ -24,3 +24,5 @@
 @media(max-width:600px){#hud .quest-card{top:76px;left:12px;width:198px;padding:8px 12px}#hud .quest-toggle{min-height:48px}#hud #adventure-menu{font-size:14px}#hud .brand-mini{display:none}.destination-grid{grid-template-columns:1fr}.destination-card{min-height:96px;display:grid;grid-template-columns:48px 1fr;gap:5px 12px;padding:14px}.destination-icon{grid-row:span 2}.destination-card small{grid-column:2}.nav-intro{padding:16px}.nav-intro h3{font-size:22px}.nav-list{grid-template-columns:1fr}.nav-tabs{gap:6px}.nav-tabs button{flex:1;padding:10px 8px;font-size:14px}.journey-steps{font-size:13px}.location-pill{max-width:calc(100vw - 28px)}.location-pill span{display:none}}
 
 #hud #boss-open{display:none!important}
+
+.modal-navigation{position:sticky;top:0;z-index:8;padding:0 0 10px;background:#fff9eaeF}.modal-navigation button{min-height:48px;min-width:120px}.home-editor-modal .modal-navigation{display:none}

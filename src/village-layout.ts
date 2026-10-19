@@ -26,5 +26,12 @@ export function villageMonsterSpot(id: number, x: number, z: number): { x: numbe
   if (id === 0) return { x: -19, z: 3 };
   if (id === 1) return { x: -19, z: 14 };
   if (id === 2) return { x: -7, z: -16 };
+  if (id === 3) return { x: -19, z: -15 };
   return { x, z };
 }
+
+/** Building centres. Merchants stand 3.1 units in front of their own door. */
+export const MARKET_SHOPS = [
+ {id:'weapon',x:8.5,z:-4.8,kind:0}, {id:'outfit',x:15.1,z:-4.8,kind:1}, {id:'pet',x:21.7,z:-4.8,kind:2},
+ {id:'ride',x:8.5,z:-14.6,kind:3}, {id:'beauty',x:15.1,z:-14.6,kind:4}, {id:'potion',x:21.7,z:-14.6,kind:5},
+] as const;

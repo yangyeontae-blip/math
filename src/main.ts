@@ -43,7 +43,7 @@ import './adventure.css';
 import './navigation.css';
 import { toolSpec, toolHtml, adjustTool } from './learning-tools';
 
-const CLIENT_BUILD = '2026-10-19.2';
+const CLIENT_BUILD = '2026-10-19.3';
 document.documentElement.dataset.clientBuild = CLIENT_BUILD;
 
 const $ = <T extends HTMLElement = HTMLElement>(selector: string) => document.querySelector<T>(selector)!;
@@ -93,16 +93,20 @@ function openForestExploration() {
 const homeMenuButton = document.createElement('button'); homeMenuButton.id='homestead-open'; homeMenuButton.hidden=true;root.append(homeMenuButton);homeMenuButton.onclick=openHomestead;
 const discoveryMenuButton = document.createElement('button'); discoveryMenuButton.id='discovery-open'; discoveryMenuButton.hidden=true;root.append(discoveryMenuButton);discoveryMenuButton.onclick=openDiscoveryMap;
 adventureMenu.onclick = openNavigation;
+let modalSection:'root'|'shops'|'home'|'explore'|'book'='root';
 function navPage(heading: string, body: string, actions: Record<string, () => void>) {
   openModal(title('숲에서 발견하고 · 내 마을에서 자라요', heading) + body + '<div class="nav-close-row"><button class="text-button wide" data-close>돌아가기 · 자동 저장</button></div>', 'navigation-modal');
+  $('#modal-back').onclick=actions.back??(heading==='어디로 가 볼까요?'?closeModal:openNavigation);
   document.querySelectorAll<HTMLButtonElement>('[data-nav]').forEach(b => b.onclick = actions[b.dataset.nav!] ?? (() => {}));
 }
 const navButton = (id: string, text: string, detail = '') => `<button data-nav="${id}">${text}${detail ? `<small>${detail}</small>` : ''}</button>`;
 function openNavigation() {
+  modalSection='root';
   if (!state) return;
   navPage('어디로 가 볼까요?', '<div class="destination-grid">' + HUB_DESTINATIONS.map(d => `<button class="destination-card" data-nav="${d.id}"><span class="destination-icon">${d.icon}</span><strong>${d.title}</strong><small>${d.detail}</small></button>`).join('') + '</div><div class="nav-links">' + navButton('notice','📌 운영자 소식') + navButton('book','📖 모험 수첩') + navButton('guide','처음 오셨나요?') + '</div>', {explore: openAdventureMap, home: openHomeHub, shops: openShopStreet, notice: openNoticeBoard, book: openAdventureBook, guide: openGuide});
 }
 function openAdventureMap() {
+  modalSection='explore';
   if (!state) return;
   navPage('숲으로 모험', '<p class="nav-breadcrumb">지도와 수첩 / 숲으로 모험</p><div class="nav-intro"><h3>발견한 만큼, 내 마을도 자라요</h3><p>숲을 고르고 열린 단계를 탐험해요. 발자국 끝의 장소를 되살리면 추억과 도안이 쌓여요.</p></div><div class="nav-list">' + operationsForGrade(state.grade).map(f => navButton(f,`${FOREST_INFO[f].icon} ${FOREST_INFO[f].name}`,`열린 단계 ${Array.from({length:10},(_,i)=>i+1).filter(n=>canEnter(state!,n,f)).length} · 발견 ${state!.exploration.solved.filter(id=>id.startsWith(f+':')).length}/10`)).join('') + '</div><div class="nav-links">' + navButton('subjects',`📚 ${state.grade}학년 단원 지도`) + navButton('stories','✉️ 이야기 의뢰') + navButton('back','← 전체 지도') + '</div>', {...Object.fromEntries(operationsForGrade(state.grade).map(f=>[f,()=>openStageMap(f)])), subjects:()=>openStageMap(), stories:openStoryBoard, back:openNavigation});
 }
@@ -118,13 +122,16 @@ function enterMyRoom() {
   toast('나의 집이에요. 문을 나가면 내 정원으로 돌아가요.');
 }
 function openHomeHub() {
+  modalSection='home';
   if (!state) return;
   navPage('나의 마을', '<p class="nav-breadcrumb">지도와 수첩 / 나의 마을</p><div class="nav-intro"><h3>탐험이 끝나면, 여기서 쉬어요</h3><p>첫 제작은 무료예요. 꽃이나 벤치를 놓으면 주민이 찾아와요. 보관하거나 옮겨도 물건은 사라지지 않아요.</p></div><div class="nav-list">' + navButton('walk','🌿 집 밖 정원','내가 꾸민 마을에서 걷고 주민 만나기') + navButton('design','📐 정원 꾸미기','제작 · 배치 · 회전 · 보관') + navButton('room','🏠 집 안','모은 가구와 이야기 선물로 방 꾸미기') + navButton('projects','🌷 함께 만드는 정원','꽃밭 → 산책길 → 나눔 식탁') + navButton('requests','💌 주민 부탁과 추억','놓은 시설에서 함께 보내는 시간') + navButton('garden','🐑 목장과 작은 화단','구조한 양과 심어 둔 꽃 돌보기') + '</div><div class="nav-links">' + navButton('back','← 전체 지도') + '</div>', {walk:()=>{if(enterHomeGarden())closeModal();},design:()=>{if(enterHomeGarden())openHomestead();},room:enterMyRoom,projects:()=>{if(enterHomeGarden())openVillageProjects();}, requests:()=>{if(state)showHomeRequests(state,homesteadHooks());},garden:()=>{if(!state)return;switchStage(0);openGarden();},back:openNavigation});
 }
 function openShopStreet() {
+  modalSection='shops';
   navPage('상점 거리', '<div class="nav-intro"><h3>모험가의 취향을 골라요</h3><p>상점들이 광장 오른쪽 길에 모였어요. 여기서 바로 구경해도 좋아요.</p></div><div class="nav-list">' + navButton('outfit','👗 옷') + navButton('beauty','✨ 헤어와 얼굴 꾸미기') + navButton('pet','🐾 펫') + navButton('ride','🦄 탈것') + navButton('weapon','🪄 모험 도구') + navButton('potion','🧪 물약') + '</div><div class="nav-links">'+navButton('walk','상점 거리로 길 안내')+navButton('back','← 전체 지도')+'</div>', {outfit:()=>openShop('outfit'),beauty:openBeauty,pet:openPetShop,ride:()=>openInventory('ride'),weapon:()=>openShop('weapon'),potion:openPotionShop,walk:()=>{switchStage(0);world.guideTo('shop');},back:openNavigation});
 }
 function openAdventureBook() {
+  modalSection='book';
   navPage('모험 수첩', '<p>지금 궁금한 기록만 펼쳐 보세요. 선택 활동은 나중에 해도 괜찮아요.</p><div class="nav-list">' + navButton('discover','🗺 발견과 추억','숲에서 되살린 장소들') + navButton('records','📖 도감과 학습 기록','만난 친구들과 다시 살펴볼 개념') + navButton('daily','📅 오늘의 미션','원할 때 하는 짧은 활동') + navButton('extra','✦ 더 놀기','대련 · 별빛 재탐험') + navButton('adult','👪 보호자·교사','학습 리포트와 설정') + navButton('help','새로 정리된 마을 안내') + '</div><div class="nav-links">'+navButton('back','← 전체 지도')+'</div>', {discover:openDiscoveryMap,records:openNotebook,daily:openDaily,extra:openExtraActivities,adult:()=>navPage('보호자·교사와 함께','<div class="nav-list">'+navButton('report','학습 리포트')+navButton('settings','설정과 저장')+'</div>',{report:openReport,settings:openSettings}),help:openGuide,back:openNavigation});
 }
 function openExtraActivities() {
@@ -329,7 +336,8 @@ function closeModal() { stopSpeech(); preview?.dispose(); preview = null; curric
 function openModal(html: string, cls = '') {
   preview?.dispose(); preview = null; if (world!) { world.setPaused(true); world.clearInput(); }
   const dialog = $('#modal') as HTMLDialogElement; if (!dialog.open) modalOpener = document.activeElement as HTMLElement;
-  dialog.className = cls; $('#modal-content').innerHTML = html; if (!dialog.open) dialog.showModal();
+  dialog.className = cls; $('#modal-content').innerHTML = '<div class="modal-navigation"><button id="modal-back" type="button" class="secondary">← 뒤로가기</button></div>'+html; if (!dialog.open) dialog.showModal();
+  $('#modal-back').onclick=()=>{if(!state){closeModal();return;}if(battle){exitBattle();return;}if(modalSection==='shops')openShopStreet();else if(modalSection==='home')openHomeHub();else if(modalSection==='explore')openAdventureMap();else if(modalSection==='book')openAdventureBook();else openNavigation();};
   $('#modal-content').querySelectorAll<HTMLElement>('[data-close]').forEach(el => el.onclick = () => { if (battle) exitBattle(); else closeModal(); });
 }
 function title(kicker: string, name: string) { return `<div class="modal-heading"><div><span class="eyebrow">${kicker}</span><h2>${name}</h2></div><button class="close" data-close aria-label="닫기">×</button></div>`; }
@@ -1288,6 +1296,7 @@ function continueFriendBattle() {
 function exitBattle() { if (battle?.encounter.arena) toast(`대련 ${battle.score}점 · 받은 보상은 저장했어요.`); battle = null; persist(); if (sessionExpired) { showSessionSummary(); return; } closeModal(); }
 
 function openShop(kind: 'weapon' | 'outfit', selectedId?: number) {
+  modalSection='shops';
   if (!state) return;
   state.tutorial.shop = true; refresh(); persist();
   const s = state, items = kind === 'weapon' ? WEAPONS : OUTFITS, owned = kind === 'weapon' ? s.weapons : s.outfits;
@@ -1461,6 +1470,7 @@ function openReview(index = 0) {
   startCalculationRecovery(items[index % items.length]);
 }
 function openPetShop(selectedId?: number) {
+  modalSection='shops';
   if (!state) return; const s = state, id = selectedId ?? (s.pet >= 0 ? s.pet : 0), pet = PETS[id], owned = !!s.pets[id], active = s.pet === id;
   const cards = PETS.map((item, itemId) => { const hasPet = !!s.pets[itemId], withPlayer = s.pet === itemId; return `<button class="collection-card ${itemId === id ? 'selected' : ''} ${withPlayer ? 'active' : ''}" data-shop-pet="${itemId}" aria-pressed="${itemId === id}"><span class="collection-icon" style="--item-color:${itemColor(item.color)}">${item.icon}</span><strong>${item.name}</strong><small>${withPlayer ? '함께하는 중' : hasPet ? '보유 중' : `🍓 ${item.price.toLocaleString()}`}</small></button>`; }).join('');
   openModal(title('윤준의 펫 상점', `3D로 만나 보는 ${PETS.length}마리 친구`) + `<p class="shop-explainer">친구를 눌러 앞·옆모습과 장식을 천천히 살펴보세요. 펫은 라이딩 중에도 베리를 찾아 직접 달려가요. <b>🍓 ${s.berries.toLocaleString()}베리</b></p><div class="collection-showcase"><div class="collection-picker" role="list">${cards}</div><section class="collection-detail"><div id="collection-preview" class="collection-preview pet-preview" style="--item-color:${itemColor(pet.color)}"></div><span class="preview-tag">살랑살랑 3D 미리 보기</span><h3>${pet.icon} ${pet.name}</h3>${petEffectBadges(id)}<p><b>${pet.desc}</b><br>플레이어와 같은 베리를 동시에 먹어도 보상은 한 번만 받아요.</p><button class="primary wide" id="buy-pet" ${active ? 'disabled' : ''}>${active ? '지금 함께하고 있어요' : owned ? '이 펫과 함께하기' : `${pet.price.toLocaleString()}베리로 친구 되기`}</button><p class="error" id="pet-error" role="alert"></p></section></div>`, 'inventory-modal collection-modal pet-shop');
@@ -1470,6 +1480,7 @@ function openPetShop(selectedId?: number) {
 }
 
 function openPotionShop() {
+  modalSection='shops';
   if (!state) return; const s = state;
   const effect = potionEffects(s), active = `${effect.berrySeconds ? `🍓 베리 ${effect.berryMultiplier}배 · ${buffTime(effect.berrySeconds)} 남음` : '🍓 베리 효과 없음'}<br>${effect.xpSeconds ? `🧪 경험치 ${effect.xpMultiplier}배 · ${buffTime(effect.xpSeconds)} 남음` : '🧪 경험치 효과 없음'}`;
   openModal(title('박준우의 물약 상점', '시간 동안 힘이 나는 물약') + `<p class="shop-explainer">물약은 산 뒤 <b>사용하기</b>를 누른 순간부터 시간이 줄어요. 문제를 풀거나 메뉴를 보는 동안에도 시간이 흘러요. <b>🍓 ${s.berries.toLocaleString()}베리</b></p><p class="note" id="potion-status">지금 효과<br>${active}</p><div class="inventory-list">${POTIONS.map((potion, id) => `<article class="inventory-item"><span class="inventory-icon potion-icon">${potion.icon}</span><div><strong>${potion.name}</strong><small>${potion.desc}<br>가방에 ${s.potions.stock[id]}개</small></div><div class="potion-actions"><button class="primary" data-buy-potion="${id}">🍓 ${potion.price}</button><button class="secondary" data-use-potion="${id}" ${s.potions.stock[id] ? '' : 'disabled'}>사용하기</button></div></article>`).join('')}</div><p class="error" id="potion-error" role="alert"></p>`, 'inventory-modal potion-shop');
@@ -1478,6 +1489,7 @@ function openPotionShop() {
 }
 
 function openBeauty(kind: 'hairstyle' | 'face' = 'hairstyle', selectedId?: number) {
+  modalSection='shops';
   if (!state) return;
   const s = state, items = kind === 'hairstyle' ? HAIRSTYLES : FACES, owned = kind === 'hairstyle' ? s.hairstyles : s.faces, id = selectedId ?? s[kind];
   const descriptions = kind === 'hairstyle' ? ['내 캐릭터의 편안한 기본 스타일', '리본으로 묶은 사랑스러운 양갈래', '얼굴을 감싸는 산뜻한 단발', '폭신하게 볼륨을 살린 웨이브', '별빛을 닮은 경쾌한 포니테일', '구름처럼 둥근 두 개의 번', '꽃을 곁들인 발랄한 땋은머리', '동글동글 포근한 꿀벌 번', '살구빛 분위기의 부드러운 웨이브', '햇살 장식으로 완성한 특별한 머리'] : ['따뜻하게 웃는 해맑은 표정', '맑은 빛을 담은 커다란 눈', '자신감이 느껴지는 또렷한 눈썹', '장난기 가득한 고양이 미소', '반짝이는 별을 담은 눈', '나른하고 편안한 달빛 표정', '귀여운 앞니가 보이는 미소', '설렘을 담은 하트 모양 눈', '번개처럼 힘찬 모험가의 눈', '무지개를 닮은 환한 미소', '햇살처럼 포근한 초승달 눈', '꿀방울처럼 달콤한 반짝임', '해바라기처럼 밝게 빛나는 눈', '별숲을 지키는 용기 있는 눈'];
@@ -1644,12 +1656,12 @@ function openForestWork(step: number) {
 }
 
 function homesteadHooks(): HomeHooks { return {
-  open:html=>{openModal(html+'<button id="home-hub-back" class="text-button wide">← 나의 마을 메뉴</button>','homestead-modal');$('#home-hub-back').onclick=openHomeHub;},save:persist,changed:()=>{if(state&&world.inHomestead)world.enterHomestead(state);refresh();},
+  open:html=>{openModal(html+'<button id="home-hub-back" class="text-button wide">← 나의 마을 메뉴</button>',html.includes('data-home-editor')?'homestead-modal home-editor-modal':'homestead-modal');$('#home-hub-back').onclick=openHomeHub;},save:persist,changed:()=>{if(state&&world.inHomestead)world.enterHomestead(state,true);refresh();},
   enter:()=>{if(!state)return;if(world.inRoom||state.expedition.active){toast('방이나 진행 중인 원정을 마치고 나의 마을에 들어와요.');return;}persist();world.enterHomestead(state);closeModal();refresh();persist();toast('나의 마을에 왔어요! 설계 수첩과 주민에게 다가가 보세요.');},
-  leave:leaveHomestead,full:()=>true,paywall:()=>toast('모든 도안을 무료로 즐길 수 있어요.'),notebook:openAdventureMap,
+  leave:leaveHomestead,full:()=>true,paywall:()=>toast('모든 도안을 무료로 즐길 수 있어요.'),notebook:openAdventureMap,back:openHomeHub,
   react:()=>{audio.play('level');if(!matchMedia('(prefers-reduced-motion: reduce)').matches)world.celebrate();},
 }; }
-function openHomestead(){if(state){syncDiscoveries(state);showHomestead(state,homesteadHooks());}}
+function openHomestead(){modalSection='home';if(state){syncDiscoveries(state);showHomestead(state,homesteadHooks());}}
 function leaveHomestead(){if(!state)return;persist();state.homestead.inside=false;world.restore(state);closeModal();refresh();persist();toast('이어 하던 모험으로 돌아왔어요.');}
 function openHomeVisitor(){if(!state)return;const remembered=state.homestead.memories.at(-1);const line=remembered===undefined?'네가 놓은 꽃과 시설을 보러 왔어. 주민 부탁 수첩에서 함께 하고 싶은 일을 만나 보자!':HOME_REQUESTS[remembered].line;openModal(homeHeading(escape(nearNpcName||'마을 친구'))+`<p>${line}</p><button id="home-visitor-requests" class="primary wide">주민 부탁과 추억 보기</button><button class="text-button wide" data-close>함께 더 둘러보기</button>`,'homestead-modal');$('#home-visitor-requests').onclick=()=>{if(state)showHomeRequests(state,homesteadHooks());};}
 function interactHomeObject(uid:number){if(!state)return;const object=state.homestead.objects.find(o=>o.uid===uid);if(!object)return;const item=HOME_ITEMS[object.kind];if(object.kind===15&&state.pet>=0){world.reactPet('happy');audio.play('berry');}openModal(homeHeading(`${item.icon} ${item.name}`)+`<p>${object.kind===15?state.pet>=0?'함께 온 펫 친구가 놀이터에서 신나게 재주를 부려요!':'펫 친구와 함께 오면 놀이터에서 재주를 볼 수 있어요.':object.kind===18?'벤치에서 잠깐 쉬며 내가 만든 정원을 둘러봐요.':object.kind===17?'직접 만든 물레방아가 물을 따라 돌아가요.':'내가 배치한 시설이에요. 주민들이 찾아와 함께 즐겨요.'}</p><button id="home-object-design" class="primary wide">설계 수첩에서 옮기거나 꾸미기</button><button id="home-object-requests" class="secondary wide">주민 부탁과 추억</button><button class="text-button wide" data-close>정원에서 더 놀기</button>`,'homestead-modal');$('#home-object-design').onclick=openHomestead;$('#home-object-requests').onclick=()=>{if(state)showHomeRequests(state,homesteadHooks());};}
