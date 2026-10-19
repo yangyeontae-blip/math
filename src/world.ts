@@ -1394,6 +1394,17 @@ export class World {
     const hidden = this.occlusionRay.intersectObjects(candidates, true).some(h => { let o: T.Object3D | null = h.object; while (o) { if (!o.visible) return false; o = o.parent; } const m = (h.object as T.Mesh).material as T.Material; return !m.transparent; });
     if (hidden !== this.xrayOn) { this.xrayOn = hidden; this.xrayParts.forEach(x => { x.visible = hidden; }); }
   }
+  /** 몬스터는 제자리 근처를 천천히 돌아다니다가, 가까이 오면 바라보며 다가와요(집에서 3.5칸까지만). */
+  private wander(e: Entity, p: T.Vector3, dt: number) {
+    const home = (e.mesh.userData.home ??= { x: e.x, z: e.z }) as { x: number; z: number }, phase = this.time * .45 + home.x * .7;
+    let tx = home.x + Math.cos(phase) * 1.6, tz = home.z + Math.sin(phase * 1.3) * 1.2;
+    const toPlayer = Math.hypot(p.x - home.x, p.z - home.z), near = this.active && toPlayer < 7;
+    if (near) { const step = Math.max(0, Math.min(toPlayer - 2, 3.5)); tx = home.x + (p.x - home.x) / Math.max(toPlayer, .01) * step; tz = home.z + (p.z - home.z) / Math.max(toPlayer, .01) * step; }
+    const ease = Math.min(1, dt * (near ? 2.2 : 1.2)), mx = (tx - e.x) * ease, mz = (tz - e.z) * ease; e.x += mx; e.z += mz;
+    e.mesh.position.set(e.x, Math.max(0, Math.sin(this.time * (near ? 5 : 2) + home.x)) * (near ? .28 : .16), e.z);
+    const face = near ? Math.atan2(p.x - e.x, p.z - e.z) : Math.hypot(mx, mz) > .0005 ? Math.atan2(mx, mz) : e.mesh.rotation.y;
+    e.mesh.rotation.y += Math.atan2(Math.sin(face - e.mesh.rotation.y), Math.cos(face - e.mesh.rotation.y)) * Math.min(1, dt * 4);
+  }
   private disposeModel(g: T.Group) { g.traverse(o => { if (o instanceof T.Mesh && !sharedGeometries.has(o.geometry)) o.geometry.dispose(); }); }
   /** 날씨는 화면 위 필터가 아니라 캐릭터 주변 3D 공간에서 움직여 글자와 지형을 가리지 않아요. */
   setWeather(scene: AmbienceScene | null) {
@@ -1597,7 +1608,7 @@ export class World {
     const reach=(e:Entity)=>Math.hypot(p.x-e.x,p.z-e.z)+(e.id.startsWith('tree')?1.2:0);
     for(const e of this.entities){const d=reach(e);if(e.mesh.visible&&d<distance){near=e;distance=d;}}
     for (const e of this.entities) {
-      if (e.id.startsWith('monster')) { e.mesh.position.y = Math.max(0, Math.sin(this.time * 2 + e.x)) * .16; e.mesh.rotation.y = Math.sin(this.time * .5 + e.z) * .35; }
+      if (e.id.startsWith('monster')) this.wander(e, p, dt);
       if (e.id.startsWith('tree') && e.mesh.userData.shakeUntil > this.time) e.mesh.rotation.z = Math.sin(this.time * 55) * .08; else if (e.id.startsWith('tree')) e.mesh.rotation.z = 0;
       if (e.mesh.userData.magicGate) { e.mesh.rotation.y = Math.sin(this.time * .45 + e.x) * .045; e.mesh.traverse(o => {
         if (o.userData.sparkle) { o.rotation.y += dt * 2.4; o.rotation.z += dt * 1.2; }
