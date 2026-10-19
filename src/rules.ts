@@ -618,7 +618,7 @@ export function battleRewardReason(s: Save, question: Question, usedHint: boolea
 export function rewardFor(s: Save, monster: number, arena: boolean, now = Date.now(), eligible = true) {
   const m = MONSTERS[monster], w = WEAPONS[s.weapon];
   const { berryMultiplier, xpMultiplier } = potionEffects(s, now);
-  return { berries: eligible ? (m.berry + w.bonus + (arena ? 0 : 2 + journeyFor(s).stage * 2)) * berryMultiplier : 0, xp: eligible ? (m.xp + OUTFITS[s.outfit].xpBonus) * xpMultiplier : 0, score: eligible && arena ? Math.round(m.score * (w.multiplier + s.weapons[s.weapon] * 0.1)) : 0 };
+  return { berries: eligible ? (m.berry + w.bonus + (arena ? 0 : 2 + journeyFor(s).stage * 5)) * berryMultiplier : 0, xp: eligible ? (m.xp + OUTFITS[s.outfit].xpBonus) * xpMultiplier : 0, score: eligible && arena ? Math.round(m.score * (w.multiplier + s.weapons[s.weapon] * 0.1)) : 0 };
 }
 export function grantReward(s: Save, monster: number, arena: boolean, now = Date.now(), eligible = true) {
   const reward = rewardFor(s, monster, arena, now, eligible); let levels = 0;

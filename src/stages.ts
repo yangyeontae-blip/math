@@ -39,4 +39,4 @@ export function stageTrees(stage: number) {
 // Give children a steady path toward the larger shops without making one
 // activity infinitely repeatable.
 export const berryValue = (stage: number) => stage === 0 ? 4 : 5 + stage;
-export const clearBonus = (stage: number) => 70 + stage * 30;
+export const clearBonus = (stage: number) => 100 + stage * 60; // 2026-10-20: 후반 상점 가격에 맞춰 올림
