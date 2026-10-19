@@ -1,7 +1,7 @@
 /** 공지판·개인 마을 입구는 큰 포털/꽃밭/나무와 다른 구역에 둡니다. */
 export const VILLAGE_SPOTS = {
-  notice: { x: -4, z: 8 },
-  home: { x: -14, z: 8 },
+  notice: { x: -9, z: 9 },
+  home: { x: 20, z: -2 },
   flowers: { x: -7, z: 24 },
 } as const;
 
@@ -32,7 +32,8 @@ export function villageMonsterSpot(id: number, x: number, z: number): { x: numbe
 }
 
 /** Building centres. Merchants stand 3.1 units in front of their own door. */
+export const MARKET_SCALE=1.3, MARKET_RADIUS=2.8, MARKET_DOOR_OFFSET=4.2;
 export const MARKET_SHOPS = [
- {id:'weapon',x:-16,z:-2.8,kind:0}, {id:'outfit',x:0,z:-2.8,kind:1}, {id:'pet',x:16,z:-2.8,kind:2},
- {id:'ride',x:-16,z:-13,kind:3}, {id:'beauty',x:0,z:-13,kind:4}, {id:'potion',x:16,z:-13,kind:5},
+ {id:'weapon',x:-12,z:-2.8,kind:0}, {id:'outfit',x:0,z:-2.8,kind:1}, {id:'pet',x:12,z:-2.8,kind:2},
+ {id:'ride',x:-12,z:-13,kind:3}, {id:'beauty',x:0,z:-13,kind:4}, {id:'potion',x:12,z:-13,kind:5},
 ] as const;

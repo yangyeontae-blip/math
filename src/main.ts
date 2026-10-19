@@ -47,7 +47,7 @@ import './adventure.css';
 import './navigation.css';
 import { toolSpec, toolHtml, adjustTool } from './learning-tools';
 
-const CLIENT_BUILD = '2026-10-19.4';
+const CLIENT_BUILD = '2026-10-20.1';
 document.documentElement.dataset.clientBuild = CLIENT_BUILD;
 
 const $ = <T extends HTMLElement = HTMLElement>(selector: string) => document.querySelector<T>(selector)!;
@@ -108,7 +108,7 @@ const navButton = (id: string, text: string, detail = '') => `<button data-nav="
 function openNavigation() {
   modalSection='root';
   if (!state) return;
-  navPage('베리숲 모험 지도',worldMap(state)+'<div class="nav-links">'+navButton('explore','숲별 단계 고르기')+navButton('notice','운영자 소식')+navButton('book','모험 수첩')+navButton('guide','조작 안내')+'</div>',{back:closeModal,explore:openAdventureMap,home:openHomeHub,shops:openShopStreet,school:()=>openStageMap(),addition:()=>openStageMap('addition'),subtraction:()=>openStageMap('subtraction'),multiplication:()=>openStageMap('multiplication'),division:()=>openStageMap('division'),notice:openNoticeBoard,book:openAdventureBook,guide:openGuide});
+  navPage('베리숲 모험 지도',worldMap(state,world.inMarket)+'<div class="nav-links">'+navButton('explore','숲별 단계 고르기')+navButton('notice','운영자 소식')+navButton('book','모험 수첩')+navButton('guide','조작 안내')+'</div>',{back:closeModal,explore:openAdventureMap,home:openHomeHub,shops:openShopStreet,school:()=>switchStage(0),addition:()=>openStageMap('addition'),subtraction:()=>openStageMap('subtraction'),multiplication:()=>openStageMap('multiplication'),division:()=>openStageMap('division'),notice:openNoticeBoard,book:openAdventureBook,guide:openGuide});
 }
 function openAdventureMap() {
   modalSection='explore';
@@ -131,9 +131,16 @@ function openHomeHub() {
   if (!state) return;
   navPage('나의 마을', '<p class="nav-breadcrumb">지도 / 나의 마을</p><div class="nav-intro"><h3>탐험이 끝나면, 여기서 쉬어요</h3><p>첫 제작은 무료예요. 꽃이나 벤치를 놓으면 주민이 찾아와요. 보관하거나 옮겨도 물건은 사라지지 않아요.</p></div><div class="nav-list">' + navButton('walk','🌿 집 밖 정원','내가 꾸민 마을에서 걷고 주민 만나기') + navButton('design','📐 정원 꾸미기','제작 · 배치 · 회전 · 보관') + navButton('room','🏠 집 안','모은 가구와 이야기 선물로 방 꾸미기') + navButton('projects','🌷 함께 만드는 정원','꽃밭 → 산책길 → 나눔 식탁') + navButton('requests','💌 주민 부탁과 추억','놓은 시설에서 함께 보내는 시간') + navButton('garden','🐑 목장과 작은 화단','구조한 양과 심어 둔 꽃 돌보기') + '</div><div class="nav-links">' + navButton('back','← 전체 지도') + '</div>', {walk:()=>{if(enterHomeGarden())closeModal();},design:()=>{if(enterHomeGarden())openHomestead();},room:enterMyRoom,projects:()=>{if(enterHomeGarden())openVillageProjects();}, requests:()=>{if(state)showHomeRequests(state,homesteadHooks());},garden:()=>{if(!state)return;switchStage(0);openGarden();},back:openNavigation});
 }
+function enterShopStreet() {
+  if(!state)return;if(state.expedition.active){toast('진행 중인 원정을 마친 뒤 상점거리에 가요.');return;}
+  switchStage(0);world.enterMarket(state);closeModal();refresh();persist();toast('상점거리에 왔어요. 아래쪽 길로 나가면 중앙 광장이에요.');
+}
+function openPlazaWelcome() {
+  navPage('연태쌤의 마을 안내','<p>모험은 이 광장에서 시작해요. 원하는 길을 골라 자유롭게 다녀와요.</p><div class="nav-list">'+navButton('shops','← 왼쪽 · 상점거리','의상실, 미용실, 펫 가게와 모험 도구')+navButton('home','오른쪽 · 나의 마을 →','내가 꾸민 집과 정원')+navButton('explore','↓ 아래쪽 · 숲으로 모험','내 학년에 맞는 숲과 단원 고르기')+navButton('notice','운영자 소식')+'</div>',{shops:enterShopStreet,home:()=>{if(enterHomeGarden())closeModal();},explore:openAdventureMap,notice:openNoticeBoard});
+}
 function openShopStreet() {
   modalSection='shops';
-  navPage('상점거리', '<div class="nav-intro"><h3>모험가의 취향을 골라요</h3><p>옷, 꾸미기, 펫, 탈것, 무기, 물약 가게가 모여 있어요. 여기서 바로 구경해도 좋아요.</p></div><div class="nav-list">' + navButton('outfit','👗 옷') + navButton('beauty','✨ 헤어와 얼굴 꾸미기') + navButton('pet','🐾 펫') + navButton('ride','🦄 탈것') + navButton('weapon','🪄 무기') + navButton('potion','🧪 물약') + '</div><div class="nav-links">'+navButton('walk','상점거리로 길 안내')+navButton('back','← 전체 지도')+'</div>', {outfit:()=>openShop('outfit'),beauty:openBeauty,pet:openPetShop,ride:()=>openInventory('ride'),weapon:()=>openShop('weapon'),potion:openPotionShop,walk:()=>{switchStage(0);world.guideTo('shop');},back:openNavigation});
+  navPage('상점거리', '<div class="nav-intro"><h3>모험가의 취향을 골라요</h3><p>옷, 꾸미기, 펫, 탈것, 무기, 물약 가게가 모여 있어요. 여기서 바로 구경해도 좋아요.</p></div><div class="nav-list">' + navButton('outfit','👗 옷') + navButton('beauty','✨ 헤어와 얼굴 꾸미기') + navButton('pet','🐾 펫') + navButton('ride','🦄 탈것') + navButton('weapon','🪄 무기') + navButton('potion','🧪 물약') + '</div><div class="nav-links">'+navButton('walk','상점거리로 이동')+navButton('plaza','중앙 광장으로 돌아가기')+navButton('back','← 전체 지도')+'</div>', {outfit:()=>openShop('outfit'),beauty:openBeauty,pet:openPetShop,ride:()=>openInventory('ride'),weapon:()=>openShop('weapon'),potion:openPotionShop,walk:enterShopStreet,plaza:()=>switchStage(0),back:openNavigation});
 }
 function openAdventureBook() {
   modalSection='book';
@@ -156,8 +163,7 @@ function actionVerb(id: string | null): string {
 }
 function beginFirstAdventure() {
   if (!state) return;
-  switchStage(1,'addition'); world.guideTo(trailGoal(state).guide);
-  toast('반짝이는 빛씨앗을 찾아 나무 등불을 밝혀 봐요!');
+  openAdventureMap();
 }
 let continuingDiscovery = '';
 function renderCurrentFocus() {
@@ -176,7 +182,8 @@ function renderCurrentFocus() {
     if(stage===1&&trailHere(s)){const g=trailGoal(s);label=g.label;action=guide(g.guide);}
     else if(stage===1&&fieldHere(s)){label=`${FIELD_INFO[s.forest].title} · ${s.forestActivities[s.forest].done.length+1}번째 장소`;action=guide('forestWork');}
   } else if(kind==='explore'){if(continuingDiscovery===`${s.forest}:${stage}`){const cleared=journeyFor(s).maps[stage].cleared;label=cleared?'다음 숲으로 이어 가기':'이 숲의 몬스터 친구 만나기';action=guide(cleared?'next':'monster');button='길 안내';}else{label='숲을 되살렸어요 · 마을에 놓아 볼까요?';action=openReturnChoice;button='고르기';}}
-  else {label='숲에서 발견하고 나의 마을 꾸미기';action=s.exploration.solved.length?openAdventureMap:beginFirstAdventure;button=s.exploration.solved.length?'지도':'출발';}
+  else if(world.inMarket){label='상점을 구경하고 중앙 광장으로 돌아가기';action=()=>{closeModal();world.guideTo('shop');};button='가게 안내';}
+  else {label='중앙 광장 · 왼쪽 상점 / 오른쪽 내 마을 / 아래 모험';action=beginFirstAdventure;button='모험 선택';}
   $('#quest-peek').textContent=label;
   $('#quest-list').innerHTML=`<div class="quest"><span>${escape(label)}</span><button class="quest-guide" id="focus-action">${button}</button></div>`;
   $('#focus-action').onclick=action;
@@ -185,6 +192,7 @@ function openReturnChoice() {
   navPage('숲에 변화가 생겼어요','<p>지금 마을로 돌아가 꾸며도 되고, 이 숲에서 더 탐험해도 좋아요.</p><div class="nav-list">'+navButton('home','🏡 나의 마을에서 만들기')+navButton('continue','🌳 이 숲에서 계속 탐험')+'</div>',{home:openHomeHub,continue:()=>{closeModal();if(state){continuingDiscovery=`${state.forest}:${journeyFor(state).stage}`;refresh();}if(state)world.guideTo(journeyFor(state).maps[journeyFor(state).stage].cleared?'next':'monster');}});
 }
 let storyActivityOpen = false;
+const plazaReturn=document.createElement('button');plazaReturn.id='plaza-return';plazaReturn.className='secondary';plazaReturn.textContent='← 중앙 광장';plazaReturn.hidden=true;$('#stage-map').after(plazaReturn);plazaReturn.onclick=()=>switchStage(0);
 const petCareButton = document.createElement('button'); petCareButton.id = 'pet-care-open'; petCareButton.className = 'text-button'; petCareButton.textContent = '🐾 내 펫과 놀기'; petCareButton.hidden = true; $('#codex-open').before(petCareButton); petCareButton.onclick = () => { if (state && state.pet >= 0) openPetCare(state.pet); };
 const storyPanel = document.createElement('section'); storyPanel.id = 'story-activity'; storyPanel.hidden = true;
 storyPanel.setAttribute('aria-label', '숲속 수학 놀이'); root.append(storyPanel);
@@ -295,7 +303,7 @@ function toast(message: string) { $('#toast').textContent = message; $('#toast')
 function persist() {
   if (!state) return;
   if (world.inHomestead) { const p = world.player.position; state.homestead.position = savedGardenPosition(p.x, p.z); }
-  if (!world.inRoom && !world.inHomestead) { const p = world.player.position; state.position = { x: p.x, z: p.z }; }
+  if (!world.inRoom && !world.inHomestead && !world.inMarket) { const p = world.player.position; state.position = { x: p.x, z: p.z }; }
   try { localStorage.setItem(STORAGE, JSON.stringify(state)); if (!state.teacherMode) localStorage.setItem(RANKING_STORAGE, JSON.stringify(updateLocalRanks(parseLocalRanks(localStorage.getItem(RANKING_STORAGE)), state.nickname, state.expedition.completed))); saved = structuredClone(state); } catch { if (!storageError) toast('자동 저장 공간이 부족해요. 설정에서 저장 파일을 내려받아 주세요.'); storageError = true; }
 }
 function refresh() {
@@ -303,14 +311,14 @@ function refresh() {
   audio.setScene(journey.stage === 0 || s.homestead.inside || s.room.inside ? 'village' : s.forest); // 숲마다 다른 배경음악
   const suggested = recommendAdventure(s, curriculumRegions(), () => true);
   todayButton.textContent = world?.inHomestead ? '🏡 마을 꾸미기' : `🧭 ${suggested.title}`; todayButton.title = '오늘의 모험 하나 추천받기';
-  petCareButton.hidden = s.pet < 0;
+  petCareButton.hidden = s.pet < 0;plazaReturn.hidden=!world?.inMarket;
   const activeTitle = s.curriculum.graduationClaimed ? `${s.grade}학년 수학 탐험가` : s.expedition.selectedTitle ? EXPEDITION_TITLES[s.expedition.selectedTitle].name : s.multiplicationCompleted ? '곱셈숲 탐험가' : '';
   $('#level').textContent = `${s.level}`; $('#nickname').textContent = `${s.nickname}${activeTitle ? ` · ${activeTitle}` : ''}${s.teacherMode ? ' · 선생님' : ''}`; $('#berries').textContent = s.berries.toLocaleString();
   $('#xp-fill').style.width = `${s.xp / (s.level * 40) * 100}%`; $('#xp-text').textContent = `경험치 ${s.xp} / ${s.level * 40}`;
   $('#weapon-name').textContent = `${WEAPONS[s.weapon].icon} ${WEAPONS[s.weapon].name} +${s.weapons[s.weapon]} · ${OUTFITS[s.outfit].name}`;
   $('#weapon-effect').textContent = equipmentEffectText(s);
   const expedition = s.forest === 'division' ? s.expedition.active : null;
-  $('.location-pill').innerHTML = world?.inHomestead ? '🏡 나의 마을 <span>직접 만든 정원 · 주민과 펫의 쉼터</span>' : world?.inRoom ? '⌂ 나의 집 <span>가구를 눌러 꾸며요</span>' : journey.stage ? `${s.forest === 'division' ? '❋' : FOREST_INFO[s.forest].icon} ${journey.stage}단계 숲 <span>${expedition?.stage === journey.stage ? '✦ 별빛 원정' : `${forestName} · ${STAGES[journey.stage - 1].name}`}</span>` : `${VILLAGE_THEMES[villageThemeId(s)].icon} ${VILLAGE_THEMES[villageThemeId(s)].name} <span>${VILLAGE_THEMES[villageThemeId(s)].blurb}</span>`;
+  $('.location-pill').innerHTML = world?.inMarket ? '🛍️ 상점거리 <span>여섯 가게 · 몬스터 없는 쉼터</span>' : world?.inHomestead ? '🏡 나의 마을 <span>직접 만든 정원 · 주민과 펫의 쉼터</span>' : world?.inRoom ? '⌂ 나의 집 <span>가구를 눌러 꾸며요</span>' : journey.stage ? `${s.forest === 'division' ? '❋' : FOREST_INFO[s.forest].icon} ${journey.stage}단계 숲 <span>${expedition?.stage === journey.stage ? '✦ 별빛 원정' : `${forestName} · ${STAGES[journey.stage - 1].name}`}</span>` : '🌿 중앙 광장 <span>선생님과 만나는 모험의 출발점</span>';
   expeditionButton.hidden = true;
   renderCurrentFocus();
   audio.music = s.settings.music; audio.effects = s.settings.sound;
@@ -422,7 +430,7 @@ async function begin(s: Save, fresh: boolean) {
   world.restore(s); world.dressPet(s.pet >= 0 && !!s.petFriends[s.pet]?.accessory); world.setActive(true); audio.music = s.settings.music; audio.effects = s.settings.sound; startAmbienceCycle(); audio.start(); refresh(); persist();
   if (fresh) {
     try { localStorage.setItem('berry-forest-navigation-intro','2026-10'); } catch { /* Optional guide preference only. */ }
-    beginFirstAdventure(); // 처음 시작하면 안내 창 없이 바로 첫 숲에서 놀아요.
+    switchStage(0); world.guideTo('guide'); toast('중앙 광장에 왔어요! 선생님을 만나고, 왼쪽 상점거리 · 오른쪽 나의 마을 · 아래쪽 모험 길을 골라요.');
   } else {
     // 이어하기에서는 안내 창을 띄우지 않아요. 도움말은 모험 수첩에 있어요.
   }
@@ -559,7 +567,7 @@ async function loadWorld() {
     world.onNear = (name, id) => { nearNpcName = name || nearNpcName; $('#interact').hidden = !name; const verb = actionVerb(id); $('#interact').textContent = name ? id?.startsWith('tree') ? `${name} · F로 휘두르기` : `${name} · ${verb} E` : ''; $('#touch-talk').textContent = verb; $('#touch-attack').hidden = !id?.startsWith('tree'); };
     world.onAttack = id => { if (!state) return; if (!id) { audio.play('swing'); return; } const result = world.hitTree(id, treeDamage(state)); if (!result) return; audio.play('chop'); if (!result.fell) { toast(`통통! 나무가 흔들렸어요 · ${result.remaining}만큼 남았어요`); return; } const reward = (2 + Math.floor(Math.random() * 3)) as 2 | 3 | 4, value = fellTree(state, Number(id.slice(4)), reward); if (!value) return; audio.play('berry'); refresh(); persist(); toast(`🌳 나무를 베었어요! 🍓 +${value}베리`); };
     world.onInteract = id => { if (!state || bubbleOpen()) return; if (id === 'storyFriend') { openModal(title('편지 친구 · 솜이', '네 편지를 받고 찾아왔어!') + '<p>흩어진 편지를 모아 줘서 고마워. 이제 마을에서 자주 만나자! 호수 다리와 별빛 쉼터도 함께 구경하고 싶어.</p><button class="primary wide" data-close>또 만나!</button>'); return; } const line = greetingFor(id, Math.random, lineContext()); if (line) { world.setPaused(true); world.clearInput(); showBubble(nearNpcName || '마을 친구', line, () => { world.setPaused(!state); world.clearInput(); handleInteract(id); }, index => audio.talk(index)); return; } handleInteract(id); };
-    const handleInteract = (id: string) => { if (!state) return; const journey = journeyFor(state); if (id === 'homesteadGate') openHomeHub(); else if (id === 'homeEditor') openHomestead(); else if (id === 'shopStreet') openShopStreet(); else if (id === 'homeExit') leaveHomestead(); else if (id.startsWith('homeVisitor')) openHomeVisitor(); else if (id.startsWith('homeObject')) interactHomeObject(Number(id.slice(10))); else if (id === 'discovery') openCurrentDiscovery(); else if (id.startsWith('forestWork')) openForestWork(Number(id.slice(10))); else if (id.startsWith('trailSeed')) { if (collectTrailSeed(state, Number(id.slice(9)))) { persist(); world.refreshForestTrail(state); refresh(); audio.play('berry'); toast(`✦ 빛씨앗 묶음 ${state.forestTrail.seeds.length}/6 · 나무 등불로 가져가요!`); } } else if (id.startsWith('trailLamp')) openTrailLamp(Number(id.slice(9))); else if (id.startsWith('tree')) world.attack(); else if (id.startsWith('villageProject')) openVillageProjects(); else if (id === 'storyMailbox') openStoryBoard(); else if (id.startsWith('storyClue')) collectStoryClue(Number(id.slice('storyClue'.length))); else if (id === 'storyPuzzle') void startStoryQuestion(); else if (id === 'guide') openGuide(); else if (id === 'shepherd') openGarden(); else if (id === 'weapon' || id === 'outfit') openShop(id); else if (id === 'ride') openInventory('ride'); else if (id === 'pet') openPetShop(); else if (id === 'potion') openPotionShop(); else if (id === 'beauty') openBeauty(); else if (id === 'arena') openArena(); else if (id === 'journey') openAdventureMap(); else if (id === 'room') enterMyRoom(); else if (id === 'roomDecor') openRoom(); else if (id === 'roomExit') { state.room.inside=false; world.enterHomestead(state,true); closeModal(); refresh(); persist(); toast('내 정원으로 돌아왔어요!'); } else if (id === 'village') switchStage(0); else if (id === 'noticeBoard') openNoticeBoard(); else if (id === 'unit') openVillageBoard(); else if (id === 'next') openNextGate(); else if (id.startsWith('expMonster')) { const monsterId = Number(id.slice('expMonster'.length)), monster = stageMonsters(state.journey.stage)[monsterId]; if (state.forest === 'division' && state.expedition.active && monster) startBattle(monster.type, false, id); } else if (id.startsWith('shadow')) { const mistake = shadowList[Number(id.slice(6))]; if (mistake) void startCurriculumReview(mistake.unit, mistake); } else if (id.startsWith('monster')) { const huntId = Number(id.slice(7)); beginHuntBattle(stageMonsters(journey.stage)[huntId].type, id); } };
+    const handleInteract = (id: string) => { if (!state) return; const journey = journeyFor(state); if (id === 'homesteadGate') {if(enterHomeGarden())closeModal();} else if (id === 'homeEditor') openHomestead(); else if (id === 'shopStreet') enterShopStreet(); else if(id==='marketExit') switchStage(0); else if (id === 'homeExit') leaveHomestead(); else if (id.startsWith('homeVisitor')) openHomeVisitor(); else if (id.startsWith('homeObject')) interactHomeObject(Number(id.slice(10))); else if (id === 'discovery') openCurrentDiscovery(); else if (id.startsWith('forestWork')) openForestWork(Number(id.slice(10))); else if (id.startsWith('trailSeed')) { if (collectTrailSeed(state, Number(id.slice(9)))) { persist(); world.refreshForestTrail(state); refresh(); audio.play('berry'); toast(`✦ 빛씨앗 묶음 ${state.forestTrail.seeds.length}/6 · 나무 등불로 가져가요!`); } } else if (id.startsWith('trailLamp')) openTrailLamp(Number(id.slice(9))); else if (id.startsWith('tree')) world.attack(); else if (id.startsWith('villageProject')) openVillageProjects(); else if (id === 'storyMailbox') openStoryBoard(); else if (id.startsWith('storyClue')) collectStoryClue(Number(id.slice('storyClue'.length))); else if (id === 'storyPuzzle') void startStoryQuestion(); else if (id === 'guide') openPlazaWelcome(); else if (id === 'shepherd') openGarden(); else if (id === 'weapon' || id === 'outfit') openShop(id); else if (id === 'ride') openInventory('ride'); else if (id === 'pet') openPetShop(); else if (id === 'potion') openPotionShop(); else if (id === 'beauty') openBeauty(); else if (id === 'arena') openArena(); else if (id === 'journey') openAdventureMap(); else if (id === 'room') enterMyRoom(); else if (id === 'roomDecor') openRoom(); else if (id === 'roomExit') { state.room.inside=false; world.enterHomestead(state,true); closeModal(); refresh(); persist(); toast('내 정원으로 돌아왔어요!'); } else if (id === 'village') switchStage(0); else if (id === 'noticeBoard') openNoticeBoard(); else if (id === 'unit') openVillageBoard(); else if (id === 'next') openNextGate(); else if (id.startsWith('expMonster')) { const monsterId = Number(id.slice('expMonster'.length)), monster = stageMonsters(state.journey.stage)[monsterId]; if (state.forest === 'division' && state.expedition.active && monster) startBattle(monster.type, false, id); } else if (id.startsWith('shadow')) { const mistake = shadowList[Number(id.slice(6))]; if (mistake) void startCurriculumReview(mistake.unit, mistake); } else if (id.startsWith('monster')) { const huntId = Number(id.slice(7)); beginHuntBattle(stageMonsters(journey.stage)[huntId].type, id); } };
   } catch (e) {
     root.innerHTML = `<div class="fallback"><h1>숲을 그리지 못했어요</h1><p>3D 화면을 지원하는 최신 Chrome 또는 Edge에서 열어 주세요. 브라우저의 그래픽 가속이 켜져 있는지도 확인해 주세요.</p><button onclick="location.reload()">다시 열기</button></div>`; throw e;
   }
@@ -739,7 +747,7 @@ function openStageMap(forest?: ForestKind) {
   }
   if (!operationsForGrade(s.grade).includes(forest)) { toast('이 학년에서 배우는 계산 숲을 골라 주세요.'); return; }
   const journey = journeyFor(s, forest), info = FOREST_INFO[forest], region = curriculumRegions().find(item => item.id === forest);
-  openModal(title(region?.name ?? info.title, '단계와 발견') + `<div class="nav-tabs"><button id="forest-discoveries" class="secondary">🗺 발견 장소</button><button id="forest-story" class="secondary">✉️ 이야기 의뢰</button></div><div class="map-nav"><button id="forest-back" class="text-button">← 수학 모험 지도로 돌아가기</button><button id="forest-village" class="secondary">🏡 ${VILLAGE_THEMES[forest].name} 가기</button></div><p class="shop-explainer">${region?.short ?? info.intro} 한 단계의 몬스터를 모두 만나면 다음 길이 열려요.</p><div class="stage-grid ${forest}-map">${STAGES.map((stage, i) => { const step = i + 1, progress = journey.maps[step], open = canEnter(s, step, forest), complete = progress.cleared; const range = operationStageLabel(s.grade, forest, step); return `<button class="stage-card ${complete ? 'cleared' : ''}" data-stage="${step}" ${open ? '' : 'disabled'}><span class="stage-number">${complete ? '✓' : step}</span><strong>${info.icon} ${stage.name}</strong><small>${range}</small><small>${open ? complete ? '통과 완료 · 다시 탐험' : `${progress.monsters.length} / ${stageMonsters(step).length} 친구와 만나기` : '앞 단계를 먼저 통과해요'}</small></button>`; }).join('')}</div>`);
+  openModal(title(region?.name ?? info.title, '단계와 발견') + `<div class="nav-tabs"><button id="forest-discoveries" class="secondary">🗺 발견 장소</button><button id="forest-story" class="secondary">✉️ 이야기 의뢰</button></div><div class="map-nav"><button id="forest-back" class="text-button">← 수학 모험 지도로 돌아가기</button><button id="forest-village" class="secondary">🏡 중앙 광장으로 돌아가기</button></div><p class="shop-explainer">${region?.short ?? info.intro} 한 단계의 몬스터를 모두 만나면 다음 길이 열려요.</p><div class="stage-grid ${forest}-map">${STAGES.map((stage, i) => { const step = i + 1, progress = journey.maps[step], open = canEnter(s, step, forest), complete = progress.cleared; const range = operationStageLabel(s.grade, forest, step); return `<button class="stage-card ${complete ? 'cleared' : ''}" data-stage="${step}" ${open ? '' : 'disabled'}><span class="stage-number">${complete ? '✓' : step}</span><strong>${info.icon} ${stage.name}</strong><small>${range}</small><small>${open ? complete ? '통과 완료 · 다시 탐험' : `${progress.monsters.length} / ${stageMonsters(step).length} 친구와 만나기` : '앞 단계를 먼저 통과해요'}</small></button>`; }).join('')}</div>`);
   $('#forest-back').onclick = openAdventureMap;
   $('#forest-discoveries').onclick = () => { if(state) showDiscoveryMap(state,discoveryHooks(),forest); };
   $('#forest-story').onclick = () => { if(!state)return; if(state.forest!==forest){if(state.story.active||state.expedition.active){toast('진행 중인 모험을 먼저 이어 주세요.');return;}switchStage(0,forest);}openStoryBoard(); };
@@ -820,10 +828,10 @@ function nextCurriculumQuestion(module: CurriculumModule, run: NonNullable<typeo
     const unit = order[run.index % order.length];
     return freshCurriculumQuestion(() => state?.grade !== 3 && NEW_CURRICULUM_UNITS.includes(unit as NewCurriculumUnitId)
       ? generateGradeQuestion(state!.grade as Exclude<SchoolGrade, 3>, unit as NewCurriculumUnitId, run.index % 9)
-      : module.generateReviewQuestion(unit), run.seenQuestions);
+      : module.generateReviewQuestion(unit,Math.random,state?.grade??3), run.seenQuestions);
   }
   if (run.review && run.recoveryQuestions) return run.recoveryQuestions[run.index];
-  if (run.review) return freshCurriculumQuestion(() => module.generateReviewQuestion(run.unit), run.seenQuestions);
+  if (run.review) return freshCurriculumQuestion(() => module.generateReviewQuestion(run.unit,Math.random,state?.grade??3), run.seenQuestions);
   const unit = run.unit as NewCurriculumUnitId;
   if (run.mission === 9) return freshCurriculumQuestion(() => guardianQuestion(module, unit, run.index), run.seenQuestions);
   const position = order.indexOf(unit), completedEarlier = state ? order.slice(0, position).filter(previous => curriculumUnitComplete(state!, previous)) : [];
@@ -831,7 +839,7 @@ function nextCurriculumQuestion(module: CurriculumModule, run: NonNullable<typeo
     const previous = completedEarlier[Math.floor(Math.random() * completedEarlier.length)];
     return freshCurriculumQuestion(() => state!.grade !== 3 && NEW_CURRICULUM_UNITS.includes(previous as NewCurriculumUnitId)
       ? generateGradeQuestion(state!.grade as Exclude<SchoolGrade, 3>, previous as NewCurriculumUnitId, Math.min(8, run.mission))
-      : module.generateReviewQuestion(previous), run.seenQuestions);
+      : module.generateReviewQuestion(previous,Math.random,state?.grade??3), run.seenQuestions);
   }
   return freshCurriculumQuestion(() => curriculumQuestionFor(module, unit, run.mission), run.seenQuestions);
 }
@@ -850,7 +858,7 @@ async function startGraduationAdventure() {
   const firstUnit = curriculumRegions()[0].id;
   const question = NEW_CURRICULUM_UNITS.includes(firstUnit as NewCurriculumUnitId) && state.grade !== 3
     ? generateGradeQuestion(state.grade as Exclude<SchoolGrade, 3>, firstUnit as NewCurriculumUnitId, 0)
-    : module.generateReviewQuestion(firstUnit);
+    : module.generateReviewQuestion(firstUnit,Math.random,state?.grade??3);
   const run = { unit: 'addition' as CurriculumUnitId, mission: 0, question, index: 0, total: 11, wrong: 0, hints: 0, hintLevel: 0, seenQuestions: new Set([curriculumQuestionKey(question)]), graduation: true } satisfies NonNullable<typeof curriculumRun>;
   curriculumRun = run; renderCurriculumQuestion();
 }
@@ -1093,7 +1101,7 @@ function beginExpedition() {
   world.loadStage(state, !resumeHere); closeModal(); refresh(); persist(); toast('✦ 별빛 원정이 시작됐어요! 표식을 찾아보세요.');
 }
 function switchStage(stage: number, forest: ForestKind = state?.forest ?? 'division', hub?: NewCurriculumUnitId) {
-  if (!state || !canEnter(state, stage, forest)) return; state.homestead.inside=false; state.forest = forest; state.hub = stage === 0 ? hub : undefined; journeyFor(state).stage = stage; state.position = stage === 0 ? { x: 0, z: 8 } : { x: 0, z: 26 }; world.loadStage(state, true); closeModal(); refresh(); persist(); toast(stage ? `${FOREST_INFO[forest].name} ${stage}단계 · ${STAGES[stage - 1].name}에 도착했어요!` : `${VILLAGE_THEMES[villageThemeId(state)].name}에 도착했어요.`);
+  if (!state || !canEnter(state, stage, forest)) return; state.homestead.inside=false; state.forest = forest; state.hub = stage === 0 ? hub : undefined; journeyFor(state).stage = stage; state.position = stage === 0 ? { x: 0, z: 8 } : { x: 0, z: 26 }; world.loadStage(state, true); closeModal(); refresh(); persist(); toast(stage ? `${FOREST_INFO[forest].name} ${stage}단계 · ${STAGES[stage - 1].name}에 도착했어요!` : '중앙 광장에 도착했어요.');
 }
 function openNextGate() {
   if (!state) return; const journey = journeyFor(state), stage = journey.stage, map = journey.maps[stage], total = stageMonsters(stage).length;

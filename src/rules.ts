@@ -536,8 +536,8 @@ function decimalQuestion(grade: SchoolGrade, operation: Operation, stage: number
   for (let attempt = 0; attempt < 6; attempt++) {
     const p = stage >= 6 && Math.random() < .5 ? 2 : 1, low = p === 1 ? 11 : 101, high = p === 1 ? 150 : 899;
     let q: Question | null = null;
-    if (operation === 'addition') { const a = between(low, high), b = between(low, high); q = { dividend: a, divisor: b, answer: a + b, operation, places: [p, p, p] }; }
-    else if (operation === 'subtraction') { const a = between(low + 10, high), b = between(low, a - 1); q = { dividend: a, divisor: b, answer: a - b, operation, places: [p, p, p] }; }
+    if (operation === 'addition') { const a = between(p===1?111:1011,p===1?850:8999), b = between(p===1?111:1011,p===1?850:8999); q = { dividend: a, divisor: b, answer: a + b, operation, places: [p, p, p] }; }
+    else if (operation === 'subtraction') { const min=p===1?111:1011; const a = between(min*2,p===1?850:8999), b = between(min,a-Math.floor(min/2)); q = { dividend: a, divisor: b, answer: a - b, operation, places: [p, p, p] }; }
     else if (operation === 'multiplication') {
       if (stage >= 5 && Math.random() < .5) { const a = between(11, 49), b = between(2, 9); q = { dividend: a, divisor: b, answer: a * b, operation, places: [1, 1, 2] }; }
       else { const a = between(low, p === 1 ? 99 : 499), n = between(2, 9); q = { dividend: a, divisor: n, answer: a * n, operation, places: [p, 0, p] }; }
@@ -561,8 +561,20 @@ function pickTwoDigitMultiplier(previous?: Question): Question {
   }
   return { dividend: 35, divisor: 25, answer: 875, operation: 'multiplication' };
 }
+function gradeWholeQuestion(grade:SchoolGrade,operation:'addition'|'subtraction',stage:number,previous?:Question):Question {
+    const step=Math.min(10,Math.max(1,stage)),floor=grade===3?100:1000,ceiling=grade===3?Math.min(899,250+step*60):Math.min(7999,2200+step*550);
+    const between=(lo:number,hi:number)=>lo+Math.floor(Math.random()*(hi-lo+1));
+    for(let i=0;i<25;i++){
+      const a=operation==='addition'?between(floor,ceiling):between(grade===3?200+step*35:2000+step*300,grade===3?Math.min(999,400+step*60):Math.min(9999,ceiling*2));
+      const b=between(floor,operation==='addition'?Math.min(ceiling,9999-a):a-Math.max(20,floor/2));
+      if(previous?.dividend===a&&previous?.divisor===b)continue;
+      return {dividend:a,divisor:b,answer:operation==='addition'?a+b:a-b,operation};
+    }
+    return {dividend:floor*3+7,divisor:floor+9,answer:operation==='addition'?floor*4+16:floor*2-2,operation};
+  }
 function pickGradeOperationQuestion(grade: SchoolGrade, operation: Operation, stage: number, previous: Question | undefined, level: number, maxDividend: 0 | 90 | 180, range: MultiplicationRange) {
-  if (grade >= 5 && Math.random() < .5) { const decimal = decimalQuestion(grade, operation, stage, previous); if (decimal) return decimal; }
+  if (grade >= 5 && Math.random() < .5) { const decimal = decimalQuestion(grade, operation, operation==='addition'||operation==='subtraction'?Math.max(3,stage):stage, previous); if (decimal) return decimal; }
+  if(grade>=3&&(operation==='addition'||operation==='subtraction'))return gradeWholeQuestion(grade,operation,stage,previous);
   if (operation === 'addition') return pickAdditionQuestion(grade === 1 ? Math.min(2, stage) : grade === 2 ? Math.min(6, stage) : stage, previous);
   if (operation === 'subtraction') return pickSubtractionQuestion(grade === 1 ? Math.min(2, stage) : grade === 2 ? Math.min(6, stage) : stage, previous);
   if (operation === 'multiplication' && grade === 3 && range === 'stage' && stage >= 8 && Math.random() < .4) return pickTwoDigitMultiplier(previous);
@@ -924,9 +936,9 @@ export function validateSave(value: unknown): Save {
   const practice = s.settings.practice;
   if (!practice || typeof practice !== 'object' || !['auto', ...OPERATIONS].includes(practice.operation) || !integer(practice.tier, 0, 2) || typeof practice.skipPicker !== 'boolean') return fail();
   const validQuestion = (q: Question) => q.operation === 'addition'
-    ? integer(q.dividend, 1, 999) && integer(q.divisor, 1, 999) && q.answer === q.dividend + q.divisor
+    ? integer(q.dividend, 1, 9999) && integer(q.divisor, 1, 9999) && q.answer === q.dividend + q.divisor
     : q.operation === 'subtraction'
-    ? integer(q.dividend, 2, 999) && integer(q.divisor, 1, 998) && q.dividend > q.divisor && q.answer === q.dividend - q.divisor
+    ? integer(q.dividend, 2, 9999) && integer(q.divisor, 1, 9998) && q.dividend > q.divisor && q.answer === q.dividend - q.divisor
     : q.operation === 'multiplication'
     ? integer(q.dividend, 2, 999) && integer(q.divisor, 2, 99) && q.answer === q.dividend * q.divisor
     : integer(q.dividend, 10, 9999) && integer(q.divisor, 2, 99) && integer(q.remainder ?? 0, 0, q.divisor - 1) && q.answer === Math.floor(q.dividend / q.divisor) && (q.remainder ?? 0) === q.dividend % q.divisor;

@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { HomeEditorSession, homeCellAt } from '../src/home-editor-state';
 import { newSave, validateSave } from '../src/rules';
-import { MARKET_SHOPS, villageMonsterSpot } from '../src/village-layout';
+import { MARKET_RADIUS, MARKET_DOOR_OFFSET, MARKET_SHOPS, villageMonsterSpot } from '../src/village-layout';
 import { stageMonsters } from '../src/stages';
 
 test('3D placement, cancelled move, storage and undo preserve stock and saved progress',()=>{
@@ -28,10 +28,10 @@ test('3D floor selection retains exact cell edges instead of wrapping out-of-bou
  assert.deepEqual(homeCellAt(12,12),{column:12,row:12});assert.deepEqual(homeCellAt(-12.01,0),{column:-1,row:6});
 });
 test('six individual shop entrances remain reachable with player radius and generous merchant spacing',()=>{
- const blocked=(x:number,z:number)=>MARKET_SHOPS.some(s=>Math.hypot(s.x-x,s.z-z)<2.15+.32);
+ const blocked=(x:number,z:number)=>MARKET_SHOPS.some(s=>Math.hypot(s.x-x,s.z-z)<MARKET_RADIUS+.32);
  const reached=new Set<string>(),queue:[[number,number]]|[number,number][]=[[0,4]];
  // Half-unit nodes cover the expanded market, starting at the village approach.
  for(let i=0;i<queue.length;i++){const [gx,gz]=queue[i],key=gx+','+gz;if(reached.has(key)||gx< -48||gx>48||gz< -38||gz>4||blocked(gx/2,gz/2))continue;reached.add(key);queue.push([gx+1,gz],[gx-1,gz],[gx,gz+1],[gx,gz-1]);}
- for(const a of MARKET_SHOPS){const x=Math.round(a.x*2),z=Math.round((a.z+3.1)*2);assert.ok(reached.has(x+','+z),a.id+' entrance blocked');for(const b of MARKET_SHOPS)if(a!==b)assert.ok(Math.hypot(a.x-b.x,a.z-b.z)>6);}
+ for(const a of MARKET_SHOPS){const x=Math.round(a.x*2),z=Math.round((a.z+MARKET_DOOR_OFFSET)*2);assert.ok(reached.has(x+','+z),a.id+' entrance blocked');for(const b of MARKET_SHOPS)if(a!==b)assert.ok(Math.hypot(a.x-b.x,a.z-b.z)>6);}
  stageMonsters(0).forEach((m,id)=>{const p=villageMonsterSpot(id,m.x,m.z);assert.ok(!blocked(p.x,p.z));});
 });

@@ -1,4 +1,4 @@
-import type { CurriculumUnitId, NewCurriculumUnitId } from './rules';
+import type { CurriculumUnitId, NewCurriculumUnitId, SchoolGrade } from './rules';
 import { guardLeak } from './leak-guard';
 import { j, ye, irago } from './grade-helpers';
 import { grade3HasVariant, grade3Variant } from './grade3-variants';
@@ -554,7 +554,7 @@ export function generateCurriculumQuestion(unit: NewCurriculumUnitId, mission: n
   return guardLeak(withDistinctHints(generateRawCurriculumQuestion(unit, mission, random)));
 }
 
-export function generateReviewQuestion(unit: CurriculumUnitId, random: () => number = Math.random): CurriculumQuestion {
+export function generateReviewQuestion(unit: CurriculumUnitId, random: () => number = Math.random, grade:SchoolGrade=3): CurriculumQuestion {
   if (unit === 'multiplication') {
     const left = randomInt(12, 99, random), right = randomInt(2, 9, random), answer = left * right;
     return numberQuestion({ unit, skill: '곱셈 복습', prompt: `${left} × ${j(right, '은는')} 얼마일까요?`, visual: { kind: 'array', rows: right, columns: Math.min(10, left) }, hints: [`${j(left, '을를')} 십의 자리와 일의 자리로 나누어 보세요.`, `${Math.floor(left / 10) * 10} × ${j(right, '와과')} ${left % 10} × ${j(right, '을를')} 따로 계산해요.`, `두 계산 결과를 더하면 ${answer}${ye(answer)}.`], explanation: `${left} × ${right} = ${answer}${ye(answer)}.` }, answer);
@@ -565,12 +565,12 @@ export function generateReviewQuestion(unit: CurriculumUnitId, random: () => num
     return choiceQuestion({ unit, skill: '나눗셈 복습', prompt: `${dividend} ÷ ${divisor}의 몫과 나머지를 찾아요.`, visual: { kind: 'groups', total: dividend, divisor, remainder }, hints: [`${divisor}씩 ${quotient}묶음을 만들 수 있어요.`, `${divisor} × ${quotient} = ${divisor * quotient}${ye(divisor * quotient)}.`, `${dividend} − ${divisor * quotient} = ${remainder}이므로 나머지는 ${remainder}${ye(remainder)}.`], explanation: `${dividend} = ${divisor} × ${quotient} + ${remainder}이므로 몫은 ${quotient}, 나머지는 ${remainder}${ye(remainder)}.` }, answer, choices);
   }
   if (unit === 'addition') {
-    const left = randomInt(12, 70, random), right = randomInt(11, 99 - left, random), answer = left + right, tens = Math.floor(right / 10) * 10, ones = right % 10;
-    return numberQuestion({ unit, skill: '덧셈 복습', prompt: `${left} + ${j(right, '은는')} 얼마일까요?`, visual: { kind: 'array', rows: 2, columns: 10 }, hints: [`${j(right, '을를')} ${j(tens, '와과')} ${ones}으로 나누어 생각해요.`, `${left} + ${tens} = ${left + tens}${ye(left + tens)}.`, `${left + tens} + ${ones} = ${answer}${ye(answer)}.`], explanation: `${left} + ${right} = ${answer}${ye(answer)}.` }, answer);
+    const floor=grade<3?10:grade===3?100:1000; const left = randomInt(grade<3?12:floor+17,grade<3?70:floor*4,random), right = randomInt(grade<3?11:floor+11,grade<3?99-left:floor*3,random), answer = left + right, tens = Math.floor(right / 10) * 10, ones = right % 10;
+    return numberQuestion({ unit, skill: '덧셈 복습', prompt: `${left} + ${j(right, '은는')} 얼마일까요?`, visual: grade<3?{kind:'array',rows:2,columns:10}:{kind:'scene',items:[{icon:'🔢',label:String(left)},{icon:'🔢',label:String(right)}],caption:'같은 자리끼리 맞추어 계산해요'}, hints: [`${j(right, '을를')} ${j(tens, '와과')} ${ones}으로 나누어 생각해요.`, `${left} + ${tens} = ${left + tens}${ye(left + tens)}.`, `${left + tens} + ${ones} = ${answer}${ye(answer)}.`], explanation: `${left} + ${right} = ${answer}${ye(answer)}.` }, answer);
   }
   if (unit === 'subtraction') {
-    const left = randomInt(31, 99, random), right = randomInt(11, left - 10, random), answer = left - right, tens = Math.floor(right / 10) * 10, ones = right % 10;
-    return numberQuestion({ unit, skill: '뺄셈 복습', prompt: `${left} − ${j(right, '은는')} 얼마일까요?`, visual: { kind: 'array', rows: 2, columns: 10 }, hints: [`${j(right, '을를')} ${j(tens, '와과')} ${ones}으로 나누어 차례로 빼요.`, `${left} − ${tens} = ${left - tens}${ye(left - tens)}.`, `${left - tens} − ${ones} = ${answer}${ye(answer)}.`], explanation: `${left} − ${right} = ${answer}${ye(answer)}.` }, answer);
+    const floor=grade<3?10:grade===3?100:1000; const left = randomInt(grade<3?31:floor*3,grade<3?99:floor*8,random), right = randomInt(grade<3?11:floor+11,left-floor,random), answer = left - right, tens = Math.floor(right / 10) * 10, ones = right % 10;
+    return numberQuestion({ unit, skill: '뺄셈 복습', prompt: `${left} − ${j(right, '은는')} 얼마일까요?`, visual: grade<3?{kind:'array',rows:2,columns:10}:{kind:'scene',items:[{icon:'🔢',label:String(left)},{icon:'🔢',label:String(right)}],caption:'같은 자리끼리 맞추어 계산해요'}, hints: [`${j(right, '을를')} ${j(tens, '와과')} ${ones}으로 나누어 차례로 빼요.`, `${left} − ${tens} = ${left - tens}${ye(left - tens)}.`, `${left - tens} − ${ones} = ${answer}${ye(answer)}.`], explanation: `${left} − ${right} = ${answer}${ye(answer)}.` }, answer);
   }
   return generateCurriculumQuestion(unit, randomInt(0, 7, random), random);
 }

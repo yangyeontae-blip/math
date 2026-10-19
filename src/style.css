@@ -434,3 +434,7 @@ input:not([type=checkbox]):not([type=radio]),select,textarea{min-height:44px}
 @keyframes hit-pop{from{opacity:1;transform:translate(-50%,0) scale(.8)}to{opacity:0;transform:translate(-50%,-34px) scale(1.15)}}
 .monster-hearts{position:absolute;right:10px;top:8px;font-size:1rem;letter-spacing:2px;line-height:1}
 @media(prefers-reduced-motion:reduce){.monster-portrait.hit,.hit-pop{animation:none}}
+
+/* A travel action stays separate from the compact inventory icon row. */
+#plaza-return{position:fixed;left:20px;bottom:170px;z-index:15;min-width:126px;min-height:48px;width:auto;max-width:none;padding:12px 16px;white-space:nowrap;writing-mode:horizontal-tb;pointer-events:auto;font-size:14px}
+#plaza-return[hidden]{display:none}

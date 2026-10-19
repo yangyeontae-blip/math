@@ -6,7 +6,7 @@ export const TRAIL_SEEDS = [{ x: -4, z: 22 }, { x: 4, z: 22 }, { x: -4, z: 11 },
 export const TRAIL_LAMPS = [{ x: 0, z: 17 }, { x: 0, z: 6 }, { x: 0, z: -6 }];
 export function trailHere(s: Save) { return s.forest === 'addition' && journeyFor(s).stage === 1 && !s.room.inside && !s.homestead?.inside && !s.expedition.active; }
 export function trailPair(grade: SchoolGrade, lamp: number): readonly [number, number] {
-  const pairs = grade === 1 ? [[2, 3], [4, 2], [5, 3]] : grade === 2 ? [[8, 7], [14, 9], [26, 18]] : [[15, 7], [26, 14], [38, 25]];
+  const pairs = grade === 1 ? [[2, 3], [4, 2], [5, 3]] : grade === 2 ? [[8, 7], [14, 9], [26, 18]] : grade === 3 ? [[128, 147], [236, 185], [347, 268]] : grade === 4 ? [[237, 186], [358, 267], [467, 358]] : [[286, 397], [478, 256], [567, 278]];
   return pairs[lamp] as [number, number];
 }
 export function collectTrailSeed(s: Save, id: number) {
