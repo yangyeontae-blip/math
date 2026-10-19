@@ -5,7 +5,7 @@
 ## Protected behaviors (허락 없이 바꾸지 않기)
 아래는 버그가 아니라 **의도된 설계**입니다. 개선·리뷰·리팩터링 중에도 사용자가 명시적으로 요청하기 전에는 바꾸지 마세요. 바꾸는 게 좋겠다 싶으면 수정하지 말고 "제안"으로 따로 적어 허락을 구하세요.
 - 교사용 코드는 `teacher`입니다(`src/rules.ts`의 `TEACHER_CODE_HASH`는 이 코드의 SHA-256).
-- `levelup`, `levelup1`, `levelup10`, `showmethemoney`, `greedisgood`은 교사 모드 없이도 누구나 쓸 수 있습니다. 교사 모드 뒤로 숨기지 마세요.
+- `levelup`, `levelup숫자`(그 숫자만큼 레벨 올리기, 예: `levelup37`), `showmethemoney`(1,000베리), `showmethemoney숫자`(그 숫자만큼 베리 더하기), `greedisgood`은 교사 모드 없이도 누구나 쓸 수 있습니다. 교사 모드 뒤로 숨기지 마세요. 저장이 깨진 아이를 이 코드로 복구합니다(사용자 결정 2026-10-19).
 - 오답·대련 중단에 손실이 없고, 몬스터 보상과 레벨업은 바로 저장됩니다.
 - 저장 키 `berry-forest-save-v1`과 저장 파일 구조(version 18)는 마이그레이션 없이 바꾸지 마세요.
 - 이 동작들은 `tests/protected-behavior.test.ts`가 고정합니다. 테스트를 고쳐서 통과시키지 마세요.

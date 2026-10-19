@@ -163,6 +163,16 @@ test('teacher level codes raise only the requested number of levels', () => {
   assert.deepEqual(validateSave(JSON.parse(JSON.stringify(s))), s);
   s.level = 99_995; const before = structuredClone(s); assert.throws(() => applyTeacherCode(s, 'levelup10')); assert.deepEqual(s, before);
 });
+test('numbered levelup and showmethemoney codes add exactly that many levels and berries', () => {
+  const s = newSave('숫자코드', 0); s.xp = 25; s.berries = 500;
+  assert.equal(applyTeacherCode(s, 'levelup37'), '레벨이 37 올라서 38레벨이 되었어요!'); assert.equal(s.xp, 25);
+  assert.equal(applyTeacherCode(s, 'showmethemoney12345'), '베리 12,345개를 추가했어요!'); assert.equal(s.berries, 12_845);
+  assert.equal(applyTeacherCode(s, 'showmethemoney'), '수업용 베리 1,000개를 추가했어요!'); assert.equal(s.berries, 13_845);
+  assert.deepEqual(validateSave(JSON.parse(JSON.stringify(s))), s);
+  const before = structuredClone(s);
+  for (const word of ['levelup0', 'levelup007', 'levelup-5', 'levelup1e3', 'levelup1000000', 'levelup100000', 'showmethemoney0', 'showmethemoney007', 'showmethemoney1e3', 'ShowMeTheMoney100', ' levelup5', 'showmethemoney5 ', 'showmethemoney999999999']) assert.throws(() => applyTeacherCode(s, word), word);
+  assert.deepEqual(s, before);
+});
 test('restore codes set an exact level and add an exact number of berries', () => {
   const s = newSave('복구', 0); s.xp = 30; s.berries = 500;
   assert.equal(applyTeacherCode(s, 'level37'), '37레벨로 바꿨어요!'); assert.equal(s.level, 37); assert.equal(s.xp, 30); assert.equal(s.teacherMode, false);

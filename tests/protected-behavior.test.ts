@@ -18,6 +18,9 @@ test('protected: level and money codes work on any save, without teacher mode', 
   applyTeacherCode(s, 'levelup'); assert.equal(s.level, 2);
   applyTeacherCode(s, 'levelup1'); assert.equal(s.level, 3);
   applyTeacherCode(s, 'levelup10'); assert.equal(s.level, 13);
+  // 사용자 결정(2026-10-19): 숫자를 붙이면 그 숫자만큼 레벨·베리가 늘어요.
+  applyTeacherCode(s, 'levelup100'); assert.equal(s.level, 113);
+  applyTeacherCode(s, 'showmethemoney250'); assert.equal(s.berries, 11250);
   assert.equal(s.teacherMode, false);
 });
 
@@ -30,6 +33,6 @@ test('protected: star grants and equips only the Shinbi star pet', () => {
 
 test('protected: wrong or differently-cased codes are rejected without changing the save', () => {
   const s = newSave('아이', 0), before = structuredClone(s);
-  for (const word of ['Teacher', 'TEACHER', 'levelup100', '', ' teacher']) assert.throws(() => applyTeacherCode(s, word), /암호코드/);
+  for (const word of ['Teacher', 'TEACHER', 'Levelup100', '', ' teacher']) assert.throws(() => applyTeacherCode(s, word), /암호코드/);
   assert.deepEqual(s, before);
 });

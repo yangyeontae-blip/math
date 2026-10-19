@@ -687,7 +687,15 @@ export function applyTeacherCode(s: Save, code: string, teacherHash = TEACHER_CO
     s.level = 1000; s.xp = 0; s.berries = 10_000_000;
     return '하이퍼리얼 모드! 1,000레벨과 1,000만 베리, 모든 아이템과 스테이지가 열렸어요.';
   }
-  if (code === 'showmethemoney') { s.berries += 1000; return '수업용 베리 1,000개를 추가했어요!'; }
+  // showmethemoney는 1,000베리, showmethemoney숫자는 그 숫자만큼 베리를 더해요.
+  const money = /^showmethemoney([1-9]\d{0,9})?$/.exec(code);
+  if (money) {
+    if (!money[1]) { s.berries += 1000; return '수업용 베리 1,000개를 추가했어요!'; }
+    const amount = Number(money[1]);
+    if (s.berries + amount > 1_000_000_000) throw new Error('베리는 10억 개까지 가질 수 있어요.');
+    s.berries += amount;
+    return `베리 ${amount.toLocaleString()}개를 추가했어요!`;
+  }
   if (code === 'greedisgood') { s.berries += 10000; return '수업용 베리 10,000개를 추가했어요!'; }
   if (code === 'star') {
     s.pets[SHINBI_STAR_PET_ID] = true; s.pet = SHINBI_STAR_PET_ID;
@@ -709,8 +717,10 @@ export function applyTeacherCode(s: Save, code: string, teacherHash = TEACHER_CO
     s.berries += amount;
     return `베리 ${amount.toLocaleString()}개를 추가했어요!`;
   }
-  const levelGain = code === 'levelup' || code === 'levelup1' ? 1 : code === 'levelup10' ? 10 : 0;
-  if (levelGain) {
+  // levelup은 1레벨, levelup숫자는 그 숫자만큼 레벨을 올려요.
+  const levelUp = /^levelup([1-9]\d{0,5})?$/.exec(code);
+  if (levelUp) {
+    const levelGain = levelUp[1] ? Number(levelUp[1]) : 1;
     if (s.level + levelGain > 100_000) throw new Error('레벨은 100,000까지 올릴 수 있어요.');
     s.level += levelGain;
     return `레벨이 ${levelGain} 올라서 ${s.level}레벨이 되었어요!`;
