@@ -101,7 +101,8 @@ let modalSection:'root'|'shops'|'home'|'explore'|'book'='root';
 function navPage(heading: string, body: string, actions: Record<string, () => void>) {
   openModal(title('숲에서 발견하고 · 나의 마을에서 자라요', heading) + body + '<div class="nav-close-row"><button class="text-button wide" data-close>돌아가기</button></div>', 'navigation-modal');
   $('#modal-back').onclick=actions.back??(heading==='베리숲 모험 지도'?closeModal:openNavigation);
-  document.querySelectorAll<HTMLButtonElement>('[data-nav]').forEach(b => b.onclick = actions[b.dataset.nav!] ?? (() => {}));
+  // 클릭 이벤트를 넘기지 않아요. openBeauty처럼 첫 인자를 다른 뜻으로 받는 함수가 이벤트를 받으면 창이 열리지 않았어요.
+  document.querySelectorAll<HTMLButtonElement>('[data-nav]').forEach(b => b.onclick = () => actions[b.dataset.nav!]?.());
 }
 const navButton = (id: string, text: string, detail = '') => `<button data-nav="${id}">${text}${detail ? `<small>${detail}</small>` : ''}</button>`;
 function openNavigation() {
