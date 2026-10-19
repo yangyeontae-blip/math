@@ -3,7 +3,7 @@ import type { Save } from './rules';
 export interface DailyState { date: string; progress: number[]; claimed: boolean[]; allClaimed: boolean; streak: number; lastStamp: string }
 export const DAILY_MISSIONS = [
   { kind: 'correct', icon: '✏️', label: '문제 5개 맞히기', goal: 5, reward: 60 },
-  { kind: 'monster', icon: '⚔️', label: '몬스터 3마리 대련하기', goal: 3, reward: 80 },
+  { kind: 'monster', icon: '⚔️', label: '몬스터 3마리 시합하기', goal: 3, reward: 80 },
   { kind: 'berry', icon: '🍓', label: '베리 15개 줍기', goal: 15, reward: 50 },
 ] as const;
 export type DailyKind = typeof DAILY_MISSIONS[number]['kind'];

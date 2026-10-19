@@ -25,7 +25,7 @@ const sharedGeometries = new Set<T.BufferGeometry>();
 const CAMERA_OFFSET = new T.Vector3(18, 25, 24);
 const ROOM_CAMERA_OFFSET = new T.Vector3(10, 18, 15);
 const sphereGeometry = new T.SphereGeometry(1, 12, 8); sharedGeometries.add(sphereGeometry);
-// 펫·라이딩은 가까이서 크게 보이므로 매끈한 공을 써요. 숲·마을의 수많은 공은 가벼운 공을 그대로 써요.
+// 펫·탈것은 가까이서 크게 보이므로 매끈한 공을 써요. 숲·마을의 수많은 공은 가벼운 공을 그대로 써요.
 const smoothSphereGeometry = new T.SphereGeometry(1, 28, 20); sharedGeometries.add(smoothSphereGeometry);
 let activeSphere = sphereGeometry;
 const particleGeometry = new T.OctahedronGeometry(.09); sharedGeometries.add(particleGeometry);
@@ -725,14 +725,14 @@ export class World {
     box(this.scene,theme.path,14,.025,-7,15,.06,11);box(this.scene,theme.path,-7,.025,8,15,.06,3);
     this.buildMarket();
     box(this.scene, 0x8f6949, 5.5, .55, 5.5, 2.2, .18, .65); box(this.scene, 0x8f6949, 5.5, .95, 5.75, 2.2, .18, .18); for (const x of [4.7, 6.3]) cylinder(this.scene, 0x76523d, x, .3, 5.5, .08, .08, .6, 6);
-    const shops = new T.Group(); cylinder(shops,0x886445,0,.7,0,.08,.1,1.4,7);box(shops,0xeec8d1,0,1.5,0,1.6,.8,.15);this.addEntity('shopStreet','상점 거리 · 구경하기',0,4,shops);
+    const shops = new T.Group(); cylinder(shops,0x886445,0,.7,0,.08,.1,1.4,7);box(shops,0xeec8d1,0,1.5,0,1.6,.8,.15);this.addEntity('shopStreet','상점거리 · 구경하기',0,4,shops);
     for (const [x, z] of [[-5, 11], [6, 11], [-5, -1], [6, -1]]) { cylinder(this.scene, 0x755a43, x, .65, z, .06, .08, 1.3, 7); ball(this.scene, 0xffe99a, x, 1.35, z, .22); }
     // Pastel bunting, tiny mushrooms and butterflies make the square feel festive.
     for (const [x, z, c] of [[-4, 7, 0xf58da6], [5, 7, 0xffd66b], [-12, 1, 0xa9cceb], [13, 3, 0xd8a3e6]] as const) { cylinder(this.scene, 0xffeed6, x, .18, z, .08, .12, .36, 7); ball(this.scene, c, x, .42, z, .28, .16, .25); }
     for (let i = 0; i < 3; i++) { const x = -8 + i * 2.2, z = 7 + Math.sin(i) * 1.8; if (Math.hypot(x - 10.5, z - 13.5) < 7) continue; const g = new T.Group(); g.position.set(x, .9 + i % 2 * .35, z); this.scene.add(g); ball(g, i % 2 ? 0xf5a9ca : 0x9bd8e0, -.1, 0, 0, .12, .08, .03); ball(g, i % 2 ? 0xf5a9ca : 0x9bd8e0, .1, 0, 0, .12, .08, .03); cylinder(g, 0x75543e, 0, 0, 0, .025, .025, .16, 5); this.butterflies.push(g); }
     this.addEntity('weapon', '강지후 · 무기 상점', MARKET_SHOPS[0].x, MARKET_SHOPS[0].z+3.1, makeCharacter(1, 6, 1));
     this.addEntity('outfit', '오지후 · 의상 상점', MARKET_SHOPS[1].x, MARKET_SHOPS[1].z+3.1, makeCharacter(2, 4, 2));
-    this.addEntity('ride', '나현이 · 라이딩 상점', MARKET_SHOPS[3].x, MARKET_SHOPS[3].z+3.1, makeCharacter(0, 10, 6));
+    this.addEntity('ride', '나현이 · 탈것 상점', MARKET_SHOPS[3].x, MARKET_SHOPS[3].z+3.1, makeCharacter(0, 10, 6));
     this.addEntity('pet', '윤준 · 펫 상점', MARKET_SHOPS[2].x, MARKET_SHOPS[2].z+3.1, makeCharacter(1, 12, 10));
     this.addEntity('potion', '박준우 · 물약 상점', MARKET_SHOPS[5].x, MARKET_SHOPS[5].z+3.1, makeCharacter(0, 16, 12));
     this.addEntity('beauty', '가영이 · 헤어와 얼굴 꾸미기', MARKET_SHOPS[4].x, MARKET_SHOPS[4].z+3.1, makeCharacter(2, 15, 2));
@@ -849,7 +849,7 @@ export class World {
     }
     for (const id of layout.monsters) {
       const monster = stageMonsters(this.stage)[id], model = makeMonster(monster.type); model.userData.monsterType = monster.type;
-      this.addEntity(`expMonster${id}`, `별빛 대련 · ${MONSTERS[monster.type].name}`, monster.x, monster.z, model);
+      this.addEntity(`expMonster${id}`, `별빛 시합 · ${MONSTERS[monster.type].name}`, monster.x, monster.z, model);
       const entity = this.entities[this.entities.length - 1]; entity.mesh.visible = !active.monsters.includes(id); entity.label.classList.add('monster-label');
     }
     const gate = this.entities.find(e => e.id === 'next');
@@ -963,7 +963,7 @@ export class World {
       if(item.solid)cells.forEach(c=>this.colliders.push({x:(c.column-5.5)*2,z:(c.row-5.5)*2,r:.72}));
       if(item.interactive)this.addEntity(`homeObject${o.uid}`,`${item.icon} ${item.name}`,x,z,new T.Group());
     }
-    const editor=new T.Group();cylinder(editor,0xb98a62,0,.55,0,.6,.6,1.1,8);box(editor,0xf8ebbe,0,1.2,0,1.4,.12,1);this.addEntity('homeEditor','📐 나의 마을 설계 수첩',-3,12,editor);
+    const editor=new T.Group();cylinder(editor,0xb98a62,0,.55,0,.6,.6,1.1,8);box(editor,0xf8ebbe,0,1.2,0,1.4,.12,1);this.addEntity('homeEditor','📐 마을 꾸미기 책상',-3,12,editor);
     this.house(-8,16.7,0x739e91,0xffedc9);box(this.scene,0xe5d0a5,-4,0.04,20,9,.06,1.8);this.addEntity('room','🏠 나의 집 · 집 안으로',-8,19.8,new T.Group());
     const projects=new T.Group();projects.position.z=10;this.scene.add(projects);this.storyScenery=projects;this.buildVillageProjects(projects,s,10);
     this.addEntity('homeExit','🚪 원래 모험으로 돌아가기',3,12,new T.Group());
@@ -1059,7 +1059,7 @@ export class World {
     TRAIL_SEEDS.forEach((spot, id) => {
       const g = new T.Group(); cylinder(g, 0x91ad65, 0, .1, 0, .6, .65, .2, 8);
       mesh(expeditionStarGeometry, 0xffdf7c, 0, .95, 0, g); ball(g, 0xfff7c9, 0, 1.45, 0, .16);
-      this.addEntity(`trailSeed${id}`, `✦ ${Math.floor(id / 2) + 1}번 등불` + ` · 빛씨앗 ${trailPair(s.grade, Math.floor(id / 2))[id % 2]}개 묶음`, spot.x, spot.z, g);
+      this.addEntity(`trailSeed${id}`, `✦ 빛씨앗 ${trailPair(s.grade, Math.floor(id / 2))[id % 2]}개 · 등불 ${Math.floor(id / 2) + 1}`, spot.x, spot.z, g);
     });
     TRAIL_LAMPS.forEach((spot, id) => {
       const g = new T.Group(); cylinder(g, 0x9a7852, 0, .65, 0, .22, .3, 1.3, 8);
@@ -1510,7 +1510,7 @@ export class World {
       if ((this.inHomestead && p.z < -12.9) || Math.abs(p.x) > bounds.x - .5 || Math.abs(p.z) > bounds.z - .5 || (!flying && this.water(p.x, p.z) && p.y <= .2)) { p.copy(this.lastSafe); this.vy = 0; this.onRescue(); }
       else if (this.grounded && (flying || !this.water(p.x, p.z)) && Math.abs(p.x) < bounds.x - 2 && Math.abs(p.z) < bounds.z - 2) this.lastSafe.copy(p);
       if (this.petModel) { const walked = Math.hypot(p.x - oldX, p.z - oldZ); if (walked < 4) this.petWalk += walked; if (this.petWalk >= 1) { this.onPetWalk(this.petWalk); this.petWalk = 0; } }
-      // 베리는 바닥의 수평 거리로 판정해 발판·점프·라이딩 높이에서도 눈에 닿으면 수집됩니다.
+      // 베리는 바닥의 수평 거리로 판정해 발판·점프·탈것 높이에서도 눈에 닿으면 수집됩니다.
       for (const c of this.coins) if (c.mesh.visible && berryWithinReach(p.x, p.z, c.mesh.position.x, c.mesh.position.z)) { c.mesh.visible = false; this.burst(c.mesh.position, 0xff9fb4, 6); this.onCollect(c.id); }
       for (const star of this.stars) if (star.mesh.visible && Math.hypot(p.x - star.mesh.position.x, p.z - star.mesh.position.z) < 1.35) { star.mesh.visible = false; star.label.hidden = true; this.burst(star.mesh.position, 0xffdf83, 8); this.onStar(star.id); }
       if (this.petModel && this.petIndex >= 0) {
@@ -1568,7 +1568,9 @@ export class World {
       placeLabel(star.label, v, !this.active || !star.mesh.visible || Math.abs(v.x) > 1.15 || Math.abs(v.y) > 1.1);
     }
     let near: Entity | undefined, distance = 2.8;
-    for(const e of this.entities){const d=Math.hypot(p.x-e.x,p.z-e.z);if(e.mesh.visible&&d<distance){near=e;distance=d;}}
+    // 나무는 조금 멀게 쳐서, 빛씨앗·몬스터처럼 할 일이 옆에 있으면 그쪽을 먼저 보여 줘요.
+    const reach=(e:Entity)=>Math.hypot(p.x-e.x,p.z-e.z)+(e.id.startsWith('tree')?1.2:0);
+    for(const e of this.entities){const d=reach(e);if(e.mesh.visible&&d<distance){near=e;distance=d;}}
     for (const e of this.entities) {
       if (e.id.startsWith('monster')) { e.mesh.position.y = Math.max(0, Math.sin(this.time * 2 + e.x)) * .16; e.mesh.rotation.y = Math.sin(this.time * .5 + e.z) * .35; }
       if (e.id.startsWith('tree') && e.mesh.userData.shakeUntil > this.time) e.mesh.rotation.z = Math.sin(this.time * 55) * .08; else if (e.id.startsWith('tree')) e.mesh.rotation.z = 0;
@@ -1580,7 +1582,7 @@ export class World {
         if (o.userData.gateBeam) { o.rotation.y += dt * .3; (o as T.Mesh).material && (((o as T.Mesh).material as T.MeshBasicMaterial).opacity = .09 + (Math.sin(this.time * 2.5) + 1) * .035); }
         if (o.userData.gateOrb) { o.userData.gateAngle += dt * o.userData.gateSpeed; o.position.x = Math.cos(o.userData.gateAngle) * o.userData.gateRadius; o.position.z = Math.sin(o.userData.gateAngle) * .48; o.position.y = o.userData.gateBaseY + Math.sin(this.time * 2.1 + o.userData.gateAngle) * .16; }
       }); }
-      const d = Math.hypot(p.x - e.x, p.z - e.z); if (e.mesh.visible && d < distance) { near = e; distance = d; }
+      const d = Math.hypot(p.x - e.x, p.z - e.z), r = reach(e); if (e.mesh.visible && r < distance) { near = e; distance = r; }
       const v = this.tempProjection.set(e.x, e.id.startsWith('monster') ? 2 : 2.6, e.z).project(this.camera);
       placeLabel(e.label, v, !!this.storyActivityFocus || !this.active || !showEntityLabel(e.id,near?.id??null,e.mesh.visible) || Math.abs(v.x)>1.15 || Math.abs(v.y)>1.1);
       const isNear = d < 2.8; if (e.label.classList.contains('near') !== isNear) e.label.classList.toggle('near', isNear);
@@ -1650,7 +1652,7 @@ export class AvatarPreview {
     if (fit) this.fitCamera(new T.Vector3(...camera).sub(new T.Vector3(0, lookY, 0)).normalize());
     this.scene.add(this.model); this.draw();
   }
-  /** 키가 큰 펫·라이딩도 머리끝이 잘리지 않도록 모델 크기에 맞춰 카메라 거리를 정해요. */
+  /** 키가 큰 펫·탈것도 머리끝이 잘리지 않도록 모델 크기에 맞춰 카메라 거리를 정해요. */
   private fitCamera(direction: T.Vector3) {
     this.model.updateMatrixWorld(true);
     const box = new T.Box3().setFromObject(this.model), center = box.getCenter(new T.Vector3()), size = box.getSize(new T.Vector3());

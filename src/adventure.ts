@@ -111,7 +111,7 @@ export function recommendAdventure(s: Save, regions: readonly { id: CurriculumUn
   if (s.story.active) return { kind: 'story', title: '이어 하던 숲속 편지', detail: '모아 둔 단서에서 계속할 수 있어요.' };
   if (s.adventure.active) return { kind: 'project', title: VILLAGE_PROJECTS[s.adventure.active.project].name, detail: '만들던 모습이 저장되어 있어요. 이어서 완성해요.' };
   if (!s.tutorial.collected) return { kind: 'guide', guide: 'berry', title: '첫걸음 · 베리 하나 줍기', detail: '방향키나 조이스틱으로 걸어가요. 안내 화살표를 따라가 보세요.' };
-  if (!s.tutorial.battle) return { kind: 'guide', guide: 'monster', title: '숲 친구와 첫 수학 대련', detail: '친구 가까이에서 대화해요. 틀려도 모험은 계속할 수 있어요.' };
+  if (!s.tutorial.battle) return { kind: 'guide', guide: 'monster', title: '숲 친구와 첫 수학 시합', detail: '친구 가까이에서 대화해요. 틀려도 모험은 계속할 수 있어요.' };
   if (!s.tutorial.shop) return { kind: 'guide', guide: 'shop', title: '내 모험가를 꾸며 볼까요?', detail: '상점을 구경해요. 구매하지 않고 돌아와도 괜찮아요.' };
   const mistake = s.curriculum.wrongSkills.find(m => regions.some(r => r.id === m.unit) && allowed(m.unit));
   if (mistake) return { kind: 'review', unit: mistake.unit, title: `${mistake.skill} 다시 만나기`, detail: '도움받기 → 다시 풀기 → 새 문제에 적용하기, 세 걸음으로 도전해요.' };

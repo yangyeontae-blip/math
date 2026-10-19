@@ -79,7 +79,7 @@ export const MONSTERS = [
 ] as const;
 export function monsterBattleRounds(monster: number, arena = false) { return arena ? 1 : MONSTERS[monster]?.rounds ?? 1; }
 export const RIDES = [
-  { name: '당근 씽씽카', price: 1000, speed: 1.6, flying: false, icon: '🥕', color: 0xf39a58, desc: '당근 바퀴로 통통 달리는 첫 라이딩' },
+  { name: '당근 씽씽카', price: 1000, speed: 1.6, flying: false, icon: '🥕', color: 0xf39a58, desc: '당근 바퀴로 통통 달리는 첫 탈것' },
   { name: '구름양 포포', price: 1800, speed: 1.85, flying: false, icon: '🐑', color: 0xd9eff7, desc: '폭신한 털을 흔들며 빠르게 달려요' },
   { name: '도토리 붕붕이', price: 2800, speed: 2.1, flying: false, icon: '🌰', color: 0xb98352, desc: '도토리 바퀴가 씩씩하게 숲길을 달려요' },
   { name: '무지개 사슴', price: 4000, speed: 2.35, flying: false, icon: '🦌', color: 0x82cfb2, desc: '무지개 발자국을 남기는 빠른 사슴' },
@@ -89,7 +89,7 @@ export const RIDES = [
   { name: '오로라 고래', price: 10000, speed: 3.25, flying: true, icon: '🐳', color: 0x65b9d8, desc: '오로라 물결을 헤치며 가장 빠르게 날아요' },
   { name: '해바라기 사자', price: 12000, speed: 3.45, flying: true, icon: '🦁', color: 0xe6aa43, desc: '꽃잎 갈기를 흔들며 햇살 길을 빠르게 날아요' },
   { name: '꿀벌 하늘마차', price: 15000, speed: 3.7, flying: true, icon: '🐝', color: 0xf3c43f, desc: '꿀빛 날개 네 장으로 가장 빠르게 날아가요' },
-  { name: '반짝 킥보드', price: 300, speed: 1.35, flying: false, icon: '🛴', color: 0x67c7f2, riderY: .26, desc: '발로 쓱쓱 밀며 달리는 가장 가벼운 첫 라이딩' },
+  { name: '반짝 킥보드', price: 300, speed: 1.35, flying: false, icon: '🛴', color: 0x67c7f2, riderY: .26, desc: '발로 쓱쓱 밀며 달리는 가장 가벼운 첫 탈것' },
   { name: '바람 자전거', price: 700, speed: 1.5, flying: false, icon: '🚲', color: 0x7ccf88, riderY: .62, desc: '페달을 밟아 바람을 가르며 달려요' },
   { name: '번개 오토바이', price: 6000, speed: 2.9, flying: false, icon: '🏍️', color: 0xe0524e, riderY: .66, desc: '부릉부릉! 땅 위를 아주 빠르게 달려요' },
   { name: '황금별 스포츠카', price: 40000, speed: 4.5, flying: false, icon: '🚗', color: 0x2b3a67, riderY: .4, desc: '황금 장식이 반짝이는 최고급 자동차. 땅에서 가장 빨라요' },
@@ -600,7 +600,7 @@ export function potionEffects(s: Save, now = Date.now()) {
     xpSeconds: Math.max(0, Math.ceil((s.potions.xpUntil - now) / 1000)),
   } as const;
 }
-/** 학년보다 쉬운 반복 계산과 힌트로 정답을 확인한 대련은 연습으로만 인정해요. */
+/** 학년보다 쉬운 반복 계산과 힌트로 정답을 확인한 시합은 연습으로만 인정해요. */
 export function battleRewardReason(s: Save, question: Question, usedHint: boolean, practiceTier?: PracticeTier): 'hint' | 'easy' | null {
   if (usedHint) return 'hint';
   if (s.grade >= 3 && !question.places && (question.operation === 'addition' || question.operation === 'subtraction')
@@ -642,12 +642,12 @@ export function upgrade(s: Save, kind: 'weapon' | 'outfit', id: number): string 
 }
 export function buyRide(s: Save, id: number): string {
   const ride = RIDES[id];
-  if (!Number.isInteger(id) || !ride) throw new Error('없는 라이딩이에요.');
+  if (!Number.isInteger(id) || !ride) throw new Error('없는 탈것이에요.');
   if (s.rides[id]) { s.ride = id; return `${ride.name}에 탔어요!`; }
   if (s.berries < ride.price) throw new Error(`${ride.price - s.berries}베리가 더 필요해요.`);
   s.berries -= ride.price; s.rides[id] = true; s.ride = id; return `${j(ride.name, '을를')} 만나 함께 달려요!`;
 }
-export function dismount(s: Save) { s.ride = -1; return '라이딩에서 내려 천천히 걸어요.'; }
+export function dismount(s: Save) { s.ride = -1; return '탈것에서 내려 천천히 걸어요.'; }
 export function buyPet(s: Save, id: number): string {
   const pet = PETS[id]; if (!Number.isInteger(id) || !pet) throw new Error('없는 펫이에요.');
   if (s.pets[id]) { s.pet = id; return `${j(pet.name, '와과')} 함께 모험해요!`; }

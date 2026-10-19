@@ -18,7 +18,7 @@ export function adventureFocus(s: Save): FocusKind {
 export const HUB_DESTINATIONS = [
   { id: 'explore', icon: '🌳', title: '숲으로 모험', detail: '숲을 고르고, 숨은 장소를 발견해요' },
   { id: 'home', icon: '🏡', title: '나의 마을', detail: '집 밖 정원 · 집 안 · 함께 만드는 정원' },
-  { id: 'shops', icon: '🛍️', title: '상점 거리', detail: '옷과 얼굴, 펫과 모험 도구를 골라요' },
+  { id: 'shops', icon: '🛍️', title: '상점거리', detail: '옷과 얼굴, 펫과 무기를 골라요' },
 ] as const;
 
 /** Only the closest actionable name floats above the world. Directions live in the map. */

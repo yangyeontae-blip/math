@@ -37,6 +37,6 @@ export function trailGoal(s: Save): { label: string; guide: 'trailSeed' | 'trail
   const t = s.forestTrail, lamp = t.lit.length;
   return lamp === 3 ? { label: '빛씨앗 오솔길 완성! 빛나는 나무 구경하기', guide: 'trailLamp' }
     : t.seeds.includes(lamp * 2) && t.seeds.includes(lamp * 2 + 1)
-      ? { label: `${lamp + 1}번째 나무 등불에서 빛 합치기 · ${lamp}/3`, guide: 'trailLamp' }
-      : { label: `${lamp + 1}번째 등불의 빛씨앗 두 묶음 찾기 · ${t.seeds.length}/6`, guide: 'trailSeed' };
+      ? { label: `등불 ${lamp + 1}/3 · 나무 등불에서 빛 합치기`, guide: 'trailLamp' }
+      : { label: `등불 ${lamp + 1}/3 · 빛씨앗 묶음 ${[lamp * 2, lamp * 2 + 1].filter(n => t.seeds.includes(n)).length}/2 찾기`, guide: 'trailSeed' };
 }

@@ -129,7 +129,7 @@ test('rides keep a clear price ladder: kickboard is cheapest, flying starts at 5
   assert.equal(PETS[SHINBI_STAR_PET_ID].name, '이신비의 별'); assert.equal(PETS[SHINBI_STAR_PET_ID].price, 9000);
   assert.equal(PETS[HERO_BREAD_PET_ID].name, '호빵 별용사 팡팡'); assert.ok(PETS.every(pet => pet.price <= PETS[HERO_BREAD_PET_ID].price)); assert.ok(PETS.every(pet => pet.radius <= PETS[HERO_BREAD_PET_ID].radius));
   const s = newSave('라이더', 0); assert.throws(() => buyRide(s, 0)); s.berries = 6000; const before = s.berries; buyRide(s, 0); assert.equal(s.berries, before - RIDES[0].price); assert.equal(s.ride, 0); assert.equal(s.rides[0], true);
-  buyRide(s, 0); assert.equal(s.berries, before - RIDES[0].price); assert.equal(dismount(s), '라이딩에서 내려 천천히 걸어요.'); assert.equal(s.ride, -1);
+  buyRide(s, 0); assert.equal(s.berries, before - RIDES[0].price); assert.equal(dismount(s), '탈것에서 내려 천천히 걸어요.'); assert.equal(s.ride, -1);
 });
 test('pet chase speed stays ahead of every ride so mounted berries can be reached', () => {
   assert.ok(Math.abs(PLAYER_MOVE_SPEED / 6.5 - 1.3) < 1e-10);

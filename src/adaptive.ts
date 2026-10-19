@@ -1,6 +1,6 @@
 import type { PracticeTier } from './rules';
 
-// 계산 대련의 "자동 조절": 연속 정답이면 한 단계 어렵게, 연속 오답이면 한 단계 쉽게.
+// 계산 시합의 "자동 조절": 연속 정답이면 한 단계 어렵게, 연속 오답이면 한 단계 쉽게.
 // 아이가 직접 고른 경우에만 켜지고(기본은 꺼짐), 저장 파일은 바꾸지 않아요.
 export interface AdaptiveLevel { tier: PracticeTier; streak: number; misses: number }
 export const ADAPT_UP_STREAK = 3, ADAPT_DOWN_MISSES = 2;
