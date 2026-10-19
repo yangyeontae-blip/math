@@ -29,9 +29,9 @@ test('3D floor selection retains exact cell edges instead of wrapping out-of-bou
 });
 test('six individual shop entrances remain reachable with player radius and generous merchant spacing',()=>{
  const blocked=(x:number,z:number)=>MARKET_SHOPS.some(s=>Math.hypot(s.x-x,s.z-z)<2.15+.32);
- const reached=new Set<string>(),queue:[[number,number]]|[number,number][]=[[12,-2]];
- // Half-unit nodes cover the right-hand market, starting at the village approach.
- for(let i=0;i<queue.length;i++){const [gx,gz]=queue[i],key=gx+','+gz;if(reached.has(key)||gx<10||gx>48||gz< -38||gz>4||blocked(gx/2,gz/2))continue;reached.add(key);queue.push([gx+1,gz],[gx-1,gz],[gx,gz+1],[gx,gz-1]);}
+ const reached=new Set<string>(),queue:[[number,number]]|[number,number][]=[[0,4]];
+ // Half-unit nodes cover the expanded market, starting at the village approach.
+ for(let i=0;i<queue.length;i++){const [gx,gz]=queue[i],key=gx+','+gz;if(reached.has(key)||gx< -48||gx>48||gz< -38||gz>4||blocked(gx/2,gz/2))continue;reached.add(key);queue.push([gx+1,gz],[gx-1,gz],[gx,gz+1],[gx,gz-1]);}
  for(const a of MARKET_SHOPS){const x=Math.round(a.x*2),z=Math.round((a.z+3.1)*2);assert.ok(reached.has(x+','+z),a.id+' entrance blocked');for(const b of MARKET_SHOPS)if(a!==b)assert.ok(Math.hypot(a.x-b.x,a.z-b.z)>6);}
  stageMonsters(0).forEach((m,id)=>{const p=villageMonsterSpot(id,m.x,m.z);assert.ok(!blocked(p.x,p.z));});
 });

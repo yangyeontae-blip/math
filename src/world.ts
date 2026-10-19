@@ -717,27 +717,19 @@ export class World {
     box(this.scene, theme.path, 0, .015, 2, 3.8, .055, 34); box(this.scene, theme.path, 0, .02, -3.8, 25, .06, 3.8); box(this.scene, theme.path, 6, .018, 9, 15, .05, 3);
     cylinder(this.scene, theme.square, 0, .04, 3, 4.3, 4.3, .07, 40);
     for (let i = 0; i < 10; i++) { const a = i * Math.PI / 5; cylinder(this.scene, 0xd0b98e, Math.cos(a) * 4.1, .085, 3 + Math.sin(a) * 4.1, .22, .22, .06, 8); }
-    // Fountain and water with a clear boundary.
-    cylinder(this.scene, 0xc8c9b0, -3.1, .32, 3, 1.05, 1.14, .65); cylinder(this.scene, 0x69c5cb, -3.1, .68, 3, .85, .85, .07); cylinder(this.scene, 0xf3e6c4, -3.1, 1, 3, .19, .27, .9); ball(this.scene, 0xb4e7e4, -3.1, 1.53, 3, .29);
-    this.colliders.push({ x: -3.1, z: 3, r: 1.3 });
+    // The story pond remains; the central fountain gives way to an open market approach.
     box(this.scene, 0xe5d29f, 19, .03, 8, 8.6, .1, 11.5); box(this.scene, 0x59b9bf, 19, .1, 8, 7.5, .08, 10.5);
     for (let i = 0; i < 5; i++) { cylinder(this.scene, 0x72ad63, 17 + i % 2 * 3, .16, 4.5 + i * 1.5, .42, .42, .02, 12); ball(this.scene, 0xf0b6ce, 17 + i % 2 * 3, .24, 4.5 + i * 1.5, .14, .12, .14); }
     this.platforms.forEach(p => { box(this.scene, 0xa8a88c, p.x, p.h / 2, p.z, p.w, p.h, p.d); box(this.scene, 0xcfe298, p.x, p.h + .02, p.z, p.w + .05, .08, p.d + .05); });
-    this.house(-9, -8, 0x659c91, 0xf6e5bd);
+
     box(this.scene,theme.path,14,.025,-7,15,.06,11);box(this.scene,theme.path,-7,.025,8,15,.06,3);
     this.buildMarket();
-    // Original cozy life-sim details: a tiny farm, mailbox, picnic bench and lanterns.
-    box(this.scene, 0x9d754d, -17, .05, -10, 6.5, .12, 4.5);
-    for (let row = 0; row < 3; row++) for (let col = 0; col < 5; col++) { cylinder(this.scene, 0x4c9555, -19.2 + col * 1.1, .28, -11.2 + row * 1.15, .035, .055, .5, 5); ball(this.scene, [0xf28fa8, 0xf4d66a, 0x9dcfe5][row], -19.2 + col * 1.1, .55, -11.2 + row * 1.15, .13); }
-    for (let i = 0; i < 7; i++) { box(this.scene, 0xe4c18c, -20.4 + i * 1.1, .42, -12.75, 1, .12, .12); cylinder(this.scene, 0xba8a58, -20.9 + i * 1.1, .4, -12.75, .045, .055, .8, 6); }
     box(this.scene, 0x8f6949, 5.5, .55, 5.5, 2.2, .18, .65); box(this.scene, 0x8f6949, 5.5, .95, 5.75, 2.2, .18, .18); for (const x of [4.7, 6.3]) cylinder(this.scene, 0x76523d, x, .3, 5.5, .08, .08, .6, 6);
-    const shops = new T.Group(); cylinder(shops,0x886445,0,.7,0,.08,.1,1.4,7);box(shops,0xeec8d1,0,1.5,0,1.6,.8,.15);this.addEntity('shopStreet','상점 거리 · 구경하기',7,-1,shops);
+    const shops = new T.Group(); cylinder(shops,0x886445,0,.7,0,.08,.1,1.4,7);box(shops,0xeec8d1,0,1.5,0,1.6,.8,.15);this.addEntity('shopStreet','상점 거리 · 구경하기',0,4,shops);
     for (const [x, z] of [[-5, 11], [6, 11], [-5, -1], [6, -1]]) { cylinder(this.scene, 0x755a43, x, .65, z, .06, .08, 1.3, 7); ball(this.scene, 0xffe99a, x, 1.35, z, .22); }
     // Pastel bunting, tiny mushrooms and butterflies make the square feel festive.
     for (const [x, z, c] of [[-4, 7, 0xf58da6], [5, 7, 0xffd66b], [-12, 1, 0xa9cceb], [13, 3, 0xd8a3e6]] as const) { cylinder(this.scene, 0xffeed6, x, .18, z, .08, .12, .36, 7); ball(this.scene, c, x, .42, z, .28, .16, .25); }
     for (let i = 0; i < 3; i++) { const x = -8 + i * 2.2, z = 7 + Math.sin(i) * 1.8; if (Math.hypot(x - 10.5, z - 13.5) < 7) continue; const g = new T.Group(); g.position.set(x, .9 + i % 2 * .35, z); this.scene.add(g); ball(g, i % 2 ? 0xf5a9ca : 0x9bd8e0, -.1, 0, 0, .12, .08, .03); ball(g, i % 2 ? 0xf5a9ca : 0x9bd8e0, .1, 0, 0, .12, .08, .03); cylinder(g, 0x75543e, 0, 0, 0, .025, .025, .16, 5); this.butterflies.push(g); }
-    this.addEntity('guide', '연태쌤 · 마을 대장', 1.8, 3, makeYeontae());
-    this.addEntity('shepherd', '가현이 · 구름양 목장주인', -17, -9, makeCharacter(0, 21, 3, 0, 0, 6, 7));
     this.addEntity('weapon', '강지후 · 무기 상점', MARKET_SHOPS[0].x, MARKET_SHOPS[0].z+3.1, makeCharacter(1, 6, 1));
     this.addEntity('outfit', '오지후 · 의상 상점', MARKET_SHOPS[1].x, MARKET_SHOPS[1].z+3.1, makeCharacter(2, 4, 2));
     this.addEntity('ride', '나현이 · 라이딩 상점', MARKET_SHOPS[3].x, MARKET_SHOPS[3].z+3.1, makeCharacter(0, 10, 6));
@@ -764,9 +756,9 @@ export class World {
   /** Different silhouettes and generous lanes make each merchant easy to recognise and approach. */
   private buildMarket() {
     const wood=0x886348,cream=0xf7e7c8,stone=0x9eaa9b;
-    box(this.scene,0xe3d2ad,15,.045,-8,19,.07,19.6);
+    box(this.scene,0xe3d2ad,0,.045,-8,43,.07,20);
     // Two simple streets with no overhead flags, flower crates or repeated signs.
-    for(const z of [-1.4,-11.2])box(this.scene,0xf0e5ce,15,.095,z,19,.025,2.4);
+    for(const z of [.4,-9.8])box(this.scene,0xf0e5ce,0,.095,z,43,.025,3.4);
     for(const {x,z,kind}of MARKET_SHOPS){
       const g=new T.Group();g.position.set(x,0,z);this.scene.add(g);
       const accent=[0x638e8b,0xda9da7,0x8cae77,0xc6a272,0xb29ac9,0x729a91][kind];
@@ -843,7 +835,7 @@ export class World {
     const light = new T.PointLight(0xe6c8ff, 6, 7); light.position.set(0, 1.7, .4); g.add(light);
     g.userData.magicGate = true; return g;
   }
-  private addBerries() { stageBerries(this.stage).forEach(({ x, z }, id) => { const p = this.platforms.find(t => Math.abs(t.x - x) < 1 && Math.abs(t.z - z) < 1); const g = new T.Group(); ball(g, 0xf77591, -.09, 0, 0, .21, .24, .19); ball(g, 0xdd496f, .1, .015, 0, .2, .23, .19); const leaf = ball(g, 0x4a9853, 0, .26, 0, .18, .055, .09); leaf.rotation.z = .45; const y = (p?.h ?? 0) + .68; g.position.set(x, y, z); this.scene.add(g); this.coins.push({ mesh: g, id, y }); }); }
+  private addBerries() { stageBerries(this.stage).forEach(({ x, z }, id) => { if(this.stage===0&&MARKET_SHOPS.some(shop=>Math.hypot(x-shop.x,z-shop.z)<2.5))z=2.2; const p = this.platforms.find(t => Math.abs(t.x - x) < 1 && Math.abs(t.z - z) < 1); const g = new T.Group(); ball(g, 0xf77591, -.09, 0, 0, .21, .24, .19); ball(g, 0xdd496f, .1, .015, 0, .2, .23, .19); const leaf = ball(g, 0x4a9853, 0, .26, 0, .18, .055, .09); leaf.rotation.z = .45; const y = (p?.h ?? 0) + .68; g.position.set(x, y, z); this.scene.add(g); this.coins.push({ mesh: g, id, y }); }); }
   private addExpeditionObjects(s: Save) {
     const active = s.expedition.active;
     if (!active) return;

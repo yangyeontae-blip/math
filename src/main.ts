@@ -1,3 +1,5 @@
+import './world-map.css';
+import { worldMap } from './world-map';
 import { adventureFocus, HUB_DESTINATIONS, savedGardenPosition } from './navigation';
 import './salon.css';
 import { VILLAGE_NOTICES, noticeListHtml, noticeDetailHtml } from './notices';
@@ -43,7 +45,7 @@ import './adventure.css';
 import './navigation.css';
 import { toolSpec, toolHtml, adjustTool } from './learning-tools';
 
-const CLIENT_BUILD = '2026-10-19.3';
+const CLIENT_BUILD = '2026-10-19.4';
 document.documentElement.dataset.clientBuild = CLIENT_BUILD;
 
 const $ = <T extends HTMLElement = HTMLElement>(selector: string) => document.querySelector<T>(selector)!;
@@ -96,14 +98,14 @@ adventureMenu.onclick = openNavigation;
 let modalSection:'root'|'shops'|'home'|'explore'|'book'='root';
 function navPage(heading: string, body: string, actions: Record<string, () => void>) {
   openModal(title('숲에서 발견하고 · 내 마을에서 자라요', heading) + body + '<div class="nav-close-row"><button class="text-button wide" data-close>돌아가기 · 자동 저장</button></div>', 'navigation-modal');
-  $('#modal-back').onclick=actions.back??(heading==='어디로 가 볼까요?'?closeModal:openNavigation);
+  $('#modal-back').onclick=actions.back??(heading==='베리숲 모험 지도'?closeModal:openNavigation);
   document.querySelectorAll<HTMLButtonElement>('[data-nav]').forEach(b => b.onclick = actions[b.dataset.nav!] ?? (() => {}));
 }
 const navButton = (id: string, text: string, detail = '') => `<button data-nav="${id}">${text}${detail ? `<small>${detail}</small>` : ''}</button>`;
 function openNavigation() {
   modalSection='root';
   if (!state) return;
-  navPage('어디로 가 볼까요?', '<div class="destination-grid">' + HUB_DESTINATIONS.map(d => `<button class="destination-card" data-nav="${d.id}"><span class="destination-icon">${d.icon}</span><strong>${d.title}</strong><small>${d.detail}</small></button>`).join('') + '</div><div class="nav-links">' + navButton('notice','📌 운영자 소식') + navButton('book','📖 모험 수첩') + navButton('guide','처음 오셨나요?') + '</div>', {explore: openAdventureMap, home: openHomeHub, shops: openShopStreet, notice: openNoticeBoard, book: openAdventureBook, guide: openGuide});
+  navPage('베리숲 모험 지도',worldMap(state)+'<div class="nav-links">'+navButton('explore','숲별 단계 고르기')+navButton('notice','운영자 소식')+navButton('book','모험 수첩')+navButton('guide','조작 안내')+'</div>',{back:closeModal,explore:openAdventureMap,home:openHomeHub,shops:openShopStreet,school:()=>openStageMap(),addition:()=>openStageMap('addition'),subtraction:()=>openStageMap('subtraction'),multiplication:()=>openStageMap('multiplication'),division:()=>openStageMap('division'),notice:openNoticeBoard,book:openAdventureBook,guide:openGuide});
 }
 function openAdventureMap() {
   modalSection='explore';
@@ -128,7 +130,7 @@ function openHomeHub() {
 }
 function openShopStreet() {
   modalSection='shops';
-  navPage('상점 거리', '<div class="nav-intro"><h3>모험가의 취향을 골라요</h3><p>상점들이 광장 오른쪽 길에 모였어요. 여기서 바로 구경해도 좋아요.</p></div><div class="nav-list">' + navButton('outfit','👗 옷') + navButton('beauty','✨ 헤어와 얼굴 꾸미기') + navButton('pet','🐾 펫') + navButton('ride','🦄 탈것') + navButton('weapon','🪄 모험 도구') + navButton('potion','🧪 물약') + '</div><div class="nav-links">'+navButton('walk','상점 거리로 길 안내')+navButton('back','← 전체 지도')+'</div>', {outfit:()=>openShop('outfit'),beauty:openBeauty,pet:openPetShop,ride:()=>openInventory('ride'),weapon:()=>openShop('weapon'),potion:openPotionShop,walk:()=>{switchStage(0);world.guideTo('shop');},back:openNavigation});
+  navPage('상점 거리', '<div class="nav-intro"><h3>모험가의 취향을 골라요</h3><p>목장과 안내 캐릭터가 있던 자리까지 넓힌 큰 상점거리예요. 여기서 바로 구경해도 좋아요.</p></div><div class="nav-list">' + navButton('outfit','👗 옷') + navButton('beauty','✨ 헤어와 얼굴 꾸미기') + navButton('pet','🐾 펫') + navButton('ride','🦄 탈것') + navButton('weapon','🪄 모험 도구') + navButton('potion','🧪 물약') + '</div><div class="nav-links">'+navButton('walk','상점 거리로 길 안내')+navButton('back','← 전체 지도')+'</div>', {outfit:()=>openShop('outfit'),beauty:openBeauty,pet:openPetShop,ride:()=>openInventory('ride'),weapon:()=>openShop('weapon'),potion:openPotionShop,walk:()=>{switchStage(0);world.guideTo('shop');},back:openNavigation});
 }
 function openAdventureBook() {
   modalSection='book';
