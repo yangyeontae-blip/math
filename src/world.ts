@@ -725,7 +725,7 @@ export class World {
     this.platforms.forEach(p => { box(this.scene, 0xa8a88c, p.x, p.h / 2, p.z, p.w, p.h, p.d); box(this.scene, 0xcfe298, p.x, p.h + .02, p.z, p.w + .05, .08, p.d + .05); });
     this.house(-9, -8, 0x659c91, 0xf6e5bd);
     box(this.scene,theme.path,14,.025,-7,15,.06,11);box(this.scene,theme.path,-7,.025,8,15,.06,3);
-    for(const x of [10,14,19]){box(this.scene,0xf3d7bd,x,2.7,-7,3.2,.15,2);for(const side of [-1,1])cylinder(this.scene,0xa98160,x+side*1.4,1.3,-7,.06,.08,2.6,6);}
+    this.buildMarket();
     // Original cozy life-sim details: a tiny farm, mailbox, picnic bench and lanterns.
     box(this.scene, 0x9d754d, -17, .05, -10, 6.5, .12, 4.5);
     for (let row = 0; row < 3; row++) for (let col = 0; col < 5; col++) { cylinder(this.scene, 0x4c9555, -19.2 + col * 1.1, .28, -11.2 + row * 1.15, .035, .055, .5, 5); ball(this.scene, [0xf28fa8, 0xf4d66a, 0x9dcfe5][row], -19.2 + col * 1.1, .55, -11.2 + row * 1.15, .13); }
@@ -761,6 +761,70 @@ export class World {
       this.addEntity('noticeBoard', '운영자 소식 · 공지 읽기', VILLAGE_SPOTS.notice.x, VILLAGE_SPOTS.notice.z, board);
     }
     this.addBerries();
+  }
+  /** Six small shops frame two walkable lanes; merchants keep their existing interaction positions. */
+  private buildMarket() {
+    const warm=0xf6e8cd,wood=0x906647;
+    box(this.scene,0xcab68e,14.4,.025,-8.1,15.8,.08,15.8);
+    box(this.scene,0xeee0bc,14.4,.075,-8.1,15.3,.08,15.3);
+    // Setts and borders make the market a destination without filling the walking lanes.
+    for(let i=0;i<12;i++) for(const z of [-2.1,-8.5]) box(this.scene,i%2?0xd9c99f:0xe4d4af,8.2+i*1.1,.13,z,.95,.035,.46);
+    const stalls=[
+      {x:10,z:-6.1,c:0x71aaa3,kind:0}, {x:14.5,z:-6.1,c:0xdc94aa,kind:1}, {x:19,z:-6.1,c:0xd6b66c,kind:2},
+      {x:10,z:-12.5,c:0x88a9cf,kind:3}, {x:14.5,z:-12.5,c:0xb59ace,kind:4}, {x:19,z:-12.5,c:0x8cb282,kind:5},
+    ];
+    for(const {x,z,c,kind} of stalls){
+      const g=new T.Group();g.position.set(x,0,z);this.scene.add(g);
+      box(g,0xb48a60,0,.12,0,3.7,.18,2.8);
+      box(g,warm,0,1.45,-1,3.25,2.5,.16);
+      for(const side of [-1,1]){
+        box(g,wood,side*1.62,1.6,-1,.13,3.1,.14);
+        cylinder(g,wood,side*1.62,1.42,1.12,.07,.09,2.8,7);
+        ball(g,0xf4d48b,side*1.62,2.89,1.12,.12);
+      }
+      // Pitched striped canopy with a scalloped valance and a little gold ridge.
+      for(const side of [-1,1]){
+        const roof=box(g,c,0,3.25,side*.64,3.9,.18,1.55);roof.rotation.x=side*.23;
+        for(let stripe=0;stripe<5;stripe++){
+          const strip=box(g,warm,-1.52+stripe*.76,3.36,side*.64,.29,.035,1.55);strip.rotation.x=side*.23;
+        }
+      }
+      box(g,wood,0,3.49,0,4,.12,.16);
+      for(let i=0;i<9;i++)ball(g,i%2?warm:c,-1.7+i*.425,2.99,1.39,.215,.23,.07);
+      // Timber counter, cream inset panels, shelving and a framed shop emblem.
+      box(g,wood,0,.67,.83,2.95,1.12,.7);box(g,0xf2d4a4,0,1.26,.83,3.15,.14,.88);
+      for(const side of [-1,1])box(g,c,side*.76,.66,1.195,1.24,.72,.04);
+      box(g,wood,0,1.6,-.87,2.8,.11,.5);
+      box(g,wood,0,2.55,1.43,1.22,.64,.13);box(g,0xfff2cf,0,2.55,1.51,1.06,.49,.04);
+      const icon=new T.Group();icon.position.set(0,2.55,1.56);icon.scale.setScalar(.42);g.add(icon);
+      const goods=new T.Group();goods.position.set(0,1.34,.85);g.add(goods);
+      const emblem=(target:T.Group,size=1)=>{
+        target.scale.multiplyScalar(size);
+        if(kind===0){const blade=box(target,0xc8dfdf,0,.28,0,.18,.82,.1);blade.rotation.z=-.3;box(target,0xd9b363,-.1,-.1,.02,.65,.12,.14);box(target,wood,-.16,-.34,0,.13,.45,.12);}
+        else if(kind===1){box(target,0xe8a0b4,0,0,0,.66,.76,.15);for(const side of [-1,1]){const sleeve=box(target,0xe8a0b4,side*.42,.19,0,.3,.38,.17);sleeve.rotation.z=side*.55;}box(target,0xffe8b3,0,-.16,.09,.68,.09,.04);}
+        else if(kind===2){ball(target,0xb5916e,0,0,0,.4,.33,.2);for(const side of [-1,1]){ball(target,0xb5916e,side*.29,.32,0,.17);ball(target,0x393c37,side*.15,.07,.19,.045);}ball(target,0xffead1,0,-.09,.18,.2,.14,.06);}
+        else if(kind===3){ball(target,0xf5dca5,0,0,0,.43,.22,.17);for(const side of [-1,1])cylinder(target,wood,side*.25,-.25,0,.09,.09,.36,7);box(target,0x789eaf,0,.2,0,.5,.14,.35);ball(target,0xf5dca5,.36,.26,0,.16,.32,.16);}
+        else if(kind===4){ball(target,0xe8cf92,0,.07,0,.4,.46,.08);ball(target,0xc4e4ee,0,.07,.07,.3,.35,.03);box(target,wood,0,-.44,0,.12,.36,.1);ball(target,0xffffff,-.09,.19,.11,.04,.12,.02);}
+        else {cylinder(target,0xb0d7b0,0,-.04,0,.31,.26,.55,10);cylinder(target,0xedcc83,0,.37,0,.14,.16,.24,8);ball(target,0xf0d88c,0,-.03,.22,.12,.15,.04);}
+      };
+      emblem(icon);
+      for(const side of [-1,1]){const item=new T.Group();item.position.x=side*.78;goods.add(item);emblem(item,.65);}
+      for(let i=0;i<3;i++){box(g,[c,0xe7c48b,0xb9c9a7][i],-.85+i*.85,1.84,-.81,.45,.39,.24);ball(g,0xffe4a7,-.85+i*.85,1.84,-.66,.055);}
+      // One planter per shop stays behind the merchant, clear of their approach.
+      cylinder(g,0xc68e68,1.88,.28,.55,.28,.2,.48,8);ball(g,0x8eb47c,1.88,.65,.55,.36,.35,.3);ball(g,c,1.85,.9,.65,.16);
+      this.colliders.push({x,z,r:1.35});
+    }
+    // A restrained string of flags and warm lanterns connects the stalls.
+    for(const z of [-2.4,-8.8]){
+      for(const x of [7.1,21.7]){cylinder(this.scene,wood,x,1.65,z,.07,.1,3.3,7);ball(this.scene,0xffe6a0,x,3.18,z,.2,.28,.2);}
+      box(this.scene,0xa98862,14.4,3.05,z,14.6,.035,.035);
+      for(let i=0;i<12;i++){const flag=mesh(new T.ConeGeometry(.13,.32,3),[0xe7a4ae,0x91b9b0,0xe6c880][i%3],7.7+i*1.2,2.86,z,this.scene);flag.rotation.z=Math.PI;}
+    }
+    // Entrance flower boxes add a welcoming edge while the centre remains open.
+    for(const z of [-.9,-15.6])for(const x of [9,14.5,20]){
+      box(this.scene,wood,x,.27,z,1.6,.48,.52);box(this.scene,0x6c8656,x,.54,z,1.4,.08,.4);
+      for(let i=0;i<4;i++)ball(this.scene,[0xebacba,0xf4d691,0xe9d8f0][i%3],x-.54+i*.36,.69,z,.18,.16,.18);
+    }
   }
   // 숲마다 다른 분위기를 만드는 장식. 걷는 길과 상점 앞은 비워 둬요.
   private villageDecor(theme: VillageTheme) {
