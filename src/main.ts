@@ -299,6 +299,7 @@ function persist() {
 }
 function refresh() {
   if (!state) return; syncDiscoveries(state); const s = state, journey = journeyFor(s), forestName = FOREST_INFO[s.forest].name;
+  audio.setScene(journey.stage === 0 || s.homestead.inside || s.room.inside ? 'village' : s.forest); // 숲마다 다른 배경음악
   const suggested = recommendAdventure(s, curriculumRegions(), () => true);
   todayButton.textContent = world?.inHomestead ? '🏡 마을 꾸미기' : `🧭 ${suggested.title}`; todayButton.title = '오늘의 모험 하나 추천받기';
   petCareButton.hidden = s.pet < 0;
@@ -350,7 +351,7 @@ function openRescue(round: number) {
   };
   draw();
 }
-function closeModal() { stopSpeech(); preview?.dispose(); preview = null; curriculumRun = null; $('#modal').classList.remove('shop-modal'); ($('#modal') as HTMLDialogElement).close(); if (world!) { world.setPaused(!state); world.clearInput(); } if (modalOpener?.isConnected && !modalOpener.closest('[hidden]')) modalOpener.focus(); }
+function closeModal() { audio.setBattle(false); stopSpeech(); preview?.dispose(); preview = null; curriculumRun = null; $('#modal').classList.remove('shop-modal'); ($('#modal') as HTMLDialogElement).close(); if (world!) { world.setPaused(!state); world.clearInput(); } if (modalOpener?.isConnected && !modalOpener.closest('[hidden]')) modalOpener.focus(); }
 function openModal(html: string, cls = '') {
   preview?.dispose(); preview = null; if (world!) { world.setPaused(true); world.clearInput(); }
   const dialog = $('#modal') as HTMLDialogElement; if (!dialog.open) modalOpener = document.activeElement as HTMLElement;
@@ -1159,6 +1160,7 @@ function renderBattle() {
   }
   document.querySelectorAll<HTMLButtonElement>('[data-number]').forEach(button => button.onclick = () => enterAnswer(button.dataset.number!));
   document.querySelectorAll<HTMLInputElement>('[data-answer-part]').forEach(input => input.onclick = () => { document.querySelectorAll<HTMLInputElement>('[data-answer-part]').forEach(item => item.classList.toggle('active', item === input)); });
+  audio.setBattle(true); // 시합 중에는 빠른 시합 음악
   if (challenge) $('#monster-portrait').insertAdjacentHTML('beforeend', heartsMarkup(b.goalRounds! - b.round + 1, b.goalRounds!));
   $('#show-hint').onclick = () => showHint(true); $('#answer').focus();
 }
@@ -1291,7 +1293,7 @@ function submitAnswer() {
   if (!b.result) return;
   b.score += b.result.score;
   if (b.encounter.arena) state.best = Math.max(state.best, b.score); else if (b.kind === 'normal' || b.kind === 'expMonster') world.defeat(b.id);
-  audio.play(b.result.levels ? 'level' : 'correct'); world.celebrate(); persist(); refresh();
+  audio.setBattle(false); audio.play(b.result.levels ? 'level' : 'victory'); world.celebrate(); persist(); refresh();
   $('#answer-message').textContent = '정답이에요! 정말 잘했어요!'; $('#monster-portrait').classList.add('defeated');
   $('.number-pad').hidden = true; $('.battle-footer').hidden = true; $('#hint').hidden = true;
   $('#battle-result').hidden = false;
