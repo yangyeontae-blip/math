@@ -4,7 +4,7 @@ import { emptyForestActivities, validForestActivities, type ForestActivities } f
 import { emptyForestTrail, validForestTrail, type ForestTrail } from './forest-trail';
 import { stageBerries, stageMonsters, stageTrees, stageSize, berryValue, clearBonus } from './stages';
 import { emptyExpedition, expeditionLayout, EXPEDITION_TITLES, type ExpeditionProgress } from './expedition';
-import { DAILY_MISSIONS, DATE_KEY, recordDaily, type DailyState } from './daily';
+import { DAILY_MISSIONS, DAILY_GOAL_LIMITS, DATE_KEY, recordDaily, type DailyState } from './daily';
 import { sha256Hex } from './sha256';
 import { j } from './grade-helpers';
 export const WEAPONS = [
@@ -953,7 +953,7 @@ export function validateSave(value: unknown): Save {
     const d = s.daily;
     if (!d || typeof d !== 'object' || typeof d.date !== 'string' || (d.date !== '' && !DATE_KEY.test(d.date)) || typeof d.lastStamp !== 'string' || (d.lastStamp !== '' && !DATE_KEY.test(d.lastStamp)) || !integer(d.streak, 0, 1e6) || typeof d.allClaimed !== 'boolean') return fail();
     if (!Array.isArray(d.progress) || d.progress.length !== DAILY_MISSIONS.length || !Array.isArray(d.claimed) || d.claimed.length !== DAILY_MISSIONS.length) return fail();
-    if (DAILY_MISSIONS.some((m, i) => !integer(d.progress[i], 0, m.goal) || typeof d.claimed[i] !== 'boolean' || (d.claimed[i] && d.progress[i] < m.goal)) || d.allClaimed !== d.claimed.every(Boolean)) return fail();
+    if (DAILY_GOAL_LIMITS.some((m, i) => !integer(d.progress[i], 0, m.max) || typeof d.claimed[i] !== 'boolean' || (d.claimed[i] && d.progress[i] < m.min)) || d.allClaimed !== d.claimed.every(Boolean)) return fail();
   }
   for (const [key, max] of [['monsters', MONSTERS.length], ['pets', PETS.length], ['outfits', OUTFITS.length]] as const) if (!Array.isArray(s.discoveries[key]) || s.discoveries[key].some(id => !integer(id, 0, max - 1))) return fail();
   // Old saves may contain an arena choice or current forest unavailable to this grade.

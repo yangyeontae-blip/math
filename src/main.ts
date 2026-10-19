@@ -19,7 +19,7 @@ import { curriculumVisualHtml } from './curriculum-visual';
 import { curriculumActivityHtml } from './curriculum-activity';
 import { mathTextHtml } from './math-format';
 import { VILLAGE_THEMES, villageThemeId } from './villages';
-import { DAILY_MISSIONS, DAILY_STAMPS, DAILY_ALL_CLEAR_BONUS, claimDaily, dailyReady, dailyStampsShown, ensureDaily } from './daily';
+import { dailyMissions, DAILY_STAMPS, DAILY_ALL_CLEAR_BONUS, claimDaily, dailyReady, dailyStampsShown, ensureDaily } from './daily';
 import type { World, AvatarPreview, GuideKind } from './world';
 import { formatScaled, operationsForGrade, battleMode, type CurriculumMistake, newSave, validateSave, CHARACTERS, MONSTERS, OUTFITS, PETS, POTIONS, RIDES, WEAPONS, HAIRSTYLES, FACES, WEAPON_UPGRADES, OUTFIT_UPGRADES, ROOM_GRID_COLUMNS, ROOM_GRID_ROWS, HERO_BREAD_PET_ID, Encounter, grantReward, rewardFor, battleRewardReason, potionEffects, buy, upgrade, buyRide, dismount, buyPet, unequipPet, buyLook, buyPotion, usePotion, applyTeacherCode, collectBerry, finishHunt, fellTree, treeDamage, canEnter, monsterBattleRounds, recordWrongAnswer, recordCorrectAnswer, STAGE_STORIES, journeyFor, multiplicationUsesStory, startMultiplicationFinal, answerMultiplicationFinal, questionAnswerText, curriculumUnitComplete, canStartCurriculumMission, recordCurriculumAttempt, completeCurriculumMission, curriculumGraduationAvailable, claimCurriculumGraduation, addRoomFurniture, removeRoomFurniture, placeRoomFurniture, roomFurniturePosition, defaultRoomFurniturePosition, OPERATIONS, NEW_CURRICULUM_UNITS, OPERATION_INFO, PRACTICE_TIER_NAMES, type CurriculumUnitId, type NewCurriculumUnitId, type ForestKind, type Operation, type PracticeTier, type SchoolGrade, type Save } from './rules';
 import { gradeRegions, gradeMissions, generateGradeQuestion, type GradeRegion } from './grade-content';
@@ -1566,7 +1566,7 @@ function openSettings() {
 }
 function openDaily() {
   if (!state) return; const s = state, d = ensureDaily(s), shown = dailyStampsShown(d.streak);
-  const rows = DAILY_MISSIONS.map((m, i) => { const done = d.progress[i] >= m.goal, claimed = d.claimed[i];
+  const rows = dailyMissions(d.date).map((m, i) => { const done = d.progress[i] >= m.goal, claimed = d.claimed[i];
     return `<li class="daily-row ${claimed ? 'claimed' : done ? 'done' : ''}"><span class="daily-icon">${m.icon}</span><div><b>${m.label}</b><div class="daily-bar" role="progressbar" aria-valuemin="0" aria-valuemax="${m.goal}" aria-valuenow="${d.progress[i]}"><i style="width:${Math.round(d.progress[i] / m.goal * 100)}%"></i></div><small>${d.progress[i]} / ${m.goal}</small></div><button class="primary" data-daily="${i}" ${done && !claimed ? '' : 'disabled'}>${claimed ? '받았어요' : `🍓 ${m.reward}`}</button></li>`; }).join('');
   const stamps = Array.from({ length: DAILY_STAMPS }, (_, i) => `<span class="daily-stamp ${i < shown ? 'on' : ''}">${i === DAILY_STAMPS - 1 ? '🎁' : i < shown ? '⭐' : '☆'}</span>`).join('');
   openModal(title('오늘의 미션', '하루 5분 모험') + `<p>미션을 완수하고 보상을 받아요! 하루가 지나면 새 미션이 열려요.</p><ul class="daily-list">${rows}</ul><p class="expedition-note">3개를 모두 받으면 보너스 🍓 ${DAILY_ALL_CLEAR_BONUS}!</p><h3 class="title-heading">📅 연속 출석 도장 · ${d.streak}일째</h3><div class="daily-stamps">${stamps}</div><p class="note">매일 한 번 이상 미션 보상을 받으면 도장이 찍혀요. 하루 쉬어도 괜찮아요, 다시 1일부터 모으면 돼요. 7일째 선물은 베리 물약이에요!</p>`);
