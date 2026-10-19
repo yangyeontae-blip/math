@@ -694,6 +694,21 @@ export function applyTeacherCode(s: Save, code: string, teacherHash = TEACHER_CO
     if (!s.discoveries.pets.includes(SHINBI_STAR_PET_ID)) s.discoveries.pets.push(SHINBI_STAR_PET_ID);
     return '이신비의 별을 얻고 바로 함께하기로 했어요!';
   }
+  // 브라우저 데이터가 지워진 학생 복구용: level숫자는 그 레벨로 바꾸고, yeontae숫자는 그만큼 베리를 더해요.
+  const levelTo = /^level([1-9]\d{0,5})$/.exec(code);
+  if (levelTo) {
+    const level = Number(levelTo[1]);
+    if (level > 100_000) throw new Error('레벨은 100,000까지 정할 수 있어요.');
+    s.level = level; s.xp = Math.min(s.xp, level * 40 - 1);
+    return `${level.toLocaleString()}레벨로 바꿨어요!`;
+  }
+  const berryGift = /^yeontae([1-9]\d{0,9})$/.exec(code);
+  if (berryGift) {
+    const amount = Number(berryGift[1]);
+    if (s.berries + amount > 1_000_000_000) throw new Error('베리는 10억 개까지 가질 수 있어요.');
+    s.berries += amount;
+    return `베리 ${amount.toLocaleString()}개를 추가했어요!`;
+  }
   const levelGain = code === 'levelup' || code === 'levelup1' ? 1 : code === 'levelup10' ? 10 : 0;
   if (levelGain) {
     if (s.level + levelGain > 100_000) throw new Error('레벨은 100,000까지 올릴 수 있어요.');

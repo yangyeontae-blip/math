@@ -163,6 +163,17 @@ test('teacher level codes raise only the requested number of levels', () => {
   assert.deepEqual(validateSave(JSON.parse(JSON.stringify(s))), s);
   s.level = 99_995; const before = structuredClone(s); assert.throws(() => applyTeacherCode(s, 'levelup10')); assert.deepEqual(s, before);
 });
+test('restore codes set an exact level and add an exact number of berries', () => {
+  const s = newSave('복구', 0); s.xp = 30; s.berries = 500;
+  assert.equal(applyTeacherCode(s, 'level37'), '37레벨로 바꿨어요!'); assert.equal(s.level, 37); assert.equal(s.xp, 30); assert.equal(s.teacherMode, false);
+  s.xp = 1000; applyTeacherCode(s, 'level1'); assert.equal(s.level, 1); assert.equal(s.xp, 39);
+  applyTeacherCode(s, 'level100000'); assert.equal(s.level, 100_000);
+  assert.equal(applyTeacherCode(s, 'yeontae12345'), '베리 12,345개를 추가했어요!'); assert.equal(s.berries, 12_845);
+  assert.deepEqual(validateSave(JSON.parse(JSON.stringify(s))), s);
+  const before = structuredClone(s);
+  for (const word of ['level0', 'level007', 'level100001', 'level', 'level-5', 'yeontae', 'yeontae0', 'yeontae1e3', 'Yeontae100', 'yeontae1000000000']) assert.throws(() => applyTeacherCode(s, word));
+  assert.deepEqual(s, before);
+});
 test('Junwoo potions last for their exact time and never overspend', () => {
   const s = newSave('물약', 0); s.berries = 1_000; const now = 1_800_000_000_000;
   buyPotion(s, 0); buyPotion(s, 0); assert.equal(s.berries, 1_000 - POTIONS[0].price * 2); assert.equal(s.potions.stock[0], 2);
