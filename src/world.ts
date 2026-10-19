@@ -1,3 +1,4 @@
+import { showEntityLabel } from './navigation';
 import { VILLAGE_SPOTS, villageWelcomeClear, villageTreeSpot, villageMonsterSpot } from './village-layout';
 import { homeScenery } from './homestead-models';
 import { HOME_ITEMS, objectCells, visitorTargets, homeRoute, type HomeObject } from './homestead';
@@ -17,7 +18,7 @@ import { VILLAGE_THEMES, villageThemeId, type VillageTheme } from './villages';
 import type { AmbienceScene } from './ambience';
 
 type Entity = { id: string; name: string; x: number; z: number; mesh: T.Group; label: HTMLDivElement };
-export type GuideKind = 'homeEditor' | 'homeExit' | 'homeVisitor' | 'discovery' | 'forestWork' | 'trailSeed' | 'trailLamp' | 'berry' | 'monster' | 'shop' | 'journey' | 'next' | 'star' | 'expMonster' | 'roomExit' | 'storyClue' | 'storyPuzzle' | 'storyMailbox' | 'village' | 'villageProject0' | 'villageProject1' | 'villageProject2';
+export type GuideKind = 'noticeBoard' | 'homesteadGate' | 'shopStreet' | 'homeEditor' | 'homeExit' | 'homeVisitor' | 'discovery' | 'forestWork' | 'trailSeed' | 'trailLamp' | 'berry' | 'monster' | 'shop' | 'journey' | 'next' | 'star' | 'expMonster' | 'roomExit' | 'storyClue' | 'storyPuzzle' | 'storyMailbox' | 'village' | 'villageProject0' | 'villageProject1' | 'villageProject2';
 const mat = (color: number, roughness = .86) => new T.MeshStandardMaterial({ color, roughness });
 const materials = new Map<number, T.MeshStandardMaterial>();
 const sharedGeometries = new Set<T.BufferGeometry>();
@@ -722,47 +723,43 @@ export class World {
     box(this.scene, 0xe5d29f, 19, .03, 8, 8.6, .1, 11.5); box(this.scene, 0x59b9bf, 19, .1, 8, 7.5, .08, 10.5);
     for (let i = 0; i < 5; i++) { cylinder(this.scene, 0x72ad63, 17 + i % 2 * 3, .16, 4.5 + i * 1.5, .42, .42, .02, 12); ball(this.scene, 0xf0b6ce, 17 + i % 2 * 3, .24, 4.5 + i * 1.5, .14, .12, .14); }
     this.platforms.forEach(p => { box(this.scene, 0xa8a88c, p.x, p.h / 2, p.z, p.w, p.h, p.d); box(this.scene, 0xcfe298, p.x, p.h + .02, p.z, p.w + .05, .08, p.d + .05); });
-    this.house(-9, -8, 0x659c91, 0xf6e5bd); this.house(9, -8, 0xd995a7, 0xffe9ce);
+    this.house(-9, -8, 0x659c91, 0xf6e5bd);
+    box(this.scene,theme.path,14,.025,-7,15,.06,11);box(this.scene,theme.path,-7,.025,8,15,.06,3);
+    for(const x of [10,14,19]){box(this.scene,0xf3d7bd,x,2.7,-7,3.2,.15,2);for(const side of [-1,1])cylinder(this.scene,0xa98160,x+side*1.4,1.3,-7,.06,.08,2.6,6);}
     // Original cozy life-sim details: a tiny farm, mailbox, picnic bench and lanterns.
     box(this.scene, 0x9d754d, -17, .05, -10, 6.5, .12, 4.5);
     for (let row = 0; row < 3; row++) for (let col = 0; col < 5; col++) { cylinder(this.scene, 0x4c9555, -19.2 + col * 1.1, .28, -11.2 + row * 1.15, .035, .055, .5, 5); ball(this.scene, [0xf28fa8, 0xf4d66a, 0x9dcfe5][row], -19.2 + col * 1.1, .55, -11.2 + row * 1.15, .13); }
     for (let i = 0; i < 7; i++) { box(this.scene, 0xe4c18c, -20.4 + i * 1.1, .42, -12.75, 1, .12, .12); cylinder(this.scene, 0xba8a58, -20.9 + i * 1.1, .4, -12.75, .045, .055, .8, 6); }
     box(this.scene, 0x8f6949, 5.5, .55, 5.5, 2.2, .18, .65); box(this.scene, 0x8f6949, 5.5, .95, 5.75, 2.2, .18, .18); for (const x of [4.7, 6.3]) cylinder(this.scene, 0x76523d, x, .3, 5.5, .08, .08, .6, 6);
-    const mailbox = new T.Group(); box(mailbox, 0xe59687, 0, 1.1, 0, .72, .95, .5); cylinder(mailbox, 0x81624b, 0, .45, 0, .09, .11, .9, 7); box(mailbox, 0xffe6a3, .25, 1.1, .28, .12, .12, .04); ball(mailbox, 0xfff1b1, 0, 1.66, 0, .15); this.addEntity('storyMailbox', '숲속 우체통 · 편지 대모험', -6.1, -4.9, mailbox);
+    const shops = new T.Group(); cylinder(shops,0x886445,0,.7,0,.08,.1,1.4,7);box(shops,0xeec8d1,0,1.5,0,1.6,.8,.15);this.addEntity('shopStreet','상점 거리 · 구경하기',7,-1,shops);
     for (const [x, z] of [[-5, 11], [6, 11], [-5, -1], [6, -1]]) { cylinder(this.scene, 0x755a43, x, .65, z, .06, .08, 1.3, 7); ball(this.scene, 0xffe99a, x, 1.35, z, .22); }
     // Pastel bunting, tiny mushrooms and butterflies make the square feel festive.
     for (let i = 0; i < 9; i++) { const flag = mesh(new T.ConeGeometry(.18, .38, 3), [0xf6a7bc, 0xf5d37b, 0x92d4cc][i % 3], -5 + i * 1.25, 2.3 + Math.sin(i * .7) * .12, -2.2, this.scene); flag.rotation.z = Math.PI; }
     for (const [x, z, c] of [[-4, 7, 0xf58da6], [5, 7, 0xffd66b], [-12, 1, 0xa9cceb], [13, 3, 0xd8a3e6]] as const) { cylinder(this.scene, 0xffeed6, x, .18, z, .08, .12, .36, 7); ball(this.scene, c, x, .42, z, .28, .16, .25); }
     for (let i = 0; i < 8; i++) { const x = -8 + i * 2.2, z = 7 + Math.sin(i) * 1.8; if (Math.hypot(x - 10.5, z - 13.5) < 7) continue; const g = new T.Group(); g.position.set(x, .9 + i % 2 * .35, z); this.scene.add(g); ball(g, i % 2 ? 0xf5a9ca : 0x9bd8e0, -.1, 0, 0, .12, .08, .03); ball(g, i % 2 ? 0xf5a9ca : 0x9bd8e0, .1, 0, 0, .12, .08, .03); cylinder(g, 0x75543e, 0, 0, 0, .025, .025, .16, 5); this.butterflies.push(g); }
-    // Arena: a lavender garden, not a threatening dungeon.
-    cylinder(this.scene, 0xc7bdd8, 0, .08, -13, 4.3, 4.3, .14, 40); cylinder(this.scene, 0xe1d9e7, 0, .17, -13, 3.65, 3.65, .07, 40);
-    const ring = mesh(new T.TorusGeometry(3.25, .055, 6, 48), 0xab96c4, 0, .22, -13, this.scene); ring.rotation.x = Math.PI / 2;
-    for (const x of [-4.3, 4.3]) { cylinder(this.scene, 0xaca4b6, x, 1, -14, .38, .48, 2); ball(this.scene, 0xfbe5a2, x, 2.15, -14, .42); }
     this.addEntity('guide', '연태쌤 · 마을 대장', 1.8, 3, makeYeontae());
-    this.addEntity('shepherd', '가현이 · 구름양 목장주인', -5.4, 3, makeCharacter(0, 21, 3, 0, 0, 6, 7));
-    this.addEntity('weapon', '강지후 · 무기 상점', -8, -3.8, makeCharacter(1, 6, 1));
-    this.addEntity('outfit', '오지후 · 의상 상점', -3.8, -7, makeCharacter(2, 4, 2));
-    this.addEntity('ride', '나현이 · 라이딩 상점', 14, -5.5, makeCharacter(0, 10, 6));
-    this.addEntity('pet', '윤준 · 펫 상점', 18.5, -3.5, makeCharacter(1, 12, 10));
-    this.addEntity('potion', '박준우 · 물약 상점', 8, -1.8, makeCharacter(0, 16, 12));
-    this.addEntity('beauty', '가영이 · 헤어와 얼굴 꾸미기', -15.5, -4.2, makeCharacter(2, 15, 2));
-    this.addEntity('arena', '신비 · 대련장', 0, -9, makeCharacter(3, 5, 3));
-    this.addEntity('room', '나의 집 · 들어가기', 9, -4.5, this.gate(0xe5ad79));
+    this.addEntity('shepherd', '가현이 · 구름양 목장주인', -17, -9, makeCharacter(0, 21, 3, 0, 0, 6, 7));
+    this.addEntity('weapon', '강지후 · 무기 상점', 10, -3.8, makeCharacter(1, 6, 1));
+    this.addEntity('outfit', '오지후 · 의상 상점', 14, -3.8, makeCharacter(2, 4, 2));
+    this.addEntity('ride', '나현이 · 라이딩 상점', 10, -10, makeCharacter(0, 10, 6));
+    this.addEntity('pet', '윤준 · 펫 상점', 19, -3.8, makeCharacter(1, 12, 10));
+    this.addEntity('potion', '박준우 · 물약 상점', 19, -10, makeCharacter(0, 16, 12));
+    this.addEntity('beauty', '가영이 · 헤어와 얼굴 꾸미기', 14, -10, makeCharacter(2, 15, 2));
     stageMonsters(0).forEach((m, i) => { const at = villageMonsterSpot(i, m.x, m.z); this.addEntity(`monster${i}`, MONSTERS[m.type].name, at.x, at.z, makeMonster(m.type)); });
-    this.addEntity('journey', '수학 모험의 문 · 1~6학년 지도', 10.5, 13.5, this.gate(0x9e78c9));
+    this.addEntity('journey', '숲으로 모험 · 지도', 8, 8, this.gate(0x9e78c9));
     // Keep the walking areas clear; peripheral trees frame the miniature world.
     for (let i = 0; i < 48; i++) { const a = i * 2.39996, r = 17 + (i % 4) * 1.65; const x = Math.cos(a) * r, z = Math.sin(a) * r * .77; if (villageWelcomeClear(x, z) || (x > 14 && z > 1) || Math.hypot(x - 10.5, z - 13.5) < 7 || Math.hypot(x - 18.5, z + 3.5) < 7 || (Math.abs(x) < 5 && z < -12)) continue; this.tree(x, z, .85 + (i % 3) * .16, theme.pinkTrees ? i % 3 === 0 : i % 6 === 0, theme.foliage); }
     stageTrees(0).forEach(({ x, z }, i) => { const at = villageTreeSpot(i, x, z); if (Math.hypot(at.x - 18.5, at.z + 3.5) >= 8) this.addChoppableTree(i, at.x, at.z, 1, theme.pinkTrees || i % 2 === 0, theme.foliage); });
     for (let i = 0; i < 65; i++) { const x = Math.sin(i * 12.97) * 23, z = Math.cos(i * 4.67) * 18; if (villageWelcomeClear(x, z) || Math.abs(x) < 3 || Math.hypot(x - 10.5, z - 13.5) < 7 || (z < -2 && z > -11) || (x > 5 && z > 2 && z < 14)) continue; for (let j = 0; j < 3; j++) { const fx = x + j * .14; cylinder(this.scene, 0x538c50, fx, .14, z, .025, .025, .3, 5); ball(this.scene, [0xffe8ae, 0xf4aec4, 0xeae3ff][i % 3], fx, .32, z, .1, .09, .1); } }
     for (const side of [-1, 1]) for (let i = 0; i < 7; i++) { const x = side * 22, z = -15 + i * 4.7; cylinder(this.scene, 0xd4bb88, x, .5, z, .08, .09, 1, 8); box(this.scene, 0xe7d3a3, x, .65, z + 2, .12, .11, 4.7); }
     this.villageDecor(theme);
-    if (theme === VILLAGE_THEMES.addition) {
+    { // The operator notice has the same location in every village.
       const board = new T.Group();
       for (const x of [-.65,.65]) cylinder(board, 0x886445, x, .8, 0, .07, .09, 1.6, 7);
       box(board, 0xc99062, 0, 1.35, 0, 1.9, 1.15, .16); box(board, 0xfff8de, 0, 1.35, .1, 1.58, .88, .04);
       for (let i=0;i<3;i++) box(board, 0xd5ae8d, -.1, 1.58-i*.23, .13, 1.1-i*.15, .045, .02);
-      this.addEntity('noticeBoard', '마을 공지판 · 소식 읽기', VILLAGE_SPOTS.notice.x, VILLAGE_SPOTS.notice.z, board);
-    } else if (theme !== VILLAGE_THEMES.division) this.addEntity('unit', `${theme.name} 안내판 · 단계 지도`, -10, 9.5, this.gate(theme.gate));
+      this.addEntity('noticeBoard', '운영자 소식 · 공지 읽기', VILLAGE_SPOTS.notice.x, VILLAGE_SPOTS.notice.z, board);
+    }
     this.addBerries();
   }
   // 숲마다 다른 분위기를 만드는 장식. 걷는 길과 상점 앞은 비워 둬요.
@@ -895,7 +892,7 @@ export class World {
   }
   loadStage(s: Save, fresh = false) {
     this.clearInput(); this.clearMap(); this.inRoom = false; s.room.inside = false; s.homestead.inside=false; this.forest = s.forest; const journey = journeyFor(s); this.stage = journey.stage;
-    this.scene.background = new T.Color(0xd0eade); this.scene.fog = new T.Fog(0xd0eade, 58, 112); this.platforms = stagePlatforms(this.stage);
+    this.scene.background = new T.Color(0xd0eade); this.scene.fog = new T.Fog(0xd0eade, 58, 112); this.platforms = this.stage===0 ? [] : stagePlatforms(this.stage);
     if (this.stage === 0) this.buildVillage(VILLAGE_THEMES[villageThemeId(s)]); else this.buildHunt(this.stage);
     if (this.stage === 0) { this.updateStoryVillage(s); const gate=new T.Group();box(gate,0xd3b985,0,.8,0,1.4,1.6,.2);ball(gate,0xa8c98c,0,1.9,0,.5);this.addEntity('homesteadGate','🏡 나의 마을 · 들어가기',VILLAGE_SPOTS.home.x,VILLAGE_SPOTS.home.z,gate); }
     this.mergeStaticScenery();
@@ -923,7 +920,7 @@ export class World {
   enterHomestead(s:Save,preserve=false){
     const pos=preserve?s.homestead.position:{x:0,z:12};this.clearInput();this.clearMap();this.inRoom=false;this.inHomestead=true;s.room.inside=false;s.homestead.inside=true;this.stage=0;this.platforms=[];this.homeSave=s;
     this.scene.background=new T.Color(0xd5eddb);this.scene.fog=new T.Fog(0xd5eddb,40,85);
-    box(this.scene,0xa9c78c,0,-.5,0,27,1,27);box(this.scene,0xe5d0a5,0,.02,12,4,.04,2);box(this.scene,0x8daf76,0,.2,-12.7,26,.4,.5);for(const side of [-1,1]){box(this.scene,0x8daf76,side*12.7,.2,0,.5,.4,26);box(this.scene,0x8daf76,side*8,.2,12.7,10,.4,.5);}
+    box(this.scene,0xa9c78c,0,-.5,8,27,1,43);box(this.scene,0xe5d0a5,0,.02,20,3.8,.04,16);box(this.scene,0xe5d0a5,0,.02,12,4,.04,2);box(this.scene,0x8daf76,0,.2,-12.7,26,.4,.5);for(const side of [-1,1]){box(this.scene,0x8daf76,side*12.7,.2,0,.5,.4,26);box(this.scene,0x8daf76,side*8,.2,12.7,10,.4,.5);}
     for(let i=0;i<=12;i++){box(this.scene,0xbed29e,-12+i*2,.015,0,.025,.025,24);box(this.scene,0xbed29e,0,.015,-12+i*2,24,.025,.025);}
     const built=homeScenery(s.homestead.objects);this.homeRoot=built.root;this.scene.add(built.root);this.craftAnimated.push(...built.rotors);
     for(const o of s.homestead.objects){const item=HOME_ITEMS[o.kind],cells=objectCells(o),w=o.rotation%2?item.h:item.w,h=o.rotation%2?item.w:item.h,x=(o.column+(w-1)/2-5.5)*2,z=(o.row+(h-1)/2-5.5)*2;
@@ -931,6 +928,8 @@ export class World {
       if(item.interactive)this.addEntity(`homeObject${o.uid}`,`${item.icon} ${item.name}`,x,z,new T.Group());
     }
     const editor=new T.Group();cylinder(editor,0xb98a62,0,.55,0,.6,.6,1.1,8);box(editor,0xf8ebbe,0,1.2,0,1.4,.12,1);this.addEntity('homeEditor','📐 나의 마을 설계 수첩',-3,12,editor);
+    const room=new T.Group();box(room,0xe9c99c,0,.8,0,1.8,1.6,1.2);cylinder(room,0xb88e78,0,1.9,0,0,1.5,.9,4);this.addEntity('room','🏠 나의 집 · 집 안으로',-8,18,room);
+    const projects=new T.Group();projects.position.z=10;this.scene.add(projects);this.storyScenery=projects;this.buildVillageProjects(projects,s,10);
     const exit=new T.Group();cylinder(exit,0xc3a774,0,.5,0,.08,.1,1,8);box(exit,0xf1e2ad,0,1.2,0,1.5,.7,.15);this.addEntity('homeExit','🚪 원래 모험으로 돌아가기',3,12,exit);
     const names=["연태쌤", "가현이", "오지후"];
     this.homeTargets=visitorTargets(s);if(this.homeTargets.length)for(let i=0;i<3;i++){const model=makeCharacter(i,0,0),cell=137+i%2;this.addEntity(`homeVisitor${i}`,`${names[i]} · 정원 구경`,(cell%12-5.5)*2,(Math.floor(cell/12)-5.5)*2,model);const entity=this.entities[this.entities.length-1];entity.mesh.visible=i<(s.settings.lowQuality?1:3);this.homeVisitors.push({entity,cell,path:[],pause:i,turn:i,kind:6});}
@@ -1067,12 +1066,13 @@ export class World {
   }
   updateStoryVillage(s: Save) {
     if (this.stage !== 0 || this.inRoom) return;
+    if (this.inHomestead) { const position={x:this.player.position.x,z:this.player.position.z};s.homestead.position=position;this.enterHomestead(s,true);return; }
     if (this.storyScenery) { this.scene.remove(this.storyScenery); this.disposeModel(this.storyScenery); }
     this.craftAnimated = []; this.restoredBridge = s.story.completed.includes(1);
     const oldFriend = this.entities.find(e => e.id === 'storyFriend');
     if (oldFriend) { oldFriend.label.remove(); this.scene.remove(oldFriend.mesh); this.disposeModel(oldFriend.mesh); this.entities = this.entities.filter(e => e !== oldFriend); }
     const g = new T.Group(); g.userData.storyScenery = true; this.scene.add(g); this.storyScenery = g;
-    this.buildVillageProjects(g, s);
+    // Shared garden activities now live beside the personal garden.
     if (s.story.completed.includes(0)) {
       const friend = makePet(1); friend.scale.setScalar(1.4);
       this.addEntity('storyFriend', '편지 친구 · 솜이', -4.2, -3, friend);
@@ -1098,17 +1098,17 @@ export class World {
     for (let i = 0; i < 14; i++) box(g, i % 2 ? 0xc79862 : 0xd9b17d, x - length / 2 + (i + .5) * length / 14, .1, z, length / 14 - .035, .16, 2.1);
     for (const side of [-1, 1]) { box(g, 0xba9066, x, .72, z + side, length, .12, .13); for (let i = 0; i < 5; i++) cylinder(g, 0xa47c53, x - length / 2 + i * length / 4, .4, z + side, .065, .085, .8, 6); }
   }
-  private buildVillageProjects(g: T.Group, s: Save) {
+  private buildVillageProjects(g: T.Group, s: Save, offsetZ=0) {
     for (const e of this.entities.filter(entity => entity.id.startsWith('villageProject'))) {
       e.label.remove(); this.scene.remove(e.mesh); this.disposeModel(e.mesh);
     }
     this.entities = this.entities.filter(entity => !entity.id.startsWith('villageProject'));
-    const positions = [[VILLAGE_SPOTS.flowers.x, VILLAGE_SPOTS.flowers.z], [0, 14], [5, 15]];
+    const positions = [[-7, 11], [0, 14], [5, 15]];
     VILLAGE_PROJECTS.forEach((project, id) => {
       const done = s.adventure.completed.includes(id), marker = new T.Group();
       cylinder(marker, 0x94734e, 0, .45, 0, .06, .08, .9, 6);
       box(marker, done ? 0xa6d18e : 0xe5cea3, 0, .98, 0, 1.1, .6, .12);
-      this.addEntity(`villageProject${id}`, `${project.icon} ${project.name} · ${done ? '완성한 장소' : '함께 만들기'}`, positions[id][0], positions[id][1], marker);
+      this.addEntity(`villageProject${id}`, `${project.icon} ${project.name} · ${done ? '완성한 장소' : '함께 만들기'}`, positions[id][0], positions[id][1]+offsetZ, marker);
       const active = s.adventure.active?.project === id ? s.adventure.active : null;
       if (!done && !active) return;
       const design = s.adventure.active?.project === id ? s.adventure.active.design : s.adventure.designs[id];
@@ -1218,7 +1218,7 @@ export class World {
     // A dedicated doorway is the only way out; the hunt-gate remains a village return.
     for (const x of [-1.35, 1.35]) box(this.scene, 0x9e795e, x, 1.25, 5.48, .2, 2.5, .25);
     box(this.scene, 0x9e795e, 0, 2.45, 5.48, 2.8, .2, .25);
-    this.addEntity('roomExit', '마을로 돌아가기', 0, 4.2, this.gate(0x6eb7a1));
+    this.addEntity('roomExit', '내 정원으로 돌아가기', 0, 4.2, this.gate(0x6eb7a1));
     const sign = new T.Group(); box(sign, 0x9a754f, 0, 1, 0, 1.8, 1.5, .25); box(sign, 0xf2dfac, 0, 1.05, .16, 1.45, 1.1, .08); this.addEntity('roomDecor', '내 방 꾸미기', 5.65, 4.05, sign);
     this.furnitureRoot = new T.Group(); this.scene.add(this.furnitureRoot);
     this.updateRoomFurniture(s, false);
@@ -1465,8 +1465,8 @@ export class World {
       if (n > .05) { this.player.rotation.y = Math.atan2(vx, vz); this.player.userData.feet?.forEach((f: T.Mesh, i: number) => { f.position.y = .18 + Math.max(0, Math.sin(this.time * 13 + i * Math.PI)) * .12; }); }
       const platform = flying ? undefined : this.platforms.find(t => Math.abs(p.x - t.x) < t.w / 2 + .15 && Math.abs(p.z - t.z) < t.d / 2 + .15); const floor = flying ? 1.65 + Math.sin(this.time * 2.2) * .08 : platform?.h ?? 0;
       this.vy -= 18 * dt; p.y += this.vy * dt; if (p.y <= floor && this.vy <= 0) { p.y = floor; this.vy = 0; this.grounded = true; } else this.grounded = false;
-      const bounds = this.inHomestead ? { x: 13.4, z: 13.4 } : this.inRoom ? { x: 6.8, z: 5.2 } : stageSize(this.stage);
-      if (Math.abs(p.x) > bounds.x - .5 || Math.abs(p.z) > bounds.z - .5 || (!flying && this.water(p.x, p.z) && p.y <= .2)) { p.copy(this.lastSafe); this.vy = 0; this.onRescue(); }
+      const bounds = this.inHomestead ? { x: 13.4, z: 29.4 } : this.inRoom ? { x: 6.8, z: 5.2 } : stageSize(this.stage);
+      if ((this.inHomestead && p.z < -12.9) || Math.abs(p.x) > bounds.x - .5 || Math.abs(p.z) > bounds.z - .5 || (!flying && this.water(p.x, p.z) && p.y <= .2)) { p.copy(this.lastSafe); this.vy = 0; this.onRescue(); }
       else if (this.grounded && (flying || !this.water(p.x, p.z)) && Math.abs(p.x) < bounds.x - 2 && Math.abs(p.z) < bounds.z - 2) this.lastSafe.copy(p);
       if (this.petModel) { const walked = Math.hypot(p.x - oldX, p.z - oldZ); if (walked < 4) this.petWalk += walked; if (this.petWalk >= 1) { this.onPetWalk(this.petWalk); this.petWalk = 0; } }
       // 베리는 바닥의 수평 거리로 판정해 발판·점프·라이딩 높이에서도 눈에 닿으면 수집됩니다.
@@ -1527,6 +1527,7 @@ export class World {
       placeLabel(star.label, v, !this.active || !star.mesh.visible || Math.abs(v.x) > 1.15 || Math.abs(v.y) > 1.1);
     }
     let near: Entity | undefined, distance = 2.8;
+    for(const e of this.entities){const d=Math.hypot(p.x-e.x,p.z-e.z);if(e.mesh.visible&&d<distance){near=e;distance=d;}}
     for (const e of this.entities) {
       if (e.id.startsWith('monster')) { e.mesh.position.y = Math.max(0, Math.sin(this.time * 2 + e.x)) * .16; e.mesh.rotation.y = Math.sin(this.time * .5 + e.z) * .35; }
       if (e.id.startsWith('tree') && e.mesh.userData.shakeUntil > this.time) e.mesh.rotation.z = Math.sin(this.time * 55) * .08; else if (e.id.startsWith('tree')) e.mesh.rotation.z = 0;
@@ -1540,7 +1541,7 @@ export class World {
       }); }
       const d = Math.hypot(p.x - e.x, p.z - e.z); if (e.mesh.visible && d < distance) { near = e; distance = d; }
       const v = this.tempProjection.set(e.x, e.id.startsWith('monster') ? 2 : 2.6, e.z).project(this.camera);
-      placeLabel(e.label, v, !!this.storyActivityFocus || !this.active || !e.mesh.visible || (this.stage === 0 && !this.inRoom && !this.inHomestead && (e.id.startsWith('tree') ? d > 3.8 : e.id.startsWith('monster') ? d > 7 : false)) || Math.abs(v.x) > 1.15 || Math.abs(v.y) > 1.1);
+      placeLabel(e.label, v, !!this.storyActivityFocus || !this.active || !showEntityLabel(e.id,near?.id??null,e.mesh.visible) || Math.abs(v.x)>1.15 || Math.abs(v.y)>1.1);
       const isNear = d < 2.8; if (e.label.classList.contains('near') !== isNear) e.label.classList.toggle('near', isNear);
     }
     if (!this.storyActivityFocus && (near?.id ?? null) !== this.selectedId) {
@@ -1586,7 +1587,9 @@ export class World {
     if (distance < target.arrivalDistance) { this.clearGuide(); return; }
     const projected = this.tempProjection.copy(this.tempWorld).project(this.camera), width = this.container.clientWidth, height = this.container.clientHeight;
     const rawX = (projected.x * .5 + .5) * width, rawY = (-projected.y * .5 + .5) * height;
-    const x = Math.min(width - 64, Math.max(64, rawX)), y = Math.min(height - 92, Math.max(78, rawY));
+    const inset=Math.min(124,width/2), x=Math.min(width-inset,Math.max(inset,rawX));
+    let y=Math.min(height-170,Math.max(106,rawY));
+    if(x<350&&y<340)y=Math.min(350,height-170);
     const angle = Math.atan2(rawY - height / 2, rawX - width / 2) * 180 / Math.PI;
     this.guideElement.style.transform = `translate(-50%, -50%) translate(${x}px, ${y}px)`;
     (this.guideElement.querySelector('span') as HTMLElement).style.transform = `rotate(${angle}deg)`;

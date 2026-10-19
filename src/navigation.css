@@ -1,0 +1,26 @@
+/* A quiet HUD and three clear destinations. */
+#hud .quest-card{width:min(300px,calc(100vw - 32px));padding:12px;border-radius:20px;background:#fffaf0ed;box-shadow:0 6px 24px #43523518}
+#hud #today-adventure,#hud #quest-title,#hud #expedition,#hud #pet-care-open,#hud #daily-open,#hud #codex-open,#hud #village-projects{display:none!important}
+#hud .quest-toggle{min-height:48px;font-size:14px}
+#hud #quest-list .quest{display:flex;align-items:center;gap:8px;margin:0;padding:8px 0;font-size:14px}
+#hud #quest-list .quest>span:nth-child(2){flex:1}
+#hud .quest-guide{min-height:48px;min-width:56px}
+#hud #adventure-menu{margin:8px 0 0;min-height:48px;background:#446c50;color:#fff;border:0}
+#hud .equipment-card,#hud .controls-help{display:none}
+.navigation-modal{max-width:820px!important}
+.nav-intro{padding:22px;border-radius:20px;background:linear-gradient(125deg,#e5efda,#fff1d7);margin:10px 0 20px;color:#38523b}
+.nav-intro h3{font-size:25px;margin:0 0 10px}.nav-intro p{line-height:1.7;margin:0}
+.destination-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.destination-card{min-height:170px;padding:20px 14px;border:1px solid #d9e2cb;border-radius:20px;background:#f7faef;display:flex;flex-direction:column;gap:10px;text-align:left;color:#36553e}
+.destination-card:nth-child(2){background:#fff2e0;border-color:#eddbc2;color:#74512f}.destination-card:nth-child(3){background:#f8eaf0;border-color:#e8d4df;color:#79546a}
+.destination-card .destination-icon{font-size:36px}.destination-card strong{font-size:20px}.destination-card small{font:inherit;font-size:14px;line-height:1.6}
+.nav-links{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}.nav-links button,.nav-tabs button{min-height:48px;padding:10px 16px}
+.nav-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 18px}.nav-tabs [aria-pressed=true]{background:#42694e;color:#fff}
+.nav-section{padding:16px 0}.nav-section p{line-height:1.7}.nav-section h3{margin-top:0}
+.nav-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.nav-list button{min-height:72px;text-align:left;padding:15px;border-radius:14px;border:1px solid #dedfce;background:#fffaf1;color:#4e6045}.nav-list small{display:block;margin-top:6px;font-size:13px;line-height:1.5}
+.nav-close-row{margin-top:20px}.nav-breadcrumb{font-size:13px;color:#667560}
+.journey-steps{display:flex;gap:8px;list-style:none;padding:0;margin:18px 0}.journey-steps li{flex:1;border-radius:14px;background:#edf3e5;padding:14px 8px;text-align:center;line-height:1.7}.journey-steps b{display:block}
+.navigation-modal button:focus-visible{outline:3px solid #386f8a;outline-offset:3px}
+@media(max-width:600px){#hud .quest-card{top:76px;left:12px;width:198px;padding:8px 12px}#hud .quest-toggle{min-height:48px}#hud #adventure-menu{font-size:14px}#hud .brand-mini{display:none}.destination-grid{grid-template-columns:1fr}.destination-card{min-height:96px;display:grid;grid-template-columns:48px 1fr;gap:5px 12px;padding:14px}.destination-icon{grid-row:span 2}.destination-card small{grid-column:2}.nav-intro{padding:16px}.nav-intro h3{font-size:22px}.nav-list{grid-template-columns:1fr}.nav-tabs{gap:6px}.nav-tabs button{flex:1;padding:10px 8px;font-size:14px}.journey-steps{font-size:13px}.location-pill{max-width:calc(100vw - 28px)}.location-pill span{display:none}}
+
+#hud #boss-open{display:none!important}
