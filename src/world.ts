@@ -955,7 +955,7 @@ export class World {
     }
     const map = journey.maps[this.stage], expedition = s.forest === 'division' && !!s.expedition.active && s.expedition.active.stage === this.stage;
     this.coins.forEach(c => c.mesh.visible = !expedition && !map.berries.includes(c.id));
-    this.entities.forEach(e => { if (e.id.startsWith('monster')) e.mesh.visible = !expedition && !map.monsters.includes(Number(e.id.slice(7))); if (e.id.startsWith('tree')) e.mesh.visible = !expedition && !map.trees.includes(Number(e.id.slice(4))); });
+    this.entities.forEach(e => { if (e.id.startsWith('monster')) e.mesh.visible = !expedition && (map.cleared || !map.monsters.includes(Number(e.id.slice(7)))); if (e.id.startsWith('tree')) e.mesh.visible = !expedition && !map.trees.includes(Number(e.id.slice(4))); });
     if (expedition) this.addExpeditionObjects(s);
     const spawn = this.stage === 0 ? { x: 0, z: 8 } : { x: 0, z: stageSize(this.stage).z - 9 }; const p = fresh ? spawn : s.position; this.player.position.set(p.x, 0, p.z); this.placePetNearPlayer(); this.lastSafe.copy(this.player.position); this.follow.copy(this.player.position);
     this.onStageLoaded(this.stage);

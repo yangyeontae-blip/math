@@ -42,6 +42,7 @@ import { PET_TRICKS, petFriend, strokePet, walkWithPet, type PetReaction } from 
 import { VILLAGE_PROJECTS, RECOVERY_STEPS, workSpec, designOptions, changeDesign, redesignProject, moveFruit, recommendAdventure, beginProject, projectSpec, adjustProject, finishProject, recoveryQuestions, markRecovered, calculationRecoveryQuestion } from './adventure';
 import type { Question } from './rules';
 import { j as josa } from './grade-helpers';
+import { rematchHunt } from './rules';
 import './adventure.css';
 import './navigation.css';
 import { toolSpec, toolHtml, adjustTool } from './learning-tools';
@@ -1283,7 +1284,7 @@ function submitAnswer() {
     b.result = { berries: completed.berries, xp: 0, score: 0, levels: 0, milestones: [] };
   } else {
     const rewardEligible = !battleRewardReason(state, b.encounter.question, !!b.hintUsed, b.practice?.operation === b.encounter.question.operation ? b.practice?.tier : undefined);
-    b.result = b.encounter.arena ? grantReward(state, b.encounter.monster, true, Date.now(), rewardEligible) : finishHunt(state, Number(b.id.slice(7)), rewardEligible);
+    b.result = b.encounter.arena ? grantReward(state, b.encounter.monster, true, Date.now(), rewardEligible) : (finishHunt(state, Number(b.id.slice(7)), rewardEligible) ?? rematchHunt(state, Number(b.id.slice(7)), rewardEligible));
   }
   if (!b.result) return;
   b.score += b.result.score;

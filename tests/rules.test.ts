@@ -2,6 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { questionPool, newSave, validateSave, buy, upgrade, buyRide, dismount, buyPet, buyLook, buyPotion, usePotion, potionEffects, applyTeacherCode, enableTeacherMode, grantReward, rewardFor, Encounter, WEAPONS, OUTFITS, PETS, POTIONS, RIDES, HAIRSTYLES, FACES, MONSTERS, CHARACTERS, STAGE_DIVISION_DIFFICULTY, SHINBI_STAR_PET_ID, HERO_BREAD_PET_ID, collectBerry, finishHunt, fellTree, treeDamage, canEnter, monsterBattleRounds, recordWrongAnswer, recordCorrectAnswer, PLAYER_MOVE_SPEED, berryWithinReach, petChaseSpeed, riderHeight } from '../src/rules.ts';
 import { stageBerries, stageMonsters, stageTrees, clearBonus, berryValue, isVillagePond } from '../src/stages.ts';
+import { rematchHunt } from '../src/rules.ts';
 
 test('village pond never rescues a player on a hunt-stage path', () => {
   assert.equal(isVillagePond(0, 19, 8), true);
@@ -92,6 +93,10 @@ test('stages have fixed, non-refilling berries and unlock only after all hunts',
   for (let id = 0; id < stageMonsters(1).length; id++) assert.ok(finishHunt(s, id));
   assert.equal(s.journey.maps[1].cleared, true); assert.equal(canEnter(s, 2), true);
   assert.equal(finishHunt(s, 0), null); assert.ok(s.berries >= clearBonus(1));
+  // 클리어한 숲에 다시 나온 몬스터는 연습 시합으로 베리를 절반만 줘요.
+  const before = s.berries, full = rewardFor(s, stageMonsters(1)[0].type, false).berries, again = rematchHunt(s, 0)!;
+  assert.equal(again.berries, Math.ceil(full / 2)); assert.equal(again.clearReward, 0); assert.ok(s.berries >= before + again.berries);
+  s.journey.stage = 2; assert.equal(rematchHunt(s, 0), null);
 });
 test('outfit effects boost rewards but do not make problems or weapons optional', () => {
   const s = newSave('꽃', 0); s.berries = 1000; buy(s, 'outfit', 7); assert.equal(rewardFor(s, 0, false).xp, MONSTERS[0].xp + 2);

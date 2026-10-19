@@ -384,6 +384,14 @@ export function finishHunt(s: Save, id: number, rewardEligible = true) {
   }
   return { ...reward, clearReward, completionReward };
 }
+/** 클리어한 숲에 다시 나온 몬스터: 몇 번이든 연습 시합을 할 수 있고, 베리는 절반만 받아요(경험치는 그대로). */
+export function rematchHunt(s: Save, id: number, rewardEligible = true) {
+  const journey = journeyFor(s), stage = journey.stage, map = journey.maps[stage], monsters = stageMonsters(stage);
+  if (stage < 1 || !map.cleared || !Number.isInteger(id) || !monsters[id] || !map.monsters.includes(id)) return null;
+  const reward = grantReward(s, monsters[id].type, false, Date.now(), rewardEligible), keep = Math.ceil(reward.berries / 2);
+  s.berries -= reward.berries - keep;
+  return { ...reward, berries: keep, clearReward: 0, completionReward: 0 };
+}
 export function questionPool(level: number, stage = 0, maxDividend: 0 | 90 | 180 = 0): Question[] {
   const result: Question[] = [];
   const step = Math.min(10, Math.max(0, stage));
