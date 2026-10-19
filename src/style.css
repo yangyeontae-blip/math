@@ -420,3 +420,9 @@ input:not([type=checkbox]):not([type=radio]),select,textarea{min-height:44px}
   .player-card{box-shadow:0 3px 8px #28544718}
   #toast{top:auto;bottom:calc(166px + env(safe-area-inset-bottom));max-width:min(85vw,350px);padding:9px 14px;font-size:.86rem}
 }
+
+/* 휴대폰: 접힌 할 일 칸에 목표 한 줄, 알림은 조작 버튼 위쪽에 띄워 할 일 칸과 겹치지 않게 */
+.quest-peek{display:none}.quest-card.is-collapsed .quest-peek{display:block;flex-basis:100%;margin-top:2px;font-size:.78rem;font-weight:600;color:#536b43;text-align:left;line-height:1.35}
+.quest-card.is-collapsed .quest-toggle{flex-wrap:wrap}
+@media(max-width:600px){#toast{top:auto;bottom:170px}}
+.quest-card.is-collapsed > button:not(.quest-toggle){display:none}

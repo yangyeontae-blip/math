@@ -55,7 +55,7 @@ const COPYRIGHT_OWNER = '양연태';
 const COPYRIGHT_YEAR = 2026;
 root.innerHTML = `<div id="world" aria-label="베리숲 3D 마을"></div><div id="hud" hidden>
   <header class="topbar"><div class="player-card"><span class="level-badge" id="level">1</span><div><strong id="nickname"></strong><div class="xp-track"><div id="xp-fill"></div></div><small id="xp-text"></small></div></div><div class="brand-mini">베리숲 <span>모험학교</span></div><div class="top-actions"><span class="wallet">🍓 <b id="berries">0</b><span>베리</span></span><button id="inventory" class="icon-button" aria-label="내 인벤토리">🎒</button><button id="stage-map" class="icon-button" aria-label="지도">🗺</button><button id="settings" class="icon-button" aria-label="설정과 저장">⚙</button></div></header>
-  <aside class="quest-card"><button id="quest-toggle" class="quest-toggle" aria-expanded="true" aria-controls="quest-body"><span>🌿 지금 할 일</span><span class="quest-chevron" aria-hidden="true">⌃</span></button><div id="quest-body" class="quest-body"><strong id="quest-title">베리숲에 오신 걸 환영해요</strong><div id="quest-list"></div><button id="daily-open" class="text-button codex-open daily-open">📅 오늘의 미션<i class="daily-dot" aria-hidden="true"></i></button><button id="boss-open" class="text-button codex-open">🐉 우리 반 협동 보스</button><button id="codex-open" class="text-button codex-open">📖 모험 도감</button></div></aside>
+  <aside class="quest-card"><button id="quest-toggle" class="quest-toggle" aria-expanded="true" aria-controls="quest-body"><span>🌿 지금 할 일</span><span class="quest-chevron" aria-hidden="true">⌃</span><span class="quest-peek" id="quest-peek"></span></button><div id="quest-body" class="quest-body"><strong id="quest-title">베리숲에 오신 걸 환영해요</strong><div id="quest-list"></div><button id="daily-open" class="text-button codex-open daily-open">📅 오늘의 미션<i class="daily-dot" aria-hidden="true"></i></button><button id="boss-open" class="text-button codex-open">🐉 우리 반 협동 보스</button><button id="codex-open" class="text-button codex-open">📖 모험 도감</button></div></aside>
   <div class="location-pill">❋ 베리숲 마을 <span>평화로운 오후</span></div>
   <div class="equipment-card"><span id="weapon-name"></span><small id="weapon-effect"></small></div>
   <div class="controls-help"><kbd>W A S D</kbd> 이동 <kbd>Space</kbd> 점프 <kbd>E</kbd> 대화 <kbd>F</kbd> 휘두르기</div>
@@ -175,6 +175,7 @@ function renderCurrentFocus() {
     else if(stage===1&&fieldHere(s)){label=`${FIELD_INFO[s.forest].title} · ${s.forestActivities[s.forest].done.length+1}번째 장소`;action=guide('forestWork');}
   } else if(kind==='explore'){if(continuingDiscovery===`${s.forest}:${stage}`){const cleared=journeyFor(s).maps[stage].cleared;label=cleared?'다음 숲으로 이어 가기':'이 숲의 몬스터 친구 만나기';action=guide(cleared?'next':'monster');button='길 안내';}else{label='숲을 되살렸어요 · 마을에 놓아 볼까요?';action=openReturnChoice;button='고르기';}}
   else {label='숲에서 발견하고 나의 마을 꾸미기';action=s.exploration.solved.length?openAdventureMap:beginFirstAdventure;button=s.exploration.solved.length?'지도':'출발';}
+  $('#quest-peek').textContent=label;
   $('#quest-list').innerHTML=`<div class="quest"><span>${escape(label)}</span><button class="quest-guide" id="focus-action">${button}</button></div>`;
   $('#focus-action').onclick=action;
 }
@@ -211,7 +212,7 @@ function setQuestCollapsed(collapsed: boolean) {
   $('#quest-toggle').setAttribute('aria-expanded', String(!collapsed));
   $('#quest-body').hidden = collapsed;
 }
-setQuestCollapsed(matchMedia('(max-height: 500px)').matches);
+setQuestCollapsed(matchMedia('(max-height: 500px), (max-width: 600px)').matches); // 휴대폰에서는 접어 두고 목표 한 줄만 보여요.
 $('#quest-toggle').onclick = () => setQuestCollapsed(!questCard.classList.contains('is-collapsed'));
 let state: Save | null = null, saved: Save | null = null, preview: AvatarPreview | null = null, startPreview: AvatarPreview | null = null;
 let startPreviewRequest = 0, startPortraits: string[] | null = null;

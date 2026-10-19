@@ -858,10 +858,17 @@ export class World {
   private buildHunt(stage: number) {
     const base = STAGES[stage - 1], palette = FOREST_PALETTES[this.forest], spec = palette ? { ...base, ...palette } : base, size = stageSize(stage); this.platforms = stagePlatforms(stage); this.scene.background = new T.Color(spec.sky); this.scene.fog = new T.Fog(spec.sky, 55, 120);
     box(this.scene, spec.ground, 0, -.55, 0, size.x * 2, 1.1, size.z * 2); box(this.scene, 0x708f71, 0, -1.3, 0, size.x * 2 - 1, .5, size.z * 2 - 1);
+    // 숲 가장자리: 바깥 들판과 덤불 울타리를 둘러 빈 공간이 보이지 않게 해요.
+    box(this.scene, new T.Color(spec.ground).multiplyScalar(.85).getHex(), 0, -.62, 0, size.x * 2 + 80, 1.1, size.z * 2 + 80);
+    for (let x = -size.x; x <= size.x; x += 2.6) for (const z of [-size.z + .4, size.z - .4]) ball(this.scene, spec.foliage, x, .4, z, 1.15, .8, 1.15);
+    for (let z = -size.z + 2.6; z < size.z; z += 2.6) for (const x of [-size.x + .4, size.x - .4]) ball(this.scene, spec.foliage, x, .4, z, 1.15, .8, 1.15);
     box(this.scene, spec.accent, 0, .02, 0, 3.8, .06, size.z * 2 - 5); for (const z of [14, 0, -15]) box(this.scene, spec.accent, 0, .025, z, size.x * 2 - 10, .06, 2.6);
     this.platforms.forEach(p => { box(this.scene, 0xa8a88c, p.x, p.h / 2, p.z, p.w, p.h, p.d); box(this.scene, spec.accent, p.x, p.h + .02, p.z, p.w + .05, .08, p.d + .05); });
     this.addEntity('village', '베리숲 마을로 돌아가기', 0, size.z - 5, this.gate(0x6eb7a1)); this.addEntity('next', stage === 10 ? (this.forest === 'multiplication' ? '구구단 햇살문' : this.forest === 'division' ? '마지막 축하문' : '완주 축하문') : `다음 길 · ${STAGES[stage].name}`, 0, -size.z + 5, this.gate(FOREST_GATES[this.forest]));
-    stageMonsters(stage).forEach((m, i) => this.addEntity(`monster${i}`, `${MONSTERS[m.type].name} · ${i + 1}`, m.x, m.z, makeMonster(m.type)));
+    // 숲·단계마다 몬스터 배치를 뒤집거나 돌려서 어느 숲이나 똑같아 보이지 않게 해요(번호와 보상은 그대로).
+    const variant = (Math.max(0, ['addition', 'subtraction', 'multiplication', 'division'].indexOf(this.forest)) * 3 + stage) % 8, choppable = stageTrees(stage);
+    const place = (x: number, z: number) => { let px = variant & 4 ? z * size.x / size.z : x, pz = variant & 4 ? x * size.z / size.x : z; if (variant & 1) px = -px; if (variant & 2) pz = -pz; if (choppable.some(t => Math.hypot(t.x - px, t.z - pz) < 2.6)) px += px > 0 ? -3 : 3; return { x: T.MathUtils.clamp(px, -size.x + 3, size.x - 3), z: T.MathUtils.clamp(pz, -size.z + 3, size.z - 3) }; };
+    stageMonsters(stage).forEach((m, i) => { const at = place(m.x, m.z); this.addEntity(`monster${i}`, `${MONSTERS[m.type].name} · ${i + 1}`, at.x, at.z, makeMonster(m.type)); });
     for (let i = 0; i < 55; i++) { const x = Math.sin(i * 2.399 + stage) * (size.x - 4), z = Math.cos(i * 1.73 + stage) * (size.z - 4); if (Math.abs(x) < 4 || [14, 0, -15].some(v => Math.abs(z - v) < 2.5)) continue; this.tree(x, z, .8 + i % 3 * .2, spec.theme === 'blossom', spec.foliage); }
     stageTrees(stage).forEach(({ x, z }, i) => this.addChoppableTree(i, x, z, .92 + (i % 3) * .08, spec.theme === 'blossom', spec.foliage));
     for (const z of [20, 6, -9, -23]) { box(this.scene, 0xb98d58, -3.4, .65, z, .12, 1.25, .12); box(this.scene, 0xe6ca8f, -2.8, 1.05, z, 1.35, .56, .12); ball(this.scene, 0xffe98d, -3.35, 1.36, z, .1); }
@@ -1353,7 +1360,7 @@ export class World {
   }
   setAvatar(character: number, outfit: number, weapon: number, outfitLevel = 0, weaponLevel = 0, ride = -1, pet = -1, hairstyle = 0, face = 0) {
     const position = this.player.position.clone(), rotation = this.player.rotation.y;
-    this.scene.remove(this.player); this.disposeModel(this.player); this.player = makeCharacter(character, outfit, weapon, outfitLevel, weaponLevel, hairstyle, face); this.player.position.copy(position); this.player.rotation.y = rotation; this.player.scale.setScalar(matchMedia('(max-width: 600px)').matches ? 1.08 : 1); this.scene.add(this.player);
+    this.scene.remove(this.player); this.disposeModel(this.player); this.player = makeCharacter(character, outfit, weapon, outfitLevel, weaponLevel, hairstyle, face); this.player.position.copy(position); this.player.rotation.y = rotation; this.player.scale.setScalar(matchMedia('(max-width: 600px)').matches ? 1.08 : 1); this.scene.add(this.player); this.addXray();
     if (this.petModel) { this.scene.remove(this.petModel); this.disposeModel(this.petModel); }
     this.rideIndex = ride; this.petIndex = pet; this.petModel = null; this.petTargetId = null; this.rideAnimated = []; this.petAnimated = []; this.petIdle = 0; this.petReaction = null; this.petCharm = null;
     if (ride >= 0 && RIDES[ride]) { const body = this.player.userData.body as T.Group; body.position.y = riderHeight(ride); const rideModel = makeRide(ride); rideModel.traverse(o => { if (o.userData.rideWing || o.userData.ridePropeller || o.userData.rideGlow) this.rideAnimated.push(o); }); this.player.add(rideModel); }
@@ -1371,6 +1378,22 @@ export class World {
     if (reaction === 'happy' || reaction === 'discover') this.burst(this.petModel.position, 0xf4a3bc, 5);
   }
   private placePetNearPlayer() { if (this.petModel) this.petModel.position.set(this.player.position.x - 1.05, this.player.position.y + .02, this.player.position.z - .7); }
+  /** 나무·가게 뒤에 숨으면 가려진 부분만 실루엣으로 비쳐 보이게 해요(GreaterDepth). 평소에는 꺼 둬요. */
+  private xrayMaterial = new T.MeshBasicMaterial({ color: 0x2f6b4f, transparent: true, opacity: .55, depthWrite: false, depthFunc: T.GreaterDepth });
+  private xrayParts: T.Mesh[] = []; private xrayOn = false; private occlusionTick = 0; private occlusionRay = new T.Raycaster();
+  private addXray() {
+    const meshes: T.Mesh[] = []; this.player.traverse(o => { if (o instanceof T.Mesh) meshes.push(o); });
+    this.xrayParts = meshes.map(m => { const x = new T.Mesh(m.geometry, this.xrayMaterial); x.renderOrder = 5; x.visible = this.xrayOn = false; x.userData.xray = true; m.add(x); return x; });
+  }
+  private updateOcclusion() {
+    const target = this.tempWorld.copy(this.player.position); target.y += 1;
+    const dir = target.clone().sub(this.camera.position), far = dir.length() - .7;
+    this.occlusionRay.set(this.camera.position, dir.normalize()); this.occlusionRay.far = far;
+    const skip = new Set<T.Object3D>([this.player, ...(this.petModel ? [this.petModel] : [])]);
+    const candidates = this.scene.children.filter(o => o.visible && !skip.has(o) && !(o instanceof T.Light));
+    const hidden = this.occlusionRay.intersectObjects(candidates, true).some(h => { let o: T.Object3D | null = h.object; while (o) { if (!o.visible) return false; o = o.parent; } const m = (h.object as T.Mesh).material as T.Material; return !m.transparent; });
+    if (hidden !== this.xrayOn) { this.xrayOn = hidden; this.xrayParts.forEach(x => { x.visible = hidden; }); }
+  }
   private disposeModel(g: T.Group) { g.traverse(o => { if (o instanceof T.Mesh && !sharedGeometries.has(o.geometry)) o.geometry.dispose(); }); }
   /** 날씨는 화면 위 필터가 아니라 캐릭터 주변 3D 공간에서 움직여 글자와 지형을 가리지 않아요. */
   setWeather(scene: AmbienceScene | null) {
@@ -1474,7 +1497,7 @@ export class World {
       const landscape = w / h > 1.6 && h < 600, width = landscape ? 19 : 11.8, height = width * h / w;
       this.camera.left = landscape ? -6 : -width / 2; this.camera.right = landscape ? 13 : width / 2;
       this.camera.top = height * (landscape ? .5 : .34); this.camera.bottom = -height * (landscape ? .5 : .66);
-    } else { this.camera.left = -span * w / h; this.camera.right = span * w / h; this.camera.top = span; this.camera.bottom = -span; }
+    } else { const half = Math.max(span * w / h, 8.5), tall = half * h / w; this.camera.left = -half; this.camera.right = half; this.camera.top = Math.max(span, tall); this.camera.bottom = -Math.max(span, tall); } // 세로 휴대폰에서도 좌우가 최소 17칸은 보여요.
     this.camera.updateProjectionMatrix(); this.renderer.setSize(w, h);
   }
   /** 베리·꽃·눈알처럼 작은 조각은 그림자가 거의 보이지 않아요. 그림자 그리기에서 빼서 태블릿의 그리기 횟수를 크게 줄여요. */
@@ -1507,6 +1530,8 @@ export class World {
       const platform = flying ? undefined : this.platforms.find(t => Math.abs(p.x - t.x) < t.w / 2 + .15 && Math.abs(p.z - t.z) < t.d / 2 + .15); const floor = flying ? 1.65 + Math.sin(this.time * 2.2) * .08 : platform?.h ?? 0;
       this.vy -= 18 * dt; p.y += this.vy * dt; if (p.y <= floor && this.vy <= 0) { p.y = floor; this.vy = 0; this.grounded = true; } else this.grounded = false;
       const bounds = this.inHomestead ? { x: 13.4, z: 29.4 } : this.inRoom ? { x: 6.8, z: 5.2 } : stageSize(this.stage);
+      // 가장자리에서는 순간이동 대신 덤불 앞에서 멈춰요. 물에 빠질 때만 안전한 곳으로 돌아가요.
+      const edge = this.inHomestead || this.inRoom ? .5 : 1.6; p.x = T.MathUtils.clamp(p.x, -bounds.x + edge, bounds.x - edge); p.z = T.MathUtils.clamp(p.z, -bounds.z + edge, bounds.z - edge);
       if ((this.inHomestead && p.z < -12.9) || Math.abs(p.x) > bounds.x - .5 || Math.abs(p.z) > bounds.z - .5 || (!flying && this.water(p.x, p.z) && p.y <= .2)) { p.copy(this.lastSafe); this.vy = 0; this.onRescue(); }
       else if (this.grounded && (flying || !this.water(p.x, p.z)) && Math.abs(p.x) < bounds.x - 2 && Math.abs(p.z) < bounds.z - 2) this.lastSafe.copy(p);
       if (this.petModel) { const walked = Math.hypot(p.x - oldX, p.z - oldZ); if (walked < 4) this.petWalk += walked; if (this.petWalk >= 1) { this.onPetWalk(this.petWalk); this.petWalk = 0; } }
@@ -1619,7 +1644,7 @@ export class World {
     }
     if (this.player.userData.sparkles) this.player.userData.sparkles.rotation.y += dt;
     for (let i = this.particles.length - 1; i >= 0; i--) { const q = this.particles[i]; q.life -= dt; q.v.y -= dt * 5; q.mesh.position.addScaledVector(q.v, dt); q.mesh.scale.setScalar(Math.max(0, q.life)); if (q.life <= 0) { this.scene.remove(q.mesh); this.particles.splice(i, 1); } }
-    const target = this.storyActivityFocus ?? (this.active ? p : this.cameraTarget.set(0, 0, -1)); this.follow.lerp(target, 1 - Math.exp(-dt * (this.storyActivityFocus ? 8 : 3)));
+    const target = this.storyActivityFocus ?? (this.active ? p : this.cameraTarget.set(0, 0, -1)); this.follow.lerp(target, 1 - Math.exp(-dt * (this.storyActivityFocus ? 8 : 6))); if (this.active && !this.storyActivityFocus && (this.occlusionTick++ & 7) === 0) this.updateOcclusion();
     this.camera.position.copy(this.follow).add(this.storyActivityFocus ? this.cameraTarget.set(0, 13, 16) : this.inRoom ? ROOM_CAMERA_OFFSET : CAMERA_OFFSET); this.camera.lookAt(this.follow); this.updateGuide(); this.renderer.render(this.scene, this.camera);
   }
   private updateGuide() {
