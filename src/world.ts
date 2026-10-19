@@ -868,7 +868,8 @@ export class World {
     // 숲·단계마다 몬스터 배치를 뒤집거나 돌려서 어느 숲이나 똑같아 보이지 않게 해요(번호와 보상은 그대로).
     const variant = (Math.max(0, ['addition', 'subtraction', 'multiplication', 'division'].indexOf(this.forest)) * 3 + stage) % 8, choppable = stageTrees(stage);
     const place = (x: number, z: number) => { let px = variant & 4 ? z * size.x / size.z : x, pz = variant & 4 ? x * size.z / size.x : z; if (variant & 1) px = -px; if (variant & 2) pz = -pz; if (choppable.some(t => Math.hypot(t.x - px, t.z - pz) < 2.6)) px += px > 0 ? -3 : 3; return { x: T.MathUtils.clamp(px, -size.x + 3, size.x - 3), z: T.MathUtils.clamp(pz, -size.z + 3, size.z - 3) }; };
-    stageMonsters(stage).forEach((m, i) => { const at = place(m.x, m.z); this.addEntity(`monster${i}`, `${MONSTERS[m.type].name} · ${i + 1}`, at.x, at.z, makeMonster(m.type)); });
+    const bossId = stage === 10 ? stageMonsters(stage).length - 1 : -1; // 10단계 마지막 몬스터는 숲의 대왕
+    stageMonsters(stage).forEach((m, i) => { const at = place(m.x, m.z), model = makeMonster(m.type); if (i === bossId) model.scale.multiplyScalar(1.8); this.addEntity(`monster${i}`, i === bossId ? `👑 ${MONSTERS[m.type].name} 대왕` : `${MONSTERS[m.type].name} · ${i + 1}`, at.x, at.z, model); });
     for (let i = 0; i < 55; i++) { const x = Math.sin(i * 2.399 + stage) * (size.x - 4), z = Math.cos(i * 1.73 + stage) * (size.z - 4); if (Math.abs(x) < 4 || [14, 0, -15].some(v => Math.abs(z - v) < 2.5)) continue; this.tree(x, z, .8 + i % 3 * .2, spec.theme === 'blossom', spec.foliage); }
     stageTrees(stage).forEach(({ x, z }, i) => this.addChoppableTree(i, x, z, .92 + (i % 3) * .08, spec.theme === 'blossom', spec.foliage));
     for (const z of [20, 6, -9, -23]) { box(this.scene, 0xb98d58, -3.4, .65, z, .12, 1.25, .12); box(this.scene, 0xe6ca8f, -2.8, 1.05, z, 1.35, .56, .12); ball(this.scene, 0xffe98d, -3.35, 1.36, z, .1); }
