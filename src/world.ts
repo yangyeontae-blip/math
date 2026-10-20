@@ -690,6 +690,7 @@ export class World {
   private shadowSweep = 0; private tempScale = new T.Vector3(); private tempSphere = new T.Sphere();
   private tempProjection = new T.Vector3(); private tempTarget = new T.Vector3(); private tempWorld = new T.Vector3(); private cameraTarget = new T.Vector3();
   inMarket=false; private signResources:{texture:T.Texture;material:T.Material;geometry:T.BufferGeometry}[]=[];
+  private signFontReady: Promise<unknown> | null = null;
   inHomestead=false; private homeRoot:T.Group|null=null; private homeSave:Save|null=null; private homeTargets:ReturnType<typeof visitorTargets>=[]; private discoveryRoot:T.Group|null=null;
   private homeVisitors:{entity:Entity;cell:number;path:number[];pause:number;turn:number;kind:number}[]=[];
   active = false; paused = true; inRoom = false; onCollect = (_id: number) => {}; onStar = (_id: number) => {}; onInteract = (_id: string) => {}; onAttack = (_id: string | null) => {}; onNear = (_name: string | null, _id: string | null) => {}; onJump = () => {}; onRescue = () => {}; onStageLoaded = (_stage: number) => {};
@@ -712,11 +713,32 @@ export class World {
     this.renderOnce();
   }
   private sign(parent:T.Object3D,text:string,x:number,y:number,z:number,width=3.4,color='#416e62') {
-    const canvas=document.createElement('canvas');canvas.width=768;canvas.height=160;
-    const ctx=canvas.getContext('2d')!;ctx.fillStyle='#fff5d9';ctx.fillRect(0,0,768,160);ctx.strokeStyle=color;ctx.lineWidth=12;ctx.strokeRect(6,6,756,148);ctx.fillStyle=color;ctx.font='bold 54px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(text,384,82,710);
+    const canvas=document.createElement('canvas');canvas.width=1024;canvas.height=288;
+    const ctx=canvas.getContext('2d')!;
+    const paint=()=>{
+      ctx.clearRect(0,0,1024,288);
+      ctx.fillStyle='#b68b58';ctx.beginPath();ctx.roundRect(12,20,1000,256,48);ctx.fill();
+      ctx.fillStyle='#fff6df';ctx.beginPath();ctx.roundRect(12,10,1000,250,48);ctx.fill();
+      ctx.strokeStyle='#dfc89b';ctx.lineWidth=5;ctx.beginPath();ctx.roundRect(23,21,978,228,39);ctx.stroke();
+      for(const side of [-1,1]){
+        const cx=512+side*445;ctx.fillStyle='#8daa75';ctx.beginPath();ctx.ellipse(cx-7,134,10,21,-.55,0,Math.PI*2);ctx.ellipse(cx+10,145,9,18,.65,0,Math.PI*2);ctx.fill();
+        ctx.fillStyle='#e7bd6d';ctx.beginPath();ctx.arc(cx,101,6,0,Math.PI*2);ctx.fill();
+      }
+      let size=116;const font=()=>`${size}px "Jua", "Malgun Gothic", sans-serif`;ctx.font=font();
+      while(size>52&&ctx.measureText(text).width>834){size-=2;ctx.font=font();}
+      ctx.fillStyle=color;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(text,512,143);
+    };
+    paint();
     const texture=new T.CanvasTexture(canvas);texture.colorSpace=T.SRGBColorSpace;
-    const material=new T.MeshBasicMaterial({map:texture,side:T.DoubleSide});const geometry=new T.PlaneGeometry(width,width*160/768);
-    const plaque=new T.Mesh(geometry,material);plaque.position.set(x,y,z);plaque.userData.sign=true;parent.add(plaque);this.signResources.push({texture,material,geometry});
+    const material=new T.MeshBasicMaterial({map:texture,side:T.DoubleSide,transparent:true,toneMapped:false,fog:false});const geometry=new T.PlaneGeometry(width,width*288/1024);
+    const plaque=new T.Mesh(geometry,material);plaque.position.set(x,y,z);plaque.userData.sign=true;plaque.name=`표지판: ${text}`;parent.add(plaque);this.signResources.push({texture,material,geometry});
+    // Orthographic camera-facing boards stay legible when the portal gently turns.
+    const parentRotation=new T.Quaternion();
+    plaque.onBeforeRender=()=>{parent.getWorldQuaternion(parentRotation);plaque.quaternion.copy(parentRotation.invert().multiply(this.camera.quaternion));plaque.updateMatrixWorld(true);};
+    if(document.fonts){
+      this.signFontReady??=document.fonts.load('116px "Jua"').catch(()=>null);
+      void this.signFontReady.then(()=>{if(!this.signResources.some(r=>r.texture===texture))return;paint();texture.needsUpdate=true;this.renderOnce();});
+    }
   }
   private buildVillage(theme: VillageTheme = VILLAGE_THEMES.division) {
     this.scene.background=new T.Color(theme.sky);this.scene.fog=new T.Fog(theme.sky,58,112);
@@ -726,8 +748,12 @@ export class World {
     for(let i=0;i<20;i++){const a=i*Math.PI/10;cylinder(this.scene,0xd4bd92,Math.cos(a)*5.9,.14,2+Math.sin(a)*5.9,.19,.19,.06,8);}
     const fountain=new T.Group();cylinder(fountain,0xd2cfaf,0,.28,0,1.5,1.6,.55,24);cylinder(fountain,0x8bd0cc,0,.58,0,1.25,1.25,.05,24);cylinder(fountain,0xe2d7b5,0,.9,0,.2,.3,.65,12);ball(fountain,0xc3e6dd,0,1.4,0,.25);fountain.position.set(-3,0,0);this.scene.add(fountain);this.colliders.push({x:-3,z:0,r:1.6});
     this.addEntity('guide','연태쌤 · 마을 안내',0,3,makeCharacter(0,6,0));
-    this.house(0,-12,0x759f90,0xffe9c0);this.sign(this.scene,'베리숲 모험학교',0,4.6,-10,5);
-    const exit=(id:string,name:string,x:number,z:number,color:number)=>{const g=this.gate(color);this.addEntity(id,name,x,z,g);this.sign(g,name.split(' · ')[0],0,4.6,0,4.4);};
+    const arena=VILLAGE_SPOTS.arena;
+    cylinder(this.scene,0xf1deb4,arena.x,.08,arena.z,2.4,2.4,.1,32);
+    this.addEntity('arena','신비 · 수학 시합',arena.x,arena.z,makeCharacter(3,8,4));
+    this.sign(this.scene,'신비의 시합장',arena.x,5.2,arena.z,5.4,'#675282');
+    this.house(0,-12,0x759f90,0xffe9c0);this.sign(this.scene,'베리숲 모험학교',0,4.9,-10,6.6);
+    const exit=(id:string,name:string,x:number,z:number,color:number)=>{const g=this.gate(color);this.addEntity(id,name,x,z,g);this.sign(g,name.split(' · ')[0],0,4.8,0,6);};
     exit('shopStreet','상점거리 · 왼쪽 길',-20,2,0xd69aa9);exit('journey','숲으로 모험 · 아래쪽 길',0,16,0x83b894);
     for(const [x,z]of [[-7,-4],[7,-4],[-7,7],[7,7]]){cylinder(this.scene,0x84664a,x,.9,z,.08,.1,1.8,8);ball(this.scene,0xffe5a1,x,1.95,z,.24);}
     for(const x of [-7,7]){box(this.scene,0xb38a61,x,.5,-1,2,.15,.65);box(this.scene,0xb38a61,x,.95,-1.25,2,.5,.1);for(const side of [-1,1])box(this.scene,0x876447,x+side*.7,.25,-1,.1,.5,.5);}
@@ -952,7 +978,7 @@ export class World {
     this.clearInput(); this.clearMap(); this.inRoom = false; s.room.inside = false; s.homestead.inside=false; this.forest = s.forest; const journey = journeyFor(s); this.stage = journey.stage;
     this.scene.background = new T.Color(0xd0eade); this.scene.fog = new T.Fog(0xd0eade, 58, 112); this.platforms = this.stage===0 ? [] : stagePlatforms(this.stage);
     if (this.stage === 0) this.buildVillage(VILLAGE_THEMES[villageThemeId(s)]); else this.buildHunt(this.stage);
-    if (this.stage === 0) { this.updateStoryVillage(s); const gate=this.gate(0xd7b06c);this.sign(gate,'나의 집',0,4.6,0,4.4);this.addEntity('homesteadGate','🏡 나의 집 · 오른쪽 길',VILLAGE_SPOTS.home.x,VILLAGE_SPOTS.home.z,gate); }
+    if (this.stage === 0) { this.updateStoryVillage(s); const gate=this.gate(0xd7b06c);this.sign(gate,'나의 집',0,4.8,0,6);this.addEntity('homesteadGate','🏡 나의 집 · 오른쪽 길',VILLAGE_SPOTS.home.x,VILLAGE_SPOTS.home.z,gate); }
     this.mergeStaticScenery();
     if (trailHere(s)) this.buildForestTrail(s);
     if (fieldHere(s)) this.buildForestWork(s);

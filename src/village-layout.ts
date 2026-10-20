@@ -3,12 +3,14 @@ export const VILLAGE_SPOTS = {
   notice: { x: -9, z: 9 },
   home: { x: 20, z: -2 },
   flowers: { x: -7, z: 24 },
+  arena: { x: 7, z: 3 },
 } as const;
 
 export function villageWelcomeClear(x: number, z: number): boolean {
   return Math.hypot(x - VILLAGE_SPOTS.notice.x, z - VILLAGE_SPOTS.notice.z) < 4.5
     || Math.hypot(x - VILLAGE_SPOTS.home.x, z - VILLAGE_SPOTS.home.z) < 4.5
     || Math.hypot(x - VILLAGE_SPOTS.flowers.x, z - VILLAGE_SPOTS.flowers.z) < 5
+    || Math.hypot(x - VILLAGE_SPOTS.arena.x, z - VILLAGE_SPOTS.arena.z) < 3.5
     || (Math.abs(x) < 21 && z < 1);
 }
 

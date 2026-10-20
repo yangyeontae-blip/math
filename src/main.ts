@@ -47,7 +47,7 @@ import './adventure.css';
 import './navigation.css';
 import { toolSpec, toolHtml, adjustTool } from './learning-tools';
 
-const CLIENT_BUILD = '2026-10-20.2';
+const CLIENT_BUILD = '2026-10-20.3';
 document.documentElement.dataset.clientBuild = CLIENT_BUILD;
 
 const $ = <T extends HTMLElement = HTMLElement>(selector: string) => document.querySelector<T>(selector)!;
@@ -155,7 +155,7 @@ function enterShopStreet() {
   switchStage(0);world.enterMarket(state);closeModal();refresh();persist();toast('상점거리에 왔어요. 아래쪽 길로 나가면 중앙 광장이에요.');
 }
 function openPlazaWelcome() {
-  navPage('연태쌤의 마을 안내','<p>모험은 이 광장에서 시작해요. 원하는 길을 골라 자유롭게 다녀와요.</p><div class="nav-list">'+navButton('shops','← 왼쪽 · 상점거리','의상실, 미용실, 펫 가게와 모험 도구')+navButton('home','오른쪽 · 나의 집 →','내가 꾸민 집과 정원')+navButton('explore','↓ 아래쪽 · 숲으로 모험','내 학년에 맞는 숲과 단원 고르기')+navButton('notice','운영자 소식')+'</div>',{shops:enterShopStreet,home:()=>{if(enterHomeGarden())closeModal();},explore:openAdventureMap,notice:openNoticeBoard});
+  navPage('연태쌤의 마을 안내','<p>모험은 이 광장에서 시작해요. 원하는 길을 골라 자유롭게 다녀와요. 수학 시합을 하고 싶으면 분수 오른쪽의 신비를 만나요.</p><div class="nav-list">'+navButton('shops','← 왼쪽 · 상점거리','의상실, 미용실, 펫 가게와 모험 도구')+navButton('home','오른쪽 · 나의 집 →','내가 꾸민 집과 정원')+navButton('explore','↓ 아래쪽 · 숲으로 모험','내 학년에 맞는 숲과 단원 고르기')+navButton('notice','운영자 소식')+'</div>',{shops:enterShopStreet,home:()=>{if(enterHomeGarden())closeModal();},explore:openAdventureMap,notice:openNoticeBoard});
 }
 function openShopStreet() {
   rememberMenu('shops', openShopStreet);
@@ -182,7 +182,7 @@ function openAdventureBook(tab: 'discover' | 'collection' | 'learning' = 'discov
   links.querySelectorAll<HTMLButtonElement>('[data-nav]').forEach(b=>b.onclick=()=>({today:openTodayAdventure,extra:openExtraActivities,help:openGuide}[b.dataset.nav as 'today'|'extra'|'help'])());
 }
 function openExtraActivities() {
-  navPage('더 놀기','<p>모험 중간에 언제든 해 볼 수 있는 놀이예요.</p><div class="nav-list">'+navButton('arena','✦ 수학 시합')+navButton('expedition','🌟 별빛 원정과 기록')+navButton('boss','🤝 협동 보스')+'</div>',{arena:openArena,expedition:openExpeditionBoard,boss:()=>void openBoss()});
+  navPage('더 놀기','<p>모험 중간에 언제든 해 볼 수 있는 놀이예요.</p><div class="nav-list">'+navButton('arena','✦ 신비의 수학 시합','중앙 광장 분수 오른쪽에서 만나요')+navButton('expedition','🌟 별빛 원정과 기록')+navButton('boss','🤝 협동 보스')+'</div>',{arena:openArena,expedition:openExpeditionBoard,boss:()=>void openBoss()});
 }
 /** 가까이 있는 대상에 맞는 버튼 이름. 대화 버튼 하나로 줍기·밝히기·싸우기를 모두 해요. */
 function actionVerb(id: string | null): string {
