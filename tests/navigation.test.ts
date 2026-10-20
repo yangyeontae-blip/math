@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { adventureFocus, HUB_DESTINATIONS, showEntityLabel, savedGardenPosition } from '../src/navigation';
+import { adventureFocus, HUB_DESTINATIONS, showEntityLabel, savedGardenPosition, MenuHistory } from '../src/navigation';
 import { newSave, journeyFor, validateSave } from '../src/rules';
 import { craftHome, placeHome } from '../src/homestead';
 import { beginProject } from '../src/adventure';
@@ -39,4 +39,34 @@ test('only three main destinations and one nearest actionable name are exposed',
   const ids=['noticeBoard','journey','tree1','beauty','homeVisitor0'];
   assert.equal(ids.filter(id=>showEntityLabel(id,'noticeBoard',true)).length,1);
   assert.ok(ids.every(id=>!showEntityLabel(id,null,true)));assert.equal(showEntityLabel('noticeBoard','noticeBoard',false),false);
+});
+
+test('menu back returns to the actual parent and redraws from current ownership', () => {
+  const history = new MenuHistory(), owned: number[] = [], visits: string[] = [];
+  const bag = () => { history.enter('bag', bag); visits.push(`bag:${owned.join(',')}`); };
+  const shop = () => { history.enter('shop', shop); visits.push('shop'); };
+  bag(); shop(); owned.push(2); shop();
+  assert.equal(history.back(), true);
+  assert.equal(visits.at(-1), 'bag:2');
+  assert.equal(history.back(), false);
+  // Closing a menu prevents the next world interaction from inheriting an old parent.
+  history.clear(); shop(); assert.equal(history.hasParent, false);
+});
+
+test('tabs replace their screen and an explicit ancestor does not produce back loops', () => {
+  const history = new MenuHistory();
+  const map = () => history.enter('map', map);
+  const book = () => history.enter('book', book);
+  const report = () => history.enter('report', report);
+  map(); book(); book(); report(); book();
+  assert.equal(history.back(), true); assert.equal(history.current, map);
+  assert.equal(history.back(), false);
+});
+
+test('closing or leaving a loading menu invalidates its asynchronous render', () => {
+  const history = new MenuHistory();
+  history.enter('unit', () => {}); const version = history.version;
+  assert.ok(history.isCurrent('unit', version));
+  history.clear(); assert.equal(history.isCurrent('unit', version), false);
+  history.enter('unit', () => {}); assert.equal(history.isCurrent('unit', version), false);
 });

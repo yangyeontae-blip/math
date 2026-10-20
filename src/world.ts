@@ -952,7 +952,7 @@ export class World {
     this.clearInput(); this.clearMap(); this.inRoom = false; s.room.inside = false; s.homestead.inside=false; this.forest = s.forest; const journey = journeyFor(s); this.stage = journey.stage;
     this.scene.background = new T.Color(0xd0eade); this.scene.fog = new T.Fog(0xd0eade, 58, 112); this.platforms = this.stage===0 ? [] : stagePlatforms(this.stage);
     if (this.stage === 0) this.buildVillage(VILLAGE_THEMES[villageThemeId(s)]); else this.buildHunt(this.stage);
-    if (this.stage === 0) { this.updateStoryVillage(s); const gate=this.gate(0xd7b06c);this.sign(gate,'나의 마을',0,4.6,0,4.4);this.addEntity('homesteadGate','🏡 나의 마을 · 오른쪽 길',VILLAGE_SPOTS.home.x,VILLAGE_SPOTS.home.z,gate); }
+    if (this.stage === 0) { this.updateStoryVillage(s); const gate=this.gate(0xd7b06c);this.sign(gate,'나의 집',0,4.6,0,4.4);this.addEntity('homesteadGate','🏡 나의 집 · 오른쪽 길',VILLAGE_SPOTS.home.x,VILLAGE_SPOTS.home.z,gate); }
     this.mergeStaticScenery();
     if (trailHere(s)) this.buildForestTrail(s);
     if (fieldHere(s)) this.buildForestWork(s);

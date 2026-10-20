@@ -26,3 +26,17 @@
 #hud #boss-open{display:none!important}
 
 .modal-navigation{position:sticky;top:0;z-index:8;padding:0 0 10px;background:#fff9eaeF}.modal-navigation button{min-height:48px;min-width:120px}.home-editor-modal .modal-navigation{display:none}
+
+/* One direct adventure action remains available when the objective card is folded. */
+#hud #today-adventure{display:block!important;min-height:48px;width:100%;margin:0 0 6px;padding:10px 8px;background:#446c50;color:white;font-size:14px;line-height:1.4}
+#hud .quest-card.is-collapsed #today-adventure{max-width:none}
+#hud .quest-card #adventure-menu{background:#f5f1e5;color:#36553e}
+.map-overview{margin-top:16px}.map-overview summary{cursor:pointer;min-height:48px;display:flex;align-items:center;color:#49674c;font-weight:800}
+.notebook-tabs{position:sticky;top:58px;z-index:7;background:#fff9ea;padding:8px 0}
+.notebook-tabs button,.inventory-tabs button{min-height:48px;white-space:normal;line-height:1.4}
+.notebook-tabs button{flex:1;min-width:0}.codex-list section{margin-bottom:24px}
+.navigation-modal .nav-list button,.navigation-modal .nav-links button{overflow-wrap:anywhere}
+@media(max-width:600px){#hud .quest-card{width:210px;max-height:calc(100dvh - 245px);overflow-y:auto}#hud .quest-card .quest{flex-wrap:wrap}#hud .quest-guide{width:100%}.notebook-tabs button{padding:10px 6px;font-size:13px}.destination-card{min-height:100px}.notebook-tabs{gap:4px}}
+@media(max-height:500px){#hud .quest-card{top:72px;max-height:calc(100dvh - 190px)}.notebook-tabs{position:static}}
+.home-editor-modal button,.home-editor-modal .editor-camera button,.home-editor-modal .editor-tools button{min-height:44px!important;min-width:44px}
+#hud .top-actions .icon-button{min-width:44px;min-height:44px}
