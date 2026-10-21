@@ -37,6 +37,7 @@ import { buildReport, reportHtml } from './report';
 import { addBossDamage, bossOfWeek, claimBossReward, readBoss, setClassCode, syncBoss, type BossSummary } from './boss';
 import { bubbleOpen, closeBubble, greetingFor, showBubble } from './bubble';
 import { speak, speechSupported, stopSpeech, autoReadEnabled, setAutoRead } from './speech';
+import { voiceControls } from './speech-controls';
 import { STORY_CHAPTERS, startStory, findStoryClue, solveStory, finishStory, storyHere } from './story';
 import { activitySpec, newActivity, adjustActivity, activitySolved } from './story-activities';
 import { PET_TRICKS, petFriend, strokePet, walkWithPet, type PetReaction } from './pet-care';
@@ -48,7 +49,7 @@ import './adventure.css';
 import './navigation.css';
 import { toolSpec, toolHtml, adjustTool } from './learning-tools';
 
-const CLIENT_BUILD = '2026-10-21.1';
+const CLIENT_BUILD = '2026-10-21.2';
 document.documentElement.dataset.clientBuild = CLIENT_BUILD;
 
 const $ = <T extends HTMLElement = HTMLElement>(selector: string) => document.querySelector<T>(selector)!;
@@ -1004,6 +1005,7 @@ function renderCurriculumQuestion() {
   $('#curriculum-hint-button').onclick = showCurriculumHint;
   const readText = () => [q.prompt, q.detail, q.kind === 'choice' ? `보기. ${q.choices!.map(choice => choice.label).join('. ')}` : ''].filter(Boolean).join('. ');
   const readButton = document.querySelector<HTMLButtonElement>('#curriculum-read');
+  if(readButton)voiceControls(readButton.parentElement!);
   if (readButton) readButton.onclick = () => { readButton.textContent = '🔊 읽는 중…'; if (!speak(readText(), () => { readButton.textContent = '🔊 문제 읽어주기'; })) readButton.textContent = '🔊 문제 읽어주기'; };
   if (readButton && autoReadEnabled()) readButton.click();
 }
@@ -1677,6 +1679,7 @@ function openSettings() {
   for (const [id, key] of [['music', 'music'], ['sound', 'sound'], ['quality', 'lowQuality']] as const) $<HTMLInputElement>(`#${id}-toggle`).onchange = e => { state!.settings[key] = (e.target as HTMLInputElement).checked; refresh(); if (key === 'lowQuality') { world.quality(state!.settings.lowQuality); world.setWeather(null); refreshAmbience(); } persist(); };
   $<HTMLInputElement>('#ambience-toggle').onchange = e => { setAmbience((e.target as HTMLInputElement).checked); refreshAmbience(); };
   const speechToggle = document.querySelector<HTMLInputElement>('#speech-toggle'); if (speechToggle) speechToggle.onchange = () => { setAutoRead(speechToggle.checked); if (!speechToggle.checked) stopSpeech(); };
+  voiceControls($('.settings-list'),true);
   const range = document.querySelector<HTMLSelectElement>('#question-range'); if (range) range.onchange = () => { state!.settings.maxDividend = Number(range.value) as 0 | 90 | 180; persist(); };
   const multiplicationRange = document.querySelector<HTMLSelectElement>('#multiplication-range'); if (multiplicationRange) multiplicationRange.onchange = () => { state!.settings.multiplicationRange = multiplicationRange.value as 'stage' | 'tables'; persist(); };
   const focusUnit = document.querySelector<HTMLSelectElement>('#focus-unit'); if (focusUnit) focusUnit.onchange = () => { state!.settings.focusUnit = focusUnit.value as Save['settings']['focusUnit']; persist(); };
@@ -1788,6 +1791,7 @@ function openTrailLamp(lamp: number) {
   document.querySelectorAll<HTMLButtonElement>('[data-trail-side]').forEach(button => button.onclick = () => { if (moveTrailBundle(s, lamp, Number(button.dataset.trailSide))) { persist(); draw(); audio.play('berry'); } });
   $('#trail-hint').onclick = () => { $('#trail-status').textContent = s.grade === 1 ? `첫 묶음 ${a}개에서 시작해 두 번째 묶음의 별을 하나씩 이어 세어 보세요.` : '각 묶음의 십과 일을 살펴보세요. 일끼리 더해 열 개가 되면 십 하나로 묶을 수 있어요.'; };
   if (speechSupported()) $('#trail-read').onclick = () => { speak(prompt); };
+  if(speechSupported())voiceControls($('#trail-read').parentElement!);
   $('#trail-check').onclick = () => {
     if (state !== s || !trailHere(s) || t.lit.includes(lamp)) return;
     saveDraft();

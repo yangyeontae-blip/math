@@ -11,12 +11,13 @@ const types = {
   '.html': 'text/html; charset=utf-8',
   '.js': 'text/javascript; charset=utf-8',
   '.json': 'application/json; charset=utf-8',
+  '.txt': 'text/plain; charset=utf-8',
   '.svg': 'image/svg+xml; charset=utf-8',
   '.webmanifest': 'application/manifest+json; charset=utf-8',
   '.png': 'image/png',
   '.jpg': 'image/jpeg',
 };
-const textTypes = new Set(['.css', '.html', '.js', '.json', '.svg', '.webmanifest']);
+const textTypes = new Set(['.css', '.html', '.js', '.json', '.txt', '.svg', '.webmanifest']);
 
 async function files(directory) {
   const found = [];
