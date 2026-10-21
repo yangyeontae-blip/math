@@ -1,9 +1,11 @@
 import type { Save } from './rules';
 
 export const HOME_EXIT = { x: 0, z: 26 };
+// Coordinates are local to the southern activity group (z offset 10).
+export const HOME_PROJECT_SPOTS = [[-8,13],[-6,15.7],[5,16.3]] as const;
 export const HOME_VISITORS = ['강아지 단추', '가현이', '오지후'] as const;
 export function atHomeExit(x: number, z: number) {
-  return Math.abs(x - HOME_EXIT.x) < 1.8 && z >= HOME_EXIT.z - .7;
+  return Math.hypot(x-HOME_EXIT.x,z-HOME_EXIT.z) < 3.2;
 }
 
 // Only describe things the visitor can actually find in this save.

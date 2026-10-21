@@ -1,13 +1,16 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { newSave, addRoomFurniture, placeRoomFurniture, removeRoomFurniture, validateSave } from '../src/rules';
-import { HOME_EXIT, atHomeExit, VISITOR_LINES, visitorLines, pickVisitorLine } from '../src/home-experience';
+import { HOME_EXIT, HOME_PROJECT_SPOTS, atHomeExit, VISITOR_LINES, visitorLines, pickVisitorLine } from '../src/home-experience';
 
 test('home: the village exit is at the end of the path, not beside the entrance',()=>{
   assert.equal(atHomeExit(0,12),false);
-  assert.equal(atHomeExit(3,HOME_EXIT.z),false);
+  assert.equal(atHomeExit(4,HOME_EXIT.z),false);
   assert.equal(atHomeExit(0,HOME_EXIT.z),true);
   assert.equal(atHomeExit(0,28),true);
+  assert.equal(atHomeExit(0,23),true);
+  assert.equal(atHomeExit(0,22),false);
+  assert.ok(HOME_PROJECT_SPOTS.every(([x,z])=>Math.hypot(x-HOME_EXIT.x,z+10-HOME_EXIT.z)>4.5));
 });
 test('home: 56 original visitor lines are unique and matched to existing scenery',()=>{
   const all=Object.values(VISITOR_LINES).flat();assert.equal(all.length,56);assert.equal(new Set(all).size,56);

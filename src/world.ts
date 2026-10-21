@@ -2,7 +2,7 @@ import { showEntityLabel } from './navigation';
 import { MARKET_SCALE, MARKET_RADIUS, MARKET_DOOR_OFFSET, MARKET_SHOPS, VILLAGE_SPOTS, villageWelcomeClear, villageTreeSpot, villageMonsterSpot } from './village-layout';
 import { homeScenery } from './homestead-models';
 import { HOME_ITEMS, objectCells, visitorTargets, homeRoute, homeReachable, type HomeObject } from './homestead';
-import { HOME_EXIT, HOME_VISITORS, atHomeExit } from './home-experience';
+import { HOME_EXIT, HOME_PROJECT_SPOTS, HOME_VISITORS, atHomeExit } from './home-experience';
 import { discoveryHere, discoveryInfo, discoverySpot, discoveryId } from './exploration';
 import { fieldHere, fieldSpec, FIELD_INFO, FIELD_SPOTS } from './forest-activities';
 import { trailHere, trailPair, TRAIL_SEEDS, TRAIL_LAMPS } from './forest-trail';
@@ -1194,7 +1194,7 @@ export class World {
       e.label.remove(); this.scene.remove(e.mesh); this.disposeModel(e.mesh);
     }
     this.entities = this.entities.filter(entity => !entity.id.startsWith('villageProject'));
-    const positions = [[-8, 13], [0, 15.7], [5, 16.3]];
+    const positions = HOME_PROJECT_SPOTS;
     VILLAGE_PROJECTS.forEach((project, id) => {
       const done = s.adventure.completed.includes(id), marker = new T.Group();
 
@@ -1221,7 +1221,7 @@ export class World {
           ball(g, 0xf7e5a3, x, .46, z, .07);
         }
       } else if (id === 1) {
-        for (let i = 0; i < (active ? active.values[0] : spec.target); i++) cylinder(g, i % 2 ? 0xcac4af : 0xdbd0b5, -4.8 + i * 8 / spec.target, .05, 15.7 + (design.curved ? Math.sin(i * Math.PI / spec.target) * .6 : 0), .27, .32, .1, 7);
+        for (let i = 0; i < (active ? active.values[0] : spec.target); i++) cylinder(g, i % 2 ? 0xcac4af : 0xdbd0b5, positions[1][0]-4 + i * 8 / spec.target, .05, 15.7 + (design.curved ? Math.sin(i * Math.PI / spec.target) * .6 : 0), .27, .32, .1, 7);
       } else {
         box(g, 0xbd9268, 5, .75, 16.3, 3, .18, 1.5);
         for (const x of [3.9, 6.1]) for (const z of [15.8, 16.8]) box(g, 0x97704d, x, .35, z, .13, .7, .13);
@@ -1538,7 +1538,7 @@ export class World {
   private clearGuide() { this.guideTarget = null; this.guideElement.hidden = true; }
   moveStick(x: number, z: number) { this.stick = { x, z }; }
   jump() { if (this.active && !this.paused && !this.storyActivityFocus && this.grounded) { this.vy = 7.4; this.grounded = false; this.onJump(); } }
-  interact() { if (this.active && !this.paused && !this.storyActivityFocus && this.selectedId) this.onInteract(this.selectedId); }
+  interact() { if (this.active && !this.paused && !this.storyActivityFocus) {if(this.inHomestead&&atHomeExit(this.player.position.x,this.player.position.z))this.onInteract('homeExit');else if(this.selectedId)this.onInteract(this.selectedId);} }
   attack() { if (!this.active || this.paused || this.storyActivityFocus) return; this.swingUntil = this.time + .28; this.onAttack(this.selectedId?.startsWith('tree') ? this.selectedId : null); }
   hitTree(id: string, damage: number) {
     const e = this.entities.find(e => e.id === id && e.mesh.visible); if (!e || !id.startsWith('tree')) return null;
@@ -1591,7 +1591,6 @@ export class World {
       const bounds = this.inHomestead ? { x: 13.4, z: 29.4 } : this.inRoom ? { x: 6.8, z: 5.2 } : stageSize(this.stage);
       // 가장자리에서는 순간이동 대신 덤불 앞에서 멈춰요. 물에 빠질 때만 안전한 곳으로 돌아가요.
       const edge = this.inHomestead || this.inRoom ? .5 : 1.6; p.x = T.MathUtils.clamp(p.x, -bounds.x + edge, bounds.x - edge); p.z = T.MathUtils.clamp(p.z, -bounds.z + edge, bounds.z - edge);
-      if(this.inHomestead && n > .05 && atHomeExit(p.x,p.z)){this.clearInput();this.onInteract('homeExit');return;}
       if ((this.inHomestead && p.z < -12.9) || Math.abs(p.x) > bounds.x - .5 || Math.abs(p.z) > bounds.z - .5 || (!flying && this.water(p.x, p.z) && p.y <= .2)) { p.copy(this.lastSafe); this.vy = 0; this.onRescue(); }
       else if (this.grounded && (flying || !this.water(p.x, p.z)) && Math.abs(p.x) < bounds.x - 2 && Math.abs(p.z) < bounds.z - 2) this.lastSafe.copy(p);
       if (this.petModel) { const walked = Math.hypot(p.x - oldX, p.z - oldZ); if (walked < 4) this.petWalk += walked; if (this.petWalk >= 1) { this.onPetWalk(this.petWalk); this.petWalk = 0; } }
@@ -1654,7 +1653,7 @@ export class World {
     }
     let near: Entity | undefined, distance = 2.8;
     // 나무는 조금 멀게 쳐서, 빛씨앗·몬스터처럼 할 일이 옆에 있으면 그쪽을 먼저 보여 줘요.
-    const reach=(e:Entity)=>Math.hypot(p.x-e.x,p.z-e.z)+(e.id.startsWith('tree')?1.2:0);
+    const reach=(e:Entity)=>this.inHomestead&&e.id==='homeExit'&&atHomeExit(p.x,p.z)?-1:Math.hypot(p.x-e.x,p.z-e.z)+(e.id.startsWith('tree')?1.2:0);
     for(const e of this.entities){const d=reach(e);if(e.mesh.visible&&d<distance){near=e;distance=d;}}
     for (const e of this.entities) {
       if (e.id.startsWith('monster')) this.wander(e, p, dt);
