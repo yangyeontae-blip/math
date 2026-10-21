@@ -1,7 +1,8 @@
 import { showEntityLabel } from './navigation';
 import { MARKET_SCALE, MARKET_RADIUS, MARKET_DOOR_OFFSET, MARKET_SHOPS, VILLAGE_SPOTS, villageWelcomeClear, villageTreeSpot, villageMonsterSpot } from './village-layout';
 import { homeScenery } from './homestead-models';
-import { HOME_ITEMS, objectCells, visitorTargets, homeRoute, type HomeObject } from './homestead';
+import { HOME_ITEMS, objectCells, visitorTargets, homeRoute, homeReachable, type HomeObject } from './homestead';
+import { HOME_EXIT, HOME_VISITORS, atHomeExit } from './home-experience';
 import { discoveryHere, discoveryInfo, discoverySpot, discoveryId } from './exploration';
 import { fieldHere, fieldSpec, FIELD_INFO, FIELD_SPOTS } from './forest-activities';
 import { trailHere, trailPair, TRAIL_SEEDS, TRAIL_LAMPS } from './forest-trail';
@@ -822,7 +823,8 @@ export class World {
         block(wood,-1.1,1.3,1.9,.9,1.55,.25);for(let row=0;row<2;row++){block(wood,-1.1,.85+row*.7,2.1,.95,.1,.5);for(let i=0;i<3;i++){const px=-1.4+i*.3;cylinder(g,[0xc493bc,0x89bdac,0xdfbb6e][i],px,1.04+row*.7,2.1,.09,.12,.3,8);cylinder(g,0xb69867,px,1.24+row*.7,2.1,.06,.06,.1,6);}}
         cylinder(g,0xc6d39d,.45,4.72,0,.21,.35,.65,10);cylinder(g,0xbd966c,.45,5.1,0,.14,.14,.15,8);
       }
-      this.sign(this.scene,['별빛 대장간','새봄 의상실','숲속 펫 가게','구름 마구간','반짝 미용실','풀잎 물약방'][kind],x,2.8*MARKET_SCALE,z+2.05*MARKET_SCALE,4.4*MARKET_SCALE);
+      // Above the roof rather than buried in the facade; functional names help young visitors.
+      this.sign(this.scene,['무기 상점','의상 상점','펫 상점','라이딩 상점','미용실','물약 상점'][kind],x,7.5,z+2.05*MARKET_SCALE,6);
       if(kind===1){ // Real hanger rail, two dresses and folded textiles.
         for(const px of [-3.1,-1.1])block(wood,px,.9,1.8,.08,1.8,.08);block(wood,-2.1,1.8,1.8,2.2,.08,.08);
         for(const [px,c]of [[-2.65,0xe5a6b6],[-1.6,0x9bbdc9]]){ball(g,0xe5c48c,px,1.7,1.8,.12);const dress=mesh(new T.ConeGeometry(.44,.9,6),c,px,1.05,1.8,g);dress.rotation.y=.5;block(c,px,1.5,1.8,.55,.35,.2);}
@@ -1014,19 +1016,24 @@ export class World {
     const editor=new T.Group();cylinder(editor,0xb98a62,0,.55,0,.6,.6,1.1,8);box(editor,0xf8ebbe,0,1.2,0,1.4,.12,1);this.addEntity('homeEditor','📐 마을 꾸미기 책상',-3,12,editor);
     this.house(-8,16.7,0x739e91,0xffedc9);box(this.scene,0xe5d0a5,-4,0.04,20,9,.06,1.8);this.addEntity('room','🏠 나의 집 · 집 안으로',-8,19.8,new T.Group());
     const projects=new T.Group();projects.position.z=10;this.scene.add(projects);this.storyScenery=projects;this.buildVillageProjects(projects,s,10);
-    this.addEntity('homeExit','🚪 원래 모험으로 돌아가기',3,12,new T.Group());
-    const names=["연태쌤", "가현이", "오지후"];
-    this.homeTargets=visitorTargets(s);if(this.homeTargets.length)for(let i=0;i<3;i++){const model=makeCharacter(i,0,0),cell=137+i%2;this.addEntity(`homeVisitor${i}`,`${names[i]} · 정원 구경`,(cell%12-5.5)*2,(Math.floor(cell/12)-5.5)*2,model);const entity=this.entities[this.entities.length-1];entity.mesh.visible=i<(s.settings.lowQuality?1:3);this.homeVisitors.push({entity,cell,path:[],pause:i,turn:i,kind:6});}
+    this.addEntity('homeExit','🚪 길 끝 · 마을로 돌아가기',HOME_EXIT.x,HOME_EXIT.z,this.gate(0x739e91));
+    this.sign(this.scene,'마을로 돌아가기',HOME_EXIT.x,4.4,HOME_EXIT.z,6);
+    for (const z of [16,20,24]) { const arrow=mesh(new T.ConeGeometry(.38,.75,3),0xfff4d4,0,.09,z,this.scene);arrow.rotation.x=Math.PI/2; }
+    this.homeTargets=visitorTargets(s);
+    if(!this.homeTargets.length)this.homeTargets=[{uid:0,kind:-1,cell:125},{uid:0,kind:-1,cell:126}];
+    const visitorCells=[...new Set([137,138,...homeReachable(s.homestead.objects)])];
+    for(let i=0;i<Math.min(3,visitorCells.length);i++){const model=i===0?makePet(16):makeCharacter(i, i===1?4:7,0),cell=visitorCells[i];this.addEntity(`homeVisitor${i}`,`${HOME_VISITORS[i]} · 정원 구경`,(cell%12-5.5)*2,(Math.floor(cell/12)-5.5)*2,model);const entity=this.entities[this.entities.length-1];entity.mesh.visible=i<(s.settings.lowQuality?2:3);this.homeVisitors.push({entity,cell,path:[],pause:i+1,turn:i,kind:-1});}
     this.player.position.set(pos.x,0,pos.z);this.placePetNearPlayer();this.lastSafe.set(0,0,12);this.follow.copy(this.player.position);this.quality(s.settings.lowQuality);
   }
   private animateHomeVisitors(dt:number){
     const s=this.homeSave;if(!s)return;const targets=this.homeTargets;
     for(const visitor of this.homeVisitors){if(!visitor.entity.mesh.visible)continue;const model=visitor.entity.mesh;
       if(visitor.pause>0){visitor.pause-=dt;continue;}
-      if(!visitor.path.length){const turn=visitor.turn++,target=s.homestead.memories.includes(3)&&turn%3===0?targets.filter(t=>t.kind===14)[turn%Math.max(1,targets.filter(t=>t.kind===14).length)]??targets[turn%targets.length]:targets[turn%targets.length];if(!target)continue;visitor.kind=target.kind;visitor.path=homeRoute(s.homestead.objects,visitor.cell,target.cell).slice(1);if(!visitor.path.length){visitor.pause=s.homestead.memories.length?6:4;model.scale.y=(visitor.kind===18||visitor.kind===13)&&s.homestead.memories.some(id=>id===0||id===2)?.82:1;}continue;}
+      if(!visitor.path.length){const turn=visitor.turn++,target=s.homestead.memories.includes(3)&&turn%3===0?targets.filter(t=>t.kind===14)[turn%Math.max(1,targets.filter(t=>t.kind===14).length)]??targets[turn%targets.length]:targets[turn%targets.length];if(!target)continue;visitor.kind=target.kind;visitor.path=homeRoute(s.homestead.objects,visitor.cell,target.cell).slice(1);if(!visitor.path.length){visitor.pause=s.homestead.memories.length?6:4;model.scale.y=1;}continue;}
       model.scale.y=1;const next=visitor.path[0],x=(next%12-5.5)*2,z=(Math.floor(next/12)-5.5)*2,dx=x-model.position.x,dz=z-model.position.z,d=Math.hypot(dx,dz),step=Math.min(d,dt*1.65);
       if(d>.01){model.position.x+=dx/d*step;model.position.z+=dz/d*step;model.rotation.y=Math.atan2(dx,dz);}visitor.entity.x=model.position.x;visitor.entity.z=model.position.z;
-      if(d<.05){visitor.cell=next;visitor.path.shift();if(!visitor.path.length){visitor.pause=s.homestead.memories.length?6:4;model.scale.y=(visitor.kind===18||visitor.kind===13)&&s.homestead.memories.some(id=>id===0||id===2)?.82:1;visitor.entity.name=["연태쌤", "가현이", "오지후"][Number(visitor.entity.id.slice(11))]+' · '+(visitor.kind===18||visitor.kind===13?'잠깐 쉬는 중':visitor.kind===14?'함께 소풍 중':visitor.kind===15?'펫 놀이터 구경':'꽃과 정원 구경');visitor.entity.label.textContent=visitor.entity.name;if(visitor.kind===15&&s.homestead.memories.includes(4)&&this.petIndex>=0)this.reactPet('spin');}}
+      model.traverse(o=>{if(o.userData.petTail)o.rotation.y=Math.sin(this.time*7)*.25;if(o.userData.petPaw)o.rotation.x=Math.sin(this.time*10+Number(o.userData.petPaw)*Math.PI/2)*.22;});
+      if(d<.05){visitor.cell=next;visitor.path.shift();if(!visitor.path.length){visitor.pause=s.homestead.memories.length?6:4;model.scale.y=1;visitor.entity.name=HOME_VISITORS[Number(visitor.entity.id.slice(11))]+' · '+(visitor.kind===18||visitor.kind===13?'잠깐 쉬는 중':visitor.kind===14?'소풍 자리 구경':visitor.kind===15?'펫 놀이터 구경':visitor.kind<0?'산책 중':'정원 구경');visitor.entity.label.textContent=visitor.entity.name;if(visitor.kind===15&&s.homestead.memories.includes(4)&&this.petIndex>=0)this.reactPet('spin');}}
     }
   }
   private buildDiscovery(s:Save){
@@ -1512,7 +1519,7 @@ export class World {
   }
   private renderOnce() { if (!document.hidden) this.renderer.render(this.scene, this.camera); }
   restore(s: Save) { this.setAvatar(s.character, s.outfit, s.weapon, s.outfits[s.outfit], s.weapons[s.weapon], s.ride, s.pet, s.hairstyle, s.face); if (s.homestead.inside) this.enterHomestead(s,true); else if (s.room.inside) this.enterRoom(s); else this.loadStage(s); this.quality(s.settings.lowQuality); }
-  quality(low: boolean) { this.lowQuality = low; const touchDevice = matchMedia('(pointer: coarse)').matches; this.renderer.setPixelRatio(Math.min(devicePixelRatio, low || touchDevice ? 1 : 1.25)); this.renderer.shadowMap.enabled = !low; this.sun.castShadow = !low;this.homeVisitors.forEach((v,i)=>v.entity.mesh.visible=i<(low?1:3)); }
+  quality(low: boolean) { this.lowQuality = low; const touchDevice = matchMedia('(pointer: coarse)').matches; this.renderer.setPixelRatio(Math.min(devicePixelRatio, low || touchDevice ? 1 : 1.25)); this.renderer.shadowMap.enabled = !low; this.sun.castShadow = !low;this.homeVisitors.forEach((v,i)=>v.entity.mesh.visible=i<(low?2:3)); }
   clearInput() { this.keys.clear(); this.stick = { x: 0, z: 0 }; }
   guideTo(kind: GuideKind) {
     const entityMatch = (entity: Entity) => kind === 'homeVisitor' ? entity.id.startsWith('homeVisitor') : kind === 'forestWork' ? entity.id === `forestWork${this.trailNext}` : kind === 'trailSeed' ? entity.id.startsWith('trailSeed') && Math.floor(Number(entity.id.slice(9)) / 2) === this.trailNext : kind === 'trailLamp' ? entity.id === `trailLamp${this.trailNext}` : kind === 'monster' ? entity.id.startsWith('monster') : kind === 'expMonster' ? entity.id.startsWith('expMonster') : kind === 'storyClue' ? entity.id.startsWith('storyClue') : kind === 'shop' ? ['weapon', 'outfit', 'ride', 'pet', 'potion', 'beauty'].includes(entity.id) : entity.id === kind;
@@ -1584,6 +1591,7 @@ export class World {
       const bounds = this.inHomestead ? { x: 13.4, z: 29.4 } : this.inRoom ? { x: 6.8, z: 5.2 } : stageSize(this.stage);
       // 가장자리에서는 순간이동 대신 덤불 앞에서 멈춰요. 물에 빠질 때만 안전한 곳으로 돌아가요.
       const edge = this.inHomestead || this.inRoom ? .5 : 1.6; p.x = T.MathUtils.clamp(p.x, -bounds.x + edge, bounds.x - edge); p.z = T.MathUtils.clamp(p.z, -bounds.z + edge, bounds.z - edge);
+      if(this.inHomestead && n > .05 && atHomeExit(p.x,p.z)){this.clearInput();this.onInteract('homeExit');return;}
       if ((this.inHomestead && p.z < -12.9) || Math.abs(p.x) > bounds.x - .5 || Math.abs(p.z) > bounds.z - .5 || (!flying && this.water(p.x, p.z) && p.y <= .2)) { p.copy(this.lastSafe); this.vy = 0; this.onRescue(); }
       else if (this.grounded && (flying || !this.water(p.x, p.z)) && Math.abs(p.x) < bounds.x - 2 && Math.abs(p.z) < bounds.z - 2) this.lastSafe.copy(p);
       if (this.petModel) { const walked = Math.hypot(p.x - oldX, p.z - oldZ); if (walked < 4) this.petWalk += walked; if (this.petWalk >= 1) { this.onPetWalk(this.petWalk); this.petWalk = 0; } }
