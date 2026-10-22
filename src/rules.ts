@@ -462,8 +462,8 @@ export function pickQuestion(level: number, previous?: Question, stage = 0, maxD
   const picked = pool[Math.floor(Math.random() * pool.length)]; recentQuestions.push(`${picked.operation ?? 'division'}:${picked.dividend}/${picked.divisor}`); if (recentQuestions.length > 16) recentQuestions.shift(); return picked;
 }
 export function questionAnswerText(q: Question) { return q.places ? formatScaled(q.answer, q.places[2]) : q.remainder ? `${q.answer}R${q.remainder}` : String(q.answer); }
-export function pickMultiplicationQuestion(stage = 1, previous?: Question, range: MultiplicationRange = 'stage'): Question {
-  const review = range === 'stage' && stage >= 9 && Math.random() < .3;
+export function pickMultiplicationQuestion(stage = 1, previous?: Question, range: MultiplicationRange = 'stage', allowTableReview = true): Question {
+  const review = allowTableReview && range === 'stage' && stage >= 9 && Math.random() < .3;
   const all = multiplicationQuestionPool(stage, range === 'tables', review);
   const key = (q: Question) => `${q.operation}:${q.dividend}x${q.divisor}`;
   const blocked = new Set(recentQuestions.slice(-Math.min(8, Math.floor(all.length / 2))));
@@ -578,7 +578,8 @@ function pickGradeOperationQuestion(grade: SchoolGrade, operation: Operation, st
   if (operation === 'addition') return pickAdditionQuestion(grade === 1 ? Math.min(2, stage) : grade === 2 ? Math.min(6, stage) : stage, previous);
   if (operation === 'subtraction') return pickSubtractionQuestion(grade === 1 ? Math.min(2, stage) : grade === 2 ? Math.min(6, stage) : stage, previous);
   if (operation === 'multiplication' && grade === 3 && range === 'stage' && stage >= 8 && Math.random() < .4) return pickTwoDigitMultiplier(previous);
-  if (operation === 'multiplication') return pickMultiplicationQuestion(grade === 2 ? Math.min(2, stage) : stage, previous, grade === 2 ? 'tables' : range);
+  // 고학년 첫 단계에서는 기초 구구단보다 자리 수가 있는 곱셈을 연습해요.
+  if (operation === 'multiplication') return pickMultiplicationQuestion(grade === 2 ? Math.min(2, stage) : grade >= 4 && range === 'stage' ? Math.min(10, stage + 4) : stage, previous, grade === 2 ? 'tables' : range, grade < 4);
   if (grade >= 4) {
     const divisor = 10 + Math.floor(Math.random() * Math.min(40, 10 + stage * 3));
     const answer = 2 + Math.floor(Math.random() * Math.min(90, 8 + stage * 5));

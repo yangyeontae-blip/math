@@ -45,6 +45,7 @@
 /* Store readability audit: never let a growing inventory squash item names. */
 .item-grid{grid-auto-rows:minmax(112px,max-content);overscroll-behavior:contain;scrollbar-gutter:stable}.item-card{min-height:112px}.item-card strong{line-height:1.35;overflow-wrap:anywhere}.item-detail{position:sticky;top:0}.shop-layout{align-items:start}
 @media(max-width:600px){.item-grid{grid-auto-rows:minmax(64px,max-content);padding:3px 6px 7px 3px}.item-card{min-height:64px;overflow:hidden}.item-card strong{font-size:.8rem;line-height:1.25}.item-card small{font-size:.7rem;line-height:1.25}.shop-explainer{line-height:1.5;margin-bottom:12px}.shop-explainer b{display:inline-block;margin-left:4px}.item-detail{position:static}.top-actions{flex-wrap:wrap;justify-content:flex-end}.equipment-card{max-width:48%;overflow-wrap:anywhere}}
+@media(max-width:600px){.shop-layout .item-detail{order:-1}.shop-layout .item-grid{max-height:min(31dvh,220px)}.shop-modal #shop-avatar{height:120px}.shop-layout #buy-item{min-height:48px}.shop-layout .item-detail h3{margin:8px 0 4px}}
 
 /* Cozy village-fantasy finish: clearer cards, candy colors, and light motion only. */
 /* A warmer storybook palette with garden-paper surfaces and calm, readable contrast. */

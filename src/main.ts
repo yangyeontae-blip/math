@@ -841,12 +841,12 @@ function openStageMap(forest?: ForestKind) {
   document.querySelectorAll<HTMLButtonElement>('[data-stage]').forEach(b => b.onclick = () => switchStage(Number(b.dataset.stage), forest));
 }
 function operationStageLabel(grade: SchoolGrade, operation: ForestKind, stage: number) {
-  if (grade === 3) return FOREST_INFO[operation].stages(stage);
+  if (grade === 3) return operation === 'addition' || operation === 'subtraction' ? `세 자리 수 ${OPERATION_INFO[operation].name}` : FOREST_INFO[operation].stages(stage);
   if (grade === 1) return operation === 'addition' ? `합이 ${stage < 4 ? 10 : 20}까지인 덧셈` : `${stage < 4 ? 10 : 20}까지의 뺄셈`;
   if (grade === 2) return operation === 'multiplication' ? `${Math.min(9, Math.max(2, stage + 1))}단 중심 구구단` : `두 자리 수 ${OPERATION_INFO[operation].name} · ${stage < 5 ? '기초' : '받아올림·받아내림'}`;
   if (operation === 'division') return `${Math.min(50, 10 + stage * 4)} 이하의 두 자리 수로 나누기${stage >= 7 ? ' · 나머지' : ''}`;
-  if (operation === 'multiplication') return stage < 5 ? '두 자리 수의 곱셈' : '두 자리 수 × 두 자리 수';
-  return `${grade}학년 큰 수 ${OPERATION_INFO[operation].name} 연산 감각`;
+  if (operation === 'multiplication') return stage < 5 ? '두 자리 수 × 한 자리 수' : stage === 5 ? '세 자리 수 × 한 자리 수' : '두 자리 수 × 두 자리 수';
+  return grade >= 5 ? `큰 수와 소수 ${OPERATION_INFO[operation].name}` : `네 자리 수 ${OPERATION_INFO[operation].name}`;
 }
 function multiplicationStageLabel(stage: number) {
   if (stage === 1) return '2~5끼리 곱하기'; if (stage === 2) return '2~9 구구단'; if (stage === 3) return '몇십 × 2~5'; if (stage === 4) return '몇십 × 2~9'; if (stage === 5) return '두 자리 수 × 2~4 · 어느 자리에도 받아올림 없음'; if (stage === 6) return '11~49 × 2~4 · 받아올림'; if (stage === 7) return '11~59 × 2~5 · 받아올림'; if (stage === 8) return '11~79 × 2~6 · 받아올림'; if (stage === 9) return '100~299 × 2~6'; return '11~49 × 11~19 · 부분곱으로 풀기';

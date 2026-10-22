@@ -25,13 +25,15 @@ export function showHomeEditor(s:Save,h:HomeHooks){
   const grid=new T.GridHelper(24,12,0x8ea678,0xaabc91);grid.position.y=.015;scene.add(grid);
   const entry=new T.Mesh(new T.BoxGeometry(3.8,.08,1.8),material(0xe4c79a));entry.position.set(0,.03,11);scene.add(entry);
   const root=new T.Group();scene.add(root);let ghost:T.Group|null=null,ghostKind=-1,angle=Math.PI/4,zoom=1,frame=0,disposed=false,category='전체';
+  const focus=new T.Vector3();
   const markMaterial=new T.MeshBasicMaterial({color:0x4c946c,transparent:true,opacity:.42,depthWrite:false});ownedMaterials.push(markMaterial);
   const mark=new T.Mesh(new T.BoxGeometry(1,.05,1),markMaterial);scene.add(mark);
   const disposeGroup=(g:T.Object3D,cloned=false)=>g.traverse(o=>{if(o instanceof T.Mesh){o.geometry.dispose();if(cloned)(Array.isArray(o.material)?o.material:[o.material]).forEach(m=>m.dispose());}});
   const position=(g:T.Object3D,o:HomeObject)=>{const item=HOME_ITEMS[o.kind],w=o.rotation%2?item.h:item.w,d=o.rotation%2?item.w:item.h;g.position.set((o.column+(w-1)/2-5.5)*2,0,(o.row+(d-1)/2-5.5)*2);g.rotation.y=o.rotation*Math.PI/2;};
   const draw=()=>{if(!disposed)renderer.render(scene,camera);};
   const requestDraw=()=>{if(!frame)frame=requestAnimationFrame(()=>{frame=0;draw();});};
-  const resize=()=>{if(disposed)return;const w=host.clientWidth,hgt=host.clientHeight;if(!w||!hgt)return;renderer.setSize(w,hgt);const aspect=w/hgt,half=(aspect<1?18:16.5)/zoom;camera.left=-half*Math.max(1,aspect);camera.right=-camera.left;camera.top=half*Math.max(1,1/aspect);camera.bottom=-camera.top;camera.position.set(Math.sin(angle)*32,35,Math.cos(angle)*32);camera.lookAt(0,0,0);camera.updateProjectionMatrix();requestDraw();};
+  const resize=()=>{if(disposed)return;const w=host.clientWidth,hgt=host.clientHeight;if(!w||!hgt)return;renderer.setSize(w,hgt);const aspect=w/hgt,half=(aspect<1?18:16.5)/zoom;camera.left=-half*Math.max(1,aspect);camera.right=-camera.left;camera.top=half*Math.max(1,1/aspect);camera.bottom=-camera.top;camera.position.set(focus.x+Math.sin(angle)*32,35,focus.z+Math.cos(angle)*32);camera.lookAt(focus);camera.updateProjectionMatrix();requestDraw();};
+  const focusSelection=()=>{if(!edit.selection)return;const o=edit.selection;focus.set((o.column-5.5)*2,0,(o.row-5.5)*2);zoom=Math.max(zoom,1.55);resize();};
   const rebuild=()=>{for(const child of [...root.children]){root.remove(child);disposeGroup(child);}for(const o of s.homestead.objects){const g=homeItemModel(o.kind);g.userData.uid=o.uid;position(g,o);root.add(g);}};
   const message=(text:string,error=false)=>{$('editor-message').textContent=text;$('editor-message').classList.toggle('invalid',error);};
   const updatePreview=()=>{
@@ -57,7 +59,7 @@ export function showHomeEditor(s:Save,h:HomeHooks){
   const catalog=()=>{
     const blueprints=blueprintIds(s.exploration.solved.length),items=HOME_ITEMS.filter(i=>blueprints.includes(i.id)&&(h.full()||STARTER_BLUEPRINTS.includes(i.id))&&(category==='전체'||category===i.category));
     $('editor-items').innerHTML=items.map(i=>`<button data-editor-kind="${i.id}" class="editor-item" aria-label="${i.name} 고르기"><span>${i.icon}</span><b>${i.name}</b><small>${availableHome(s,i.id)?`보관 ${availableHome(s,i.id)}개`:s.homestead.owned[i.id]?`${i.price}베리로 제작`:'첫 제작 무료'}</small></button>`).join('');
-    document.querySelectorAll<HTMLButtonElement>('[data-editor-kind]').forEach(b=>b.onclick=()=>{const kind=Number(b.dataset.editorKind);edit.choose(kind);if(!s.homestead.owned[kind]){const error=edit.craft(kind);if(error){message(error,true);updatePreview();return;}changed();message('첫 물건은 무료로 준비했어요! 원하는 바닥을 누르면 놓여요.');return;}updatePreview();message(availableHome(s,kind)?'원하는 바닥을 누르면 바로 놓여요.':'이 물건은 모두 놓았어요. 하나 더 만들려면 아래의 베리 가격을 확인해 주세요.');});
+    document.querySelectorAll<HTMLButtonElement>('[data-editor-kind]').forEach(b=>b.onclick=()=>{const kind=Number(b.dataset.editorKind);edit.choose(kind);focusSelection();if(!s.homestead.owned[kind]){const error=edit.craft(kind);if(error){message(error,true);updatePreview();return;}changed();message('첫 물건을 무료로 준비했어요! 놓을 칸을 고른 뒤 ‘여기에 놓기’를 누르세요.');return;}updatePreview();message(availableHome(s,kind)?'놓을 칸을 고른 뒤 ‘여기에 놓기’를 누르세요.':'이 물건은 모두 놓았어요. 하나 더 만들려면 아래의 베리 가격을 확인해 주세요.');});
   };
   const changed=()=>{h.changed();h.save();rebuild();catalog();updatePreview();};
   const place=()=>{const error=edit.place();if(error){message(error,true);updatePreview();return;}changed();message('놓았어요. 옮기려면 그 물건을 누르세요.');};
@@ -65,11 +67,11 @@ export function showHomeEditor(s:Save,h:HomeHooks){
   let down:{x:number;y:number;uid:number|null}|null=null,dragged=false;
   renderer.domElement.onpointerdown=e=>{
     host.focus({preventScroll:true});hit(e);let uid:number|null=null;
-    if(!edit.selection){const intersection=ray.intersectObjects(root.children,true)[0];let o:T.Object3D|undefined=intersection?.object;while(o&&o.parent!==root)o=o.parent??undefined;uid=o?.userData.uid??null;if(uid){edit.select(uid);updatePreview();}}
+    if(!edit.selection){const intersection=ray.intersectObjects(root.children,true)[0];let o:T.Object3D|undefined=intersection?.object;while(o&&o.parent!==root)o=o.parent??undefined;uid=o?.userData.uid??null;if(uid){edit.select(uid);focusSelection();updatePreview();}}
     down={x:e.clientX,y:e.clientY,uid};dragged=false;renderer.domElement.setPointerCapture(e.pointerId);
   };
   renderer.domElement.onpointermove=e=>{if(!edit.selection)return;if(down&&Math.hypot(e.clientX-down.x,e.clientY-down.y)>6)dragged=true;const p=hit(e);if(p&&(e.pointerType!=='touch'||down&&dragged)){edit.move(p.column,p.row);updatePreview();}};
-  renderer.domElement.onpointerup=e=>{if(!down)return;const start=down;down=null;const p=hit(e);if(start.uid&&!dragged){message('바닥을 눌러 이동하거나 회전·보관을 선택하세요.');return;}if(edit.selection&&p){edit.move(p.column,p.row);place();}};
+  renderer.domElement.onpointerup=e=>{if(!down)return;const start=down;down=null;const p=hit(e);if(start.uid&&!dragged){message('바닥을 눌러 이동하거나 회전·보관을 선택하세요.');return;}if(edit.selection&&p){edit.move(p.column,p.row);if(e.pointerType==='touch'){updatePreview();message('초록색 칸을 확인하고 ‘여기에 놓기’를 누르세요.');}else place();}};
   renderer.domElement.onpointercancel=()=>{down=null;edit.cancel();updatePreview();message('이동을 취소했어요. 원래 물건은 그대로예요.');};
   $('editor-place').onclick=place;$('editor-rotate').onclick=()=>{edit.rotate();updatePreview();};$('editor-cancel').onclick=()=>{edit.cancel();updatePreview();message('선택을 해제했어요.');};
   $('editor-store').onclick=()=>{if(edit.store()){changed();message('보관했어요. 물건은 사라지지 않아요.');}};
@@ -79,7 +81,7 @@ export function showHomeEditor(s:Save,h:HomeHooks){
   document.querySelectorAll<HTMLButtonElement>('[data-nudge]').forEach(b=>b.onclick=()=>{const [x,z]=b.dataset.nudge!.split(',').map(Number);nudge(x,z);});
   host.onkeydown=e=>{const directions:Record<string,number[]>={ArrowLeft:[-1,0],ArrowRight:[1,0],ArrowUp:[0,-1],ArrowDown:[0,1]};if(directions[e.key]){e.preventDefault();nudge(...directions[e.key] as [number,number]);}if(e.key==='Enter'){e.preventDefault();place();}if(e.key.toLowerCase()==='r'){edit.rotate();updatePreview();}};
   $<HTMLSelectElement>('editor-category').onchange=e=>{category=(e.target as HTMLSelectElement).value;catalog();};
-  $('editor-camera-left').onclick=()=>{angle-=Math.PI/4;resize();};$('editor-camera-right').onclick=()=>{angle+=Math.PI/4;resize();};$('editor-zoom-in').onclick=()=>{zoom=Math.min(1.8,zoom+.2);resize();};$('editor-zoom-out').onclick=()=>{zoom=Math.max(.8,zoom-.2);resize();};$('editor-fit').onclick=()=>{zoom=1;angle=Math.PI/4;resize();};
+  $('editor-camera-left').onclick=()=>{angle-=Math.PI/4;resize();};$('editor-camera-right').onclick=()=>{angle+=Math.PI/4;resize();};$('editor-zoom-in').onclick=()=>{zoom=Math.min(1.8,zoom+.2);resize();};$('editor-zoom-out').onclick=()=>{zoom=Math.max(.8,zoom-.2);resize();};$('editor-fit').onclick=()=>{zoom=1;focus.set(0,0,0);angle=Math.PI/4;resize();};
   $('editor-back').onclick=()=>{edit.cancel();dispose();h.back();};$('editor-finish').onclick=()=>{edit.cancel();dispose();h.enter();};
   const resizeObserver=new ResizeObserver(resize);resizeObserver.observe(host);
   const observer=new MutationObserver(()=>{if(!host.isConnected||!dialog.open)dispose();});observer.observe(dialog,{childList:true,subtree:true,attributes:true,attributeFilter:['open']});

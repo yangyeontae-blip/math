@@ -20,6 +20,18 @@ test('grades 3–6 have a grade floor even on stage one and easy practice; every
  }
  for(const grade of [1,2] as const){const q=new Encounter(0,false,1,undefined,1,0,'addition','stage',undefined,grade).question;assert.ok(q.dividend<10&&q.divisor<10);}
 });
+test('grades 4–6 begin the multiplication forest beyond basic tables while the tables setting remains available',()=>{
+ for(const grade of [4,5,6] as const)for(const stage of [1,4,5,6,10]){
+  for(let i=0;i<25;i++){
+   const encounter=new Encounter(0,false,1,undefined,stage,0,'multiplication','stage',undefined,grade),q=encounter.question;
+   assert.ok(q.dividend>=11,`${grade}학년 ${stage}단계의 첫 수`);
+   assert.equal(q.answer,q.dividend*q.divisor);
+   assert.equal(encounter.answer(questionAnswerText(q)),'correct');
+  }
+ }
+ const tables=new Encounter(0,false,1,undefined,1,0,'multiplication','tables',undefined,4).question;
+ assert.ok(tables.dividend<=9);
+});
 test('town and market map markers are separate and never alter an existing save',()=>{
  const s=newSave('모험가',0,3);s.berries=4321;s.learning.correct=27;s.journey.maps[1].berries=[0,2];const before=structuredClone(s);
  assert.match(worldMap(s),/aria-current="location"[^>]*>🧭 중앙 광장/);assert.match(worldMap(s,true),/aria-current="location"[^>]*>🧭 상점거리/);

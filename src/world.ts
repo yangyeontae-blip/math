@@ -713,7 +713,7 @@ export class World {
     window.addEventListener('keyup', e => this.keys.delete(keyOf(e))); window.addEventListener('blur', () => this.clearInput()); document.addEventListener('visibilitychange', () => { if (document.hidden) this.clearInput(); });
     this.renderOnce();
   }
-  private sign(parent:T.Object3D,text:string,x:number,y:number,z:number,width=3.4,color='#416e62') {
+  private sign(parent:T.Object3D,text:string,x:number,y:number,z:number,width=3.4,color='#416e62',foreground=false) {
     const canvas=document.createElement('canvas');canvas.width=1024;canvas.height=288;
     const ctx=canvas.getContext('2d')!;
     const paint=()=>{
@@ -731,8 +731,8 @@ export class World {
     };
     paint();
     const texture=new T.CanvasTexture(canvas);texture.colorSpace=T.SRGBColorSpace;
-    const material=new T.MeshBasicMaterial({map:texture,side:T.DoubleSide,transparent:true,toneMapped:false,fog:false});const geometry=new T.PlaneGeometry(width,width*288/1024);
-    const plaque=new T.Mesh(geometry,material);plaque.position.set(x,y,z);plaque.userData.sign=true;plaque.name=`표지판: ${text}`;parent.add(plaque);this.signResources.push({texture,material,geometry});
+    const material=new T.MeshBasicMaterial({map:texture,side:T.DoubleSide,transparent:true,toneMapped:false,fog:false,depthTest:!foreground});const geometry=new T.PlaneGeometry(width,width*288/1024);
+    const plaque=new T.Mesh(geometry,material);plaque.position.set(x,y,z);plaque.renderOrder=foreground?20:0;plaque.userData.sign=true;plaque.name=`표지판: ${text}`;parent.add(plaque);this.signResources.push({texture,material,geometry});
     // Orthographic camera-facing boards stay legible when the portal gently turns.
     const parentRotation=new T.Quaternion();
     plaque.onBeforeRender=()=>{parent.getWorldQuaternion(parentRotation);plaque.quaternion.copy(parentRotation.invert().multiply(this.camera.quaternion));plaque.updateMatrixWorld(true);};
@@ -823,8 +823,8 @@ export class World {
         block(wood,-1.1,1.3,1.9,.9,1.55,.25);for(let row=0;row<2;row++){block(wood,-1.1,.85+row*.7,2.1,.95,.1,.5);for(let i=0;i<3;i++){const px=-1.4+i*.3;cylinder(g,[0xc493bc,0x89bdac,0xdfbb6e][i],px,1.04+row*.7,2.1,.09,.12,.3,8);cylinder(g,0xb69867,px,1.24+row*.7,2.1,.06,.06,.1,6);}}
         cylinder(g,0xc6d39d,.45,4.72,0,.21,.35,.65,10);cylinder(g,0xbd966c,.45,5.1,0,.14,.14,.15,8);
       }
-      // Above the roof rather than buried in the facade; functional names help young visitors.
-      this.sign(this.scene,['무기 상점','의상 상점','펫 상점','라이딩 상점','미용실','물약 상점'][kind],x,7.5,z+2.05*MARKET_SCALE,6);
+      // 기능이 바로 보이는 이름을 지붕 위에 두고, 앞줄 차양에도 가리지 않게 해요.
+      this.sign(this.scene,['무기 상점','의상 상점','펫 상점','라이딩 상점','미용실','물약 상점'][kind],x,7.5,z+3.2*MARKET_SCALE,6,'#416e62',true);
       if(kind===1){ // Real hanger rail, two dresses and folded textiles.
         for(const px of [-3.1,-1.1])block(wood,px,.9,1.8,.08,1.8,.08);block(wood,-2.1,1.8,1.8,2.2,.08,.08);
         for(const [px,c]of [[-2.65,0xe5a6b6],[-1.6,0x9bbdc9]]){ball(g,0xe5c48c,px,1.7,1.8,.12);const dress=mesh(new T.ConeGeometry(.44,.9,6),c,px,1.05,1.8,g);dress.rotation.y=.5;block(c,px,1.5,1.8,.55,.35,.2);}
@@ -916,7 +916,6 @@ export class World {
     for (const z of [20, 6, -9, -23]) { box(this.scene, 0xb98d58, -3.4, .65, z, .12, 1.25, .12); box(this.scene, 0xe6ca8f, -2.8, 1.05, z, 1.35, .56, .12); ball(this.scene, 0xffe98d, -3.35, 1.36, z, .1); }
     for (let i = 0; i < 30; i++) { const x = Math.sin(i * 5.7 + stage) * (size.x - 7), z = Math.cos(i * 3.3 + stage) * (size.z - 8); cylinder(this.scene, 0x5c9a59, x, .12, z, .025, .025, .24, 5); ball(this.scene, [0xffb3c7, 0xffdf82, 0xc5b2ef, 0xa9dfe1][i % 4], x, .29, z, .1, .08, .1); }
     if (this.forest === 'multiplication') for (let i = 0; i < 18; i++) { const x = Math.sin(i * 4.31 + stage) * (size.x - 7), z = Math.cos(i * 2.71 + stage) * (size.z - 8); cylinder(this.scene, 0x5d934b, x, .45, z, .04, .06, .85, 6); ball(this.scene, 0x6e512f, x, .93, z, .14); for (let p = 0; p < 8; p++) ball(this.scene, 0xf6cb42, x + Math.cos(p * Math.PI / 4) * .25, .93 + Math.sin(p * Math.PI / 4) * .25, z, .11, .15, .06); if (i % 3 === 0) { const bee = new T.Group(); bee.position.set(x + .45, 1.4, z); ball(bee, 0xf2c340, 0, 0, 0, .15, .11, .12); box(bee, 0x4b4036, 0, 0, .08, .3, .06, .08); this.scene.add(bee); this.butterflies.push(bee); } }
-    if (this.forest === 'addition') for (let i = 0; i < 24; i++) { const x = Math.sin(i * 4.31 + stage) * (size.x - 7), z = Math.cos(i * 2.71 + stage) * (size.z - 8); ball(this.scene, 0xe0503f, x, .22, z, .2, .19, .2); ball(this.scene, 0x5d934b, x + .08, .42, z, .09, .04, .05); }
     if (this.forest === 'subtraction') for (let i = 0; i < 46; i++) { const x = Math.sin(i * 3.91 + stage) * (size.x - 6), z = Math.cos(i * 2.17 + stage) * (size.z - 7); ball(this.scene, [0xd9822f, 0xc0592a, 0xe9b04a, 0x9a5a2a][i % 4], x, .05, z, .26, .025, .17); }
     for (let i = 0; i < 14; i++) { const g = new T.Group(); g.position.set((i % 2 ? 1 : -1) * (size.x - 5), 0, size.z - 7 - Math.floor(i / 2) * 8); this.scene.add(g); if (spec.theme === 'crystal') { for (let j = 0; j < 3; j++) { const m = mesh(new T.OctahedronGeometry(.65), [0x9bade6, 0xc3a0df, 0x9bd6d4][j], j * .55 - .55, 1.3, 0, g); m.scale.y = 2 + j * .3; } } else if (spec.theme === 'mushroom') { cylinder(g, 0xf4e4cb, 0, .9, 0, .4, .6, 1.8); ball(g, 0xda8e9a, 0, 2, 0, 1.8, .65, 1.5); } else { for (let j = 0; j < 5; j++) ball(g, spec.foliage, Math.cos(j * 1.26), .7, Math.sin(j * 1.26), .4, .14, .4); } }
     this.addBerries();
