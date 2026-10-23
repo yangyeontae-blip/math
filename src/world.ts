@@ -1,3 +1,4 @@
+import { shopSignText, shopInteraction } from './shop-signs';
 import { showEntityLabel } from './navigation';
 import { MARKET_SCALE, MARKET_RADIUS, MARKET_DOOR_OFFSET, MARKET_SHOPS, VILLAGE_SPOTS, villageWelcomeClear, villageTreeSpot, villageMonsterSpot } from './village-layout';
 import { homeScenery } from './homestead-models';
@@ -731,7 +732,7 @@ export class World {
     };
     paint();
     const texture=new T.CanvasTexture(canvas);texture.colorSpace=T.SRGBColorSpace;
-    const material=new T.MeshBasicMaterial({map:texture,side:T.DoubleSide,transparent:true,toneMapped:false,fog:false,depthTest:!foreground});const geometry=new T.PlaneGeometry(width,width*288/1024);
+    const material=new T.MeshBasicMaterial({map:texture,side:T.DoubleSide,transparent:true,toneMapped:false,fog:false,depthTest:!foreground,depthWrite:!foreground});const geometry=new T.PlaneGeometry(width,width*288/1024);
     const plaque=new T.Mesh(geometry,material);plaque.position.set(x,y,z);plaque.renderOrder=foreground?20:0;plaque.userData.sign=true;plaque.name=`표지판: ${text}`;parent.add(plaque);this.signResources.push({texture,material,geometry});
     // Orthographic camera-facing boards stay legible when the portal gently turns.
     const parentRotation=new T.Quaternion();
@@ -769,12 +770,12 @@ export class World {
     this.clearInput();this.clearMap();this.inMarket=true;this.inRoom=false;s.room.inside=false;s.homestead.inside=false;this.stage=0;this.forest=s.forest;this.platforms=[];
     this.scene.background=new T.Color(0xd4e9df);this.scene.fog=new T.Fog(0xd4e9df,58,112);
     box(this.scene,0xb5cd95,0,-.55,0,51,1.1,41);box(this.scene,0x91ae79,0,-1.3,0,50,.5,40);this.buildMarket();
-    this.addEntity('weapon', '강지후 · 무기 상점', MARKET_SHOPS[0].x, MARKET_SHOPS[0].z+MARKET_DOOR_OFFSET, makeCharacter(1, 6, 1));
-    this.addEntity('outfit', '오지후 · 의상 상점', MARKET_SHOPS[1].x, MARKET_SHOPS[1].z+MARKET_DOOR_OFFSET, makeCharacter(2, 4, 2));
-    this.addEntity('ride', '나현이 · 탈것 상점', MARKET_SHOPS[3].x, MARKET_SHOPS[3].z+MARKET_DOOR_OFFSET, makeCharacter(0, 10, 6));
-    this.addEntity('pet', '윤준 · 펫 상점', MARKET_SHOPS[2].x, MARKET_SHOPS[2].z+MARKET_DOOR_OFFSET, makeCharacter(1, 12, 10));
-    this.addEntity('potion', '박준우 · 물약 상점', MARKET_SHOPS[5].x, MARKET_SHOPS[5].z+MARKET_DOOR_OFFSET, makeCharacter(0, 16, 12));
-    this.addEntity('beauty', '가영이 · 헤어와 얼굴 꾸미기', MARKET_SHOPS[4].x, MARKET_SHOPS[4].z+MARKET_DOOR_OFFSET, makeCharacter(2, 15, 2));
+    this.addEntity('weapon', shopInteraction(0) + ' · 강지후', MARKET_SHOPS[0].x, MARKET_SHOPS[0].z+MARKET_DOOR_OFFSET, makeCharacter(1, 6, 1));
+    this.addEntity('outfit', shopInteraction(1) + ' · 오지후', MARKET_SHOPS[1].x, MARKET_SHOPS[1].z+MARKET_DOOR_OFFSET, makeCharacter(2, 4, 2));
+    this.addEntity('ride', shopInteraction(3) + ' · 나현이', MARKET_SHOPS[3].x, MARKET_SHOPS[3].z+MARKET_DOOR_OFFSET, makeCharacter(0, 10, 6));
+    this.addEntity('pet', shopInteraction(2) + ' · 윤준', MARKET_SHOPS[2].x, MARKET_SHOPS[2].z+MARKET_DOOR_OFFSET, makeCharacter(1, 12, 10));
+    this.addEntity('potion', shopInteraction(5) + ' · 박준우', MARKET_SHOPS[5].x, MARKET_SHOPS[5].z+MARKET_DOOR_OFFSET, makeCharacter(0, 16, 12));
+    this.addEntity('beauty', shopInteraction(4) + ' · 가영이', MARKET_SHOPS[4].x, MARKET_SHOPS[4].z+MARKET_DOOR_OFFSET, makeCharacter(2, 15, 2));
 
     const exit=this.gate(0x91b9a1);this.addEntity('marketExit','중앙 광장 · 돌아가기',0,11,exit);this.sign(exit,'중앙 광장',0,4.6,0,4.5);
     box(this.scene,0xf0e5ce,0,.08,8,4,.08,18);
@@ -824,7 +825,7 @@ export class World {
         cylinder(g,0xc6d39d,.45,4.72,0,.21,.35,.65,10);cylinder(g,0xbd966c,.45,5.1,0,.14,.14,.15,8);
       }
       // 기능이 바로 보이는 이름을 지붕 위에 두고, 앞줄 차양에도 가리지 않게 해요.
-      this.sign(this.scene,['무기 상점','의상 상점','펫 상점','라이딩 상점','미용실','물약 상점'][kind],x,7.5,z+3.2*MARKET_SCALE,6,'#416e62',true);
+      this.sign(this.scene,shopSignText(kind),x,7.5,z+3.2*MARKET_SCALE,6.5,'#173f30',true);
       if(kind===1){ // Real hanger rail, two dresses and folded textiles.
         for(const px of [-3.1,-1.1])block(wood,px,.9,1.8,.08,1.8,.08);block(wood,-2.1,1.8,1.8,2.2,.08,.08);
         for(const [px,c]of [[-2.65,0xe5a6b6],[-1.6,0x9bbdc9]]){ball(g,0xe5c48c,px,1.7,1.8,.12);const dress=mesh(new T.ConeGeometry(.44,.9,6),c,px,1.05,1.8,g);dress.rotation.y=.5;block(c,px,1.5,1.8,.55,.35,.2);}

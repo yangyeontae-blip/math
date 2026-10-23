@@ -28,7 +28,7 @@ export type FocusKind = 'story' | 'project' | 'room' | 'craft' | 'visit' | 'expe
 /** Existing progress is the source of truth; opening a menu never changes the chosen adventure. */
 export function adventureFocus(s: Save): FocusKind {
   if (s.room.inside) return 'room';
-  if (s.homestead.inside) return s.adventure.active ? 'project' : s.homestead.objects.some(o => [6, 18].includes(o.kind)) ? 'visit' : 'craft';
+  if (s.homestead.inside) return s.adventure.active ? 'project' : (s.homestead.objects.length || s.homestead.memories.length) ? 'visit' : 'craft';
   if (s.expedition.active) return 'expedition';
   if (s.story.active) return 'story';
   if (s.adventure.active) return 'project';

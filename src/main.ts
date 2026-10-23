@@ -1,3 +1,6 @@
+import { homeRecommendation } from './home-guidance';
+import { showHomeEditor } from './home-editor';
+import { HintProgress, earlyCalculationHint } from './battle-hints';
 import './world-map.css';
 import { worldMap } from './world-map';
 import { adventureFocus, HUB_DESTINATIONS, savedGardenPosition, MenuHistory } from './navigation';
@@ -189,6 +192,7 @@ function openExtraActivities() {
 /** 가까이 있는 대상에 맞는 버튼 이름. 대화 버튼 하나로 줍기·밝히기·싸우기를 모두 해요. */
 function actionVerb(id: string | null): string {
   if (!id) return '대화';
+  if (/^(weapon|outfit|pet|ride|beauty|potion)$/.test(id)) return '구경하기';
   if (/^(monster|expMonster)/.test(id)) return '싸우기';
   if (id.startsWith('trailSeed')) return '줍기';
   if (id.startsWith('trailLamp')) return '밝히기';
@@ -212,7 +216,7 @@ function renderCurrentFocus() {
   else if(kind==='project'){label='함께 만들던 정원 이어 가기';action=()=>{if(enterHomeGarden())renderVillageProject();};}
   else if(kind==='room'){label='모은 가구로 내 방 꾸미기';action=openRoom;}
   else if(kind==='craft'){label='꽃이나 벤치 놓고 주민 초대하기';action=()=>{if(enterHomeGarden())openHomestead();};}
-  else if(kind==='visit'){label='내 정원에 찾아온 주민 만나기';action=guide('homeVisitor');button='길 안내';}
+  else if(kind==='visit'){const next=homeRecommendation(s,true);label=next.label;button=next.action==='design'?'준비하기':next.action==='request'?'부탁 보기':next.action==='discover'?'숲으로':'꾸미기';action=()=>{if(next.action==='design'){showHomeEditor(s,homesteadHooks(),next.kind);}else if(next.action==='request'){showHomeRequests(s,homesteadHooks());}else if(next.action==='discover'){openAdventureMap();}else openHomestead();};}
   else if(kind==='expedition'){label='진행 중인 별빛 원정 이어 가기';action=resumeAdventure;}
   else if(kind==='discover'){
     label='발자국을 따라 숨은 장소 찾기';action=guide('discovery');button='길 안내';
@@ -286,7 +290,7 @@ $('#quest-toggle').onclick = () => setQuestCollapsed(!questCard.classList.contai
 let state: Save | null = null, saved: Save | null = null, preview: AvatarPreview | null = null, startPreview: AvatarPreview | null = null;
 let startPreviewRequest = 0, startPortraits: string[] | null = null;
 let selected = 0, selectedGrade: SchoolGrade = 3, pendingImport: Save | null = null, toastTimer: ReturnType<typeof setTimeout>, modalOpener: HTMLElement | null = null;
-let battle: { encounter: Encounter; id: string; kind: 'normal' | 'expMonster' | 'expGate' | 'multiplicationGate'; round: number; goalRounds?: number; score: number; result: ReturnType<typeof grantReward> | null; newTitle?: number; story?: boolean; missedCurrent?: boolean; hintUsed?: boolean; practice?: { operation: Operation; tier: PracticeTier } } | null = null;
+let battle: { encounter: Encounter; id: string; kind: 'normal' | 'expMonster' | 'expGate' | 'multiplicationGate'; round: number; goalRounds?: number; score: number; result: ReturnType<typeof grantReward> | null; newTitle?: number; story?: boolean; missedCurrent?: boolean; hintUsed?: boolean; hint?: HintProgress; hintQuestion?: unknown; practice?: { operation: Operation; tier: PracticeTier } } | null = null;
 type CurriculumModule = typeof import('./curriculum');
 type CurriculumQuestion = import('./curriculum').CurriculumQuestion;
 let curriculumModulePromise: Promise<CurriculumModule> | null = null;
@@ -1263,7 +1267,8 @@ function renderBattle() {
   document.querySelectorAll<HTMLInputElement>('[data-answer-part]').forEach(input => input.onclick = () => { document.querySelectorAll<HTMLInputElement>('[data-answer-part]').forEach(item => item.classList.toggle('active', item === input)); });
   audio.setBattle(true); // 시합 중에는 빠른 시합 음악
   if (challenge) $('#monster-portrait').insertAdjacentHTML('beforeend', heartsMarkup(b.goalRounds! - b.round + 1, b.goalRounds!));
-  $('#show-hint').onclick = () => showHint(true); $('#answer').focus();
+  if (b.hintQuestion !== q) { b.hint = new HintProgress(); b.hintQuestion = q; }
+  $('#show-hint').onclick = () => showHint(); if (b.hint?.stage) showHint(false); $('#answer').focus();
 }
 /** 여러 문제 시합: 남은 문제를 하트로 보여 주고, 마지막 문제를 맞혀야 몬스터가 쓰러져요. */
 function heartsMarkup(left: number, total: number) { return `<div class="monster-hearts" id="monster-hearts" aria-label="남은 문제 ${left}개">${'❤️'.repeat(left)}${'🤍'.repeat(total - left)}</div>`; }
@@ -1298,22 +1303,20 @@ function arithmeticHint(q: { dividend: number; divisor: number; answer: number; 
   const steps = parts.map(part => { const next = add ? current + part : current - part, text = `${current} ${sign} ${part} = ${next}`; current = next; return `<span>${text}</span>`; });
   return `<p>${b}를 <b>${parts.join(', ')}</b>으로 나누어 차례로 ${add ? '더해' : '빼'} 봐요.</p><div class="split-hint">${steps.join('')}</div><b>${a} ${sign} ${b} = ${q.answer}</b>`;
 }
-function showHint(manual = false) {
-  if (!battle) return; const q = battle.encounter.question;
-  if (!manual && !battle.hintUsed) {
-    $('#hint').hidden = false;
-    $('#hint').innerHTML = q.operation === 'addition' ? '<p>큰 수부터 세며 작은 수를 조금씩 더해 보세요. 10이 넘으면 다음 자리로 묶어요.</p>'
-      : q.operation === 'subtraction' ? '<p>큰 수에서 작은 수를 차례로 빼 보세요. 일의 자리부터 생각해요.</p>'
-      : q.operation === 'multiplication' ? `<p>${q.dividend}이(가) ${q.divisor}번 있는 모습을 떠올려 보세요. 같은 수를 여러 번 더해도 돼요.</p>`
-      : `<p>${q.dividend}개를 ${q.divisor}씩 묶어 보세요. ${q.divisor} × □가 ${q.dividend}에 가까워지는 수를 찾아요.</p>`;
-    return;
-  }
-  if (manual) {
-    battle.hintUsed = true;
-    $('#battle-reward').textContent = '힌트 연습 · 베리와 경험치 없음';
-    $('#answer-message').textContent = '힌트를 보며 풀어도 통과할 수 있어요. 이번 시합의 베리와 경험치는 받지 않아요.';
-  }
-  $('#hint').hidden = false;
+function showHint(advance = true) {
+  if (!battle) return;
+  const q=battle.encounter.question;
+  if(advance){battle.hintUsed=true;$('#battle-reward').textContent='힌트 연습 · 베리와 경험치 없음';$('#answer-message').textContent='힌트를 보며 풀어도 통과할 수 있어요. 이번 시합의 베리와 경험치는 받지 않아요.';}
+  if(battle.hintQuestion!==q){battle.hintQuestion=q;battle.hint=new HintProgress();}
+  const progress=battle.hint??=new HintProgress(),stage=advance?progress.next():progress.first();
+  const hint=$('#hint');hint.hidden=false;
+  if(stage===3)showFullHint();else hint.innerHTML=earlyCalculationHint(q,stage);
+  hint.insertAdjacentHTML('afterbegin',`<p class="hint-step" role="status">도움 ${stage}/3 · ${['생각하는 방법','일부 풀이','전체 풀이와 정답'][stage-1]}</p>`);
+  const button=$<HTMLButtonElement>('#show-hint');button.textContent=stage===3?'전체 풀이를 보고 있어요':'💡 도움 더 보기';button.disabled=stage===3;
+}
+function showFullHint() {
+  if(!battle)return;const q=battle.encounter.question;
+  $('#hint').hidden=false;
   if (q.places) { $('#hint').innerHTML = decimalHint(q); return; }
   if (q.operation === 'addition' || q.operation === 'subtraction') { $('#hint').innerHTML = arithmeticHint(q); return; }
   if (q.operation === 'multiplication') {
@@ -1366,7 +1369,7 @@ function submitAnswer() {
   const submitted = b.encounter.question.remainder ? `${input.value}R${remainderInput!.value}` : input.value;
   const outcome = b.encounter.answer(submitted);
   if (outcome === 'ignored') return;
-  if (outcome === 'wrong') { if (!b.missedCurrent) { b.missedCurrent = true; recordAdaptive(false); recordWrongAnswer(state, b.encounter.question); recordCurriculumAttempt(state, b.encounter.question.operation ?? 'division', false); sessionWrong++; } combo = 0; audio.play('wrong'); persist(); $('#answer-message').textContent = '괜찮아요! 묶음을 살펴보고 다시 풀어 볼까요?'; input.value = ''; if (remainderInput) remainderInput.value = ''; showHint(); return; }
+  if (outcome === 'wrong') { if (!b.missedCurrent) { b.missedCurrent = true; recordAdaptive(false); recordWrongAnswer(state, b.encounter.question); recordCurriculumAttempt(state, b.encounter.question.operation ?? 'division', false); sessionWrong++; } combo = 0; audio.play('wrong'); persist(); $('#answer-message').textContent = '괜찮아요! 묶음을 살펴보고 다시 풀어 볼까요?'; input.value = ''; if (remainderInput) remainderInput.value = ''; showHint(false); return; }
   sessionCorrect++; combo = b.missedCurrent ? 0 : combo + 1; hitMonster(combo); recordCorrectAnswer(state, b.encounter.monster, !b.missedCurrent && !b.hintUsed); if (!b.missedCurrent) { recordCurriculumAttempt(state, b.encounter.question.operation ?? 'division', true); if (!b.hintUsed) { addBossDamage(localStorage); recordAdaptive(true); } } state.discoveries.outfits.includes(state.outfit) || state.discoveries.outfits.push(state.outfit); if (state.pet >= 0 && !state.discoveries.pets.includes(state.pet)) state.discoveries.pets.push(state.pet);
   if (!b.encounter.arena && !['multiplicationGate', 'expGate'].includes(b.kind) && b.round < (b.goalRounds ?? 1)) {
     audio.play('correct'); world.celebrate(); persist();
