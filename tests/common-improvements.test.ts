@@ -48,3 +48,14 @@ test('concept difficulties isolate borrowing, basic subtraction, carrying, decim
  }
  p.clear();assert.equal(p.levels.size,0);
 });
+
+test('a concept unavailable at its adjusted tier cannot change another concept difficulty',()=>{
+ const p=new ConceptPractice();const basic:Question={operation:'subtraction',dividend:32,divisor:11,answer:21,remainder:0};
+ const borrow:Question={...basic,divisor:17,answer:15};
+ p.record(borrow,1,false);p.record(borrow,1,false);
+ const chosen=p.choose('subtraction',1,()=>basic);
+ assert.equal(calculationConcept(chosen.question),'subtraction:basic');assert.equal(chosen.tier,1);
+ p.clear();for(let i=0;i<3;i++)p.record(basic,1,true);
+ const raised=p.choose('subtraction',1,tier=>tier===2?borrow:basic);
+ assert.equal(calculationConcept(raised.question),'subtraction:basic');assert.equal(raised.tier,1);
+});

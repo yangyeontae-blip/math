@@ -24,13 +24,16 @@ export class ConceptPractice {
     return [...this.levels].filter(([key, level]) => key.startsWith(`${operation}:`) && (level.misses > 0 || level.tier < 1)).sort((a,b) => a[1].tier - b[1].tier || b[1].misses - a[1].misses)[0]?.[0];
   }
   choose(operation: Operation, fallback: PracticeTier, generate: (tier: PracticeTier) => Question): { question: Question; tier: PracticeTier } {
-    const target = this.target(operation), tier = target ? this.levels.get(target)!.tier : fallback;
-    let question = generate(tier);
-    for (let i = 0; target && calculationConcept(question) !== target && i < 30; i++) question = generate(tier);
-    // Some concepts do not occur at the easier tier (e.g. grade 1 carrying).
-    // Keep the grade-safe fallback, and use its own concept level when seen again.
-    const ownTier = this.levels.get(calculationConcept(question))?.tier;
-    if (!target && ownTier !== undefined && ownTier !== tier) return { question: generate(ownTier), tier: ownTier };
-    return { question, tier };
+    const initial = generate(fallback);
+    const target = this.target(operation) ?? calculationConcept(initial);
+    const tier = this.levels.get(target)?.tier ?? fallback;
+    if (tier === fallback && calculationConcept(initial) === target) return { question: initial, tier };
+    for (let i = 0; i < 30; i++) {
+      const question = generate(tier);
+      if (calculationConcept(question) === target) return { question, tier };
+    }
+    // Never apply a concept's tier to a different concept just to fill a slot.
+    // If the grade-safe generator cannot serve that concept, retain the picker baseline.
+    return { question: initial, tier: fallback };
   }
 }
