@@ -11,16 +11,19 @@ async function openArena(page){
 }
 async function answer(page, wrong=false){
  const q=await page.evaluate(()=>window.__berry.testBattleQuestion());
- await page.locator('#answer').fill(wrong?'99999999':q.answer);
- if(await page.locator('#remainder').count())await page.locator('#remainder').fill(wrong?'999':String(q.remainder));
+ await page.locator('#answer').click();
+ for(const digit of (wrong?'9999':q.answer))await page.locator(`[data-number="${digit}"]`).click();
+ if(await page.locator('#remainder').count()){await page.locator('#remainder').click();for(const digit of String(wrong?9:q.remainder))await page.locator(`[data-number="${digit}"]`).click();}
  await page.locator('[data-number="확인"]').click();
 }
 test('hint, retry, immediate save, report and reload keep the same adventure',async({page})=>{
- await start(page);await openArena(page);await page.locator('#show-hint').click();await answer(page,true);await answer(page);
+ await start(page);await openArena(page);await answer(page);await page.locator('#next-battle').click();
+ await page.locator('#show-hint').click();await answer(page);await page.locator('#next-battle').click();
+ await answer(page,true);await answer(page);
  await expect(page.locator('#battle-result')).toBeVisible();
  const before=await page.evaluate(key=>JSON.parse(localStorage.getItem(key)), SAVE);
  const ledger=await page.evaluate(key=>JSON.parse(localStorage.getItem(key)), RECORD);
- expect(ledger.units.addition.retried).toBe(1);
+ expect(ledger.units.addition).toEqual({independent:1,assisted:1,retried:1});
  await page.evaluate(()=>window.__berry.openReport());await expect(page.locator('.report-sheet').first()).toContainText('재도전 성공');
  await page.reload();await page.locator('#continue').click();await expect(page.locator('#hud')).toBeVisible();
  const after=await page.evaluate(key=>JSON.parse(localStorage.getItem(key)), SAVE);expect(after.nickname).toBe(before.nickname);expect(after.berries).toBe(before.berries);
