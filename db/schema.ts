@@ -21,3 +21,10 @@ export const expeditionRankings = sqliteTable('expedition_rankings', {
 }, table => [
   index('idx_expedition_rankings_completed').on(table.completed),
 ]);
+
+// Ephemeral, hashed-IP rate buckets only. Feedback text goes directly to email.
+export const feedbackLimits = sqliteTable('feedback_limits', {
+  key: text('key').primaryKey().notNull(),
+  bucket: integer('bucket').notNull(),
+  hits: integer('hits').notNull().default(1),
+});

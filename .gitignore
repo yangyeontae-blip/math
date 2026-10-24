@@ -3,3 +3,7 @@ dist/
 .sites-runtime/
 *.log
 presentation-worksheet/
+
+.dev.vars
+.env.local
+.env.*.local

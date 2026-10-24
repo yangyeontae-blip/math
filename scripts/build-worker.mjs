@@ -40,7 +40,8 @@ for (const file of await files(dist)) {
   manifest[pathname] = { body: await readFile(file, text ? 'utf8' : 'base64'), type: types[extension] ?? 'application/octet-stream', ...(text ? {} : { base64: true }) };
 }
 
-const template = await readFile(workerSource, 'utf8');
+const feedback = (await readFile(join(root, 'worker', 'feedback.js'), 'utf8')).replace('export async function handleFeedback', 'async function handleFeedback');
+const template = (await readFile(workerSource, 'utf8')).replace("import { handleFeedback } from './feedback.js';", feedback);
 const marker = '/*__EMBEDDED_ASSETS__*/{}';
 await mkdir(join(dist, 'server'), { recursive: true });
 await writeFile(join(dist, 'server', 'index.js'), embedWorkerAssets(template, marker, manifest), 'utf8');

@@ -1,0 +1,4 @@
+# Copy to .dev.vars locally. Never commit actual values.
+RESEND_API_KEY=
+FEEDBACK_FROM=
+# Recipient is already stored as a private Sites runtime setting.
