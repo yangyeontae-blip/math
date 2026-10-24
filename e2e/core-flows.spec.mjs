@@ -1,8 +1,16 @@
 import { test, expect } from '@playwright/test';
+import { newSave } from '../src/rules.ts';
 const SAVE='berry-forest-save-v1', RECORD='berry-forest-learning-resolutions-v1';
 async function start(page){
- await page.goto('/');await page.locator('#nickname-input').fill('탐험가');await page.locator('#new-game').click();
- await expect(page.locator('#hud')).toBeVisible();await expect(page.locator('#save-status')).toHaveText('✓ 저장됨');
+ page.on('pageerror',error=>console.log('Browser error:',error.message));
+ const fixture=newSave('탐험가',0,3);fixture.settings.lowQuality=true;fixture.settings.music=false;fixture.settings.sound=false;
+ await page.goto('/',{waitUntil:'domcontentloaded'});
+ // Use a real v21 fixture in the supported lightweight mode on software-rendered CI.
+ await page.evaluate(({key,save})=>localStorage.setItem(key,JSON.stringify(save)),{key:SAVE,save:fixture});
+ await page.reload({waitUntil:'domcontentloaded'});console.log('Start screen ready');
+ await page.locator('#continue').click();
+ await expect(page.locator('#hud')).toBeVisible({timeout:20000});console.log('Adventure ready');
+ await expect(page.locator('#save-status')).toHaveText('✓ 저장됨');
  await page.waitForFunction(()=>!!window.__berry);
 }
 async function openArena(page){
