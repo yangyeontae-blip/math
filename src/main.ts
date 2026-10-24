@@ -1,3 +1,7 @@
+import { SafeSaveStore } from './save-storage';
+import { readLearningRecords, recordResolution, resetLearningRecords } from './learning-records';
+import { ConceptPractice, conceptLabel } from './concept-practice';
+import './save-status.css';
 import { showFeedback } from './feedback-view';
 import { homeRecommendation } from './home-guidance';
 import { showHomeEditor } from './home-editor';
@@ -26,7 +30,7 @@ import { mathTextHtml } from './math-format';
 import { VILLAGE_THEMES, villageThemeId } from './villages';
 import { dailyMissions, DAILY_STAMPS, DAILY_ALL_CLEAR_BONUS, claimDaily, dailyReady, dailyStampsShown, ensureDaily } from './daily';
 import type { World, AvatarPreview, GuideKind } from './world';
-import { formatScaled, operationsForGrade, battleMode, type CurriculumMistake, newSave, validateSave, CHARACTERS, MONSTERS, OUTFITS, PETS, POTIONS, RIDES, WEAPONS, HAIRSTYLES, FACES, WEAPON_UPGRADES, OUTFIT_UPGRADES, ROOM_GRID_COLUMNS, ROOM_GRID_ROWS, HERO_BREAD_PET_ID, Encounter, grantReward, rewardFor, battleRewardReason, potionEffects, buy, upgrade, buyRide, dismount, buyPet, unequipPet, buyLook, buyPotion, usePotion, applyTeacherCode, collectBerry, finishHunt, fellTree, treeDamage, canEnter, monsterBattleRounds, recordWrongAnswer, recordCorrectAnswer, STAGE_STORIES, journeyFor, multiplicationUsesStory, startMultiplicationFinal, answerMultiplicationFinal, questionAnswerText, curriculumUnitComplete, canStartCurriculumMission, recordCurriculumAttempt, completeCurriculumMission, curriculumGraduationAvailable, claimCurriculumGraduation, addRoomFurniture, removeRoomFurniture, placeRoomFurniture, roomFurniturePosition, defaultRoomFurniturePosition, OPERATIONS, NEW_CURRICULUM_UNITS, OPERATION_INFO, PRACTICE_TIER_NAMES, type CurriculumUnitId, type NewCurriculumUnitId, type ForestKind, type Operation, type PracticeTier, type SchoolGrade, type Save } from './rules';
+import { formatScaled, operationsForGrade, battleMode, type CurriculumMistake, newSave, validateSave, CHARACTERS, MONSTERS, OUTFITS, PETS, POTIONS, RIDES, WEAPONS, HAIRSTYLES, FACES, WEAPON_UPGRADES, OUTFIT_UPGRADES, ROOM_GRID_COLUMNS, ROOM_GRID_ROWS, HERO_BREAD_PET_ID, Encounter, grantReward, rewardFor, battleRewardReason, potionEffects, buy, upgrade, buyRide, dismount, buyPet, unequipPet, buyLook, buyPotion, usePotion, applyTeacherCode, collectBerry, finishHunt, fellTree, treeDamage, canEnter, monsterBattleRounds, recordWrongAnswer, recordCorrectAnswer, STAGE_STORIES, journeyFor, multiplicationUsesStory, startMultiplicationFinal, answerMultiplicationFinal, questionAnswerText, curriculumUnitComplete, canStartCurriculumMission, recordCurriculumAttempt, completeCurriculumMission, curriculumGraduationAvailable, claimCurriculumGraduation, addRoomFurniture, removeRoomFurniture, placeRoomFurniture, roomFurniturePosition, defaultRoomFurniturePosition, OPERATIONS, NEW_CURRICULUM_UNITS, OPERATION_INFO, PRACTICE_TIER_NAMES, type CurriculumUnitId, type NewCurriculumUnitId, type ForestKind, type Operation, type PracticeTier, type SchoolGrade, practiceQuestion, type Save } from './rules';
 import { gradeRegions, gradeMissions, generateGradeQuestion, type GradeRegion } from './grade-content';
 import { STAGES, stageMonsters, stageBerries, berryValue, clearBonus } from './stages';
 import { Sound } from './audio';
@@ -36,7 +40,7 @@ import { EXPEDITION_TITLES, expeditionBerryReward, expeditionLayout, expeditionU
 import { parseLocalRanks, updateLocalRanks } from './ranking';
 import { getGlobalPlayerId, loadGlobalRanks, syncGlobalRank, type GlobalRank } from './global-ranking';
 import { markBackup, shouldRemindBackup } from './backup';
-import { adaptiveEnabled, adaptiveRecord, setAdaptive, startLevel, type AdaptiveLevel } from './adaptive';
+import { adaptiveEnabled, setAdaptive } from './adaptive';
 import { buildReport, reportHtml } from './report';
 import { addBossDamage, bossOfWeek, claimBossReward, readBoss, setClassCode, syncBoss, type BossSummary } from './boss';
 import { bubbleOpen, closeBubble, greetingFor, showBubble } from './bubble';
@@ -61,7 +65,7 @@ const root = $('#game');
 const COPYRIGHT_OWNER = '양연태';
 const COPYRIGHT_YEAR = 2026;
 root.innerHTML = `<div id="world" aria-label="베리숲 3D 마을"></div><div id="hud" hidden>
-  <header class="topbar"><div class="player-card"><span class="level-badge" id="level">1</span><div><strong id="nickname"></strong><div class="xp-track"><div id="xp-fill"></div></div><small id="xp-text"></small></div></div><div class="brand-mini">베리숲 <span>모험학교</span></div><div class="top-actions"><span class="wallet">🍓 <b id="berries">0</b><span>베리</span></span><button id="inventory" class="icon-button" aria-label="내 가방">🎒</button><button id="stage-map" class="icon-button" aria-label="지도">🗺</button><button id="settings" class="icon-button" aria-label="설정과 저장">⚙</button></div></header>
+  <header class="topbar"><div class="player-card"><span class="level-badge" id="level">1</span><div><strong id="nickname"></strong><div class="xp-track"><div id="xp-fill"></div></div><small id="xp-text"></small><span id="save-status" class="save-status" role="status" aria-live="polite">✓ 저장됨</span></div></div><div class="brand-mini">베리숲 <span>모험학교</span></div><div class="top-actions"><span class="wallet">🍓 <b id="berries">0</b><span>베리</span></span><button id="inventory" class="icon-button" aria-label="내 가방">🎒</button><button id="stage-map" class="icon-button" aria-label="지도">🗺</button><button id="settings" class="icon-button" aria-label="설정과 저장">⚙</button></div></header>
   <aside class="quest-card"><button id="quest-toggle" class="quest-toggle" aria-expanded="true" aria-controls="quest-body"><span>🌿 지금 할 일</span><span class="quest-chevron" aria-hidden="true">⌃</span><span class="quest-peek" id="quest-peek"></span></button><div id="quest-body" class="quest-body"><strong id="quest-title">베리숲에 오신 걸 환영해요</strong><div id="quest-list"></div><button id="daily-open" class="text-button codex-open daily-open">📅 오늘의 미션<i class="daily-dot" aria-hidden="true"></i></button><button id="boss-open" class="text-button codex-open">🐉 우리 반 협동 보스</button><button id="codex-open" class="text-button codex-open">📖 모험 도감</button></div></aside>
   <div class="location-pill">❋ 베리숲 마을 <span>평화로운 오후</span></div>
   <div class="equipment-card"><span id="weapon-name"></span><small id="weapon-effect"></small></div>
@@ -292,7 +296,7 @@ $('#quest-toggle').onclick = () => setQuestCollapsed(!questCard.classList.contai
 let state: Save | null = null, saved: Save | null = null, preview: AvatarPreview | null = null, startPreview: AvatarPreview | null = null;
 let startPreviewRequest = 0, startPortraits: string[] | null = null;
 let selected = 0, selectedGrade: SchoolGrade = 3, pendingImport: Save | null = null, toastTimer: ReturnType<typeof setTimeout>, modalOpener: HTMLElement | null = null;
-let battle: { encounter: Encounter; id: string; kind: 'normal' | 'expMonster' | 'expGate' | 'multiplicationGate'; round: number; goalRounds?: number; score: number; result: ReturnType<typeof grantReward> | null; newTitle?: number; story?: boolean; missedCurrent?: boolean; hintUsed?: boolean; hint?: HintProgress; hintQuestion?: unknown; practice?: { operation: Operation; tier: PracticeTier } } | null = null;
+let battle: { encounter: Encounter; id: string; kind: 'normal' | 'expMonster' | 'expGate' | 'multiplicationGate'; round: number; goalRounds?: number; score: number; result: ReturnType<typeof grantReward> | null; newTitle?: number; story?: boolean; missedCurrent?: boolean; hintUsed?: boolean; hint?: HintProgress; hintQuestion?: unknown; adaptiveTier?: PracticeTier; practice?: { operation: Operation; tier: PracticeTier } } | null = null;
 type CurriculumModule = typeof import('./curriculum');
 type CurriculumQuestion = import('./curriculum').CurriculumQuestion;
 let curriculumModulePromise: Promise<CurriculumModule> | null = null;
@@ -343,7 +347,17 @@ const FOREST_INFO: Record<ForestKind, { name: string; icon: string; op: string; 
 };
 const curriculumName = (unit: CurriculumUnitId) => curriculumRegions().find(region => region.id === unit)?.name ?? unit;
 const loadCurriculum = () => curriculumModulePromise ??= import('./curriculum');
-try { const raw = localStorage.getItem(STORAGE); if (raw) saved = validateSave(JSON.parse(raw)); } catch { storageError = true; }
+const saveStore = new SafeSaveStore<Save>(() => localStorage, STORAGE, validateSave);
+saved = saveStore.load(); storageError = saveStore.status === 'error';
+function renderSaveStatus() {
+  const el = document.querySelector<HTMLElement>('#save-status'); if (!el) return;
+  const label = saveStore.status === 'error' ? '⚠ 저장 실패 · 설정에서 파일 보관' : saveStore.status === 'recovered' ? '↩ 정상 기록 복구됨' : '✓ 저장됨';
+  if (el.textContent !== label) el.textContent = label;
+  el.dataset.state = saveStore.status;
+}
+function recordLearningResolution(unit: CurriculumUnitId, missed: boolean, helped: boolean) { try { recordResolution(localStorage, unit, missed, helped); } catch { /* Supplemental record is optional. */ } }
+function currentLearningRecords() { try { return readLearningRecords(localStorage); } catch { return undefined; } }
+renderSaveStatus();
 selectedGrade = saved?.grade ?? 3;
 
 function escape(s: string) { return s.replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch]!); }
@@ -369,7 +383,13 @@ function persist() {
   if (!state) return;
   if (world.inHomestead) { const p = world.player.position; state.homestead.position = savedGardenPosition(p.x, p.z); }
   if (!world.inRoom && !world.inHomestead && !world.inMarket) { const p = world.player.position; state.position = { x: p.x, z: p.z }; }
-  try { localStorage.setItem(STORAGE, JSON.stringify(state)); if (!state.teacherMode) localStorage.setItem(RANKING_STORAGE, JSON.stringify(updateLocalRanks(parseLocalRanks(localStorage.getItem(RANKING_STORAGE)), state.nickname, state.expedition.completed))); saved = structuredClone(state); } catch { if (!storageError) toast('자동 저장 공간이 부족해요. 설정에서 저장 파일을 내려받아 주세요.'); storageError = true; }
+  const written = saveStore.write(state);
+  if (written) {
+    saved = structuredClone(state);
+    if (!state.teacherMode) { try { const raw = JSON.stringify(updateLocalRanks(parseLocalRanks(localStorage.getItem(RANKING_STORAGE)), state.nickname, state.expedition.completed)); if (localStorage.getItem(RANKING_STORAGE) !== raw) localStorage.setItem(RANKING_STORAGE, raw); } catch { /* Rank storage cannot invalidate the game save. */ } }
+  }
+  if (saveStore.status === 'error' && !storageError) toast('자동 저장에 실패했어요. 설정에서 저장 파일을 내려받아 주세요.');
+  storageError = saveStore.status === 'error'; renderSaveStatus();
 }
 function refresh() {
   if (!state) return; syncDiscoveries(state); const s = state, journey = journeyFor(s), forestName = FOREST_INFO[s.forest].name;
@@ -499,11 +519,14 @@ function showStart() {
   if (saved) $('#continue').onclick = () => begin(structuredClone(saved!), false);
   $('#start-import').onclick = () => ($('#import-file') as HTMLInputElement).click();
   $('#start-legal').onclick = openCopyrightNotice; $('#start-feedback').onclick = openFeedback;
+  if (saveStore.status === 'recovered') $('#start-error').textContent = '이전 저장이 손상되어 직전 정상 기록을 찾았어요. 이어하기로 복구할 수 있어요.';
   if (storageError) $('#start-error').textContent = '이전 저장을 읽지 못했어요. 저장 파일을 불러오거나 새 모험을 시작할 수 있어요.';
 }
-async function begin(s: Save, fresh: boolean) {
+async function begin(s: Save, fresh: boolean, imported = false) {
   const launch = document.querySelector<HTMLButtonElement>('#new-game, #continue'); if (launch) { launch.disabled = true; launch.textContent = '숲을 준비하고 있어요…'; }
   try { await loadWorld(); } catch { $('#start-error').textContent = '3D 숲을 열지 못했어요. 최신 Chrome 또는 Edge에서 다시 시도해 주세요.'; if (launch) launch.disabled = false; return; }
+  if (fresh || imported || saveStore.status === 'recovered') { try { resetLearningRecords(localStorage); } catch { /* optional history */ } }
+  adaptiveLevels.clear();
   sessionExpired = false; sessionElapsed = 0; sessionCorrect = 0; sessionWrong = 0;
   closeModal(); startPreviewRequest++; startPreview?.dispose(); startPreview = null; state = s; preview?.dispose(); preview = null; $('#start-screen').hidden = true; $('#hud').hidden = false;
   world.restore(s); world.dressPet(s.pet >= 0 && !!s.petFriends[s.pet]?.accessory); world.setActive(true); audio.music = s.settings.music; audio.effects = s.settings.sound; startAmbienceCycle(); audio.start(); refresh(); persist();
@@ -747,22 +770,26 @@ const PRACTICE_TIER_TEXT: Record<Operation, readonly [string, string, string]> =
 };
 function practiceNote(choice: Save['settings']['practice']) {
   if (choice.operation === 'auto') return '마을 시합장에서도 현재 선택한 숲의 계산과 단계에 맞춰 문제가 나와요.';
-  if (adaptiveEnabled()) return `${OPERATION_INFO[choice.operation].name} · ✨ 자동 조절 — 연속 3번 맞히면 한 단계 어려워지고, 2번 틀리면 한 단계 쉬워져요. ${PRACTICE_TIER_NAMES[choice.tier]}부터 시작해요.`;
+  if (adaptiveEnabled()) return `${OPERATION_INFO[choice.operation].name} · ✨ 자동 조절 — 받아올림·받아내림·나머지·소수 등 개념별로 3번 연속 맞히면 어렵게, 2번 틀리면 쉽게 조절해요. ${PRACTICE_TIER_NAMES[choice.tier]}부터 시작해요.`;
   return `${OPERATION_INFO[choice.operation].name} · ${PRACTICE_TIER_NAMES[choice.tier]} — ${PRACTICE_TIER_TEXT[choice.operation][choice.tier]}`;
 }
 // 자동 조절 중인 계산별 현재 단계(이번 접속 동안만 기억해요). 켜져 있지 않으면 고른 단계를 그대로 써요.
-const adaptiveLevels = new Map<Operation, AdaptiveLevel>();
-function practiceFor(practice?: { operation: Operation; tier: PracticeTier }) {
-  if (!practice || !adaptiveEnabled()) return practice;
-  const level = adaptiveLevels.get(practice.operation) ?? startLevel(practice.tier); adaptiveLevels.set(practice.operation, level);
-  return { operation: practice.operation, tier: level.tier };
+const adaptiveLevels = new ConceptPractice();
+const preparedAdaptive = new WeakSet<Encounter>();
+function practiceFor(practice?: { operation: Operation; tier: PracticeTier }) { return practice; }
+function prepareAdaptiveQuestion() {
+  if (!battle?.practice || !state || !adaptiveEnabled() || preparedAdaptive.has(battle.encounter)) return;
+  const p = battle.practice;
+  const chosen = adaptiveLevels.choose(p.operation, p.tier, tier => practiceQuestion(p.operation, tier, battle!.encounter.question, state!.level, state!.grade));
+  battle.encounter.question = chosen.question;
+  // Reward eligibility must use the difficulty actually served, not the original picker.
+  battle.adaptiveTier = chosen.tier; preparedAdaptive.add(battle.encounter);
 }
 function recordAdaptive(correct: boolean) {
   if (!battle?.practice || !adaptiveEnabled()) return;
-  const before = adaptiveLevels.get(battle.practice.operation) ?? startLevel(battle.practice.tier), after = adaptiveRecord(before, correct);
-  adaptiveLevels.set(battle.practice.operation, after);
-  if (after.tier > before.tier) toast('✨ 잘하고 있어요! 조금 더 어려운 문제로 올라가 볼까요?');
-  else if (after.tier < before.tier) toast('🌿 천천히 해도 괜찮아요. 한 단계 쉬운 문제로 바꿨어요.');
+  const { key, before, after } = adaptiveLevels.record(battle.encounter.question, (battle.adaptiveTier ?? battle.practice.tier), correct);
+  if (after.tier > before.tier) toast(`✨ ${conceptLabel(key)}를 잘하고 있어요! 이 개념을 조금 더 어렵게 풀어 봐요.`);
+  else if (after.tier < before.tier) toast(`🌿 ${conceptLabel(key)}를 한 단계 쉽게 연습해요. 다른 개념의 단계는 그대로예요.`);
 }
 function practicePickerHtml() {
   const choice = state!.settings.practice, ops: [string, string, string][] = [['auto', '🎲', '자동'], ...operationsForGrade(state!.grade).map(op => [op, OPERATION_INFO[op].icon, OPERATION_INFO[op].name] as [string, string, string])];
@@ -1105,6 +1132,7 @@ async function submitCurriculumAnswer(value: string) {
   }
   sessionCorrect++;
   run.answered = true;
+  recordLearningResolution(q.unit, !!run.missedCurrent, run.hintLevel > 0);
   document.querySelectorAll<HTMLButtonElement | HTMLInputElement>('.learning-tool button,.learning-tool input').forEach(b => b.disabled = true);
   if (run.review && run.index === 0) state.adventure.tool = null;
   if (!run.missedCurrent) { state.learning.correct++; recordCurriculumAttempt(state, q.unit, true, run.mission, q.skill); if (!run.review && !run.story && run.hintLevel === 0) addBossDamage(localStorage); }
@@ -1235,7 +1263,8 @@ function startExpeditionGate() {
   battle = { encounter, id: 'expGate', kind: 'expGate', round: 1, score: 0, result: null }; renderBattle();
 }
 function renderBattle() {
-  if (!battle || !state) return; const b = battle, e = b.encounter, m = MONSTERS[e.monster], q = e.question, rewardReason = battleRewardReason(state, q, !!b.hintUsed, b.practice?.operation === q.operation ? b.practice?.tier : undefined), reward = rewardFor(state, e.monster, e.arena, Date.now(), !rewardReason), op = q.operation ?? 'division', info = OPERATION_INFO[op], multiplication = op === 'multiplication', symbol = info.symbol, operationName = info.name;
+  prepareAdaptiveQuestion();
+  if (!battle || !state) return; const b = battle, e = b.encounter, m = MONSTERS[e.monster], q = e.question, rewardReason = battleRewardReason(state, q, !!b.hintUsed, b.practice?.operation === q.operation ? (b.adaptiveTier ?? b.practice?.tier) : undefined), reward = rewardFor(state, e.monster, e.arena, Date.now(), !rewardReason), op = q.operation ?? 'division', info = OPERATION_INFO[op], multiplication = op === 'multiplication', symbol = info.symbol, operationName = info.name;
   const dp = q.places, da = dp ? formatScaled(q.dividend, dp[0]) : String(q.dividend), db = dp ? formatScaled(q.divisor, dp[1]) : String(q.divisor);
   const story = !b.story ? '' : dp ? `<p class="expedition-story">${decimalStory(op, da, db)}</p>` : op === 'addition'
     ? `<p class="expedition-story">사과 바구니에 사과가 ${q.dividend}개, 다른 바구니에 ${q.divisor}개 있어요. 모두 합하면 몇 개일까요?</p>`
@@ -1375,6 +1404,7 @@ function submitAnswer() {
   const outcome = b.encounter.answer(submitted);
   if (outcome === 'ignored') return;
   if (outcome === 'wrong') { if (!b.missedCurrent) { b.missedCurrent = true; recordAdaptive(false); recordWrongAnswer(state, b.encounter.question); recordCurriculumAttempt(state, b.encounter.question.operation ?? 'division', false); sessionWrong++; } combo = 0; audio.play('wrong'); persist(); $('#answer-message').textContent = '괜찮아요! 묶음을 살펴보고 다시 풀어 볼까요?'; input.value = ''; if (remainderInput) remainderInput.value = ''; showHint(false); return; }
+  recordLearningResolution(b.encounter.question.operation ?? 'division', !!b.missedCurrent, !!b.hintUsed);
   sessionCorrect++; combo = b.missedCurrent ? 0 : combo + 1; hitMonster(combo); recordCorrectAnswer(state, b.encounter.monster, !b.missedCurrent && !b.hintUsed); if (!b.missedCurrent) { recordCurriculumAttempt(state, b.encounter.question.operation ?? 'division', true); if (!b.hintUsed) { addBossDamage(localStorage); recordAdaptive(true); } } state.discoveries.outfits.includes(state.outfit) || state.discoveries.outfits.push(state.outfit); if (state.pet >= 0 && !state.discoveries.pets.includes(state.pet)) state.discoveries.pets.push(state.pet);
   if (!b.encounter.arena && !['multiplicationGate', 'expGate'].includes(b.kind) && b.round < (b.goalRounds ?? 1)) {
     audio.play('correct'); world.celebrate(); persist();
@@ -1396,7 +1426,7 @@ function submitAnswer() {
     b.newTitle = completed.newTitle;
     b.result = { berries: completed.berries, xp: 0, score: 0, levels: 0, milestones: [] };
   } else {
-    const rewardEligible = !battleRewardReason(state, b.encounter.question, !!b.hintUsed, b.practice?.operation === b.encounter.question.operation ? b.practice?.tier : undefined);
+    const rewardEligible = !battleRewardReason(state, b.encounter.question, !!b.hintUsed, b.practice?.operation === b.encounter.question.operation ? (b.adaptiveTier ?? b.practice?.tier) : undefined);
     b.result = b.encounter.arena ? grantReward(state, b.encounter.monster, true, Date.now(), rewardEligible) : (finishHunt(state, Number(b.id.slice(7)), rewardEligible) ?? rematchHunt(state, Number(b.id.slice(7)), rewardEligible));
   }
   if (!b.result) return;
@@ -1407,7 +1437,7 @@ function submitAnswer() {
   $('.number-pad').hidden = true; $('.battle-footer').hidden = true; $('#hint').hidden = true;
   $('#battle-result').hidden = false;
   const clearReward = (b.result as ReturnType<typeof grantReward> & { clearReward?: number }).clearReward ?? 0, completionReward = (b.result as ReturnType<typeof grantReward> & { completionReward?: number }).completionReward ?? 0;
-  const rewardReason = battleRewardReason(state, b.encounter.question, !!b.hintUsed, b.practice?.operation === b.encounter.question.operation ? b.practice?.tier : undefined);
+  const rewardReason = battleRewardReason(state, b.encounter.question, !!b.hintUsed, b.practice?.operation === b.encounter.question.operation ? (b.adaptiveTier ?? b.practice?.tier) : undefined);
   const practiceMessage = rewardReason === 'hint' ? '힌트를 보며 푼 시합이라 이번 베리·경험치·점수는 없어요. 통과 기록은 남아요.' : rewardReason === 'easy' ? '지금 학년보다 쉬운 계산은 보상 없는 연습이에요. 더 어려운 문제에 도전해 보세요.' : '';
   if (b.kind === 'multiplicationGate') {
     $('#battle-result').innerHTML = `<div class="reward-banner multiplication-reward"><strong>🌻 곱셈의 숲 완전 정복!</strong><p>「곱셈숲 탐험가」 칭호를 얻었어요.</p><p>나의 방에 놓을 수 있는 <b>구구단 해바라기 화분</b>도 받았어요!</p><p>두 식이 서로 도와주는 곱셈과 나눗셈의 짝을 찾아냈어요.</p></div><button class="primary wide" id="next-battle">마을로 돌아가기 →</button>`;
@@ -1610,7 +1640,7 @@ function openReport() {
   if (!state) return;
   rememberMenu('report', openReport);
   if (!state) return;
-  const html = reportHtml(buildReport(state, curriculumRegions()));
+  const html = reportHtml(buildReport(state, curriculumRegions(), new Date(), currentLearningRecords()));
   openModal(title('학습 리포트', '선생님·보호자와 함께 봐요') + `<div class="report-preview">${html}</div><button class="primary wide" id="report-print">🖨 인쇄하기</button><button class="text-button wide" id="report-back">학습 기록으로 돌아가기</button>`, 'report-modal');
   $('#report-back').onclick = openNotebook;
   $('#report-print').onclick = () => {
@@ -1683,7 +1713,7 @@ function openSettings() {
     ${operationsForGrade(state.grade).includes('multiplication') ? `<label><span>곱셈 문제 범위<small>구구단만을 고르면 어느 단계에서도 한 자리 수끼리 곱해요</small></span><select id="multiplication-range"><option value="stage" ${state.settings.multiplicationRange === 'stage' ? 'selected' : ''}>단계에 맞추기</option><option value="tables" ${state.settings.multiplicationRange === 'tables' ? 'selected' : ''}>구구단만</option></select></label>` : ''}
     <label><span>한 번의 수업 시간<small>시간이 끝나면 진행 중인 문제 뒤에 요약해요</small></span><select id="session-limit">${[0, 10, 15, 20, 30, 45, 60].map(n => `<option value="${n}" ${state!.settings.sessionMinutes === n ? 'selected' : ''}>${n ? `${n}분` : '시간 제한 없음'}</option>`).join('')}</select></label>
     <button id="notebook" class="secondary">📖 학습 요약과 틀린 문제 복습</button></div>` : '';
-  openModal(title('설정', '소리·화면·저장·교사용') + `<div class="settings-list"><label><span>배경음악<small>잔잔한 숲속 멜로디</small></span><input id="music-toggle" type="checkbox" ${state.settings.music ? 'checked' : ''}></label><label><span>효과음<small>베리와 정답 알림</small></span><input id="sound-toggle" type="checkbox" ${state.settings.sound ? 'checked' : ''}></label><label><span>계절과 날씨 이벤트<small>실제 시각과 관계없이 낙엽·눈·보슬비가 숲 안에 나타나요. 화면은 어두워지지 않아요</small></span><input id="ambience-toggle" type="checkbox" ${ambienceEnabled() ? 'checked' : ''}></label><label><span>가벼운 화면<small>그림자를 줄여 휴대폰과 태블릿에서 부드럽게</small></span><input id="quality-toggle" type="checkbox" ${state.settings.lowQuality ? 'checked' : ''}></label>${speechSupported() ? `<label><span>문제 읽어주기<small>새 문제가 나오면 소리 내어 읽어 줘요</small></span><input id="speech-toggle" type="checkbox" ${autoReadEnabled() ? 'checked' : ''}></label>` : ''}</div><div class="teacher-code ${state.teacherMode ? 'enabled' : ''}"><div><strong>🧑‍🏫 교사용 코드</strong><small>${state.teacherMode ? '선생님 모드 활성화됨 · 아래에서 수업 단원과 범위를 정할 수 있어요' : '수업 시연용 코드를 입력하세요'}</small></div><div class="teacher-input"><input id="teacher-code" type="password" autocomplete="off" placeholder="교사용 코드"><button id="teacher-unlock" class="secondary">입력</button></div><p class="error" id="teacher-error" role="alert"></p></div>${teacherOptions}<p class="note">자동 저장은 이 기기와 브라우저에만 남아요. 선생님 설정도 이 기기에서만 적용됩니다. ${storageError ? '<br>자동 저장을 사용할 수 없어요. 꼭 저장 파일을 내려받아 주세요.' : ''}</p><div class="settings-buttons"><button id="export" class="secondary">저장 파일 내려받기</button><button id="import" class="secondary">저장 파일 불러오기</button><button id="help" class="secondary">조작 방법 보기</button><button id="copyright-notice" class="secondary">© 저작권·이용 안내</button><button id="return-title" class="secondary">처음 화면으로</button></div>`);
+  openModal(title('설정', '소리·화면·저장·교사용') + `<div class="settings-list"><label><span>배경음악<small>잔잔한 숲속 멜로디</small></span><input id="music-toggle" type="checkbox" ${state.settings.music ? 'checked' : ''}></label><label><span>효과음<small>베리와 정답 알림</small></span><input id="sound-toggle" type="checkbox" ${state.settings.sound ? 'checked' : ''}></label><label><span>계절과 날씨 이벤트<small>실제 시각과 관계없이 낙엽·눈·보슬비가 숲 안에 나타나요. 화면은 어두워지지 않아요</small></span><input id="ambience-toggle" type="checkbox" ${ambienceEnabled() ? 'checked' : ''}></label><label><span>가벼운 화면<small>그림자를 줄여 휴대폰과 태블릿에서 부드럽게</small></span><input id="quality-toggle" type="checkbox" ${state.settings.lowQuality ? 'checked' : ''}></label>${speechSupported() ? `<label><span>문제 읽어주기<small>새 문제가 나오면 소리 내어 읽어 줘요</small></span><input id="speech-toggle" type="checkbox" ${autoReadEnabled() ? 'checked' : ''}></label>` : ''}</div><div class="teacher-code ${state.teacherMode ? 'enabled' : ''}"><div><strong>🧑‍🏫 교사용 코드</strong><small>${state.teacherMode ? '선생님 모드 활성화됨 · 아래에서 수업 단원과 범위를 정할 수 있어요' : '수업 시연용 코드를 입력하세요'}</small></div><div class="teacher-input"><input id="teacher-code" type="password" autocomplete="off" placeholder="교사용 코드"><button id="teacher-unlock" class="secondary">입력</button></div><p class="error" id="teacher-error" role="alert"></p></div>${teacherOptions}<p class="note">자동 저장은 이 기기와 브라우저에만 남아요. 선생님 설정도 이 기기에서만 적용됩니다. ${storageError ? '<br>자동 저장을 사용할 수 없어요. 꼭 저장 파일을 내려받아 주세요.' : ''}</p><div class="settings-buttons"><button id="export" class="secondary">저장 파일 내려받기</button><button id="restore-checkpoint" class="secondary">직전 정상 기록 복구</button><button id="import" class="secondary">저장 파일 불러오기</button><button id="help" class="secondary">조작 방법 보기</button><button id="copyright-notice" class="secondary">© 저작권·이용 안내</button><button id="return-title" class="secondary">처음 화면으로</button></div>`);
   for (const [id, key] of [['music', 'music'], ['sound', 'sound'], ['quality', 'lowQuality']] as const) $<HTMLInputElement>(`#${id}-toggle`).onchange = e => { state!.settings[key] = (e.target as HTMLInputElement).checked; refresh(); if (key === 'lowQuality') { world.quality(state!.settings.lowQuality); world.setWeather(null); refreshAmbience(); } persist(); };
   $<HTMLInputElement>('#ambience-toggle').onchange = e => { setAmbience((e.target as HTMLInputElement).checked); refreshAmbience(); };
   const speechToggle = document.querySelector<HTMLInputElement>('#speech-toggle'); if (speechToggle) speechToggle.onchange = () => { setAutoRead(speechToggle.checked); if (!speechToggle.checked) stopSpeech(); };
@@ -1694,6 +1724,11 @@ function openSettings() {
   const spiral = document.querySelector<HTMLInputElement>('#spiral-toggle'); if (spiral) spiral.onchange = () => { state!.settings.spiralReview = spiral.checked; persist(); };
   const limit = document.querySelector<HTMLSelectElement>('#session-limit'); if (limit) limit.onchange = () => { state!.settings.sessionMinutes = Number(limit.value); sessionExpired = false; persist(); };
   const notebook = document.querySelector<HTMLButtonElement>('#notebook'); if (notebook) notebook.onclick = openNotebook;
+  $('#restore-checkpoint').onclick = () => {
+    const checkpoint = saveStore.checkpoint();
+    if (!checkpoint) { toast('복구할 정상 기록이 아직 없어요. 저장 파일을 불러올 수 있어요.'); return; }
+    confirmAction('직전 정상 기록으로 돌아갈까요?', `${escape(checkpoint.nickname)} · 레벨 ${checkpoint.level}. 최근 진행 일부가 되돌아갈 수 있어요. 현재 모험을 먼저 내려받을 수 있어요.`, () => begin(checkpoint, false, true), true);
+  };
   $('#export').onclick = exportSave; $('#import').onclick = () => $<HTMLInputElement>('#import-file').click(); $('#help').onclick = openGuide; $('#copyright-notice').onclick = openCopyrightNotice;
   const unlock = () => { try { const msg = applyTeacherCode(state!, $<HTMLInputElement>('#teacher-code').value.trim()); audio.play('level'); syncAvatar(); refresh(); persist(); openSettings(); toast(msg); } catch (e) { $('#teacher-error').textContent = (e as Error).message; } }; $('#teacher-unlock').onclick = unlock; $<HTMLInputElement>('#teacher-code').onkeydown = e => { if (e.key === 'Enter') unlock(); };
   $('#return-title').onclick = () => { persist(); closeModal(); state = null; audio.music = false; showStart(); };
@@ -1740,9 +1775,10 @@ $('#codex-open').onclick = openNotebook;
 $<HTMLInputElement>('#import-file').onchange = async e => {
   const input = e.target as HTMLInputElement, file = input.files?.[0]; input.value = ''; if (!file) return;
   try { if (file.size > 100000) throw new Error('파일이 너무 커요. 베리숲 저장 파일을 골라 주세요.'); pendingImport = validateSave(JSON.parse(await file.text()));
-    confirmAction('저장된 모험을 불러올까요?', `${escape(pendingImport.nickname)} · 레벨 ${pendingImport.level}의 모험으로 바뀌어요. 현재 모험은 덮어쓰게 됩니다.`, () => { const incoming = pendingImport!; pendingImport = null; begin(incoming, false); }, !!(state ?? saved));
+    confirmAction('저장된 모험을 불러올까요?', `${escape(pendingImport.nickname)} · 레벨 ${pendingImport.level}의 모험으로 바뀌어요. 현재 모험은 덮어쓰게 됩니다.`, () => { const incoming = pendingImport!; pendingImport = null; begin(incoming, false, true); }, !!(state ?? saved));
   } catch (error) { toast(error instanceof SyntaxError ? '베리숲 저장 파일이 아니에요. 다른 파일을 골라 주세요.' : (error as Error).message); }
 };
+let saveTick = 0;
 setInterval(() => {
   if (state && world.active && !document.hidden && (!($('#modal') as HTMLDialogElement).open || battle || curriculumRun)) {
     sessionElapsed++; state.learning.elapsedSeconds++;
@@ -1752,15 +1788,15 @@ setInterval(() => {
   if (state) { $('#weapon-effect').textContent = equipmentEffectText(state); $('#daily-open').classList.toggle('ready', dailyReady(state)); }
   const potionStatus = document.querySelector<HTMLElement>('#potion-status');
   if (state && potionStatus) { const effect = potionEffects(state); potionStatus.innerHTML = `지금 효과<br>${effect.berrySeconds ? `🍓 베리 ${effect.berryMultiplier}배 · ${buffTime(effect.berrySeconds)} 남음` : '🍓 베리 효과 없음'}<br>${effect.xpSeconds ? `🧪 경험치 ${effect.xpMultiplier}배 · ${buffTime(effect.xpSeconds)} 남음` : '🧪 경험치 효과 없음'}`; }
-  persist();
+  if (!document.hidden && ++saveTick % 5 === 0) persist();
 }, 1000); window.addEventListener('pagehide', persist); document.addEventListener('visibilitychange', () => { if (document.hidden) persist(); });
 if (import.meta.env.PROD && 'serviceWorker' in navigator && window.isSecureContext) {
   const registerWorker = () => { navigator.serviceWorker.register('./sw.js').catch(() => { /* 오프라인 기능만 빠지고 게임은 그대로 동작해요 */ }); };
   if (document.readyState === 'complete') registerWorker(); else window.addEventListener('load', registerWorker);
 }
 
-if ((import.meta as unknown as { env?: { DEV?: boolean } }).env?.DEV) {
-  const devApi = { openArena, beginHuntBattle, openStageMap, openSettings, openDaily, openInventory, openShop, openPetShop, openGuide, openNotebook, openRoom, openCurriculumUnit, switchStage, refresh, getState: () => state };
+if ((import.meta as unknown as { env?: { DEV?: boolean; VITE_BROWSER_TEST?: string } }).env?.DEV || import.meta.env.VITE_BROWSER_TEST === '1') {
+  const devApi = { openArena, beginHuntBattle, openStageMap, openSettings, openDaily, openInventory, openShop, openPetShop, openGuide, openNotebook, openRoom, openCurriculumUnit, switchStage, refresh, getState: () => state, begin, openReport, persist, openHomestead, enterHomeGarden, closeModal, testBattleQuestion: () => battle ? ({ answer: formatScaled(battle.encounter.question.answer, battle.encounter.question.places?.[2] ?? 0), remainder: battle.encounter.question.remainder }) : null, testHomeEditor: () => { if (state) showHomeEditor(state, homesteadHooks(), 0); } };
   Object.assign(window, { __berry: devApi }); void import('./dev-audit').then(module => module.installAudit(devApi as never));
 }
 

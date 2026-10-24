@@ -7,3 +7,6 @@ presentation-worksheet/
 .dev.vars
 .env.local
 .env.*.local
+
+playwright-report/
+test-results/
