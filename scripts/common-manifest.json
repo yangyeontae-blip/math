@@ -2,7 +2,7 @@
   "version": 1,
   "files": {
     "e2e/core-flows.spec.mjs": "b2f46214b79525a55529cce0124447ebfc24766f392fee3e04f33e6469940a38",
-    "playwright.config.mjs": "468f469e7192a9b537da4c901ae26dc17827f059e79a3cbbc53ef0fc5c1d962b",
+    "playwright.config.mjs": "1696fc78e4a4452278380764425cac580fa9c3537bb465968cd5c8ecdec451e9",
     "scripts/check-common.mjs": "ff34b6050d590181dab5f65f2a5819560204c159c50bb7a610ff045dd60e0311",
     "scripts/sync-common.mjs": "12772636a37791b9148010b9b9734db9722cc464359d49fcd2f4097bdb45ca5f",
     "src/adaptive.ts": "b943e7d99164396cd587e3191cecee50107276a776c78824f28bf3c6f8ae46c2",
@@ -66,5 +66,5 @@
     "src/world-map.css": "714622fea939d0203b5c94f17364cdaf29149ffef7524ff66f9b6b40d7e6f90f",
     "tests/common-improvements.test.ts": "2a9f7b0a9705f693a4845dea66c48d0b30c81d0b09b7e766b303706e8e771eb8"
   },
-  "generation": "731630ddd80b19d150a8013933c7b0ab03cb81ec2012d82bd9e296ed5276c067"
+  "generation": "79c34fa47c059d9b0bd4e39a560e89b34cfec40b3d9f8741a94762cb88530bc6"
 }
