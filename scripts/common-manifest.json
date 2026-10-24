@@ -1,7 +1,7 @@
 {
   "version": 1,
   "files": {
-    "e2e/core-flows.spec.mjs": "fc46271f190e6db98ce46045344aedb5b22d9bef7d7753542f2908296bb051f3",
+    "e2e/core-flows.spec.mjs": "16adec630f4c96b06cfdd06359d34bec0bd497df7c4827d4df6ab798f7152020",
     "playwright.config.mjs": "dadd3e2a8c38f5b5960eed9c0bbdb130dfa22a785919057d30c18fcd463e474b",
     "scripts/check-common.mjs": "ff34b6050d590181dab5f65f2a5819560204c159c50bb7a610ff045dd60e0311",
     "scripts/sync-common.mjs": "12772636a37791b9148010b9b9734db9722cc464359d49fcd2f4097bdb45ca5f",
@@ -66,5 +66,5 @@
     "src/world-map.css": "714622fea939d0203b5c94f17364cdaf29149ffef7524ff66f9b6b40d7e6f90f",
     "tests/common-improvements.test.ts": "2a9f7b0a9705f693a4845dea66c48d0b30c81d0b09b7e766b303706e8e771eb8"
   },
-  "generation": "f9f7652c59a4de15910494bf03b12b98c11f34518ccc21fea452a4cfe21eadd8"
+  "generation": "82cd2908f7ce61f7818c874fc102ced5a3fb96ed69da2cf236ca7f2682de1aba"
 }

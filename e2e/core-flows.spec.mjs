@@ -39,7 +39,9 @@ test('hint, retry, immediate save, report and reload keep the same adventure',as
 test('garden placement survives reloading',async({page})=>{
  await start(page);await page.evaluate(()=>{window.__berry.closeModal();window.__berry.enterHomeGarden();window.__berry.testHomeEditor();});
  await expect(page.locator('[data-home-editor]')).toBeVisible();
- await page.locator('[data-editor-kind="0"]').click();await page.locator('#editor-place').click();
+ await page.locator('[data-editor-kind="0"]').click();
+ if(!(await page.locator('#editor-place').isEnabled()))await page.locator('#editor-craft').click();
+ await page.locator('#editor-place').click();
  const before=await page.evaluate(()=>window.__berry.getState().homestead.objects);expect(before.length).toBeGreaterThan(0);
  await page.reload();await page.locator('#continue').click();await expect(page.locator('#hud')).toBeVisible();
  const after=await page.evaluate(()=>window.__berry.getState().homestead.objects);expect(after).toEqual(before);
