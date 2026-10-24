@@ -763,7 +763,15 @@ export class World {
     stageTrees(0).forEach(({x,z},id)=>{const at=villageTreeSpot(id,x,z);this.addChoppableTree(id,at.x,at.z,1,false,theme.foliage);});
     // Keep the earned story pond and bridge exactly where earlier saves expect them.
     box(this.scene,0xe5d29f,19,.03,8,8.6,.1,11.5);box(this.scene,0x59b9bf,19,.1,8,7.5,.08,10.5);
-    const board=new T.Group();for(const x of [-.65,.65])cylinder(board,0x886445,x,.8,0,.07,.09,1.6,7);box(board,0xc99062,0,1.35,0,1.9,1.15,.16);this.sign(board,'운영자 소식',0,1.35,.1,1.8);this.addEntity('noticeBoard','운영자 소식 · 공지 읽기',VILLAGE_SPOTS.notice.x,VILLAGE_SPOTS.notice.z,board);
+    const board=new T.Group();
+    for(const x of [-.85,.85])cylinder(board,0x886445,x,.9,0,.08,.1,1.8,7);
+    box(board,0xc99062,0,1.5,0,2.5,1.35,.2);
+    box(board,0xfff6df,-.55,1.55,.12,.65,.8,.03);
+    box(board,0xffe1a3,.4,1.5,.12,.65,.65,.03);
+    // Keep the camera-facing title above the wooden board: a plaque embedded in
+    // its face intersects the wood as it turns toward the angled camera.
+    this.sign(board,'운영자 소식',0,2.75,.25,3.8,'#173f30',true);
+    this.addEntity('noticeBoard','운영자 소식 · 공지 읽기',VILLAGE_SPOTS.notice.x,VILLAGE_SPOTS.notice.z,board);
     this.addBerries();
   }
   enterMarket(s:Save) {
