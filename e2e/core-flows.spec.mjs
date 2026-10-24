@@ -20,7 +20,7 @@ async function openArena(page){
 async function answer(page, wrong=false){
  const q=await page.evaluate(()=>window.__berry.testBattleQuestion());
  await page.locator('#answer').click();
- for(const digit of (wrong?'9999':q.answer))await page.locator(`[data-number="${digit}"]`).click();
+ for(const digit of (wrong?(q.answer==='0'?'1':'0'):q.answer))await page.locator(`[data-number="${digit}"]`).click();
  if(await page.locator('#remainder').count()){await page.locator('#remainder').click();for(const digit of String(wrong?9:q.remainder))await page.locator(`[data-number="${digit}"]`).click();}
  await page.locator('[data-number="확인"]').click();
 }
@@ -46,6 +46,8 @@ test('garden placement survives reloading',async({page})=>{
 });
 test('corrupt current save offers the valid checkpoint and storage failure stays visible',async({page})=>{
  await start(page);
+ // Leave the active game first: its pagehide handler correctly flushes live progress.
+ await page.locator('#settings').click();await page.locator('#return-title').click();
  await page.evaluate(key=>{const s=localStorage.getItem(key);localStorage.setItem(key+'-checkpoint',s);localStorage.setItem(key,'{broken');}, SAVE);
  await page.reload();await expect(page.locator('#start-error')).toContainText('정상 기록');await page.locator('#continue').click();await expect(page.locator('#hud')).toBeVisible();
  await page.evaluate(()=>{window.__berry.getState().berries++;Storage.prototype.setItem=function(){throw new DOMException('full','QuotaExceededError');};window.__berry.persist();});
