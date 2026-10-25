@@ -70,8 +70,8 @@
     "src/academy.ts": "c7a095b0cfbe7502c3c77f9d7cbd678494f0c28e73df70545a6230242bfef544",
     "src/academy.css": "b132f46aa2488e36b87784aa90ed7f1945b405439b9523df193f5348c51d7848",
     "tests/academy.test.ts": "9b62a1e1ce449d45bd2fa9200453a6f40c23fdebed0523e400ba731ba6642b4d",
-    "e2e/academy.spec.mjs": "441397432ec36eb50e2d9a8c7a0fefbfbf2a5df5e4ed1c16dff07320d56153ee",
+    "e2e/academy.spec.mjs": "50751fbe0bb09705a40099e2e303b7e9954fb994c6feb31566b5af8882508c0c",
     "tests/common-line-endings.test.mjs": "a26a99e5f73e489d088fd03eebdf2582aa148ff378b8c094e142fb570e2e82bf"
   },
-  "generation": "3530afd0bb6d907d8751f34c7f3ee85a5feca3a73a5f7360241a119f3d90e319"
+  "generation": "9c84a48211807a52082a12ebe99ade1b0e126534faac787b6ca695b2245bd8ac"
 }
