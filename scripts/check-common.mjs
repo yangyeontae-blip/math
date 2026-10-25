@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { resolve } from 'node:path';
 const manifest=JSON.parse(readFileSync('scripts/common-manifest.json','utf8'));
-const digest=data=>createHash('sha256').update(data).digest('hex');
+const digest=data=>createHash('sha256').update(data.toString().replace(/\r\n/g,'\n')).digest('hex');
 const peer=process.argv.find(a=>a.startsWith('--peer='))?.slice(7);
 for(const [file,hash] of Object.entries(manifest.files)){
  if(digest(readFileSync(file))!==hash)throw Error(`Common source changed without synchronization: ${file}`);
