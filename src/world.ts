@@ -1,3 +1,4 @@
+import { HOME_PLAZA_EXIT, homePlazaExitReached } from './home-exit';
 import { SkillRuntime, trialComplete, type SkillId } from './academy';
 import { academyBuilding, academyInterior, skillEffectModel, VILLAGE_ART, PLAZA_BERRY_TREES, berryTreeModel, plazaGarden, fountainModel, cottageModel, marketGarden, homesteadGarden, stoneLane, districtBorder, flowerBed } from './village-art';
 import { shopSignText, shopInteraction } from './shop-signs';
@@ -1633,6 +1634,7 @@ export class World {
       const edge = this.inHomestead || this.inRoom ? .5 : 1.6; p.x = T.MathUtils.clamp(p.x, -bounds.x + edge, bounds.x - edge); p.z = T.MathUtils.clamp(p.z, -bounds.z + edge, bounds.z - edge);
       if ((this.inHomestead && p.z < -12.9) || Math.abs(p.x) > bounds.x - .5 || Math.abs(p.z) > bounds.z - .5 || (!flying && this.water(p.x, p.z) && p.y <= .2)) { p.copy(this.lastSafe); this.vy = 0; this.onRescue(); }
       else if (this.grounded && (flying || !this.water(p.x, p.z)) && Math.abs(p.x) < bounds.x - 2 && Math.abs(p.z) < bounds.z - 2) this.lastSafe.copy(p);
+      if(this.inHomestead&&homePlazaExitReached(p.x,p.z)){this.onInteract('homeExit');return;}
       if (this.petModel) { const walked = Math.hypot(p.x - oldX, p.z - oldZ); if (walked < 4) this.petWalk += walked; if (this.petWalk >= 1) { this.onPetWalk(this.petWalk); this.petWalk = 0; } }
       // 베리는 바닥의 수평 거리로 판정해 발판·점프·탈것 높이에서도 눈에 닿으면 수집됩니다.
       for (const c of this.coins) if (c.mesh.visible && berryWithinReach(p.x, p.z, c.mesh.position.x, c.mesh.position.z)) { c.mesh.visible = false; this.burst(c.mesh.position, 0xff9fb4, 6); this.onCollect(c.id); }

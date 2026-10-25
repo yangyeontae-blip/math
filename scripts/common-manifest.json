@@ -71,7 +71,9 @@
     "src/academy.css": "b132f46aa2488e36b87784aa90ed7f1945b405439b9523df193f5348c51d7848",
     "tests/academy.test.ts": "9b62a1e1ce449d45bd2fa9200453a6f40c23fdebed0523e400ba731ba6642b4d",
     "e2e/academy.spec.mjs": "fbcd5010cb95449774a208d30dc9088bfbcdcabb41a1007b0d9d1837eafc4cb3",
-    "tests/common-line-endings.test.mjs": "a26a99e5f73e489d088fd03eebdf2582aa148ff378b8c094e142fb570e2e82bf"
+    "tests/common-line-endings.test.mjs": "a26a99e5f73e489d088fd03eebdf2582aa148ff378b8c094e142fb570e2e82bf",
+    "src/home-exit.ts": "d4352dbb183157a6a9b13ed6005475b3caf1fa23194965b1cb55f02f79641f39",
+    "tests/home-exit.test.ts": "79abd5b56333d57f7c574fce6bdf8520f9f16f239fe89708c0c2e56f4f0f8e24"
   },
-  "generation": "4ba6a157fcc63da9c2ea5b6d0e4f14b3d97baa7579b10c52deb38f8c06b99f24"
+  "generation": "d5d6c82ebfa661b43f5a8009e032daa2faece5ebfdcbec9cf8837a6635ca0315"
 }
