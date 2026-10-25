@@ -72,8 +72,8 @@
     "tests/academy.test.ts": "9b62a1e1ce449d45bd2fa9200453a6f40c23fdebed0523e400ba731ba6642b4d",
     "e2e/academy.spec.mjs": "fbcd5010cb95449774a208d30dc9088bfbcdcabb41a1007b0d9d1837eafc4cb3",
     "tests/common-line-endings.test.mjs": "a26a99e5f73e489d088fd03eebdf2582aa148ff378b8c094e142fb570e2e82bf",
-    "src/home-exit.ts": "d4352dbb183157a6a9b13ed6005475b3caf1fa23194965b1cb55f02f79641f39",
-    "tests/home-exit.test.ts": "79abd5b56333d57f7c574fce6bdf8520f9f16f239fe89708c0c2e56f4f0f8e24"
+    "src/home-exit.ts": "055824644f9cc9bba4ba9f4166170b636f6e3849a7288e2ace60ebdbb4b9e0ad",
+    "tests/home-exit.test.ts": "55615d3f051ce152b5d39ebd346777997051e6fa71344602999a10962db4efc3"
   },
-  "generation": "d5d6c82ebfa661b43f5a8009e032daa2faece5ebfdcbec9cf8837a6635ca0315"
+  "generation": "43d1ed1ab04c9dda84dcd1055e83743e7e5d2250cd47d0d31aec7e14bf60a484"
 }

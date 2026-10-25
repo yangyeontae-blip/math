@@ -1,8 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { HOME_PLAZA_EXIT, homePlazaExitReached } from '../src/home-exit';
-test('private village exit is at the lower path and only crossing its approach returns to the plaza',()=>{
- assert.equal(HOME_PLAZA_EXIT.x,0);assert.ok(HOME_PLAZA_EXIT.z>=25&&HOME_PLAZA_EXIT.z<=27.5);
- assert.equal(homePlazaExitReached(0,24.7),false);assert.equal(homePlazaExitReached(0,24.8),true);assert.equal(homePlazaExitReached(1.4,26),true);assert.equal(homePlazaExitReached(1.41,26),false);
- assert.equal(homePlazaExitReached(0,12),false);assert.equal(homePlazaExitReached(-8,20),false);assert.equal(homePlazaExitReached(NaN,26),false);assert.equal(homePlazaExitReached(0,Infinity),false);
+import { HOME_PLAZA_EXIT, homeExitInReach } from '../src/home-exit';
+test('lower garden gateway offers an interaction only within reach, including when standing inside it',()=>{
+ assert.equal(HOME_PLAZA_EXIT.x,0);assert.equal(HOME_PLAZA_EXIT.z,26);assert.equal(homeExitInReach(0,26),true);assert.equal(homeExitInReach(0,23.21),true);assert.equal(homeExitInReach(0,23.19),false);assert.equal(homeExitInReach(2.79,26),true);assert.equal(homeExitInReach(2.81,26),false);assert.equal(homeExitInReach(2.5,24),false);assert.equal(homeExitInReach(0,12),false);assert.equal(homeExitInReach(NaN,26),false);assert.equal(homeExitInReach(0,Infinity),false);
 });
