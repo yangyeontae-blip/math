@@ -1,3 +1,4 @@
+import { fountainModel, gardenBench } from './village-art';
 import * as T from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { HOME_ITEMS, type HomeObject } from './homestead';
@@ -7,9 +8,12 @@ const box=(g:T.Group,c:number,x:number,y:number,z:number,w:number,h:number,d:num
 const ball=(g:T.Group,c:number,x:number,y:number,z:number,r:number)=>piece(g,c,new T.SphereGeometry(r,8,6),x,y,z);
 const post=(g:T.Group,c:number,x:number,y:number,z:number,r:number,h:number)=>piece(g,c,new T.CylinderGeometry(r,r,h,8),x,y,z);
 export function homeItemModel(kind:number){
+ if(kind===12)return fountainModel();
+ if(kind===18){const bench=new T.Group();gardenBench(bench,0,0);return bench;}
  const g=new T.Group(),wood=0xa7815d,green=0x91ba75,cream=0xf2dfb0,pink=0xefacc3,blue=0x89ccdb;
  const flower=(x:number,z:number,c=pink)=>{post(g,green,x,.4,z,.035,.7);ball(g,c,x,.8,z,.22);ball(g,0xffe28f,x,.85,z+.08,.1);};
- if(kind<=2){box(g,[0xd4b68b,0xc6c7ad,wood][kind],0,.06,0,kind===2?3.8:1.85,.12,1.85);if(kind===2)for(let i=0;i<5;i++)box(g,cream,-1.5+i*.75,.14,0,.035,.02,1.8);}
+ if(kind<=1){const color=kind===0?0xcbaa81:0xd5d0bb;for(let row=0;row<2;row++)for(let col=0;col<2;col++)box(g,color,-.46+col*.92,.065,-.46+row*.92,.86,.13,.86);}
+ else if(kind===2){box(g,[0xd4b68b,0xc6c7ad,wood][kind],0,.06,0,kind===2?3.8:1.85,.12,1.85);if(kind===2)for(let i=0;i<5;i++)box(g,cream,-1.5+i*.75,.14,0,.035,.02,1.8);}
  else if(kind<=5){if(kind===5){for(const x of [-.7,.7])post(g,wood,x,.8,0,.12,1.6);box(g,cream,0,1.6,0,1.8,.2,.2);}else{for(const x of [-1.5,0,1.5])post(g,wood,x,.7,0,.1,1.4);for(const y of [.45,1])box(g,wood,0,y,0,3.8,.16,.16);if(kind===3)for(const x of [-1.1,0,1.1])ball(g,pink,x,1.2,0,.23);}}
  else if(kind<=9){box(g,0x9e7658,0,.04,0,1.75,.08,1.75);for(const [x,z] of [[-.5,-.5],[.5,-.5],[-.5,.5],[.5,.5]]){if(kind===9){post(g,cream,x,.28,z,.08,.55);ball(g,0xe6a19d,x,.55,z,.3);}else flower(x,z,[0xe99cab,0xf8d378,0xb5a1d3][kind-6]);}}
  else if(kind<=11){post(g,wood,0,1,0,.25,2);ball(g,green,0,2.2,0,1);ball(g,0xa6c789,-.5,1.7,0,.65);if(kind===11)for(const x of [-.6,.2,.6])ball(g,0xe99782,x,2.4,.6,.2);}

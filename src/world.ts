@@ -1,3 +1,4 @@
+import { VILLAGE_ART, PLAZA_BERRY_TREES, berryTreeModel, plazaGarden, fountainModel, cottageModel, marketGarden, homesteadGarden, stoneLane, districtBorder, flowerBed } from './village-art';
 import { shopSignText, shopInteraction } from './shop-signs';
 import { showEntityLabel } from './navigation';
 import { MARKET_SCALE, MARKET_RADIUS, MARKET_DOOR_OFFSET, MARKET_SHOPS, VILLAGE_SPOTS, villageWelcomeClear, villageTreeSpot, villageMonsterSpot } from './village-layout';
@@ -699,7 +700,7 @@ export class World {
   constructor(private container: HTMLElement) {
     this.scene.background = new T.Color(0xd0eade); this.scene.fog = new T.Fog(0xd0eade, 58, 112);
     const touchDevice = matchMedia('(pointer: coarse)').matches;
-    this.renderer = new T.WebGLRenderer({ antialias: !touchDevice, alpha: false, powerPreference: 'high-performance' }); this.renderer.setPixelRatio(Math.min(devicePixelRatio, touchDevice ? 1 : 1.25)); this.renderer.shadowMap.enabled = true; this.renderer.shadowMap.type = touchDevice ? T.PCFShadowMap : T.PCFSoftShadowMap; /* 태블릿·휴대폰은 가벼운 그림자 */ this.renderer.outputColorSpace = T.SRGBColorSpace; this.renderer.toneMapping = T.ACESFilmicToneMapping; this.renderer.toneMappingExposure = 1.35; container.append(this.renderer.domElement);
+    this.renderer = new T.WebGLRenderer({ antialias: !touchDevice, alpha: false, powerPreference: 'high-performance' }); this.renderer.setPixelRatio(Math.min(devicePixelRatio, touchDevice ? 1 : 1.25)); this.renderer.shadowMap.enabled = true; this.renderer.shadowMap.type = touchDevice ? T.PCFShadowMap : T.PCFSoftShadowMap; /* 태블릿·휴대폰은 가벼운 그림자 */ this.renderer.outputColorSpace = T.SRGBColorSpace; this.renderer.toneMapping = T.ACESFilmicToneMapping; this.renderer.toneMappingExposure = 1.08; container.append(this.renderer.domElement);
     this.camera = new T.OrthographicCamera(-18, 18, 14, -14, .1, 140);
     this.scene.add(new T.HemisphereLight(0xfff9e6, 0x74905a, 2.35)); this.sun = new T.DirectionalLight(0xffedcf, 2.8); this.sun.position.set(-15, 30, 15); this.sun.castShadow = true; this.sun.shadow.mapSize.set(1024, 1024); Object.assign(this.sun.shadow.camera, { left: -34, right: 34, top: 32, bottom: -30, far: 85 }); this.sun.shadow.normalBias = .06; this.scene.add(this.sun);
     const fill = new T.DirectionalLight(0xd8f3ff, .7); fill.position.set(18, 12, -14); this.scene.add(fill);
@@ -746,19 +747,18 @@ export class World {
     this.scene.background=new T.Color(theme.sky);this.scene.fog=new T.Fog(theme.sky,58,112);
     box(this.scene,theme.ground,0,-.55,0,51,1.1,41);box(this.scene,theme.groundDeep,0,-1.3,0,50,.5,40);
     box(this.scene,theme.path,0,.02,5,4,.06,29);box(this.scene,theme.path,-12,.025,2,25,.07,4);box(this.scene,theme.path,12,.025,-2,25,.07,4);
-    cylinder(this.scene,theme.square,0,.06,2,6.2,6.2,.12,48);
-    for(let i=0;i<20;i++){const a=i*Math.PI/10;cylinder(this.scene,0xd4bd92,Math.cos(a)*5.9,.14,2+Math.sin(a)*5.9,.19,.19,.06,8);}
-    const fountain=new T.Group();cylinder(fountain,0xd2cfaf,0,.28,0,1.5,1.6,.55,24);cylinder(fountain,0x8bd0cc,0,.58,0,1.25,1.25,.05,24);cylinder(fountain,0xe2d7b5,0,.9,0,.2,.3,.65,12);ball(fountain,0xc3e6dd,0,1.4,0,.25);fountain.position.set(-3,0,0);this.scene.add(fountain);this.colliders.push({x:-3,z:0,r:1.6});
+    stoneLane(this.scene,0,6,4.4,27);stoneLane(this.scene,-12,2,24,4);stoneLane(this.scene,12,-2,24,4);
+    this.scene.add(plazaGarden());districtBorder(this.scene,49,39);
+    const fountain=fountainModel();fountain.position.set(-3,0,0);this.scene.add(fountain);this.colliders.push({x:-3,z:0,r:1.95});
+    for(const at of PLAZA_BERRY_TREES){const tree=berryTreeModel();tree.position.set(at.x,0,at.z);tree.scale.setScalar(at.scale);this.scene.add(tree);this.colliders.push({x:at.x,z:at.z,r:.48});}
     this.addEntity('guide','연태쌤 · 마을 안내',0,3,makeCharacter(0,6,0));
     const arena=VILLAGE_SPOTS.arena;
     cylinder(this.scene,0xf1deb4,arena.x,.08,arena.z,2.4,2.4,.1,32);
     this.addEntity('arena','신비 · 수학 시합',arena.x,arena.z,makeCharacter(3,8,4));
     this.sign(this.scene,'신비의 시합장',arena.x,5.2,arena.z,5.4,'#675282');
-    this.house(0,-12,0x759f90,0xffe9c0);this.sign(this.scene,'베리숲 모험학교',0,4.9,-10,6.6);
+    const school=cottageModel(VILLAGE_ART.mint,0xf4e3bf,true);school.position.set(0,0,-12);this.scene.add(school);this.colliders.push({x:0,z:-12,r:4});this.sign(this.scene,'베리숲 모험학교',0,6.2,-9.4,5.4,'#173f30',true);
     const exit=(id:string,name:string,x:number,z:number,color:number)=>{const g=this.gate(color);this.addEntity(id,name,x,z,g);this.sign(g,name.split(' · ')[0],0,4.8,0,6);};
     exit('shopStreet','상점거리 · 왼쪽 길',-20,2,0xd69aa9);exit('journey','숲으로 모험 · 아래쪽 길',0,16,0x83b894);
-    for(const [x,z]of [[-7,-4],[7,-4],[-7,7],[7,7]]){cylinder(this.scene,0x84664a,x,.9,z,.08,.1,1.8,8);ball(this.scene,0xffe5a1,x,1.95,z,.24);}
-    for(const x of [-7,7]){box(this.scene,0xb38a61,x,.5,-1,2,.15,.65);box(this.scene,0xb38a61,x,.95,-1.25,2,.5,.1);for(const side of [-1,1])box(this.scene,0x876447,x+side*.7,.25,-1,.1,.5,.5);}
     for(const [x,z]of [[-17,-13],[-12,-15],[11,-15],[17,-13],[-19,14],[18,16],[-23,-5],[23,-6]])this.tree(x,z,1.05,false,theme.foliage);
     stageTrees(0).forEach(({x,z},id)=>{const at=villageTreeSpot(id,x,z);this.addChoppableTree(id,at.x,at.z,1,false,theme.foliage);});
     // Keep the earned story pond and bridge exactly where earlier saves expect them.
@@ -777,7 +777,7 @@ export class World {
   enterMarket(s:Save) {
     this.clearInput();this.clearMap();this.inMarket=true;this.inRoom=false;s.room.inside=false;s.homestead.inside=false;this.stage=0;this.forest=s.forest;this.platforms=[];
     this.scene.background=new T.Color(0xd4e9df);this.scene.fog=new T.Fog(0xd4e9df,58,112);
-    box(this.scene,0xb5cd95,0,-.55,0,51,1.1,41);box(this.scene,0x91ae79,0,-1.3,0,50,.5,40);this.buildMarket();
+    box(this.scene,VILLAGE_ART.grass,0,-.55,0,51,1.1,41);box(this.scene,VILLAGE_ART.earth,0,-1.3,0,50,.5,40);this.buildMarket();this.scene.add(marketGarden());
     this.addEntity('weapon', shopInteraction(0) + ' · 강지후', MARKET_SHOPS[0].x, MARKET_SHOPS[0].z+MARKET_DOOR_OFFSET, makeCharacter(1, 6, 1));
     this.addEntity('outfit', shopInteraction(1) + ' · 오지후', MARKET_SHOPS[1].x, MARKET_SHOPS[1].z+MARKET_DOOR_OFFSET, makeCharacter(2, 4, 2));
     this.addEntity('ride', shopInteraction(3) + ' · 나현이', MARKET_SHOPS[3].x, MARKET_SHOPS[3].z+MARKET_DOOR_OFFSET, makeCharacter(0, 10, 6));
@@ -786,7 +786,7 @@ export class World {
     this.addEntity('beauty', shopInteraction(4) + ' · 가영이', MARKET_SHOPS[4].x, MARKET_SHOPS[4].z+MARKET_DOOR_OFFSET, makeCharacter(2, 15, 2));
 
     const exit=this.gate(0x91b9a1);this.addEntity('marketExit','중앙 광장 · 돌아가기',0,11,exit);this.sign(exit,'중앙 광장',0,4.6,0,4.5);
-    box(this.scene,0xf0e5ce,0,.08,8,4,.08,18);
+    stoneLane(this.scene,0,8,4,18);
     for(const x of [-23,23])for(const z of [-16,-5,7]){this.tree(x,z,.75,false,0x7fad78);cylinder(this.scene,0x8b6e52,x*.9,.9,z+3,.07,.09,1.8,8);ball(this.scene,0xffe9af,x*.9,1.9,z+3,.2);}
     this.mergeStaticScenery();this.player.position.set(0,0,5.5);this.placePetNearPlayer();this.lastSafe.copy(this.player.position);this.follow.copy(this.player.position);this.onStageLoaded(0);
   }
@@ -799,6 +799,10 @@ export class World {
     for(const {x,z,kind}of MARKET_SHOPS){
       const g=new T.Group();g.position.set(x,0,z);g.scale.setScalar(MARKET_SCALE);this.scene.add(g);
       const accent=[0x638e8b,0xda9da7,0x8cae77,0xc6a272,0xb29ac9,0x729a91][kind];
+      // Shared stone plinth, window garden and small paved doorstep unify the district.
+      box(g,VILLAGE_ART.edge,0,.1,0,4.6,.2,4.2);
+      flowerBed(g,-2.3,-1.4,1.4,Math.PI/2);
+      flowerBed(g,2.3,-1.4,1.4,Math.PI/2);
       const block=(color:number,px:number,y:number,pz:number,w:number,h:number,d:number)=>box(g,color,px,y,pz,w,h,d);
       const roof=(color:number,y:number)=>{for(const side of [-1,1]){const half=block(color,0,y,side*.95,4.7,.22,2.2);half.rotation.x=side*.35;}block(wood,0,y+.38,0,4.8,.14,.15);};
       const door=()=>{block(wood,0,1.02,1.77,.9,1.95,.13);ball(g,0xf2ce78,.28,1,1.88,.07);block(0xd9c7a1,0,.16,2.1,1.6,.24,.7);};
@@ -1014,7 +1018,7 @@ export class World {
   enterHomestead(s:Save,preserve=false){
     const pos=preserve?s.homestead.position:{x:0,z:12};this.clearInput();this.clearMap();this.inRoom=false;this.inHomestead=true;s.room.inside=false;s.homestead.inside=true;this.stage=0;this.platforms=[];this.homeSave=s;
     this.scene.background=new T.Color(0xd5eddb);this.scene.fog=new T.Fog(0xd5eddb,40,85);
-    box(this.scene,0xa9c78c,0,-.5,8,27,1,43);box(this.scene,0xe5d0a5,0,.02,20,3.8,.04,16);box(this.scene,0xe5d0a5,0,.02,12,4,.04,2);box(this.scene,0x8daf76,0,.2,-12.7,26,.4,.5);for(const side of [-1,1]){box(this.scene,0x8daf76,side*12.7,.2,0,.5,.4,26);box(this.scene,0x8daf76,side*8,.2,12.7,10,.4,.5);}
+    box(this.scene,VILLAGE_ART.grass,0,-.5,8,29,1,43);this.scene.add(homesteadGarden());box(this.scene,0xe5d0a5,0,.02,20,3.8,.04,16);box(this.scene,0xe5d0a5,0,.02,12,4,.04,2);box(this.scene,0x8daf76,0,.2,-12.7,26,.4,.5);for(const side of [-1,1]){box(this.scene,0x8daf76,side*12.7,.2,0,.5,.4,26);box(this.scene,0x8daf76,side*8,.2,12.7,10,.4,.5);}
 
     const built=homeScenery(s.homestead.objects);this.homeRoot=built.root;this.scene.add(built.root);this.craftAnimated.push(...built.rotors);
     for(const o of s.homestead.objects){const item=HOME_ITEMS[o.kind],cells=objectCells(o),w=o.rotation%2?item.h:item.w,h=o.rotation%2?item.w:item.h,x=(o.column+(w-1)/2-5.5)*2,z=(o.row+(h-1)/2-5.5)*2;
@@ -1031,7 +1035,7 @@ export class World {
     if(!this.homeTargets.length)this.homeTargets=[{uid:0,kind:-1,cell:125},{uid:0,kind:-1,cell:126}];
     const visitorCells=[...new Set([137,138,...homeReachable(s.homestead.objects)])];
     for(let i=0;i<Math.min(3,visitorCells.length);i++){const model=i===0?makePet(16):makeCharacter(i, i===1?4:7,0),cell=visitorCells[i];this.addEntity(`homeVisitor${i}`,`${HOME_VISITORS[i]} · 정원 구경`,(cell%12-5.5)*2,(Math.floor(cell/12)-5.5)*2,model);const entity=this.entities[this.entities.length-1];entity.mesh.visible=i<(s.settings.lowQuality?2:3);this.homeVisitors.push({entity,cell,path:[],pause:i+1,turn:i,kind:-1});}
-    this.player.position.set(pos.x,0,pos.z);this.placePetNearPlayer();this.lastSafe.set(0,0,12);this.follow.copy(this.player.position);this.quality(s.settings.lowQuality);
+    this.mergeStaticScenery();this.player.position.set(pos.x,0,pos.z);this.placePetNearPlayer();this.lastSafe.set(0,0,12);this.follow.copy(this.player.position);this.quality(s.settings.lowQuality);
   }
   private animateHomeVisitors(dt:number){
     const s=this.homeSave;if(!s)return;const targets=this.homeTargets;
@@ -1306,7 +1310,7 @@ export class World {
     this.scene.background = new T.Color(0xf1dfc5); this.scene.fog = new T.Fog(0xf1dfc5, 35, 65);
     box(this.scene, 0xa9845e, 0, -.58, 0, 15, 1.15, 12);
     box(this.scene, 0xd8bd94, 0, .02, 0, 14.4, .08, 11.4);
-    box(this.scene, 0xf2d4c4, 0, 2.3, -5.8, 15, 4.6, .4);
+    box(this.scene, 0xe4ecda, 0, 2.3, -5.8, 15, 4.6, .4);
     // Low front and side walls let the camera see furniture inside the room.
     box(this.scene, 0xe7c6b4, -7.3, .58, 0, .4, 1.16, 12);
     box(this.scene, 0xe7c6b4, 7.3, .58, 0, .4, 1.16, 12);
@@ -1315,7 +1319,15 @@ export class World {
     box(this.scene, 0x9e795e, 0, 4.55, -5.8, 15, .18, .48);
     box(this.scene, 0x9e795e, -7.3, 1.19, 0, .48, .12, 12);
     box(this.scene, 0x9e795e, 7.3, 1.19, 0, .48, .12, 12);
-    box(this.scene, 0xc48676, 0, .09, 0, 8.4, .1, 5.6);
+    // Warm oak boards, mint wainscoting and a woven cream-bordered rug.
+    for(let i=0;i<18;i++)box(this.scene,i%3===0?0xcbb58f:0xdfc7a1,-6.8+i*.8,.075,0,.76,.025,11.35);
+    box(this.scene,0x7eab9a,0,.6,-5.54,14.4,1.2,.1);
+    for(let i=0;i<15;i++)box(this.scene,0xb5cdb7,-6.9+i*.98,.65,-5.46,.065,1.1,.045);
+    box(this.scene,0xffedcc,0,1.22,-5.4,14.5,.12,.15);
+    box(this.scene,0xe8d9b8,0,.11,0,8.5,.08,5.7);
+    box(this.scene,0x9ebdad,0,.16,0,8.1,.04,5.3);
+    for(const side of [-1,1])box(this.scene,0xdce6cf,side*3.7,.19,0,.12,.02,4.9);
+    for(const x of [-2.1,2.1])box(this.scene,0xfff1d6,x,2.7,-5.35,.65,2.15,.12);
     box(this.scene, 0x9bd6df, 0, 2.7, -5.54, 3.3, 1.8, .08);
     box(this.scene, 0xf6e4a8, 0, 2.7, -5.46, .12, 1.9, .08);
     box(this.scene, 0xf6e4a8, 0, 2.7, -5.44, 3.5, .12, .08);
@@ -1360,24 +1372,8 @@ export class World {
     if (render) this.renderOnce();
   }
   private house(x: number, z: number, roof: number, wall: number) {
-    const g = new T.Group(); g.position.set(x, 0, z); this.scene.add(g);
-    cylinder(g, 0xcebe96, 0, .22, 0, 2.65, 2.85, .44, 8); cylinder(g, wall, 0, 1.65, 0, 2.35, 2.45, 2.9, 12);
-    const r = mesh(new T.ConeGeometry(3.25, 2.2, 8), roof, 0, 4.15, 0, g); r.rotation.y = Math.PI / 8;
-    const roofCap = new T.MeshStandardMaterial({ color: roof, roughness: .92, flatShading: true });
-    const eave = new T.Mesh(new T.CylinderGeometry(3.12, 3.12, .18, 8), roofCap); eave.position.y = 3.13; eave.rotation.y = Math.PI / 8; g.add(eave);
-    cylinder(g, roof, 0, 3.13, 0, 3.1, 3.15, .22, 8); box(g, 0x836343, 0, 1.13, 2.23, 1.05, 1.95, .15); ball(g, 0xfbd180, .3, 1.12, 2.36, .07);
-    for (const sign of [-1, 1]) {
-      box(g, 0xb19a6a, sign * 1.4, 1.9, 1.94, .92, .96, .12); box(g, 0xffdc94, sign * 1.4, 1.9, 2.01, .68, .7, .08); box(g, wall, sign * 1.4, 1.9, 2.07, .07, .7, .08);
-      box(g, 0x9a704d, sign * 1.4, 1.37, 2.08, 1.02, .12, .28); for (let i = 0; i < 3; i++) ball(g, [0xf49bb2, 0xf5d36f, 0xb8d897][i], sign * 1.4 + (i - 1) * .27, 1.52, 2.18, .12, .14, .11);
-    }
-    // A little scalloped awning, timber framing and a hanging welcome sign make each shop feel handcrafted.
-    box(g, 0xf7e8cc, 0, 2.12, 2.1, 3.05, .2, .52);
-    for (let i = 0; i < 7; i++) { const stripe = box(g, i % 2 ? 0xe98f98 : 0xf8d98f, -1.28 + i * .43, 2.13, 2.37, .42, .23, .08); stripe.rotation.x = -.08; }
-    for (const side of [-1, 1]) { box(g, 0xf5e6c4, side * 2.15, 1.5, 1.76, .12, 2.65, .12); ball(g, 0xffe9a5, side * 2.15, 2.84, 1.76, .1); }
-    box(g, 0xf7e5b8, 0, 2.75, 2.52, 1.08, .35, .12); box(g, 0x9a704d, 0, 2.54, 2.52, .08, .28, .08);
-    cylinder(g, 0xa47753, 1.3, 4.7, -.8, .3, .35, 1.5, 8); ball(g, 0xf1f1dc, 1.3, 5.8, -.8, .4, .24, .34);
-    for (const side of [-1, 1]) { ball(g, 0x8eb878, side * 2.55, .38, 1.7, .44, .26, .35); ball(g, side < 0 ? 0xf6c3cf : 0xf8e2a2, side * 2.55, .57, 1.7, .17, .13, .17); }
-    this.colliders.push({ x, z, r: 2.7 });
+    const g=cottageModel(roof,wall);g.position.set(x,0,z);this.scene.add(g);
+    this.colliders.push({x,z,r:2.7});
   }
   private tree(x: number, z: number, scale: number, pink: boolean, foliage?: number) {
     const g = new T.Group(); g.position.set(x, 0, z); g.scale.setScalar(scale); this.scene.add(g); cylinder(g, 0x94724e, 0, 1, 0, .19, .32, 2, 8);
