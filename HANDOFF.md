@@ -54,3 +54,9 @@
 ③ 남은 순서: 두 저장소 커밋·푸시 → Pages/앱 CI 확인 → Sites 최신 소스에 디자인 반영·검사·배포 → 배포 상태 확인.
 ④ 확인/주의: 로컬 새 3학년 기록으로 PC 광장·상점·개인 정원 이동, 재시작 저장 복원, 390px 정원 화면을 확인. 시각 자료는 시뮬레이션이 아닌 실제 로컬 브라우저 캡처. 1/6학년과 실기기·전체 숲의 장시간 플레이는 미검증. 저장키·v21 구조·교사/복구 코드·보상·보호 테스트 수정 없음. 최신 학습/저장 복구 변경 유지. 고정 조경은 새 보상/저장필드/외부통신 없음.
 ⑤ 최종 검사: app tsc PASS / 전체 266 PASS / build PASS / Android+iOS 웹 자산 sync PASS. math tsc PASS / 전체 288 PASS / build+Worker 문법 PASS. 신규 3개 검사: 입구·선생님 접근로 확보, 유한 3D 좌표/외부텍스처 없음, 개인정원 배치영역 보존. 청크 크기 경고는 기존대로 남음.
+
+## 최종 배포 확인 — 2026-10-25
+- 구현/배포 완료. 앱 05dd025, 무료판 d852476 커밋·푸시. Pages 실행 40179838146: build 및 deploy 성공(자동 PC/모바일 브라우저 검사 포함). Sites 버전 66, 소스 d3361df2e809639068b7be39a6c5b08d0624d08f, 배포 appgdep_6addc93493c48191b78f25b1ac35769e 성공, 기존 서버 비밀값 revision 2 유지.
+- 로컬 실제 UI: 3학년 새 모험 → 광장 → 상점 → 개인정원 → 집 안 → E 출구로 정원 복귀, 이어하기 복원 확인. 모바일 390×844 정원 HUD/조이스틱/대화·점프 확인. 캡처: visualization workspace village-redesign-plaza.jpg / home.jpg / room.jpg / mobile.jpg.
+- 마지막 검사: 앱 tsc/266 tests/build/Android·iOS sync PASS. 무료판 및 Sites tsc/288 tests/build/Worker syntax PASS. 새 검사 3개, 보호 테스트 수정 없음. 실제 iOS·Android 및 전 학년 장시간 플레이 미검증. 필수 구현 잔여 없음.
+
