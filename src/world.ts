@@ -1,4 +1,5 @@
-import { VILLAGE_ART, PLAZA_BERRY_TREES, berryTreeModel, plazaGarden, fountainModel, cottageModel, marketGarden, homesteadGarden, stoneLane, districtBorder, flowerBed } from './village-art';
+import { SkillRuntime, trialComplete, type SkillId } from './academy';
+import { academyBuilding, academyInterior, skillEffectModel, VILLAGE_ART, PLAZA_BERRY_TREES, berryTreeModel, plazaGarden, fountainModel, cottageModel, marketGarden, homesteadGarden, stoneLane, districtBorder, flowerBed } from './village-art';
 import { shopSignText, shopInteraction } from './shop-signs';
 import { showEntityLabel } from './navigation';
 import { MARKET_SCALE, MARKET_RADIUS, MARKET_DOOR_OFFSET, MARKET_SHOPS, VILLAGE_SPOTS, villageWelcomeClear, villageTreeSpot, villageMonsterSpot } from './village-layout';
@@ -21,7 +22,7 @@ import { VILLAGE_THEMES, villageThemeId, type VillageTheme } from './villages';
 import type { AmbienceScene } from './ambience';
 
 type Entity = { id: string; name: string; x: number; z: number; mesh: T.Group; label: HTMLDivElement };
-export type GuideKind = 'guide' | 'marketExit' | 'noticeBoard' | 'homesteadGate' | 'shopStreet' | 'homeEditor' | 'homeExit' | 'homeVisitor' | 'discovery' | 'forestWork' | 'trailSeed' | 'trailLamp' | 'berry' | 'monster' | 'shop' | 'journey' | 'next' | 'star' | 'expMonster' | 'roomExit' | 'storyClue' | 'storyPuzzle' | 'storyMailbox' | 'village' | 'villageProject0' | 'villageProject1' | 'villageProject2';
+export type GuideKind = 'academyGate' | 'academyBook' | 'guide' | 'marketExit' | 'noticeBoard' | 'homesteadGate' | 'shopStreet' | 'homeEditor' | 'homeExit' | 'homeVisitor' | 'discovery' | 'forestWork' | 'trailSeed' | 'trailLamp' | 'berry' | 'monster' | 'shop' | 'journey' | 'next' | 'star' | 'expMonster' | 'roomExit' | 'storyClue' | 'storyPuzzle' | 'storyMailbox' | 'village' | 'villageProject0' | 'villageProject1' | 'villageProject2';
 const mat = (color: number, roughness = .86) => new T.MeshStandardMaterial({ color, roughness });
 const materials = new Map<number, T.MeshStandardMaterial>();
 const sharedGeometries = new Set<T.BufferGeometry>();
@@ -694,6 +695,7 @@ export class World {
   private tempProjection = new T.Vector3(); private tempTarget = new T.Vector3(); private tempWorld = new T.Vector3(); private cameraTarget = new T.Vector3();
   inMarket=false; private signResources:{texture:T.Texture;material:T.Material;geometry:T.BufferGeometry}[]=[];
   private signFontReady: Promise<unknown> | null = null;
+  inAcademy=false; readonly skillRuntime=new SkillRuntime(); private skillModels=new Map<SkillId,T.Group>(); private skillGuide=false; private trial:{id:SkillId;started:number;distance:number;last:T.Vector3}|null=null; onAcademyTrial=(_id:SkillId)=>{};
   inHomestead=false; private homeRoot:T.Group|null=null; private homeSave:Save|null=null; private homeTargets:ReturnType<typeof visitorTargets>=[]; private discoveryRoot:T.Group|null=null;
   private homeVisitors:{entity:Entity;cell:number;path:number[];pause:number;turn:number;kind:number}[]=[];
   active = false; paused = true; inRoom = false; onCollect = (_id: number) => {}; onStar = (_id: number) => {}; onInteract = (_id: string) => {}; onAttack = (_id: string | null) => {}; onNear = (_name: string | null, _id: string | null) => {}; onJump = () => {}; onRescue = () => {}; onStageLoaded = (_stage: number) => {};
@@ -756,7 +758,7 @@ export class World {
     cylinder(this.scene,0xf1deb4,arena.x,.08,arena.z,2.4,2.4,.1,32);
     this.addEntity('arena','신비 · 수학 시합',arena.x,arena.z,makeCharacter(3,8,4));
     this.sign(this.scene,'신비의 시합장',arena.x,5.2,arena.z,5.4,'#675282');
-    const school=cottageModel(VILLAGE_ART.mint,0xf4e3bf,true);school.position.set(0,0,-12);this.scene.add(school);this.colliders.push({x:0,z:-12,r:4});this.sign(this.scene,'베리숲 모험학교',0,6.2,-9.4,5.4,'#173f30',true);
+    const school=academyBuilding();school.position.set(0,0,-12);this.scene.add(school);this.colliders.push({x:0,z:-12,r:4});this.sign(this.scene,'베리숲 모험학교',0,7.4,-9.4,5.4,'#173f30',true);this.addEntity('academyGate','🏛 모험학교 · 스킬 배우러 들어가기',0,-7,new T.Group());for(const x of [-4.8,4.8])this.colliders.push({x,z:-12,r:2.1});
     const exit=(id:string,name:string,x:number,z:number,color:number)=>{const g=this.gate(color);this.addEntity(id,name,x,z,g);this.sign(g,name.split(' · ')[0],0,4.8,0,6);};
     exit('shopStreet','상점거리 · 왼쪽 길',-20,2,0xd69aa9);exit('journey','숲으로 모험 · 아래쪽 길',0,16,0x83b894);
     for(const [x,z]of [[-17,-13],[-12,-15],[11,-15],[17,-13],[-19,14],[18,16],[-23,-5],[23,-6]])this.tree(x,z,1.05,false,theme.foliage);
@@ -934,6 +936,7 @@ export class World {
     this.addBerries();
   }
   private clearMap() {
+    this.inAcademy=false;this.trial=null;this.skillRuntime.clear();this.skillGuide=false;for(const id of [...this.skillModels.keys()])this.removeSkillModel(id);
     this.inMarket=false;this.signResources.forEach(r=>{r.texture.dispose();r.material.dispose();r.geometry.dispose();});this.signResources=[];
     this.endStoryActivity();
     if(this.discoveryRoot)this.disposeModel(this.discoveryRoot);this.discoveryRoot=null;this.homeTargets=[];this.homeVisitors.forEach(v=>this.disposeModel(v.entity.mesh));
@@ -1014,6 +1017,38 @@ export class World {
     if (expedition) this.addExpeditionObjects(s);
     const spawn = this.stage === 0 ? { x: 0, z: 8 } : { x: 0, z: stageSize(this.stage).z - 9 }; const p = fresh ? spawn : s.position; this.player.position.set(p.x, 0, p.z); this.placePetNearPlayer(); this.lastSafe.copy(this.player.position); this.follow.copy(this.player.position);
     this.onStageLoaded(this.stage);
+  }
+  enterAcademy(s:Save){
+    this.clearInput();this.clearMap();this.inAcademy=true;this.inRoom=false;s.room.inside=false;s.homestead.inside=false;this.stage=0;this.platforms=[];
+    this.scene.background=new T.Color(0xe9dfc5);this.scene.fog=new T.Fog(0xe9dfc5,42,90);this.scene.add(academyInterior());
+    this.addEntity('academyTeacher','모험학교 선생님 · 스킬 배우기',-1,-4,makeCharacter(0,6,0));
+    this.addEntity('academyBook','배움의 서가 · 스킬 배우기',-4,-2,new T.Group());
+    this.addEntity('academyPractice','수련 마당 · 스킬 연습하기',4,-1,new T.Group());
+    this.addEntity('academyRecords','모험 기록실 · 수련 기록',5,4,new T.Group());
+    this.addEntity('academyExit','중앙 광장 · 학교 나가기',0,5.8,new T.Group());
+    this.sign(this.scene,'스킬 배우기',-4,2.9,-2,3.2,'#284f41',true);this.sign(this.scene,'수련 마당',4,2.8,-1,3.0,'#284f41',true);this.sign(this.scene,'모험 기록',5,2.1,4,2.8,'#284f41',true);
+    this.colliders.push({x:-4,z:-2,r:1},{x:4,z:-1,r:.65});
+    this.mergeStaticScenery();this.vy=0;this.grounded=true;this.player.position.set(0,0,3.7);this.placePetNearPlayer();this.lastSafe.copy(this.player.position);this.follow.copy(this.player.position);this.onStageLoaded(0);this.resize();this.renderOnce();
+  }
+  resetSkills(){this.skillRuntime.reset();this.trial=null;for(const id of [...this.skillModels.keys()])this.removeSkillModel(id);}
+  skillState(id:SkillId){return {active:this.skillRuntime.active(id,this.time),cooldown:Math.ceil(this.skillRuntime.remaining(id,this.time))};}
+  get trialSkill(){return this.trial?.id??null;}
+  useSkill(id:SkillId,learned:readonly SkillId[]){
+    if(!this.active||this.paused||this.storyActivityFocus||!this.skillRuntime.use(id,this.time,learned))return false;
+    this.removeSkillModel(id);const effect=skillEffectModel(id);effect.userData.academyEffect=true;this.scene.add(effect);this.skillModels.set(id,effect);
+    if(this.inAcademy)this.trial={id,started:this.time,distance:0,last:this.player.position.clone()};
+    if(id==='lantern'){
+      const target=this.inAcademy?'academyBook':this.inMarket?'marketExit':this.inHomestead?'homeExit':this.inRoom?'roomExit':this.stage===0?'academyGate':this.entities.some(e=>e.id==='discovery'&&e.name.includes('발자국'))?'discovery':this.stars.some(s=>s.mesh.visible)?'star':this.entities.some(e=>e.id.startsWith('monster')&&e.mesh.visible)?'monster':'next';
+      this.guideTo(target as GuideKind);this.skillGuide=true;
+    }
+    return true;
+  }
+  private removeSkillModel(id:SkillId){const g=this.skillModels.get(id);if(!g)return;this.scene.remove(g);const materials=new Set<T.Material>();g.traverse(o=>{if(o instanceof T.Mesh){o.geometry.dispose();const m=o.material;for(const item of Array.isArray(m)?m:[m])materials.add(item);}});materials.forEach(m=>m.dispose());this.skillModels.delete(id);}
+  private updateSkills(dt:number){
+    const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
+    for(const [id,g]of this.skillModels){if(!this.skillRuntime.active(id,this.time)){this.removeSkillModel(id);continue;}g.position.copy(this.player.position);if(!reduced)g.rotation.y+=dt*(id==='wind'?3:.7);}
+    if(this.skillGuide&&!this.skillRuntime.active('lantern',this.time)){this.clearGuide();this.skillGuide=false;}
+    if(this.trial){const t=this.trial;if(!this.inAcademy||!this.skillRuntime.active(t.id,this.time)){this.trial=null;return;}const d=t.last.distanceTo(this.player.position);if(d<2)t.distance+=d;t.last.copy(this.player.position);if(trialComplete(t.id,this.time-t.started,t.distance,Math.hypot(this.player.position.x+4,this.player.position.z+2)<2.8)){this.trial=null;this.onAcademyTrial(t.id);}}
   }
   enterHomestead(s:Save,preserve=false){
     const pos=preserve?s.homestead.position:{x:0,z:12};this.clearInput();this.clearMap();this.inRoom=false;this.inHomestead=true;s.room.inside=false;s.homestead.inside=true;this.stage=0;this.platforms=[];this.homeSave=s;
@@ -1393,7 +1428,7 @@ export class World {
     for (const e of this.entities) { if (e.id.startsWith('shadow')) { this.scene.remove(e.mesh); this.disposeShadow(e.mesh); e.label.remove(); } else keep.push(e); }
     this.entities = keep;
     if (this.selectedId?.startsWith('shadow')) { this.selectedId = null; this.onNear(null, null); }
-    if (this.inRoom || this.inHomestead || this.inMarket || this.stage !== 0) return;
+    if (this.inAcademy || this.inRoom || this.inHomestead || this.inMarket || this.stage !== 0) return;
     const spots = [[-6.5, 7.5], [3.5, 10.5], [-12, 2.5]] as const, dark = new T.Color(0x3b2f5c);
     shadows.slice(0, spots.length).forEach((shadow, i) => {
       const model = makeMonster(shadow.type);
@@ -1577,6 +1612,7 @@ export class World {
     if (document.hidden || this.paused || !this.active) return;
     const dt = Math.min(this.clock.getDelta(), .04); this.time += dt;
     if(this.inHomestead)this.animateHomeVisitors(dt);
+    this.updateSkills(dt);
     if (this.shadowSweep++ % 45 === 0) this.trimSmallShadows(); // 새로 생긴 펫·탈것·몬스터도 곧 정리돼요.
     const p = this.player.position;
     this.updateWeather(dt);
@@ -1585,14 +1621,14 @@ export class World {
       let dx = Number(this.keys.has('d') || this.keys.has('arrowright')) - Number(this.keys.has('a') || this.keys.has('arrowleft')) + this.stick.x;
       let dz = Number(this.keys.has('s') || this.keys.has('arrowdown')) - Number(this.keys.has('w') || this.keys.has('arrowup')) + this.stick.z;
       const n = Math.hypot(dx, dz); if (n > 1) { dx /= n; dz /= n; }
-      const ride = this.rideIndex >= 0 ? RIDES[this.rideIndex] : null, flying = !!ride?.flying, speed = PLAYER_MOVE_SPEED * (ride?.speed ?? 1);
+      const ride = this.rideIndex >= 0 ? RIDES[this.rideIndex] : null, flying = !!ride?.flying, speed = PLAYER_MOVE_SPEED * (ride?.speed ?? 1) * (this.skillRuntime.active('wind',this.time)?1.6:1);
       const vx = (dx * .8 + dz * .6) * speed, vz = (-dx * .6 + dz * .8) * speed;
       const allowed = (x: number, z: number) => flying || (!this.colliders.some(c => (!c.id || this.entities.find(e => e.id === c.id)?.mesh.visible) && Math.hypot(x - c.x, z - c.z) < c.r + .32) && !this.platforms.some(t => Math.abs(x - t.x) < t.w / 2 + .2 && Math.abs(z - t.z) < t.d / 2 + .2 && p.y < t.h - .13));
       if (allowed(p.x + vx * dt, p.z)) p.x += vx * dt; if (allowed(p.x, p.z + vz * dt)) p.z += vz * dt;
       if (n > .05) { this.player.rotation.y = Math.atan2(vx, vz); this.player.userData.feet?.forEach((f: T.Mesh, i: number) => { f.position.y = .18 + Math.max(0, Math.sin(this.time * 13 + i * Math.PI)) * .12; }); }
       const platform = flying ? undefined : this.platforms.find(t => Math.abs(p.x - t.x) < t.w / 2 + .15 && Math.abs(p.z - t.z) < t.d / 2 + .15); const floor = flying ? 1.65 + Math.sin(this.time * 2.2) * .08 : platform?.h ?? 0;
       this.vy -= 18 * dt; p.y += this.vy * dt; if (p.y <= floor && this.vy <= 0) { p.y = floor; this.vy = 0; this.grounded = true; } else this.grounded = false;
-      const bounds = this.inHomestead ? { x: 13.4, z: 29.4 } : this.inRoom ? { x: 6.8, z: 5.2 } : stageSize(this.stage);
+      const bounds = this.inAcademy ? {x:8.5,z:6.6} : this.inHomestead ? { x: 13.4, z: 29.4 } : this.inRoom ? { x: 6.8, z: 5.2 } : stageSize(this.stage);
       // 가장자리에서는 순간이동 대신 덤불 앞에서 멈춰요. 물에 빠질 때만 안전한 곳으로 돌아가요.
       const edge = this.inHomestead || this.inRoom ? .5 : 1.6; p.x = T.MathUtils.clamp(p.x, -bounds.x + edge, bounds.x - edge); p.z = T.MathUtils.clamp(p.z, -bounds.z + edge, bounds.z - edge);
       if ((this.inHomestead && p.z < -12.9) || Math.abs(p.x) > bounds.x - .5 || Math.abs(p.z) > bounds.z - .5 || (!flying && this.water(p.x, p.z) && p.y <= .2)) { p.copy(this.lastSafe); this.vy = 0; this.onRescue(); }
@@ -1660,7 +1696,7 @@ export class World {
     const reach=(e:Entity)=>this.inHomestead&&e.id==='homeExit'&&atHomeExit(p.x,p.z)?-1:Math.hypot(p.x-e.x,p.z-e.z)+(e.id.startsWith('tree')?1.2:0);
     for(const e of this.entities){const d=reach(e);if(e.mesh.visible&&d<distance){near=e;distance=d;}}
     for (const e of this.entities) {
-      if (e.id.startsWith('monster')) this.wander(e, p, dt);
+      if (e.id.startsWith('monster')&&!(this.skillRuntime.active('shield',this.time)&&Math.hypot(e.x-p.x,e.z-p.z)<6)) this.wander(e, p, dt);
       if (e.id.startsWith('tree') && e.mesh.userData.shakeUntil > this.time) e.mesh.rotation.z = Math.sin(this.time * 55) * .08; else if (e.id.startsWith('tree')) e.mesh.rotation.z = 0;
       if (e.mesh.userData.magicGate) { e.mesh.rotation.y = Math.sin(this.time * .45 + e.x) * .045; e.mesh.traverse(o => {
         if (o.userData.sparkle) { o.rotation.y += dt * 2.4; o.rotation.z += dt * 1.2; }
@@ -1708,7 +1744,7 @@ export class World {
     if (this.player.userData.sparkles) this.player.userData.sparkles.rotation.y += dt;
     for (let i = this.particles.length - 1; i >= 0; i--) { const q = this.particles[i]; q.life -= dt; q.v.y -= dt * 5; q.mesh.position.addScaledVector(q.v, dt); q.mesh.scale.setScalar(Math.max(0, q.life)); if (q.life <= 0) { this.scene.remove(q.mesh); this.particles.splice(i, 1); } }
     const target = this.storyActivityFocus ?? (this.active ? p : this.cameraTarget.set(0, 0, -1)); this.follow.lerp(target, 1 - Math.exp(-dt * (this.storyActivityFocus ? 8 : 6))); if (this.active && !this.storyActivityFocus && (this.occlusionTick++ & 7) === 0) this.updateOcclusion();
-    this.camera.position.copy(this.follow).add(this.storyActivityFocus ? this.cameraTarget.set(0, 13, 16) : this.inRoom ? ROOM_CAMERA_OFFSET : CAMERA_OFFSET); this.camera.lookAt(this.follow); this.updateGuide(); this.renderer.render(this.scene, this.camera);
+    this.camera.position.copy(this.follow).add(this.storyActivityFocus ? this.cameraTarget.set(0, 13, 16) : this.inRoom || this.inAcademy ? ROOM_CAMERA_OFFSET : CAMERA_OFFSET); this.camera.lookAt(this.follow); this.updateGuide(); this.renderer.render(this.scene, this.camera);
   }
   private updateGuide() {
     const target = this.guideTarget;
