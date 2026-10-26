@@ -1,6 +1,10 @@
 {
   "version": 1,
   "files": {
+    "tests/storybook-scene.test.ts": "b8e7577caeb17230135e500641d9913661d5f0694a409b9ad9c2bce50c70f818",
+    "src/storybook-art.ts": "9886edfe8548fe0c0c8ac7e88508de2b73cd977c4ffa7301d0441a4838e406e3",
+    "src/storybook-scene.ts": "2f1a32b13eb7ac784ec0852eaf29484f1e7d2f153d1b42b6b263c5960de2e8b4",
+    "tests/storybook-art.test.ts": "ddefef8a1e556afdff88f34a5505004c3df51b95824c82640ee79dc8d95489de",
     "e2e/core-flows.spec.mjs": "16adec630f4c96b06cfdd06359d34bec0bd497df7c4827d4df6ab798f7152020",
     "playwright.config.mjs": "dadd3e2a8c38f5b5960eed9c0bbdb130dfa22a785919057d30c18fcd463e474b",
     "scripts/check-common.mjs": "04faf72d9b67113d1cc1e04718198933a4d1e4451cc4585a385b5c9dd3311d39",
@@ -42,7 +46,7 @@
     "src/home-editor-state.ts": "49b3dad59a5a166d6c1cf3a1920911f5eacf78013cb1e0d44345cf71a01d56da",
     "src/home-editor.css": "ee503b9d89b59ca804640f02fb9208ea02b266c214dbd25d259b45c93534ef01",
     "src/home-guidance.ts": "12d2acb9f4aedf2b7a26f0b1b817ecd5f84a2defee97d9ee6ecd2add2016a729",
-    "src/homestead-models.ts": "351a7d0cc1fb660e1a416de16bcbfb307bf88b1efb1d32d6d09795af24f0939f",
+    "src/homestead-models.ts": "0aa320750882daca2b3a3d51a9a90413eb5d45af39b7c1402cc835a1f4465024",
     "src/homestead.css": "81cff6ff4c4b66e190a89d27cb0ca2be0a53cc5d28581b95080d294fafff9d48",
     "src/homestead.ts": "83fd69360decfd6c2661e7ac664557c0b4fe5c994bc64c944362ae0b42465478",
     "src/leak-guard.ts": "b6639564442fd4da3a1fa8fe9057401aa2363b171da3b67d38972c6e5326a645",
@@ -65,7 +69,7 @@
     "src/vite-env.d.ts": "65996936fbb042915f7b74a200fcdde7e410f32a669b1ab9597cfaa4b0faddb5",
     "src/world-map.css": "714622fea939d0203b5c94f17364cdaf29149ffef7524ff66f9b6b40d7e6f90f",
     "tests/common-improvements.test.ts": "2a9f7b0a9705f693a4845dea66c48d0b30c81d0b09b7e766b303706e8e771eb8",
-    "src/village-art.ts": "8d05ad2aeb7d3d6577d8ce77dc4aca3e64f2963cf5b5012fec9c1db16858aa73",
+    "src/village-art.ts": "1d982cc8f826043535ddd8c5192ac516620e5259afc6fafbe422761126748706",
     "tests/village-art.test.ts": "91e520c6457801ea865a7b8118d56da22ed9d6d6ed24477087ba05982897ea87",
     "src/academy.ts": "c7a095b0cfbe7502c3c77f9d7cbd678494f0c28e73df70545a6230242bfef544",
     "src/academy.css": "b132f46aa2488e36b87784aa90ed7f1945b405439b9523df193f5348c51d7848",
@@ -75,5 +79,5 @@
     "src/home-exit.ts": "055824644f9cc9bba4ba9f4166170b636f6e3849a7288e2ace60ebdbb4b9e0ad",
     "tests/home-exit.test.ts": "55615d3f051ce152b5d39ebd346777997051e6fa71344602999a10962db4efc3"
   },
-  "generation": "43d1ed1ab04c9dda84dcd1055e83743e7e5d2250cd47d0d31aec7e14bf60a484"
+  "generation": "dfab27d171c3b51c7e149c28cabe7f2c6ee15018b49a3726a70959fd63a2dd92"
 }

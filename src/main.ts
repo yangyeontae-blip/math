@@ -59,7 +59,7 @@ import './adventure.css';
 import './navigation.css';
 import { toolSpec, toolHtml, adjustTool } from './learning-tools';
 
-const CLIENT_BUILD = '2026-10-21.2';
+const CLIENT_BUILD = '2026-10-26.storybook.1';
 document.documentElement.dataset.clientBuild = CLIENT_BUILD;
 
 const $ = <T extends HTMLElement = HTMLElement>(selector: string) => document.querySelector<T>(selector)!;

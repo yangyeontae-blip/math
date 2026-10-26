@@ -21,6 +21,8 @@ import type { PetReaction } from './pet-care';
 import { VILLAGE_PROJECTS, projectSpec } from './adventure';
 import { VILLAGE_THEMES, villageThemeId, type VillageTheme } from './villages';
 import type { AmbienceScene } from './ambience';
+import { STORYBOOK_LIGHTING, storybookMaterial, seasonalParticleAt } from './storybook-art';
+import { StorybookScene, leafMaterial } from './storybook-scene';
 
 type Entity = { id: string; name: string; x: number; z: number; mesh: T.Group; label: HTMLDivElement };
 export type GuideKind = 'academyGate' | 'academyBook' | 'guide' | 'marketExit' | 'noticeBoard' | 'homesteadGate' | 'shopStreet' | 'homeEditor' | 'homeExit' | 'homeVisitor' | 'discovery' | 'forestWork' | 'trailSeed' | 'trailLamp' | 'berry' | 'monster' | 'shop' | 'journey' | 'next' | 'star' | 'expMonster' | 'roomExit' | 'storyClue' | 'storyPuzzle' | 'storyMailbox' | 'village' | 'villageProject0' | 'villageProject1' | 'villageProject2';
@@ -81,7 +83,8 @@ export function makeCharacter(character: number, outfit: number, weapon: number,
   for (const side of [-1, 1]) {
     ball(body, c.skin, side * .51, 1.47, 0, .1, .14, .12);
     const bigEye = face === 1 || face === 4;
-    ball(body, face === 3 ? 0x563e55 : 0x343a39, side * .19, 1.5, .424, bigEye ? .065 : .047, bigEye ? .085 : .065, .026);
+    const eye = ball(body, face === 3 ? 0x563e55 : 0x343a39, side * .19, 1.5, .424, bigEye ? .065 : .047, bigEye ? .085 : .065, .026);
+    eye.userData.blinkHeight = eye.scale.y; (g.userData.eyes ??= []).push(eye);
     if (face !== 4) ball(body, 0xffffff, side * .18, 1.524, .444, face === 1 ? .022 : .014);
     ball(body, face === 4 ? 0xf6c85f : 0xf1a69d, side * .31, 1.37, .397, face === 3 ? .065 : .086, .043, .021);
     if (hairstyle === 1 || hairstyle === 5) { ball(body, c.hair, side * .55, 1.68, -.06, hairstyle === 5 ? .3 : .24); ball(body, o.accent, side * .43, 1.84, .04, .12); }
@@ -677,6 +680,9 @@ export class World {
   private particles: { mesh: T.Mesh; v: T.Vector3; life: number }[] = []; private lastSafe = new T.Vector3(0, 0, 8); private follow = new T.Vector3(0, 0, 1);
   private weatherKind: 'none' | 'rain' | 'snow' | 'leaves' | 'fireflies' = 'none';
   private lowQuality = false;
+  private storybook = new StorybookScene();
+  private walkBlend = 0;
+  private shadowFloor = 0;
   private weatherMesh: T.InstancedMesh | null = null;
   private weatherDrops: { x: number; y: number; z: number; speed: number; sway: number; phase: number }[] = [];
   private weatherDummy = new T.Object3D();
@@ -705,7 +711,8 @@ export class World {
     const touchDevice = matchMedia('(pointer: coarse)').matches;
     this.renderer = new T.WebGLRenderer({ antialias: !touchDevice, alpha: false, powerPreference: 'high-performance' }); this.renderer.setPixelRatio(Math.min(devicePixelRatio, touchDevice ? 1 : 1.25)); this.renderer.shadowMap.enabled = true; this.renderer.shadowMap.type = touchDevice ? T.PCFShadowMap : T.PCFSoftShadowMap; /* 태블릿·휴대폰은 가벼운 그림자 */ this.renderer.outputColorSpace = T.SRGBColorSpace; this.renderer.toneMapping = T.ACESFilmicToneMapping; this.renderer.toneMappingExposure = 1.08; container.append(this.renderer.domElement);
     this.camera = new T.OrthographicCamera(-18, 18, 14, -14, .1, 140);
-    this.scene.add(new T.HemisphereLight(0xfff9e6, 0x74905a, 2.35)); this.sun = new T.DirectionalLight(0xffedcf, 2.8); this.sun.position.set(-15, 30, 15); this.sun.castShadow = true; this.sun.shadow.mapSize.set(1024, 1024); Object.assign(this.sun.shadow.camera, { left: -34, right: 34, top: 32, bottom: -30, far: 85 }); this.sun.shadow.normalBias = .06; this.scene.add(this.sun);
+    this.renderer.toneMappingExposure = STORYBOOK_LIGHTING.exposure;
+    this.scene.add(new T.HemisphereLight(STORYBOOK_LIGHTING.sky, STORYBOOK_LIGHTING.ground, STORYBOOK_LIGHTING.hemisphereIntensity)); this.sun = new T.DirectionalLight(STORYBOOK_LIGHTING.sun, STORYBOOK_LIGHTING.sunIntensity); this.sun.position.set(-15, 30, 15); this.sun.castShadow = true; this.sun.shadow.mapSize.set(1024, 1024); Object.assign(this.sun.shadow.camera, { left: -34, right: 34, top: 32, bottom: -30, far: 85 }); this.sun.shadow.normalBias = .035; this.sun.shadow.bias = -.00015; this.scene.add(this.sun);
     const fill = new T.DirectionalLight(0xd8f3ff, .7); fill.position.set(18, 12, -14); this.scene.add(fill);
     this.labelLayer = document.createElement('div'); this.labelLayer.className = 'world-labels'; container.append(this.labelLayer);
     this.guideElement = document.createElement('div'); this.guideElement.className = 'navigation-guide'; this.guideElement.hidden = true; this.guideElement.innerHTML = '<span aria-hidden="true">➜</span><div><b></b><small></small></div>'; container.append(this.guideElement);
@@ -753,7 +760,7 @@ export class World {
     stoneLane(this.scene,0,6,4.4,27);stoneLane(this.scene,-12,2,24,4);stoneLane(this.scene,12,-2,24,4);
     this.scene.add(plazaGarden());districtBorder(this.scene,49,39);
     const fountain=fountainModel();fountain.position.set(-3,0,0);this.scene.add(fountain);this.colliders.push({x:-3,z:0,r:1.95});
-    for(const at of PLAZA_BERRY_TREES){const tree=berryTreeModel();tree.position.set(at.x,0,at.z);tree.scale.setScalar(at.scale);this.scene.add(tree);this.colliders.push({x:at.x,z:at.z,r:.48});}
+    for(const [index,at] of PLAZA_BERRY_TREES.entries()){const tree=berryTreeModel(index%3);tree.position.set(at.x,0,at.z);tree.scale.setScalar(at.scale);this.scene.add(tree);this.colliders.push({x:at.x,z:at.z,r:.48});}
     this.addEntity('guide','연태쌤 · 마을 안내',0,3,makeCharacter(0,6,0));
     const arena=VILLAGE_SPOTS.arena;
     cylinder(this.scene,0xf1deb4,arena.x,.08,arena.z,2.4,2.4,.1,32);
@@ -937,6 +944,8 @@ export class World {
     this.addBerries();
   }
   private clearMap() {
+    this.shadowFloor=0;
+    this.storybook.clear(this.scene);
     this.inAcademy=false;this.trial=null;this.skillRuntime.clear();this.skillGuide=false;for(const id of [...this.skillModels.keys()])this.removeSkillModel(id);
     this.inMarket=false;this.signResources.forEach(r=>{r.texture.dispose();r.material.dispose();r.geometry.dispose();});this.signResources=[];
     this.endStoryActivity();
@@ -946,7 +955,7 @@ export class World {
     if (this.storyScenery) this.disposeModel(this.storyScenery);
     this.storyScenery = null; this.craftAnimated = []; this.restoredBridge = false; this.butterflies = []; this.particles = [];
     this.clearGuide(); this.selectedId = null; this.petTargetId = null; this.onNear(null, null); this.entities.forEach(e => e.label.remove()); this.stars.forEach(star => star.label.remove()); this.entities = []; this.coins = []; this.stars = []; this.colliders = [];
-    for (const child of [...this.scene.children]) if (child !== this.player && child !== this.petModel && child !== this.weatherMesh && !(child instanceof T.Light)) { this.scene.remove(child); if (child instanceof T.Mesh && child.userData.mergedScenery) child.geometry.dispose(); }
+    for (const child of [...this.scene.children]) if (child !== this.player && child !== this.petModel && child !== this.weatherMesh && !(child instanceof T.Light)) { this.scene.remove(child);child.traverse(o=>{if(o instanceof T.Mesh){if(!sharedGeometries.has(o.geometry)&&!o.geometry.userData.sharedStorybookAsset)o.geometry.dispose();if(o instanceof T.InstancedMesh)o.dispose();}}); }
     this.furnitureRoot = null;
   }
   /**
@@ -954,25 +963,27 @@ export class World {
    * 게임이 나중에 움직이거나 숨기는 것(베리·나무·몬스터·별·애니메이션 표시가 있는 조각)은 그대로 둬요.
    */
   private mergeStaticScenery() {
+    this.storybook.prepare(this.scene,this.inRoom||this.inAcademy,this.inMarket,this.stage>0,VILLAGE_THEMES[this.forest].foliage??0x75a669);
+    this.storybook.quality(this.lowQuality);
     this.trimSmallShadows();
     const keep = new Set<T.Object3D>();
     const note = (value: unknown) => { if (value instanceof T.Object3D) keep.add(value); else if (value && typeof value === 'object' && 'mesh' in value && (value as { mesh: unknown }).mesh instanceof T.Object3D) keep.add((value as { mesh: T.Object3D }).mesh); };
     for (const value of Object.values(this)) { if (Array.isArray(value)) value.forEach(note); else note(value); }
     const flagged = (o: T.Object3D) => Object.keys(o.userData).some(k => k !== 'shadowChecked'); // 그림자 정리 표시는 움직임과 상관없어요
-    const mergeable = (m: T.Mesh) => m.material instanceof T.MeshStandardMaterial && !m.material.transparent && m.visible;
+    const mergeable = (m: T.Mesh) => !(m instanceof T.InstancedMesh) && m.material instanceof T.MeshStandardMaterial && !m.material.transparent && m.visible;
     // 통째로 합칠 수 있는 맨 위 조각: 혼자 놓인 장식, 또는 게임이 건드리지 않는 장식 묶음(가게·집·울타리 등)
     const tops: T.Object3D[] = [];
     for (const child of this.scene.children) {
       if (keep.has(child) || flagged(child) || !child.visible || child instanceof T.Light) continue;
       if (child instanceof T.Mesh) { if (mergeable(child)) tops.push(child); continue; }
       if (child.type !== 'Group') continue;
-      let ok = true; child.traverse(o => { if (o === child) return; if (keep.has(o) || flagged(o) || !o.visible || (o instanceof T.Mesh && !mergeable(o)) || (!(o instanceof T.Mesh) && o.type !== 'Group')) ok = false; });
+      let ok = true; child.traverse(o => { if (o === child || o instanceof T.InstancedMesh) return; if (keep.has(o) || flagged(o) || !o.visible || (o instanceof T.Mesh && !mergeable(o)) || (!(o instanceof T.Mesh) && o.type !== 'Group')) ok = false; });
       if (ok) tops.push(child);
     }
     this.scene.updateMatrixWorld(true);
     const groups = new Map<string, T.Mesh[]>();
     for (const top of tops) top.traverse(o => {
-      if (!(o instanceof T.Mesh)) return;
+      if (!(o instanceof T.Mesh) || o instanceof T.InstancedMesh) return;
       const m = o.material as T.MeshStandardMaterial, g = o.geometry, attrs = Object.keys(g.attributes).sort().join(',');
       const key = `${m.uuid}|${o.castShadow}|${o.receiveShadow}|${g.index ? 'i' : 'n'}|${attrs}`;
       (groups.get(key) ?? groups.set(key, []).get(key)!).push(o);
@@ -1412,15 +1423,23 @@ export class World {
     this.colliders.push({x,z,r:2.7});
   }
   private tree(x: number, z: number, scale: number, pink: boolean, foliage?: number) {
-    const g = new T.Group(); g.position.set(x, 0, z); g.scale.setScalar(scale); this.scene.add(g); cylinder(g, 0x94724e, 0, 1, 0, .19, .32, 2, 8);
-    ball(g, foliage ?? (pink ? 0xe6a2ad : 0x63a56b), 0, 2.55, 0, 1.55, 1.5, 1.38); ball(g, foliage ?? (pink ? 0xf1b8bb : 0x88bd77), -.5, 3.35, 0, 1.12, 1.12, 1); ball(g, foliage ?? (pink ? 0xf5c9c7 : 0xa0cd7e), .5, 3.25, .45, .8, .83, .8);
-    // Soft pastel fruit and tiny blossoms add detail without textures or extra effects.
-    for (let i = 0; i < 3; i++) { const a = i * Math.PI * 2 / 3 + x * .37; ball(g, pink ? 0xffe3a1 : 0xe8798b, Math.cos(a) * .86, 2.28 + (i % 2) * .38, Math.sin(a) * .78, .13, .15, .13); }
-    ball(g, 0xfff0c6, -.9, 3.08, .1, .11, .1, .1); ball(g, 0xfff0c6, .84, 3.55, -.22, .1, .1, .1); this.colliders.push({ x, z, r: .5 });
+    const g = this.forestTree(pink,foliage,x+z);g.position.set(x,0,z);g.scale.setScalar(scale);g.rotation.y=x*.31+z*.12;this.scene.add(g);this.colliders.push({x,z,r:.5});
+  }
+  private forestTree(pink:boolean,foliage:number|undefined,phase:number) {
+    const g=new T.Group(),base=foliage??(pink?0xe6a2ad:0x63a56b);
+    const trunk=cylinder(g,this.forest==='addition'?0xc6bfa1:0x94724e,0,1,0,.19,.32,2,8);trunk.material=storybookMaterial('wood',this.forest==='addition'?0xc6bfa1:0x94724e);
+    for(const side of [-1,1]){const b=cylinder(g,0x94724e,side*.24,1.68,0,.07,.12,.8,6);b.rotation.z=side*-.6;}
+    const shades=[base,new T.Color(base).lerp(new T.Color(0xc5d89c),.17).getHex(),new T.Color(base).multiplyScalar(.88).getHex()];
+    if(this.forest==='division'&&!pink){
+      for(let i=0;i<3;i++){const cone=mesh(cachedCylinder(.12,1.55-i*.33,1.65,9),base,0,2.2+i*.75,0,g);cone.material=leafMaterial(shades[i]);cone.rotation.y=phase*.17+i*.4;}
+    } else {
+      const wide=this.forest==='subtraction'?1.12:this.forest==='multiplication'?.92:1;
+      for(let i=0;i<4;i++){const a=i*2.4+phase*.3,leaf=ball(g,shades[i%3],i?Math.cos(a)*.65:0,2.55+(i===2?.9:i*.15),i?Math.sin(a)*.5:0,i?1.03:1.38,i?1.02:1.26,i?1.03:1.24);leaf.scale.x*=wide;leaf.material=leafMaterial(shades[i%3]);}
+    }
+    return g;
   }
   private addChoppableTree(id: number, x: number, z: number, scale: number, pink: boolean, foliage?: number) {
-    const g = new T.Group(); g.scale.setScalar(scale); cylinder(g, 0x94724e, 0, 1, 0, .19, .32, 2, 8);
-    ball(g, foliage ?? (pink ? 0xe6a2ad : 0x63a56b), 0, 2.55, 0, 1.55, 1.5, 1.38); ball(g, foliage ?? (pink ? 0xf1b8bb : 0x88bd77), -.5, 3.35, 0, 1.12, 1.12, 1); ball(g, foliage ?? (pink ? 0xf5c9c7 : 0xa0cd7e), .5, 3.25, .45, .8, .83, .8);
+    const g = this.forestTree(pink,foliage,id);g.scale.setScalar(scale);
     g.userData.hp = 7; this.addEntity(`tree${id}`, '베리나무 · 베기', x, z, g); this.colliders.push({ x, z, r: .5, id: `tree${id}` });
   }
   // 틀린 개념을 다시 만나는 "그림자 몬스터". 마을에만 최대 3마리가 나타나고, 다시 풀면 사라져요.
@@ -1493,10 +1512,11 @@ export class World {
     const face = near ? Math.atan2(p.x - e.x, p.z - e.z) : Math.hypot(mx, mz) > .0005 ? Math.atan2(mx, mz) : e.mesh.rotation.y;
     e.mesh.rotation.y += Math.atan2(Math.sin(face - e.mesh.rotation.y), Math.cos(face - e.mesh.rotation.y)) * Math.min(1, dt * 4);
   }
-  private disposeModel(g: T.Group) { g.traverse(o => { if (o instanceof T.Mesh && !sharedGeometries.has(o.geometry)) o.geometry.dispose(); }); }
+  private disposeModel(g: T.Group) { g.traverse(o => { if (o instanceof T.Mesh && !sharedGeometries.has(o.geometry) && !o.geometry.userData.sharedStorybookAsset) o.geometry.dispose(); }); }
   /** 날씨는 화면 위 필터가 아니라 캐릭터 주변 3D 공간에서 움직여 글자와 지형을 가리지 않아요. */
   setWeather(scene: AmbienceScene | null) {
     const kind = !scene || matchMedia('(prefers-reduced-motion: reduce)').matches ? 'none' : scene.weather === 'rain' ? 'rain' : scene.weather === 'snow' ? 'snow' : scene.season === 'autumn' ? 'leaves' : scene.mood === 'night' ? 'fireflies' : 'none';
+    this.container.dataset.weatherEffect=kind;
     if (kind === this.weatherKind) return;
     this.weatherKind = kind;
     this.container.dataset.weatherEffect = kind;
@@ -1510,7 +1530,8 @@ export class World {
     if (kind === 'none') { this.renderOnce(); return; }
     const count = this.lowQuality ? (kind === 'rain' ? 12 : kind === 'snow' ? 16 : kind === 'fireflies' ? 6 : 7)
       : matchMedia('(pointer: coarse)').matches ? (kind === 'rain' ? 28 : kind === 'snow' ? 38 : kind === 'fireflies' ? 10 : 14) : (kind === 'rain' ? 48 : kind === 'snow' ? 60 : kind === 'fireflies' ? 16 : 22);
-    const geometry = kind === 'rain' ? new T.CylinderGeometry(.014, .014, .38, 3) : kind === 'snow' ? new T.OctahedronGeometry(.14) : kind === 'fireflies' ? new T.SphereGeometry(.07, 6, 4) : new T.PlaneGeometry(.28, .19);
+    const leaf = new T.Shape();leaf.moveTo(0,-.16);leaf.quadraticCurveTo(.2,.02,0,.2);leaf.quadraticCurveTo(-.12,.02,0,-.16);
+    const geometry = kind === 'rain' ? new T.CylinderGeometry(.009, .009, .3, 3) : kind === 'snow' ? new T.SphereGeometry(.075,6,4) : kind === 'fireflies' ? new T.SphereGeometry(.045, 6, 4) : new T.ShapeGeometry(leaf,3);
     const material = new T.MeshBasicMaterial({ color: kind === 'rain' ? 0xc3deee : kind === 'snow' ? 0xdbeaf1 : kind === 'fireflies' ? 0xffdc79 : 0xd59042, transparent: true, opacity: kind === 'rain' ? .48 : .78, depthWrite: false, side: T.DoubleSide });
     this.weatherMesh = new T.InstancedMesh(geometry, material, count);
     this.weatherMesh.frustumCulled = false;
@@ -1543,8 +1564,10 @@ export class World {
         drop.z = p.z + (Math.random() - .5) * 26;
       }
       this.weatherDummy.position.set(drop.x, drop.y, drop.z);
-      this.weatherDummy.rotation.set(kind === 'leaves' ? this.time * .8 + drop.phase : 0, kind === 'leaves' ? this.time * 1.4 + drop.phase : 0, kind === 'rain' ? -.15 : 0);
-      this.weatherDummy.scale.setScalar(kind === 'snow' ? .75 + Math.sin(drop.phase) * .2 : kind === 'fireflies' ? .65 + .35 * Math.sin(this.time * 2 + drop.phase) : 1);
+      const motion=seasonalParticleAt(kind==='leaves'?'leaf':'snow',this.time,i,26);
+      this.weatherDummy.rotation.set(kind==='leaves'?motion.rotationX:0,kind==='leaves'?motion.rotationY:0,kind==='rain'?-.15:motion.rotationZ);
+      const fade=kind==='fireflies'?1:Math.min(1,Math.max(0,drop.y/.7),Math.max(0,(11-drop.y)/1.5));
+      this.weatherDummy.scale.setScalar(fade*(kind === 'snow' ? .65 + Math.sin(drop.phase) * .24 : kind === 'fireflies' ? .65 + .35 * Math.sin(this.time * 2 + drop.phase) : .65+Math.sin(drop.phase)*.18));
       this.weatherDummy.updateMatrix();
       mesh.setMatrixAt(i, this.weatherDummy.matrix);
     }
@@ -1557,9 +1580,9 @@ export class World {
     if (shouldRun && !this.animationRunning) { this.animationRunning = true; this.clock.start(); this.renderer.setAnimationLoop(() => this.frame()); }
     else if (!shouldRun && this.animationRunning) { this.animationRunning = false; this.renderer.setAnimationLoop(null); if (!document.hidden) this.renderOnce(); }
   }
-  private renderOnce() { if (!document.hidden) this.renderer.render(this.scene, this.camera); }
+  private renderOnce() { if (!document.hidden) { this.scene.fog=null;this.storybook.update(this.time,this.player.position,this.petModel?.position??null,this.shadowFloor);this.renderer.render(this.scene, this.camera); } }
   restore(s: Save) { this.setAvatar(s.character, s.outfit, s.weapon, s.outfits[s.outfit], s.weapons[s.weapon], s.ride, s.pet, s.hairstyle, s.face); if (s.homestead.inside) this.enterHomestead(s,true); else if (s.room.inside) this.enterRoom(s); else this.loadStage(s); this.quality(s.settings.lowQuality); }
-  quality(low: boolean) { this.lowQuality = low; const touchDevice = matchMedia('(pointer: coarse)').matches; this.renderer.setPixelRatio(Math.min(devicePixelRatio, low || touchDevice ? 1 : 1.25)); this.renderer.shadowMap.enabled = !low; this.sun.castShadow = !low;this.homeVisitors.forEach((v,i)=>v.entity.mesh.visible=i<(low?2:3)); }
+  quality(low: boolean) { this.lowQuality = low;this.storybook.quality(low); const touchDevice = matchMedia('(pointer: coarse)').matches; this.renderer.setPixelRatio(Math.min(devicePixelRatio, low || touchDevice ? 1 : 1.25)); this.renderer.shadowMap.enabled = !low; this.sun.castShadow = !low;this.homeVisitors.forEach((v,i)=>v.entity.mesh.visible=i<(low?2:3)); }
   clearInput() { this.keys.clear(); this.stick = { x: 0, z: 0 }; }
   guideTo(kind: GuideKind) {
     const entityMatch = (entity: Entity) => kind === 'homeVisitor' ? entity.id.startsWith('homeVisitor') : kind === 'forestWork' ? entity.id === `forestWork${this.trailNext}` : kind === 'trailSeed' ? entity.id.startsWith('trailSeed') && Math.floor(Number(entity.id.slice(9)) / 2) === this.trailNext : kind === 'trailLamp' ? entity.id === `trailLamp${this.trailNext}` : kind === 'monster' ? entity.id.startsWith('monster') : kind === 'expMonster' ? entity.id.startsWith('expMonster') : kind === 'storyClue' ? entity.id.startsWith('storyClue') : kind === 'shop' ? ['weapon', 'outfit', 'ride', 'pet', 'potion', 'beauty'].includes(entity.id) : entity.id === kind;
@@ -1626,9 +1649,16 @@ export class World {
       const vx = (dx * .8 + dz * .6) * speed, vz = (-dx * .6 + dz * .8) * speed;
       const allowed = (x: number, z: number) => flying || (!this.colliders.some(c => (!c.id || this.entities.find(e => e.id === c.id)?.mesh.visible) && Math.hypot(x - c.x, z - c.z) < c.r + .32) && !this.platforms.some(t => Math.abs(x - t.x) < t.w / 2 + .2 && Math.abs(z - t.z) < t.d / 2 + .2 && p.y < t.h - .13));
       if (allowed(p.x + vx * dt, p.z)) p.x += vx * dt; if (allowed(p.x, p.z + vz * dt)) p.z += vz * dt;
-      if (n > .05) { this.player.rotation.y = Math.atan2(vx, vz); this.player.userData.feet?.forEach((f: T.Mesh, i: number) => { f.position.y = .18 + Math.max(0, Math.sin(this.time * 13 + i * Math.PI)) * .12; }); }
+      this.walkBlend = T.MathUtils.damp(this.walkBlend,n>.05?1:0,12,dt);
+      if (n > .05) { const angle = Math.atan2(vx,vz), turn=Math.atan2(Math.sin(angle-this.player.rotation.y),Math.cos(angle-this.player.rotation.y));this.player.rotation.y += turn*(1-Math.exp(-14*dt)); }
+      this.player.userData.feet?.forEach((f:T.Mesh,i:number)=>{f.position.y=.18+Math.max(0,Math.sin(this.time*13+i*Math.PI))*.12*this.walkBlend;});
+      const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const body=this.player.userData.body as T.Group|undefined;
+      if(body&&this.rideIndex<0){body.position.y=reduced?0:Math.sin(this.time*2)*.012+Math.abs(Math.sin(this.time*13))*.025*this.walkBlend;body.rotation.z=reduced?0:Math.sin(this.time*6.5)*.025*this.walkBlend;}
+      for(const eye of (this.player.userData.eyes??[]) as T.Mesh[])eye.scale.y=eye.userData.blinkHeight*(!reduced&&this.time%4.7>4.56?.12:1);
       const platform = flying ? undefined : this.platforms.find(t => Math.abs(p.x - t.x) < t.w / 2 + .15 && Math.abs(p.z - t.z) < t.d / 2 + .15); const floor = flying ? 1.65 + Math.sin(this.time * 2.2) * .08 : platform?.h ?? 0;
-      this.vy -= 18 * dt; p.y += this.vy * dt; if (p.y <= floor && this.vy <= 0) { p.y = floor; this.vy = 0; this.grounded = true; } else this.grounded = false;
+      this.shadowFloor = flying?0:floor;
+      this.vy -= 18 * dt; p.y += this.vy * dt; if (p.y <= floor && this.vy <= 0) { const landed=!this.grounded&&this.vy< -3;p.y = floor; this.vy = 0; this.grounded = true;if(landed&&!reduced)this.burst(p,0xd5c5a1,3); } else this.grounded = false;
       const bounds = this.inAcademy ? {x:8.5,z:6.6} : this.inHomestead ? { x: 13.4, z: 29.4 } : this.inRoom ? { x: 6.8, z: 5.2 } : stageSize(this.stage);
       // 가장자리에서는 순간이동 대신 덤불 앞에서 멈춰요. 물에 빠질 때만 안전한 곳으로 돌아가요.
       const edge = this.inHomestead || this.inRoom ? .5 : 1.6; p.x = T.MathUtils.clamp(p.x, -bounds.x + edge, bounds.x - edge); p.z = T.MathUtils.clamp(p.z, -bounds.z + edge, bounds.z - edge);
@@ -1745,7 +1775,7 @@ export class World {
     if (this.player.userData.sparkles) this.player.userData.sparkles.rotation.y += dt;
     for (let i = this.particles.length - 1; i >= 0; i--) { const q = this.particles[i]; q.life -= dt; q.v.y -= dt * 5; q.mesh.position.addScaledVector(q.v, dt); q.mesh.scale.setScalar(Math.max(0, q.life)); if (q.life <= 0) { this.scene.remove(q.mesh); this.particles.splice(i, 1); } }
     const target = this.storyActivityFocus ?? (this.active ? p : this.cameraTarget.set(0, 0, -1)); this.follow.lerp(target, 1 - Math.exp(-dt * (this.storyActivityFocus ? 8 : 6))); if (this.active && !this.storyActivityFocus && (this.occlusionTick++ & 7) === 0) this.updateOcclusion();
-    this.camera.position.copy(this.follow).add(this.storyActivityFocus ? this.cameraTarget.set(0, 13, 16) : this.inRoom || this.inAcademy ? ROOM_CAMERA_OFFSET : CAMERA_OFFSET); this.camera.lookAt(this.follow); this.updateGuide(); this.renderer.render(this.scene, this.camera);
+    this.camera.position.copy(this.follow).add(this.storyActivityFocus ? this.cameraTarget.set(0, 13, 16) : this.inRoom || this.inAcademy ? ROOM_CAMERA_OFFSET : CAMERA_OFFSET); this.camera.lookAt(this.follow); this.updateGuide();this.scene.fog=null;this.storybook.update(this.time,p,this.petModel?.position??null,this.shadowFloor); this.renderer.render(this.scene, this.camera);
   }
   private updateGuide() {
     const target = this.guideTarget;

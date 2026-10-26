@@ -1,22 +1,34 @@
 import * as T from 'three';
+import { storybookMaterial } from './storybook-art';
 
 /** Shared architectural language. Pure scenery: no rewards, storage or interactions. */
 export const VILLAGE_ART = { grass:0xc6d99c, earth:0x9bb778, cream:0xf4e6c8, edge:0xd3bb94, wood:0x997151, mint:0x659d91, trim:0xfff4d9, leaf:0x76a866, berry:0xe36685 };
 const mats=new Map<number,T.MeshStandardMaterial>();
 function piece(g:T.Object3D,c:number,geo:T.BufferGeometry,x:number,y:number,z:number){
- if(!mats.has(c))mats.set(c,new T.MeshStandardMaterial({color:c,roughness:.92,flatShading:true}));
+ if(!mats.has(c))mats.set(c,c===VILLAGE_ART.wood?storybookMaterial('wood',c):new T.MeshStandardMaterial({color:c,roughness:.92,flatShading:true}));
  const m=new T.Mesh(geo,mats.get(c));m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;g.add(m);return m;
 }
 const block=(g:T.Object3D,c:number,x:number,y:number,z:number,w:number,h:number,d:number)=>piece(g,c,new T.BoxGeometry(w,h,d),x,y,z);
 const orb=(g:T.Object3D,c:number,x:number,y:number,z:number,r:number,sy=1)=>{const m=piece(g,c,new T.IcosahedronGeometry(r,1),x,y,z);m.scale.y=sy;return m;};
 const post=(g:T.Object3D,c:number,x:number,y:number,z:number,r:number,h:number)=>piece(g,c,new T.CylinderGeometry(r,r,h,10),x,y,z);
+// Repeated little stones share one draw call, even on the longer market lanes.
+function stoneDetails(g:T.Object3D,c:number,positions:{x:number;y:number;z:number;scaleX:number;scaleZ:number;angle:number}[]){
+ if(!positions.length)return;
+ if(!mats.has(c))mats.set(c,new T.MeshStandardMaterial({color:c,roughness:.96,flatShading:true}));
+ const stones=new T.InstancedMesh(new T.IcosahedronGeometry(1,0),mats.get(c),positions.length),at=new T.Object3D();
+ positions.forEach((p,i)=>{at.position.set(p.x,p.y,p.z);at.rotation.set(0,p.angle,0);at.scale.set(p.scaleX,.075,p.scaleZ);at.updateMatrix();stones.setMatrixAt(i,at.matrix);});
+ stones.instanceMatrix.needsUpdate=true;stones.receiveShadow=true;g.add(stones);
+}
 export const PLAZA_BERRY_TREES=[{x:-5.7,z:-5.5,scale:.9},{x:-2.8,z:-6.7,scale:1.08},{x:5.7,z:-7.2,scale:.86},{x:-9.2,z:-1.9,scale:.85},{x:-10.6,z:-4.2,scale:1},{x:8.9,z:-5.7,scale:1},{x:10.4,z:-3.4,scale:.86}] as const;
-export function berryTreeModel(){
+export function berryTreeModel(variant=0){
  const g=new T.Group(),a=VILLAGE_ART;
  post(g,a.wood,0,1.15,0,.23,2.3);
  for(const side of [-1,1]){const b=post(g,a.wood,side*.35,1.9,0,.12,1.15);b.rotation.z=-side*.55;}
- for(const [x,y,z,r]of [[0,2.7,0,1.25],[-.72,2.4,.1,.83],[.72,2.5,.16,.87],[-.2,3.5,-.1,.85],[.6,3.25,.1,.68]])orb(g,a.leaf,x,y,z,r);
- orb(g,0x97bd76,-.45,3.65,.25,.65);orb(g,0xb1cd83,.65,3.1,.65,.57);
+ const shape=((variant%3)+3)%3,lean=shape===1?.15:shape===2?-.13:0;
+ for(const [i,[x,y,z,r]]of [[0,2.7,0,1.25],[-.72,2.4,.1,.83],[.72,2.5,.16,.87],[-.2,3.5,-.1,.85],[.6,3.25,.1,.68]].entries()){
+  const crown=orb(g,i%2?0x6f9e61:a.leaf,x+lean*(y-2),y,z,r,shape===1?1.12:shape===2?.9:1);crown.rotation.y=i*.7;
+ }
+ orb(g,0x97bd76,-.45+lean,3.65,.25,.65);orb(g,0xb1cd83,.65,3.1,.65,.57);
  for(let i=0;i<7;i++){const angle=i*2.4,x=Math.cos(angle)*.98,z=Math.sin(angle)*.95,y=2.25+(i%3)*.42;for(const side of [-1,1])orb(g,side<0?a.berry:0xd54d73,x+side*.1,y,z,.18,1.15);const leaf=orb(g,0x447e57,x,y+.22,z,.15,.35);leaf.rotation.z=.4;}
  return g;
 }
@@ -45,6 +57,13 @@ export function stoneLane(g:T.Object3D,x:number,z:number,width:number,length:num
   const px=x-width/2+.73+col*1.45,pz=z-length/2+.7+row*1.4;
   block(g,(row+col)%3===0?0xefdfbf:0xf8ecd5,px,.127,pz,1.35,.015,1.28);
  }
+ const edging:{x:number;y:number;z:number;scaleX:number;scaleZ:number;angle:number}[]=[];
+ // Small irregular shoulders soften the straight strip without covering its walking surface.
+ for(const side of [-1,1])for(let i=0;i<Math.min(12,Math.ceil(length/1.8));i++){
+  const t=(i+.5)/Math.min(12,Math.ceil(length/1.8));
+  edging.push({x:x+side*(width/2+.1+(i%3)*.025),y:.105,z:z-length/2+t*length,scaleX:.16+(i%2)*.035,scaleZ:.25+(i%3)*.07,angle:i*.77});
+ }
+ stoneDetails(g,0xc5b99a,edging);
 }
 export function plazaGarden(){
  const g=new T.Group(),a=VILLAGE_ART;
@@ -71,13 +90,29 @@ export function fountainModel(){
 }
 export function cottageModel(roof=VILLAGE_ART.mint,wall=0xf4e3bf,school=false){
  const g=new T.Group(),a=VILLAGE_ART,w=school?7:4.8,d=school?4.6:4.1,h=school?3.6:3;
+ const roofEdge=new T.Color(roof).lerp(new T.Color(a.trim),.2).getHex(),ridge=new T.Color(roof).multiplyScalar(.78).getHex();
  block(g,a.edge,0,.2,0,w+.6,.4,d+.5);block(g,wall,0,h/2+.4,0,w,h,d);
  block(g,a.trim,0,.62,0,w+.12,.3,d+.12);
  for(const side of [-1,1]){block(g,a.trim,side*(w/2-.16),h/2+.45,d/2+.06,.23,h,.16);const roofHalf=block(g,roof,0,h+.95,side*(d/4+.15),w+.85,.2,d/2+.65);roofHalf.rotation.x=side*.43;}
- block(g,0x507e77,0,h+1.46,0,w+.9,.18,.18);
- for(let row=0;row<4;row++)for(const side of [-1,1]){const pz=side*(.2+row*.6),py=h+1.4-row*.25;block(g,0x77afa0,0,py,pz,w+.7,.045,.07);}
+ block(g,ridge,0,h+1.46,0,w+.9,.18,.18);
+ for(let row=0;row<4;row++)for(const side of [-1,1]){const pz=side*(.2+row*.6),py=h+1.4-row*.25;block(g,roofEdge,0,py,pz,w+.7,.045,.07);}
  const front=d/2;
+ // Dark reveals, pale lintels and paired shutters keep the windows readable at village scale.
+ for(const side of [-1,1]){
+  const x=side*(school?2.25:1.5);
+  for(const shutter of [-1,1]){block(g,roof,x+shutter*.7,2,front+.14,.22,1.25,.12);block(g,a.trim,x+shutter*.7,1.82,front+.22,.23,.055,.03);}
+  block(g,a.trim,x,2.75,front+.18,1.48,.14,.28);
+ }
+ for(const side of [-1,1]){
+  block(g,a.wood,side*(w/2+.12),h+.48,0,.16,.2,d+.55);
+  block(g,a.wood,side*(w/2-.18),1.65,-d/2-.035,.15,2.6,.12);
+ }
+ const courses=[];
+ for(let i=0;i<Math.floor(w/.72);i++)courses.push({x:-w/2+.36+i*.72,y:.23,z:front+.26,scaleX:.31,scaleZ:.15,angle:(i%2)*.13});
+ stoneDetails(g,0xb9a487,courses);
  block(g,a.wood,0,1.45,front+.1,1.22,2.15,.18);block(g,0xb1d4c5,0,1.65,front+.21,.84,1.25,.045);post(g,0xe7c078,.34,1.25,front+.27,.065,.13);
+ for(const px of [-.38,0,.38])block(g,0xb78a61,px,.77,front+.215,.28,.55,.035);
+ block(g,a.trim,0,2.57,front+.16,1.5,.16,.26);
  for(let i=0;i<3;i++)block(g,i%2?a.trim:a.edge,0,.12+i*.12,front+.9-i*.22,2.05,.24,.95);
  for(const side of [-1,1]){const x=side*(school?2.25:1.5);block(g,a.wood,x,2,front+.08,1.18,1.4,.18);block(g,0xb7d8cf,x,2,front+.19,.92,1.1,.05);block(g,a.trim,x,2,front+.23,.07,1.12,.04);block(g,a.trim,x,2,front+.23,.95,.07,.04);block(g,a.wood,x,1.25,front+.3,1.4,.22,.5);flowerBed(g,x,front+.6,1.2);}
  if(school){
