@@ -77,6 +77,33 @@ export function plazaGarden(){
  for(const [x,z,len,angle]of [[-5,-8.5,3.6,0],[5,-8.5,3.6,0],[-13,6,3.2,0],[12,2,3.2,0],[-5,12,2.4,0],[5,12,2.4,0]])flowerBed(g,x,z,len,angle);
  return g;
 }
+/** 광장의 연꽃 호수(장식 전용). 가운데가 (0,0)이고, 물 판정과 같은 둥근 사각형 모양이에요. */
+export function lotusLake(halfX:number,halfZ:number,corner:number){
+ const g=new T.Group();
+ const shape=(hx:number,hz:number,r:number)=>{const s=new T.Shape();s.moveTo(-hx+r,-hz);s.lineTo(hx-r,-hz);s.quadraticCurveTo(hx,-hz,hx,-hz+r);s.lineTo(hx,hz-r);s.quadraticCurveTo(hx,hz,hx-r,hz);s.lineTo(-hx+r,hz);s.quadraticCurveTo(-hx,hz,-hx,hz-r);s.lineTo(-hx,-hz+r);s.quadraticCurveTo(-hx,-hz,-hx+r,-hz);return s;};
+ const flat=(hx:number,hz:number,r:number,c:number,y:number)=>{const m=piece(g,c,new T.ShapeGeometry(shape(hx,hz,Math.max(.2,r)),12),0,y,0);m.rotation.x=-Math.PI/2;m.castShadow=false;return m;};
+ flat(halfX+.65,halfZ+.65,corner+.65,0xe9d8aa,.035); // 모래 둑
+ flat(halfX+.2,halfZ+.2,corner+.2,0x9fc98b,.05); // 물가 풀
+ flat(halfX,halfZ,corner,0x86d3d0,.075); // 얕은 물
+ flat(halfX-1.1,halfZ-1.1,corner-1,0x5fb5c4,.085); // 깊은 물
+ flat(halfX-2.2,halfZ-2.4,corner-1.4,0x4fa3b8,.09);
+ // 물가 돌: 둘레를 따라 고르게
+ const edge:{x:number;y:number;z:number;scaleX:number;scaleZ:number;angle:number}[]=[];
+ for(let i=0;i<46;i++){const a=i/46*Math.PI*2,cx=Math.cos(a),cz=Math.sin(a),k=1/Math.max(Math.abs(cx)/(halfX+.35),Math.abs(cz)/(halfZ+.35));edge.push({x:cx*k,y:.1,z:cz*k,scaleX:.22+(i%3)*.06,scaleZ:.3+(i%4)*.05,angle:i*1.3});}
+ stoneDetails(g,0xcfc3a3,edge);
+ // 물결
+ for(const [x,z,r]of [[-1,-2,.55],[1.2,1.8,.4],[-.6,3.1,.32]]){const ring=piece(g,0xd9f3ef,new T.TorusGeometry(r,.025,4,28),x,.1,z);ring.rotation.x=Math.PI/2;ring.castShadow=false;}
+ // 연잎과 연꽃
+ const pads=[[-1.9,-3.4,.55],[1.6,-2.6,.48],[-.4,-1,.42],[2,.4,.6],[-2,1.6,.5],[.7,2.9,.46],[-1.2,3.9,.4],[1.9,3.8,.52],[.2,-3.9,.38]];
+ pads.forEach(([x,z,r],i)=>{const pad=piece(g,i%2?0x5c9d57:0x74b268,new T.CircleGeometry(r,18,.25,Math.PI*2-.5),x,.11,z);pad.rotation.x=-Math.PI/2;pad.rotation.z=i*1.7;pad.castShadow=false;
+  if(i%2===0){const s=i%4===0?1.35:1.1;for(let k=0;k<8;k++){const a=k/8*Math.PI*2,petal=orb(g,k%2?0xf7b6cc:0xf08fb0,x+Math.cos(a)*.2*s,.27,z+Math.sin(a)*.2*s,.15*s,1.6);petal.rotation.z=Math.cos(a)*.65;petal.rotation.x=Math.sin(a)*.65;}for(let k=0;k<5;k++){const a=k/5*Math.PI*2+.3;orb(g,0xffe3ec,x+Math.cos(a)*.09*s,.38,z+Math.sin(a)*.09*s,.09*s,1.5);}orb(g,0xffd966,x,.45,z,.07*s);}});
+ // 갈대
+ for(const [x,z]of [[halfX-.35,halfZ-.6],[halfX-.75,halfZ-.25],[-halfX+.4,-halfZ+.55],[-halfX+.8,-halfZ+.3],[halfX-.3,-halfZ+.9]]){const h=.9+((x*7+z*3)%3+3)%3*.18;post(g,0x7a9b52,x,h/2+.05,z,.03,h);orb(g,0x7a5236,x,h+.08,z,.07,2.2);const leaf=post(g,0x8db361,x+.08,.4,z,.025,.7);leaf.rotation.z=.35;}
+ // 작은 나무 선착장(광장 쪽)
+ for(let i=0;i<4;i++)block(g,VILLAGE_ART.wood,-halfX+.55,.2,-.9+i*.6,1.5,.08,.5);
+ for(const z of [-1.1,1.1])for(const x of [-halfX+.05,-halfX+1.15])post(g,0x7c5a3e,x,.12,z,.07,.4);
+ return g;
+}
 export function fountainModel(){
  const g=new T.Group(),a=VILLAGE_ART;
  piece(g,a.edge,new T.CylinderGeometry(1.9,2,.25,16),0,.2,0);

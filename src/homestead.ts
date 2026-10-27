@@ -58,6 +58,44 @@ export function placeHome(s: Save,kind:number,column:number,row:number,rotation:
   const error=layoutError(next);if(error)return error;
   s.homestead.objects=next;if(!old)s.homestead.nextId++;return '';
 }
+/** 한 번에 꾸미기: 예쁘게 짜 둔 정원 배치. 열린 도안만, 원래 제작·배치 규칙 그대로 놓아요. */
+type PresetItem = { kind: number; column: number; row: number; rotation: number };
+const at = (kind: number, cells: [number, number][], rotation = 0): PresetItem[] => cells.map(([column, row]) => ({ kind, column, row, rotation }));
+const span = (from: number, to: number) => Array.from({ length: to - from + 1 }, (_, i) => from + i);
+export const GARDEN_PRESETS = [
+  { id: 'flower', name: '꽃길 정원', icon: '🌸', note: '돌길 따라 딸기꽃이 피는 정원', items: [
+    ...at(1, span(3, 10).flatMap(r => [[5, r], [6, r]] as [number, number][])),
+    ...at(6, span(4, 10).flatMap(r => [[4, r], [7, r]] as [number, number][])),
+    ...at(3, [[1, 2], [3, 2], [7, 2], [9, 2]]), ...at(21, [[5, 2]]), ...at(18, [[2, 6], [8, 6]]),
+  ] },
+  { id: 'pond', name: '연못 쉼터', icon: '⛲', note: '분수 둘레에 라벤더와 가로등', items: [
+    ...at(23, [[5, 10]]), ...at(2, [[5, 9], [5, 8], [5, 7]]), ...at(12, [[5, 5]]),
+    ...at(8, [[4, 4], [4, 5], [4, 6], [7, 4], [7, 5], [7, 6], [5, 4], [6, 4]]), ...at(18, [[2, 6], [8, 6]]),
+    ...at(19, [[3, 8], [8, 8], [3, 3], [8, 3]]), ...at(10, [[1, 1], [10, 1], [1, 9], [10, 9], [1, 5], [10, 5]]),
+  ] },
+  { id: 'orchard', name: '과수원 소풍', icon: '🍎', note: '열매나무 아래 소풍과 풍차', items: [
+    ...at(0, span(5, 10).flatMap(r => [[5, r], [6, r]] as [number, number][])), ...at(14, [[5, 4]]),
+    ...at(11, [[1, 1], [3, 1], [8, 1], [10, 1], [1, 3], [3, 3], [8, 3], [10, 3]]), ...at(7, span(6, 9).flatMap(r => [[3, r], [8, r]] as [number, number][])),
+    ...at(22, [[0, 8]]), ...at(17, [[10, 7]]), ...at(4, [[0, 11], [2, 11], [8, 11], [10, 11]]),
+  ] },
+] as const;
+/** 테마에 필요한 도안 중 지금 쓸 수 있는 수. */
+export function presetReady(s: Save, id: string, full: boolean) {
+  const p = GARDEN_PRESETS.find(x => x.id === id); if (!p) return { usable: 0, total: 0 };
+  const open = blueprintIds(s.exploration.solved.length), kinds = [...new Set(p.items.map(i => i.kind))];
+  return { usable: kinds.filter(k => open.includes(k) && (full || STARTER_BLUEPRINTS.includes(k))).length, total: kinds.length };
+}
+export function applyGardenPreset(s: Save, id: string, full: boolean) {
+  const p = GARDEN_PRESETS.find(x => x.id === id); let placed = 0, skipped = 0, short = false, spent = 0;
+  if (!p) return { placed, skipped, short, spent };
+  const open = blueprintIds(s.exploration.solved.length);
+  for (const it of p.items) {
+    if (!open.includes(it.kind) || (!full && !STARTER_BLUEPRINTS.includes(it.kind))) { skipped++; continue; }
+    if (availableHome(s, it.kind) <= 0) { const before = s.berries, error = craftHome(s, it.kind, full); if (error) { skipped++; if (error.startsWith('베리')) short = true; continue; } spent += before - s.berries; }
+    if (placeHome(s, it.kind, it.column, it.row, it.rotation, full)) skipped++; else placed++;
+  }
+  return { placed, skipped, short, spent };
+}
 export function storeHome(s: Save,uid:number) { const index=s.homestead.objects.findIndex(o=>o.uid===uid);if(index<0)return false;s.homestead.objects.splice(index,1);return true; }
 export const HOME_REQUESTS = [
   {title:'꽃을 보며 쉬고 싶어요',icon:'🌸',needs:[[6,7,8,9],[18]],memory:'꽃향기 속 첫 인사',line:'네가 만든 꽃밭 옆에서 쉬니 정말 포근해!'},

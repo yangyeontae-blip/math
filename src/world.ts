@@ -1,7 +1,7 @@
 import { HOME_PLAZA_EXIT, homeExitInReach } from './home-exit';
 import { SkillRuntime, trialComplete, type SkillId, type JobId } from './academy';
 import { HuntingRuntime, type HuntEvent, type HuntSnapshot } from './hunting';
-import { advanceHuntCharge, autoHuntTarget, HuntingWorld } from './hunting-world';
+import { advanceHuntCharge, autoHuntTarget, HuntingWorld, HUNT_THEMES, huntingScenery } from './hunting-world';
 import { huntingPower } from './rules';
 import { HUNT_ZONES, HUNT_CAMP } from './hunting';
 import { academyBuilding, academyInterior, skillEffectModel, VILLAGE_ART, PLAZA_BERRY_TREES, berryTreeModel, plazaGarden, fountainModel, cottageModel, marketGarden, homesteadGarden, stoneLane, districtBorder, flowerBed } from './village-art';
@@ -17,7 +17,8 @@ import { trailHere, trailPair, TRAIL_SEEDS, TRAIL_LAMPS } from './forest-trail';
 import * as T from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { CHARACTERS, MONSTERS, OUTFITS, PETS, RIDES, WEAPONS, PLAYER_MOVE_SPEED, HERO_BREAD_PET_ID, berryWithinReach, petChaseSpeed, riderHeight, journeyFor, roomFurniturePosition, type ForestKind, type Save } from './rules';
-import { STAGES, stageBerries, stageMonsters, stagePlatforms, stageTrees, stageSize, isVillagePond } from './stages';
+import { STAGES, stageBerries, stageMonsters, stagePlatforms, stageTrees, stageSize, isVillagePond, VILLAGE_POND } from './stages';
+import { lotusLake } from './village-art';
 import { EXPEDITION_STAR_SPOTS, expeditionLayout } from './expedition';
 import { storyHere, storySpot } from './story';
 import { activitySpec, type StoryActivity } from './story-activities';
@@ -817,7 +818,7 @@ export class World {
     for(const [x,z]of [[-17,-13],[-12,-15],[11,-15],[17,-13],[-19,14],[18,16],[-23,-5],[23,-6]])this.tree(x,z,1.05,false,theme.foliage);
     stageTrees(0).forEach(({x,z},id)=>{const at=villageTreeSpot(id,x,z);this.addChoppableTree(id,at.x,at.z,1,false,theme.foliage);});
     // Keep the earned story pond and bridge exactly where earlier saves expect them.
-    box(this.scene,0xe5d29f,19,.03,8,8.6,.1,11.5);box(this.scene,0x59b9bf,19,.1,8,7.5,.08,10.5);
+    {const lake=lotusLake(VILLAGE_POND.halfX,VILLAGE_POND.halfZ,VILLAGE_POND.corner);lake.position.set(VILLAGE_POND.x,0,VILLAGE_POND.z);this.scene.add(lake);}
     const board=new T.Group();
     for(const x of [-.85,.85])cylinder(board,0x886445,x,.9,0,.08,.1,1.8,7);
     box(board,0xc99062,0,1.5,0,2.5,1.35,.2);
@@ -1106,10 +1107,13 @@ export class World {
   enterHunting(s: Save, zone = 0) {
     if (!Number.isInteger(zone) || !HUNT_ZONES[zone] || s.level < HUNT_ZONES[zone].level) return false;
     this.clearMap(); this.inHunting = true; this.combatSave = s; this.stage = 0; this.platforms = []; s.room.inside = s.homestead.inside = false;
-    this.scene.background = new T.Color(0xd8e9cb); this.scene.fog = null;
-    box(this.scene, [0x9cb17a, 0xb5bd78, 0x9ba7b1, 0x899f9b][zone], 0, -.5, -3, 43, 1, 49);
-    box(this.scene, 0xe3d0a4, 0, .025, 8.5, 35, .05, 9); stoneLane(this.scene, 0, -8, 4, 30);
-    for (const side of [-1, 1]) for (let i = 0; i < 7; i++) this.tree(side * (18 + i % 2), -21 + i * 6, 1.1, false, [0x71955e, 0x96a25f, 0x728e8a, 0x587d72][zone]);
+    // 구역마다 다른 하늘·안개·바닥과 장식. 야영지(아래쪽 모래밭)는 밝게 남겨 안전한 곳임을 보여 줘요.
+    const theme = HUNT_THEMES[zone]; this.scene.background = new T.Color(theme.sky); this.scene.fog = new T.Fog(theme.fog, 48, 95);
+    box(this.scene, theme.ground, 0, -.5, -3, 43, 1, 49);
+    box(this.scene, 0xe3d0a4, 0, .025, 8.5, 35, .05, 9); box(this.scene, theme.path, 0, .03, -8, 4.4, .06, 30);
+    for (let i = 0; i < 12; i++) box(this.scene, new T.Color(theme.path).multiplyScalar(1.18).getHex(), (i % 2 ? .9 : -.9), .07, -21.5 + i * 2.4, 1.5, .03, 1.2);
+    for (const side of [-1, 1]) for (let i = 0; i < 7; i++) this.tree(side * (18 + i % 2), -21 + i * 6, 1.1, false, theme.foliage);
+    this.scene.add(huntingScenery(zone));
     const tent = new T.Group(); tent.position.set(-11, 0, 10); const roof = mesh(new T.ConeGeometry(2.3, 3.2, 4), 0xd2ad72, 0, 1.7, 0, tent); roof.rotation.y = Math.PI / 4; box(tent, 0x5c6951, 0, .65, 1.25, 1.2, 1.2, .1); this.scene.add(tent);
     cylinder(this.scene, 0x9f7a51, 10, .4, 10, 1, 1, .7, 8); ball(this.scene, 0xf3ca79, 10, .9, 10, .45, .5, .45);
     this.sign(this.scene, '안전 야영지 · 쉬면 체력 회복', 0, 3.3, 12, 7, '#254b35', true);
@@ -1117,7 +1121,7 @@ export class World {
     for (const area of HUNT_ZONES) { const x = -12 + area.id * 8; this.addEntity(`huntingZone${area.id}`, `${area.name} · 레벨 ${area.level}`, x, 5.5, new T.Group()); this.sign(this.scene, `${area.name} Lv.${area.level}`, x, 2.4, 5.5, 4.5, s.level >= area.level ? '#365842' : '#8b7866', true); }
     this.sign(this.scene, HUNT_ZONES[zone].name, 0, 3.2, -17, 6, '#365842', true);
     this.combatRuntime = new HuntingRuntime({ zone, level: s.level, power: huntingPower(s), ...this.combatProfile });
-    this.combatWorld = new HuntingWorld(); this.scene.add(this.combatWorld.root); this.mergeStaticScenery();
+    this.combatWorld = new HuntingWorld(false, zone); this.scene.add(this.combatWorld.root); this.mergeStaticScenery();
     this.setAvatar(s.character, s.outfit, s.weapon, s.outfits[s.outfit], s.weapons[s.weapon], -1, s.pet, s.hairstyle, s.face); this.placeAt(HUNT_CAMP.x, HUNT_CAMP.z); this.onStageLoaded(0); return true;
   }
   enterTraining(s: Save, options: TrainingOptions) {

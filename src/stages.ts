@@ -12,8 +12,14 @@ export const STAGES = [
 ] as const;
 export function stageSize(stage: number) { return stage === 0 ? { x: 25, z: 20 } : { x: 38 + stage, z: 32 + stage }; }
 // The pond exists only in the village. Hunt maps reuse these coordinates as safe paths.
+/** 광장 연꽃 호수: 예전 네모 연못과 같은 자리·크기에 모서리만 둥글게(보이는 물가와 막히는 곳이 같아요). */
+export const VILLAGE_POND = { x: 19, z: 8, halfX: 3.75, halfZ: 5.25, corner: 1.6 } as const;
 export function isVillagePond(stage: number, x: number, z: number) {
-  return stage === 0 && x > 15.25 && x < 22.75 && z > 2.75 && z < 13.25;
+  if (stage !== 0) return false;
+  const p = VILLAGE_POND, dx = Math.abs(x - p.x), dz = Math.abs(z - p.z);
+  if (dx >= p.halfX || dz >= p.halfZ) return false;
+  const qx = Math.max(dx - (p.halfX - p.corner), 0), qz = Math.max(dz - (p.halfZ - p.corner), 0);
+  return qx * qx + qz * qz < p.corner * p.corner;
 }
 export function stageMonsters(stage: number) {
   if (stage === 0) return [[-11, 5], [-9, 11], [-15, 1], [15, -15]].map(([x, z], i) => ({ x, z, type: i }));

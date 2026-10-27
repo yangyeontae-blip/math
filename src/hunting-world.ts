@@ -19,6 +19,59 @@ export function advanceHuntCharge(start: { x: number; z: number }, direction: { 
   return { x, z, blocked: false };
 }
 
+/** 사냥터 구역별 분위기(하늘·안개·바닥·나무·몬스터 색). 숫자는 HUNT_ZONES의 id와 같아요. */
+export const HUNT_THEMES = [
+  { title: '해 질 녘 가시덤불', sky: 0x4f5f47, fog: 0x45553f, ground: 0x4c6a3d, path: 0x6b6446, foliage: 0x3f5d36, tint: 0x6c8f42, eye: 0xfff06a, glow: 0xb8ff6e },
+  { title: '메마른 붉은 협곡', sky: 0x9a6a46, fog: 0x8a5a3a, ground: 0xa67645, path: 0x7d5232, foliage: 0x7c6a3a, tint: 0xb0703c, eye: 0xffa53a, glow: 0xffc46b },
+  { title: '안개 낀 달빛 늪', sky: 0x23284a, fog: 0x1e2342, ground: 0x2f3557, path: 0x454a6a, foliage: 0x253049, tint: 0x5e6aa8, eye: 0xc9f0ff, glow: 0x9fd8ff },
+  { title: '불타는 용암 폐허', sky: 0x2b1515, fog: 0x231010, ground: 0x3a2120, path: 0x4f3530, foliage: 0x2a1a18, tint: 0x8a3b30, eye: 0xff4a2e, glow: 0xff7a2e },
+] as const;
+
+/** 구역마다 다른 장식(놀이 공간 바깥에만 둬요). 보상·충돌·저장과 상관없는 그림이에요. */
+export function huntingScenery(zone: number): T.Group {
+  const g = new T.Group(), theme = HUNT_THEMES[zone] ?? HUNT_THEMES[0], cache = new Map<string, T.Material>();
+  const mat = (c: number, glow = false) => { const key = `${c}:${glow}`; if (!cache.has(key)) cache.set(key, glow ? new T.MeshBasicMaterial({ color: c }) : new T.MeshStandardMaterial({ color: c, roughness: .9, flatShading: true })); return cache.get(key)!; };
+  const put = (geo: T.BufferGeometry, c: number, x: number, y: number, z: number, glow = false) => { const m = new T.Mesh(geo, mat(c, glow)); m.position.set(x, y, z); m.castShadow = !glow; m.receiveShadow = true; g.add(m); return m; };
+  let seed = zone * 7919 + 13; const rnd = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
+  // 놀이 공간(가로 -11~11, 세로 -20~4)과 야영지(세로 4 이상)를 피한 둘레 자리
+  const spots: { x: number; z: number }[] = [];
+  for (let i = 0; i < 44; i++) { const side = i % 3; const x = side === 2 ? -19 + rnd() * 38 : (side ? 1 : -1) * (12 + rnd() * 8), z = side === 2 ? -21 - rnd() * 5 : -24 + rnd() * 27; spots.push({ x, z }); }
+  // 어둠 속에서 빛나는 눈(모든 구역)
+  for (let i = 0; i < 9; i++) { const p = spots[i * 4 + 1]; const y = .8 + rnd() * .9; for (const side of [-1, 1]) put(new T.SphereGeometry(.09, 8, 6), theme.eye, p.x + side * .18, y, p.z + .9, true).scale.set(1, .6, 1); }
+  if (zone === 0) {
+    spots.forEach((p, i) => {
+      if (i % 3 === 0) { // 가시 덩굴
+        const vine = put(new T.TorusGeometry(.9 + rnd() * .5, .12, 6, 14, Math.PI * 1.2), 0x2f4a2a, p.x, .5, p.z); vine.rotation.set(Math.PI / 2 + rnd() * .5, rnd() * 3, 0);
+        for (let k = 0; k < 6; k++) { const a = k / 6 * Math.PI * 1.2; const t = put(new T.ConeGeometry(.08, .35, 4), 0x9a8a5a, p.x + Math.cos(a) * 1.1, .55 + Math.sin(a) * .3, p.z + Math.sin(a) * .4); t.rotation.z = a; }
+      } else if (i % 3 === 1) { // 빛나는 독버섯
+        for (let k = 0; k < 3; k++) { const x = p.x + (rnd() - .5) * 1.4, z = p.z + (rnd() - .5) * 1.4, h = .3 + rnd() * .5; put(new T.CylinderGeometry(.06, .08, h, 6), 0xd8d0b0, x, h / 2, z); put(new T.SphereGeometry(.28, 10, 6, 0, Math.PI * 2, 0, Math.PI / 2), k % 2 ? 0x9b4fc4 : 0x6fd36a, x, h, z, true); }
+      } else { put(new T.CylinderGeometry(.55, .7, .7, 7), 0x4a3828, p.x, .35, p.z); put(new T.CylinderGeometry(.5, .5, .05, 7), 0x7a6040, p.x, .72, p.z); }
+    });
+  } else if (zone === 1) {
+    spots.forEach((p, i) => {
+      if (i % 2 === 0) { const h = 2 + rnd() * 3.5; const spire = put(new T.ConeGeometry(.9 + rnd() * .6, h, 6), i % 4 ? 0x9a5a35 : 0x7d4529, p.x, h / 2, p.z); spire.rotation.y = rnd() * 3; }
+      else { for (let k = 0; k < 3; k++) put(new T.IcosahedronGeometry(.4 + rnd() * .5, 0), 0x8a6a4a, p.x + (rnd() - .5) * 1.5, .3, p.z + (rnd() - .5) * 1.5); }
+    });
+    for (let i = 0; i < 16; i++) { const crack = put(new T.BoxGeometry(.08, .02, 2 + rnd() * 3), 0x4a2f1c, -20 + rnd() * 40, .02, -22 + rnd() * 28); crack.rotation.y = rnd() * 3; }
+  } else if (zone === 2) {
+    spots.forEach((p, i) => {
+      if (i % 3 === 0) { const pool = put(new T.CircleGeometry(1.2 + rnd() * 1.2, 20), 0x13253a, p.x, .03, p.z); pool.rotation.x = -Math.PI / 2; pool.castShadow = false; }
+      else if (i % 3 === 1) { // 죽은 나무
+        const h = 2.2 + rnd() * 1.6; put(new T.CylinderGeometry(.12, .22, h, 6), 0x1c1a24, p.x, h / 2, p.z);
+        for (let k = 0; k < 3; k++) { const b = put(new T.CylinderGeometry(.04, .08, 1.1, 5), 0x1c1a24, p.x, h * (.55 + k * .15), p.z); b.rotation.z = (k % 2 ? 1 : -1) * (.7 + rnd() * .4); b.rotation.y = rnd() * 3; }
+      } else put(new T.SphereGeometry(.16, 10, 8), theme.glow, p.x, 1.2 + rnd(), p.z, true); // 도깨비불
+    });
+  } else {
+    for (let i = 0; i < 22; i++) { const crack = put(new T.BoxGeometry(.18, .03, 1.5 + rnd() * 3), i % 3 ? 0xff6a2a : 0xffb23e, -21 + rnd() * 42, .03, -24 + rnd() * 27, true); crack.rotation.y = rnd() * 3; if (Math.abs(crack.position.x) < 11 && crack.position.z > -20) crack.position.x += crack.position.x < 0 ? -12 : 12; }
+    spots.forEach((p, i) => {
+      if (i % 3 === 0) { const h = 1 + rnd() * 2; const c = put(new T.OctahedronGeometry(.5, 0), 0x2a1f3a, p.x, h * .5, p.z); c.scale.set(.6, h, .6); c.rotation.y = rnd() * 3; }
+      else if (i % 3 === 1) { const h = 1.5 + rnd() * 2.5; put(new T.CylinderGeometry(.45, .55, h, 8), 0x5a4a44, p.x, h / 2, p.z); put(new T.BoxGeometry(1.3, .3, 1.3), 0x6a5a52, p.x, h + .15, p.z).rotation.y = rnd(); }
+      else put(new T.SphereGeometry(.1, 6, 6), theme.glow, p.x, .4 + rnd() * 2, p.z, true); // 불씨
+    });
+  }
+  g.userData.huntingScenery = zone; return g;
+}
+
 /** A visual adapter only. Health, damage, rewards and simulation time belong to HuntingRuntime. */
 export class HuntingWorld {
   readonly root = new T.Group();
@@ -36,7 +89,9 @@ export class HuntingWorld {
   private ring = this.geometry(new T.RingGeometry(.88, 1, 32));
   private plane = this.geometry(new T.PlaneGeometry(1, 1));
   private arc = this.geometry(new T.TorusGeometry(1, .075, 6, 24, Math.PI));
-  constructor(readonly training = false) { this.root.userData.huntingRuntime = true; }
+  constructor(readonly training = false, readonly zone = 0) { this.root.userData.huntingRuntime = true; }
+  private glowing = new Map<number, T.MeshBasicMaterial>();
+  private glow(color: number) { let m = this.glowing.get(color); if (!m) { m = new T.MeshBasicMaterial({ color }); this.glowing.set(color, m); this.materials.add(m); } return m; }
   private geometry<G extends T.BufferGeometry>(geometry: G): G { this.geometries.add(geometry); return geometry; }
   private material(color: number | string, opacity = 1): T.MeshStandardMaterial | T.MeshBasicMaterial {
     const key = `${color}:${opacity}`; if (this.colors.has(key)) return this.colors.get(key) as T.MeshStandardMaterial;
@@ -56,12 +111,18 @@ export class HuntingWorld {
       this.piece(body, this.sphere, color, 0, .9, .12, .43, .5, .22);
       this.piece(body, this.sphere, 0xf7e7b8, 0, .95, .34, .25, .25, .025);
     } else {
-      this.piece(body, this.sphere, color, 0, .68, 0, .7, .64, .61);
+      // 구역이 높을수록 크고 어두우며, 볼터치 대신 빛나는 눈·찡그린 눈썹·이빨을 달아요.
+      const theme = HUNT_THEMES[this.zone] ?? HUNT_THEMES[0], dark = new T.Color(color).lerp(new T.Color(theme.tint), .55).multiplyScalar(.82).getHex();
+      body.scale.setScalar(1 + this.zone * .14);
+      this.piece(body, this.sphere, dark, 0, .68, 0, .7, .64, .61);
       for (const side of [-1, 1]) {
-        this.piece(body, this.sphere, 0x384a35, side * .21, .8, .55, .06, .08, .025);
-        this.piece(body, this.sphere, 0xf4b5a3, side * .4, .61, .51, .12, .055, .03);
-        this.piece(body, this.sphere, color, side * .4, .18, .12, .24, .16, .29);
+        const eye = new T.Mesh(this.sphere, this.glow(theme.eye)); eye.position.set(side * .22, .82, .56); eye.scale.set(.1, .07, .03); body.add(eye);
+        const brow = this.piece(body, this.cube, 0x1e1a1a, side * .22, .95, .57, .26, .05, .04); brow.rotation.z = side * .45;
+        this.piece(body, this.sphere, dark, side * .4, .18, .12, .24, .16, .29);
       }
+      for (const x of [-.12, .12]) { const fang = this.piece(body, this.cone, 0xfff4dc, x, .5, .57, .045, .13, .045); fang.rotation.x = Math.PI; }
+      if (this.zone >= 2) for (let i = 0; i < 5; i++) { const spike = this.piece(body, this.cone, 0x2a2430, -.36 + i * .18, 1.05 - Math.abs(i - 2) * .06, -.32, .1, .4, .1); spike.rotation.x = -.5; }
+      if (this.zone >= 3) for (const side of [-1, 1]) { const horn = this.piece(body, this.cone, 0x3a2a24, side * .38, 1.28, .05, .12, .55, .12); horn.rotation.z = -side * .5; }
       if (index % 6 === 0) for (const side of [-1, 1]) { const leaf = this.piece(body, this.sphere, 0x4c7951, side * .16, 1.31, 0, .17, .4, .1); leaf.rotation.z = -side * .6; }
       else if (index % 6 === 1) { this.piece(body, this.sphere, 0x81583e, 0, 1.1, 0, .78, .26, .7); this.piece(body, this.cone, 0xe8d7ac, 0, 1.45, 0, .17, .55, .17); }
       else if (index % 6 === 2) for (const side of [-1, 1]) this.piece(body, this.sphere, color, side * .31, 1.44, 0, .18, .58, .17);
