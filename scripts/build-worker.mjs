@@ -15,6 +15,7 @@ const types = {
   '.svg': 'image/svg+xml; charset=utf-8',
   '.webmanifest': 'application/manifest+json; charset=utf-8',
   '.png': 'image/png',
+  '.webp': 'image/webp',
   '.jpg': 'image/jpeg',
 };
 const textTypes = new Set(['.css', '.html', '.js', '.json', '.txt', '.svg', '.webmanifest']);

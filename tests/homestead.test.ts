@@ -5,7 +5,7 @@ import {emptyExploration,openDiscovery,solveDiscovery,syncDiscoveries,discoveryI
 test('version 20 migration preserves all old progress, finances and partial activities and recognizes finished first discoveries',()=>{
  const s=newSave('숲친구',0,3);s.berries=345;s.forestTrail={seeds:[0,1,2,3,4,5],lit:[0,1,2],placed:[3,3,3],drafts:['22','40','63']};
  const old={...structuredClone(s),version:20} as Record<string,unknown>;delete old.homestead;delete old.exploration;
- const after=validateSave(old);assert.equal(after.version,21);assert.deepEqual(after.homestead,emptyHomestead());assert.deepEqual(after.exploration.solved,['addition:1']);
+ const after=validateSave(old);assert.equal(after.version,22);assert.deepEqual(after.homestead,emptyHomestead());assert.deepEqual(after.exploration.solved,['addition:1']);
  for(const k of ['berries','weapons','forestTrail','forestActivities','story','learning','adventure','additionJourney'] as const)assert.deepEqual(after[k],s[k]);
 });
 test('24 blueprints unlock with ten discoveries available in grade 1, first crafting is free and paid duplicates are atomic',()=>{

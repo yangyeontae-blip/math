@@ -1,5 +1,9 @@
 import { HOME_PLAZA_EXIT, homeExitInReach } from './home-exit';
-import { SkillRuntime, trialComplete, type SkillId } from './academy';
+import { SkillRuntime, trialComplete, type SkillId, type JobId } from './academy';
+import { HuntingRuntime, type HuntEvent, type HuntSnapshot } from './hunting';
+import { advanceHuntCharge, autoHuntTarget, HuntingWorld } from './hunting-world';
+import { huntingPower } from './rules';
+import { HUNT_ZONES, HUNT_CAMP } from './hunting';
 import { academyBuilding, academyInterior, skillEffectModel, VILLAGE_ART, PLAZA_BERRY_TREES, berryTreeModel, plazaGarden, fountainModel, cottageModel, marketGarden, homesteadGarden, stoneLane, districtBorder, flowerBed } from './village-art';
 import { shopSignText, shopInteraction } from './shop-signs';
 import { showEntityLabel } from './navigation';
@@ -25,7 +29,9 @@ import { STORYBOOK_LIGHTING, storybookMaterial, seasonalParticleAt } from './sto
 import { StorybookScene, leafMaterial } from './storybook-scene';
 
 type Entity = { id: string; name: string; x: number; z: number; mesh: T.Group; label: HTMLDivElement };
-export type GuideKind = 'academyGate' | 'academyBook' | 'guide' | 'marketExit' | 'noticeBoard' | 'homesteadGate' | 'shopStreet' | 'homeEditor' | 'homeExit' | 'homeVisitor' | 'discovery' | 'forestWork' | 'trailSeed' | 'trailLamp' | 'berry' | 'monster' | 'shop' | 'journey' | 'next' | 'star' | 'expMonster' | 'roomExit' | 'storyClue' | 'storyPuzzle' | 'storyMailbox' | 'village' | 'villageProject0' | 'villageProject1' | 'villageProject2';
+export type GuideKind = 'huntingGate' | 'huntingExit' | 'academyGate' | 'academyBook' | 'guide' | 'marketExit' | 'noticeBoard' | 'homesteadGate' | 'shopStreet' | 'homeEditor' | 'homeExit' | 'homeVisitor' | 'discovery' | 'forestWork' | 'trailSeed' | 'trailLamp' | 'berry' | 'monster' | 'shop' | 'journey' | 'next' | 'star' | 'expMonster' | 'roomExit' | 'storyClue' | 'storyPuzzle' | 'storyMailbox' | 'village' | 'villageProject0' | 'villageProject1' | 'villageProject2';
+export type TrainingOptions = { job?: JobId | null; mode: 'single' | 'multi' | 'attacking'; skills: readonly SkillId[]; trialRank?: 1 | 2 | 3; skill?: SkillId | null };
+export const PLAZA_COMBAT_GATES = { hunting: { x: -18, z: -3 }, market: { x: -18, z: 5.5 } } as const;
 const mat = (color: number, roughness = .86) => new T.MeshStandardMaterial({ color, roughness });
 const materials = new Map<number, T.MeshStandardMaterial>();
 const sharedGeometries = new Set<T.BufferGeometry>();
@@ -703,6 +709,18 @@ export class World {
   inMarket=false; private signResources:{texture:T.Texture;material:T.Material;geometry:T.BufferGeometry}[]=[];
   private signFontReady: Promise<unknown> | null = null;
   inAcademy=false; readonly skillRuntime=new SkillRuntime(); private skillModels=new Map<SkillId,T.Group>(); private skillGuide=false; private trial:{id:SkillId;started:number;distance:number;last:T.Vector3}|null=null; onAcademyTrial=(_id:SkillId)=>{};
+  inHunting=false; inTraining=false;
+  private combatRuntime: HuntingRuntime | null = null; private combatWorld: HuntingWorld | null = null;
+  private combatProfile: { job: JobId | null; learned: readonly SkillId[]; loadout: readonly (SkillId | null)[] } = { job: null, learned: [], loadout: [] };
+  private huntTarget: string | null = null; private combatSave: Save | null = null;
+  private combatAimUntil = 0; private combatAimAngle = 0;
+  private chargeMotion: { remaining: number; direction: { x: number; z: number } } | null = null;
+  private trainingOptions: TrainingOptions | null = null;
+  private trainingStats = { mode: 'single' as TrainingOptions['mode'], skill: null as SkillId | null, damage: 0, hits: 0, casts: 0, targetsHit: 0, elapsed: 0, complete: false, blocked: 0, rooted: 0 };
+  private trainingTargets = new Set<string>(); private trainingHitSkills = new Set<SkillId>();
+  private trainingEffects = new Map<SkillId, Set<string>>(); private trainingSkillTargets = new Map<SkillId, Set<string>>();
+  private trainingCastAt: Partial<Record<SkillId, number>> = {}; private trainingWindDistance = 0; private trainingLast = new T.Vector3();
+  onHuntEvent = (_event: HuntEvent) => {};
   inHomestead=false; private homeRoot:T.Group|null=null; private homeSave:Save|null=null; private homeTargets:ReturnType<typeof visitorTargets>=[]; private discoveryRoot:T.Group|null=null;
   private homeVisitors:{entity:Entity;cell:number;path:number[];pause:number;turn:number;kind:number}[]=[];
   active = false; paused = true; inRoom = false; onCollect = (_id: number) => {}; onStar = (_id: number) => {}; onInteract = (_id: string) => {}; onAttack = (_id: string | null) => {}; onNear = (_name: string | null, _id: string | null) => {}; onJump = () => {}; onRescue = () => {}; onStageLoaded = (_stage: number) => {};
@@ -723,6 +741,9 @@ export class World {
     const keyOf = (e: KeyboardEvent) => ({ KeyW: 'w', KeyA: 'a', KeyS: 's', KeyD: 'd', KeyE: 'e', KeyF: 'f', ArrowUp: 'arrowup', ArrowDown: 'arrowdown', ArrowLeft: 'arrowleft', ArrowRight: 'arrowright', Space: ' ' } as Record<string, string>)[e.code] ?? e.key.toLowerCase();
     window.addEventListener('keydown', e => { if (!this.active || this.paused || this.storyActivityFocus || /INPUT|TEXTAREA|SELECT/.test((e.target as HTMLElement).tagName)) return; const key = keyOf(e); if (['arrowup', 'arrowdown', 'arrowleft', 'arrowright', ' '].includes(key)) e.preventDefault(); this.keys.add(key); if (!e.repeat && key === ' ') this.jump(); if (!e.repeat && key === 'e') this.interact(); if (!e.repeat && key === 'f') this.attack(); });
     window.addEventListener('keyup', e => this.keys.delete(keyOf(e))); window.addEventListener('blur', () => this.clearInput()); document.addEventListener('visibilitychange', () => { if (document.hidden) this.clearInput(); });
+    let combatPointer: { x: number; y: number; id: number } | null = null;
+    this.renderer.domElement.addEventListener('pointerdown', e => { combatPointer = { x: e.clientX, y: e.clientY, id: e.pointerId }; });
+    this.renderer.domElement.addEventListener('pointerup', e => { const from = combatPointer; combatPointer = null; if (!from || from.id !== e.pointerId || Math.hypot(from.x - e.clientX, from.y - e.clientY) > 12 || !this.combatWorld || this.paused) return; const rect = this.renderer.domElement.getBoundingClientRect(); this.selectHuntTarget(this.combatWorld.pick(new T.Vector2((e.clientX - rect.left) / rect.width * 2 - 1, -(e.clientY - rect.top) / rect.height * 2 + 1), this.camera)); });
     this.renderOnce();
   }
   private sign(parent:T.Object3D,text:string,x:number,y:number,z:number,width=3.4,color='#416e62',foreground=false) {
@@ -756,8 +777,11 @@ export class World {
   private buildVillage(theme: VillageTheme = VILLAGE_THEMES.division) {
     this.scene.background=new T.Color(theme.sky);this.scene.fog=new T.Fog(theme.sky,58,112);
     box(this.scene,theme.ground,0,-.55,0,51,1.1,41);box(this.scene,theme.groundDeep,0,-1.3,0,50,.5,40);
-    box(this.scene,theme.path,0,.02,5,4,.06,29);box(this.scene,theme.path,-12,.025,2,25,.07,4);box(this.scene,theme.path,12,.025,-2,25,.07,4);
-    stoneLane(this.scene,0,6,4.4,27);stoneLane(this.scene,-12,2,24,4);stoneLane(this.scene,12,-2,24,4);
+    box(this.scene,theme.path,0,.02,5,4,.06,29);box(this.scene,theme.path,-7,.025,2,14,.07,4);box(this.scene,theme.path,12,.025,-2,25,.07,4);
+    stoneLane(this.scene,0,6,4.4,27);stoneLane(this.scene,-7,2,14,4);stoneLane(this.scene,12,-2,24,4);
+    for (const end of Object.values(PLAZA_COMBAT_GATES)) { const dx = end.x + 11, dz = end.z - 2, path = box(this.scene, theme.path, (-11 + end.x) / 2, .04, (2 + end.z) / 2, 3.8, .08, Math.hypot(dx, dz)); path.rotation.y = Math.atan2(dx, dz); }
+    const forkSign = new T.Group(); forkSign.position.set(-11, 0, 2.2); cylinder(forkSign, 0x94704c, 0, 1.15, 0, .09, .13, 2.3, 8); this.scene.add(forkSign);
+    this.sign(forkSign, '↖ 가시덩굴 숲', 0, 2.7, 0, 4.3, '#33573c', true); this.sign(forkSign, '↙ 상점거리', 0, 1.6, .15, 4.1, '#7d5260', true);
     this.scene.add(plazaGarden());districtBorder(this.scene,49,39);
     const fountain=fountainModel();fountain.position.set(-3,0,0);this.scene.add(fountain);this.colliders.push({x:-3,z:0,r:1.95});
     for(const [index,at] of PLAZA_BERRY_TREES.entries()){const tree=berryTreeModel(index%3);tree.position.set(at.x,0,at.z);tree.scale.setScalar(at.scale);this.scene.add(tree);this.colliders.push({x:at.x,z:at.z,r:.48});}
@@ -768,7 +792,8 @@ export class World {
     this.sign(this.scene,'신비의 시합장',arena.x,5.2,arena.z,5.4,'#675282');
     const school=academyBuilding();school.position.set(0,0,-12);this.scene.add(school);this.colliders.push({x:0,z:-12,r:4});this.sign(this.scene,'베리숲 모험학교',0,7.4,-9.4,5.4,'#173f30',true);this.addEntity('academyGate','🏛 모험학교 · 스킬 배우러 들어가기',0,-7,new T.Group());for(const x of [-4.8,4.8])this.colliders.push({x,z:-12,r:2.1});
     const exit=(id:string,name:string,x:number,z:number,color:number)=>{const g=this.gate(color);this.addEntity(id,name,x,z,g);this.sign(g,name.split(' · ')[0],0,4.8,0,6);};
-    exit('shopStreet','상점거리 · 왼쪽 길',-20,2,0xd69aa9);exit('journey','숲으로 모험 · 아래쪽 길',0,16,0x83b894);
+    exit('huntingGate','가시덩굴숲 · 왼쪽 위 사냥터',PLAZA_COMBAT_GATES.hunting.x,PLAZA_COMBAT_GATES.hunting.z,0x6d9563);
+    exit('shopStreet','상점거리 · 왼쪽 아래 길',PLAZA_COMBAT_GATES.market.x,PLAZA_COMBAT_GATES.market.z,0xd69aa9);exit('journey','숲으로 모험 · 아래쪽 길',0,16,0x83b894);
     for(const [x,z]of [[-17,-13],[-12,-15],[11,-15],[17,-13],[-19,14],[18,16],[-23,-5],[23,-6]])this.tree(x,z,1.05,false,theme.foliage);
     stageTrees(0).forEach(({x,z},id)=>{const at=villageTreeSpot(id,x,z);this.addChoppableTree(id,at.x,at.z,1,false,theme.foliage);});
     // Keep the earned story pond and bridge exactly where earlier saves expect them.
@@ -944,6 +969,10 @@ export class World {
     this.addBerries();
   }
   private clearMap() {
+    this.chargeMotion = null;
+    const combatAvatar = this.combatSave;
+    this.combatWorld?.dispose(); this.combatWorld = null; this.combatRuntime = null; this.inHunting = this.inTraining = false; this.huntTarget = null; this.combatSave = null; this.trainingOptions = null;
+    if (combatAvatar) this.setAvatar(combatAvatar.character, combatAvatar.outfit, combatAvatar.weapon, combatAvatar.outfits[combatAvatar.outfit], combatAvatar.weapons[combatAvatar.weapon], combatAvatar.ride, combatAvatar.pet, combatAvatar.hairstyle, combatAvatar.face);
     this.shadowFloor=0;
     this.storybook.clear(this.scene);
     this.inAcademy=false;this.trial=null;this.skillRuntime.clear();this.skillGuide=false;for(const id of [...this.skillModels.keys()])this.removeSkillModel(id);
@@ -1042,12 +1071,88 @@ export class World {
     this.colliders.push({x:-4,z:-2,r:1},{x:4,z:-1,r:.65});
     this.mergeStaticScenery();this.vy=0;this.grounded=true;this.player.position.set(0,0,3.7);this.placePetNearPlayer();this.lastSafe.copy(this.player.position);this.follow.copy(this.player.position);this.onStageLoaded(0);this.resize();this.renderOnce();
   }
+  configureCombat(profile: { job?: JobId | null; learned: readonly SkillId[]; loadout: readonly (SkillId | null)[] }) {
+    this.combatProfile = { job: profile.job ?? null, learned: [...profile.learned], loadout: [...profile.loadout] };
+    if (this.inHunting && this.combatRuntime && this.combatSave) this.combatRuntime.updateProfile({ level: this.combatSave.level, power: huntingPower(this.combatSave), ...this.combatProfile });
+  }
+  get huntingStatus(): (HuntSnapshot & { targetId: string | null; safe: boolean; player: { x: number; z: number } }) | null { const snapshot = this.combatRuntime?.snapshot(); return snapshot ? { ...snapshot, targetId: this.huntTarget, safe: this.inHunting && Math.hypot(this.player.position.x - HUNT_CAMP.x, this.player.position.z - HUNT_CAMP.z) < 3, player: { x: this.player.position.x, z: this.player.position.z } } : null; }
+  get selectedHuntTarget() { return this.huntTarget; }
+  get trainingSkills(): readonly SkillId[] { return this.trainingOptions ? [...this.trainingOptions.skills] : []; }
+  get trainingStatus() { return this.inTraining ? { ...this.trainingStats } : null; }
+  private placeAt(x: number, z: number) { this.chargeMotion = null; this.player.position.set(x, 0, z); this.vy = 0; this.grounded = true; this.lastSafe.copy(this.player.position); this.follow.copy(this.player.position); this.placePetNearPlayer(); this.resize(); this.renderOnce(); }
+  exitMarket(s: Save) { this.loadStage(s, true); this.placeAt(PLAZA_COMBAT_GATES.market.x + 2.8, PLAZA_COMBAT_GATES.market.z); }
+  exitHunting(s: Save) { this.loadStage(s, true); this.placeAt(PLAZA_COMBAT_GATES.hunting.x + 2.8, PLAZA_COMBAT_GATES.hunting.z); }
+  exitTraining(s: Save) { this.enterAcademy(s); }
+  enterHunting(s: Save, zone = 0) {
+    if (!Number.isInteger(zone) || !HUNT_ZONES[zone] || s.level < HUNT_ZONES[zone].level) return false;
+    this.clearMap(); this.inHunting = true; this.combatSave = s; this.stage = 0; this.platforms = []; s.room.inside = s.homestead.inside = false;
+    this.scene.background = new T.Color(0xd8e9cb); this.scene.fog = null;
+    box(this.scene, [0x9cb17a, 0xb5bd78, 0x9ba7b1, 0x899f9b][zone], 0, -.5, -3, 43, 1, 49);
+    box(this.scene, 0xe3d0a4, 0, .025, 8.5, 35, .05, 9); stoneLane(this.scene, 0, -8, 4, 30);
+    for (const side of [-1, 1]) for (let i = 0; i < 7; i++) this.tree(side * (18 + i % 2), -21 + i * 6, 1.1, false, [0x71955e, 0x96a25f, 0x728e8a, 0x587d72][zone]);
+    const tent = new T.Group(); tent.position.set(-11, 0, 10); const roof = mesh(new T.ConeGeometry(2.3, 3.2, 4), 0xd2ad72, 0, 1.7, 0, tent); roof.rotation.y = Math.PI / 4; box(tent, 0x5c6951, 0, .65, 1.25, 1.2, 1.2, .1); this.scene.add(tent);
+    cylinder(this.scene, 0x9f7a51, 10, .4, 10, 1, 1, .7, 8); ball(this.scene, 0xf3ca79, 10, .9, 10, .45, .5, .45);
+    this.sign(this.scene, '안전 야영지 · 쉬면 체력 회복', 0, 3.3, 12, 7, '#254b35', true);
+    const gate = this.gate(0x8ca980); this.addEntity('huntingExit', '중앙 광장 · 사냥터 나가기', 0, 15.5, gate); this.sign(gate, '마을로 돌아가기', 0, 4.6, 0, 5, '#254b35', true);
+    for (const area of HUNT_ZONES) { const x = -12 + area.id * 8; this.addEntity(`huntingZone${area.id}`, `${area.name} · 레벨 ${area.level}`, x, 5.5, new T.Group()); this.sign(this.scene, `${area.name} Lv.${area.level}`, x, 2.4, 5.5, 4.5, s.level >= area.level ? '#365842' : '#8b7866', true); }
+    this.sign(this.scene, HUNT_ZONES[zone].name, 0, 3.2, -17, 6, '#365842', true);
+    this.combatRuntime = new HuntingRuntime({ zone, level: s.level, power: huntingPower(s), ...this.combatProfile });
+    this.combatWorld = new HuntingWorld(); this.scene.add(this.combatWorld.root); this.mergeStaticScenery();
+    this.setAvatar(s.character, s.outfit, s.weapon, s.outfits[s.outfit], s.weapons[s.weapon], -1, s.pet, s.hairstyle, s.face); this.placeAt(HUNT_CAMP.x, HUNT_CAMP.z); this.onStageLoaded(0); return true;
+  }
+  enterTraining(s: Save, options: TrainingOptions) {
+    if (options.skill === 'shield' || options.skill === 'guardian' || options.job === 'knight' && options.trialRank === 3) options = { ...options, mode: 'attacking' };
+    else if (options.skill === 'pierce' || options.job === 'ranger' && options.trialRank === 1) options = { ...options, mode: 'multi' };
+    this.clearMap(); this.inTraining = this.inAcademy = true; this.combatSave = s; this.trainingOptions = options; this.stage = 0; this.platforms = []; s.room.inside = s.homestead.inside = false;
+    this.trainingStats = { mode: options.mode, skill: options.skill ?? null, damage: 0, hits: 0, casts: 0, targetsHit: 0, elapsed: 0, complete: false, blocked: 0, rooted: 0 }; this.trainingTargets.clear(); this.trainingHitSkills.clear();
+    const practiceSpawn = options.job === 'ranger' && options.mode === 'multi' ? { x: -5, z: 0 } : { x: 0, z: 2.2 };
+    this.trainingEffects.clear(); this.trainingSkillTargets.clear(); this.trainingCastAt = {}; this.trainingWindDistance = 0; this.trainingLast.set(practiceSpawn.x, 0, practiceSpawn.z);
+    this.scene.background = new T.Color(0xe4ddc2); box(this.scene, 0xd7c99f, 0, -.4, 0, 19, .8, 20); box(this.scene, 0x86a985, 0, .02, -1, 14, .04, 9);
+    for (const side of [-1, 1]) for (let i = 0; i < 4; i++) cylinder(this.scene, 0x9a7957, side * 8.7, .6, -7 + i * 4, .09, .12, 1.2, 8);
+    this.sign(this.scene, options.mode === 'single' ? '하나씩 맞혀 보는 연습' : options.mode === 'multi' ? '여러 허수아비 함께 맞히기' : '예고 공격 피하고 막기', 0, 4, -5, 7, '#345641', true);
+    this.addEntity('trainingExit', '배움의 홀 · 수련 마치기', 0, 6, new T.Group()); this.sign(this.scene, '배움의 홀로 돌아가기', 0, 2.5, 6, 5, '#345641', true);
+    const skills = [...new Set(options.skills)]; this.combatRuntime = new HuntingRuntime({ zone: 0, level: s.level, power: Math.min(huntingPower(s), 15), job: options.job ?? this.combatProfile.job, learned: skills, loadout: skills, practice: true, practiceMode: options.mode });
+    this.combatWorld = new HuntingWorld(true); this.scene.add(this.combatWorld.root); this.mergeStaticScenery(); this.setAvatar(s.character, s.outfit, s.weapon, s.outfits[s.outfit], s.weapons[s.weapon], -1, s.pet, s.hairstyle, s.face); this.placeAt(practiceSpawn.x, practiceSpawn.z); this.onStageLoaded(0);
+  }
+  selectHuntTarget(id: string | null) { if (id !== null && !this.combatRuntime?.snapshot().enemies.some(enemy => enemy.id === id && enemy.hp > 0)) return; this.huntTarget = id; }
+  private combatFacing(range = 12) { const target = autoHuntTarget(this.combatRuntime?.snapshot().enemies ?? [], this.player.position, range, this.huntTarget); this.huntTarget = target?.id ?? null; if (!target) return { x: Math.sin(this.player.rotation.y), z: Math.cos(this.player.rotation.y) }; const facing = { x: target.x - this.player.position.x, z: target.z - this.player.position.z }; if (Math.hypot(facing.x, facing.z) < .001) { facing.x = Math.sin(this.player.rotation.y); facing.z = Math.cos(this.player.rotation.y); } this.combatAimUntil = this.time + .35; this.combatAimAngle = Math.atan2(facing.x, facing.z); return facing; }
+  huntAttack() { if (!this.combatRuntime || this.paused || !this.active) return false; const job = this.trainingOptions?.job ?? this.combatProfile.job, range = job === 'mage' ? 8 : job === 'ranger' ? 10 : 2.8; const events = this.combatRuntime.attack(this.player.position, this.combatFacing(range)); if (events.length) this.swingUntil = this.time + .28; this.handleHuntEvents(events); return events.length > 0; }
+  useHuntSkill(id: SkillId) { if (!this.combatRuntime || this.paused || !this.active) return false; const range = ['starbolt', 'arrow', 'pierce', 'lantern'].includes(id) ? 12 : id === 'charge' ? 7 : id === 'trap' ? 8 : 6, facing = this.combatFacing(range); const events = this.combatRuntime.cast(id, this.player.position, facing); this.handleHuntEvents(events); const cast = events.some(event => event.type === 'cast'); if (cast && id === 'charge') { this.chargeMotion = { remaining: .2, direction: facing }; this.swingUntil = this.time + .28; } if (cast && id === 'lantern') { const enemy = this.combatRuntime.snapshot().enemies.filter(enemy => enemy.hp > 0).sort((a, b) => Math.hypot(a.x - this.player.position.x, a.z - this.player.position.z) - Math.hypot(b.x - this.player.position.x, b.z - this.player.position.z))[0]; const object = enemy && this.combatWorld?.targetObject(enemy.id); if (object) { this.guideTarget = { object, name: this.inTraining ? '수련 허수아비' : '다음 사냥 대상', arrivalDistance: 2.5 }; this.guideElement.querySelector('b')!.textContent = this.guideTarget.name; this.guideElement.hidden = false; } } return cast; }
+  private handleHuntEvents(events: HuntEvent[]) {
+    if (!this.combatRuntime) return; const snapshot = this.combatRuntime.snapshot();
+    for (const event of events) {
+      this.combatWorld?.onEvent(event, snapshot);
+      if (event.type === 'retreat') this.placeAt(event.x, event.z);
+      if (this.inTraining) {
+        if (event.type === 'hit') { this.trainingStats.damage += event.damage; this.trainingStats.hits++; this.trainingTargets.add(event.enemyId); this.trainingStats.targetsHit = this.trainingTargets.size; if (event.skill !== 'basic') this.trainingHitSkills.add(event.skill); }
+        if (event.type === 'cast') { this.trainingStats.casts++; this.trainingCastAt[event.skill] = snapshot.time; if (event.skill === 'wind') this.trainingWindDistance = 0; }
+        if (event.type === 'playerHit' && snapshot.effects.some(effect => effect.skill === 'shield' || effect.skill === 'guardian')) this.trainingStats.blocked++;
+        if (event.type === 'practiceEffect') { const effects = this.trainingEffects.get(event.skill) ?? new Set<string>(); effects.add(event.kind); this.trainingEffects.set(event.skill, effects); const targets = this.trainingSkillTargets.get(event.skill) ?? new Set<string>(); for (const id of event.enemyIds ?? []) targets.add(id); this.trainingSkillTargets.set(event.skill, targets); }
+      }
+      this.onHuntEvent(event);
+    }
+  }
+  private updateCombat(dt: number) {
+    if (!this.combatRuntime) return;
+    this.handleHuntEvents(this.combatRuntime.step(dt, this.player.position));
+    if (this.keys.has('f')) this.huntAttack();
+    const snapshot = this.combatRuntime.snapshot(); this.combatWorld?.update(snapshot, this.camera, this.huntTarget, dt);
+    if (this.inTraining) {
+      this.trainingStats.elapsed = snapshot.time; this.trainingStats.rooted = Math.max(this.trainingStats.rooted, snapshot.enemies.filter(enemy => enemy.state === 'rooted').length);
+      const distance = this.trainingLast.distanceTo(this.player.position); if (distance < 2 && snapshot.effects.some(effect => effect.skill === 'wind')) this.trainingWindDistance += distance; this.trainingLast.copy(this.player.position);
+      const passed = (id: SkillId) => { const effects = this.trainingEffects.get(id); if (id === 'shield') return !!effects?.has('block') && snapshot.time - (this.trainingCastAt[id] ?? Infinity) >= 3; if (id === 'wind') return this.trainingWindDistance >= 3; if (id === 'lantern') return !!effects?.has('reveal'); if (id === 'guardian') return !!effects?.has('block') && !!effects?.has('hit'); if (id === 'roots' || id === 'frost' || id === 'trap') return !!effects?.has('root'); if (id === 'pierce') return (this.trainingSkillTargets.get(id)?.size ?? 0) >= 2; return !!effects?.has('hit'); };
+      const requested = this.trainingOptions?.skill ? [this.trainingOptions.skill] : this.trainingOptions?.trialRank ? this.trainingOptions.skills : [];
+      const complete = requested.length > 0 ? requested.every(passed) : this.trainingStats.hits >= 3 || [...this.trainingEffects.keys()].some(passed);
+      this.trainingStats.complete ||= complete;
+    }
+  }
   resetSkills(){this.skillRuntime.reset();this.trial=null;for(const id of [...this.skillModels.keys()])this.removeSkillModel(id);}
-  skillState(id:SkillId){return {active:this.skillRuntime.active(id,this.time),cooldown:Math.ceil(this.skillRuntime.remaining(id,this.time))};}
+  skillState(id:SkillId){const status=this.combatRuntime?.snapshot();return status?{active:status.effects.some(effect=>effect.skill===id),cooldown:Math.ceil(status.cooldowns[id]??0)}:{active:this.skillRuntime.active(id,this.time),cooldown:Math.ceil(this.skillRuntime.remaining(id,this.time))};}
   get trialSkill(){return this.trial?.id??null;}
   useSkill(id:SkillId,learned:readonly SkillId[]){
+    if (this.combatRuntime) return this.useHuntSkill(id);
     if(!this.active||this.paused||this.storyActivityFocus||!this.skillRuntime.use(id,this.time,learned))return false;
-    this.removeSkillModel(id);const effect=skillEffectModel(id);effect.userData.academyEffect=true;this.scene.add(effect);this.skillModels.set(id,effect);
+    this.removeSkillModel(id);const effect=skillEffectModel(id==='wind'||id==='lantern'?id:'shield');effect.userData.academyEffect=true;this.scene.add(effect);this.skillModels.set(id,effect);
     if(this.inAcademy)this.trial={id,started:this.time,distance:0,last:this.player.position.clone()};
     if(id==='lantern'){
       const target=this.inAcademy?'academyBook':this.inMarket?'marketExit':this.inHomestead?'homeExit':this.inRoom?'roomExit':this.stage===0?'academyGate':this.entities.some(e=>e.id==='discovery'&&e.name.includes('발자국'))?'discovery':this.stars.some(s=>s.mesh.visible)?'star':this.entities.some(e=>e.id.startsWith('monster')&&e.mesh.visible)?'monster':'next';
@@ -1215,7 +1320,7 @@ export class World {
     this.clearGuide(); this.renderOnce();
   }
   updateStoryVillage(s: Save) {
-    if (this.stage !== 0 || this.inRoom || this.inMarket) return;
+    if (this.stage !== 0 || this.inHunting || this.inAcademy || this.inRoom || this.inMarket) return;
     if (this.inHomestead) { const position={x:this.player.position.x,z:this.player.position.z};s.homestead.position=position;this.enterHomestead(s,true);return; }
     if (this.storyScenery) { this.scene.remove(this.storyScenery); this.disposeModel(this.storyScenery); }
     this.craftAnimated = []; this.restoredBridge = s.story.completed.includes(1);
@@ -1448,7 +1553,7 @@ export class World {
     for (const e of this.entities) { if (e.id.startsWith('shadow')) { this.scene.remove(e.mesh); this.disposeShadow(e.mesh); e.label.remove(); } else keep.push(e); }
     this.entities = keep;
     if (this.selectedId?.startsWith('shadow')) { this.selectedId = null; this.onNear(null, null); }
-    if (this.inAcademy || this.inRoom || this.inHomestead || this.inMarket || this.stage !== 0) return;
+    if (this.inHunting || this.inAcademy || this.inRoom || this.inHomestead || this.inMarket || this.stage !== 0) return;
     const spots = [[-6.5, 7.5], [3.5, 10.5], [-12, 2.5]] as const, dark = new T.Color(0x3b2f5c);
     shadows.slice(0, spots.length).forEach((shadow, i) => {
       const model = makeMonster(shadow.type);
@@ -1466,6 +1571,7 @@ export class World {
     this.entities.push({ id, name, x, z, mesh: model, label });
   }
   setAvatar(character: number, outfit: number, weapon: number, outfitLevel = 0, weaponLevel = 0, ride = -1, pet = -1, hairstyle = 0, face = 0) {
+    if (this.inHunting || this.inTraining) ride = -1;
     const position = this.player.position.clone(), rotation = this.player.rotation.y;
     this.scene.remove(this.player); this.disposeModel(this.player); this.player = makeCharacter(character, outfit, weapon, outfitLevel, weaponLevel, hairstyle, face); this.player.position.copy(position); this.player.rotation.y = rotation; this.player.scale.setScalar(matchMedia('(max-width: 600px)').matches ? 1.08 : 1); this.scene.add(this.player); this.addXray();
     if (this.petModel) { this.scene.remove(this.petModel); this.disposeModel(this.petModel); }
@@ -1495,7 +1601,7 @@ export class World {
   private updateOcclusion() {
     const target = this.tempWorld.copy(this.player.position); target.y += 1;
     const dir = target.clone().sub(this.camera.position), far = dir.length() - .7;
-    this.occlusionRay.set(this.camera.position, dir.normalize()); this.occlusionRay.far = far;
+    this.occlusionRay.set(this.camera.position, dir.normalize()); this.occlusionRay.far = far; this.occlusionRay.camera = this.camera;
     const skip = new Set<T.Object3D>([this.player, ...(this.petModel ? [this.petModel] : [])]);
     const candidates = this.scene.children.filter(o => o.visible && !skip.has(o) && !(o instanceof T.Light));
     const hidden = this.occlusionRay.intersectObjects(candidates, true).some(h => { let o: T.Object3D | null = h.object; while (o) { if (!o.visible) return false; o = o.parent; } const m = (h.object as T.Mesh).material as T.Material; return !m.transparent; });
@@ -1602,7 +1708,7 @@ export class World {
   moveStick(x: number, z: number) { this.stick = { x, z }; }
   jump() { if (this.active && !this.paused && !this.storyActivityFocus && this.grounded) { this.vy = 7.4; this.grounded = false; this.onJump(); } }
   interact() { if (this.active && !this.paused && !this.storyActivityFocus) {if(this.inHomestead&&atHomeExit(this.player.position.x,this.player.position.z))this.onInteract('homeExit');else if(this.selectedId)this.onInteract(this.selectedId);} }
-  attack() { if (!this.active || this.paused || this.storyActivityFocus) return; this.swingUntil = this.time + .28; this.onAttack(this.selectedId?.startsWith('tree') ? this.selectedId : null); }
+  attack() { if (!this.active || this.paused || this.storyActivityFocus) return; if (this.combatRuntime) { this.huntAttack(); return; } this.swingUntil = this.time + .28; this.onAttack(this.selectedId?.startsWith('tree') ? this.selectedId : null); }
   hitTree(id: string, damage: number) {
     const e = this.entities.find(e => e.id === id && e.mesh.visible); if (!e || !id.startsWith('tree')) return null;
     e.mesh.userData.hp = Math.max(0, Number(e.mesh.userData.hp) - damage); e.mesh.userData.shakeUntil = this.time + .28; this.burst(e.mesh.position, 0xc5e88b, 5);
@@ -1612,7 +1718,7 @@ export class World {
   defeat(id: string) { const e = this.entities.find(e => e.id === id); if (e) { const type = id.startsWith('expMonster') ? Number(e.mesh.userData.monsterType) : stageMonsters(this.stage)[Number(id.slice(7))].type; this.burst(e.mesh.position, MONSTERS[type].color); e.mesh.visible = false; } }
   celebrate() { this.burst(this.player.position, 0xffd371, 10); }
   private burst(pos: T.Vector3, color: number, count = 14) { if (matchMedia('(prefers-reduced-motion: reduce)').matches) return; const available = Math.max(0, 48 - this.particles.length); for (let i = 0; i < Math.min(count, available); i++) { const m = mesh(particleGeometry, color, pos.x, pos.y + .9, pos.z, this.scene); this.particles.push({ mesh: m, v: new T.Vector3((Math.random() - .5) * 3.5, 1.5 + Math.random() * 2, (Math.random() - .5) * 3.5), life: .75 }); } }
-  private water(x: number, z: number) { return !this.inMarket && !this.inHomestead && !this.inRoom && !(this.stage === 0 && this.restoredBridge && x > 14 && x < 24 && Math.abs(z - 8) < 1) && isVillagePond(this.stage, x, z); }
+  private water(x: number, z: number) { return !this.inHunting && !this.inTraining && !this.inAcademy && !this.inMarket && !this.inHomestead && !this.inRoom && !(this.stage === 0 && this.restoredBridge && x > 14 && x < 24 && Math.abs(z - 8) < 1) && isVillagePond(this.stage, x, z); }
   private resize() {
     const w = this.container.clientWidth, h = this.container.clientHeight, span = w < 700 ? 13 : 14.5;
     if (this.storyActivityFocus) {
@@ -1644,11 +1750,13 @@ export class World {
       const oldX = p.x, oldZ = p.z;
       let dx = Number(this.keys.has('d') || this.keys.has('arrowright')) - Number(this.keys.has('a') || this.keys.has('arrowleft')) + this.stick.x;
       let dz = Number(this.keys.has('s') || this.keys.has('arrowdown')) - Number(this.keys.has('w') || this.keys.has('arrowup')) + this.stick.z;
+      if (this.chargeMotion) dx = dz = 0;
       const n = Math.hypot(dx, dz); if (n > 1) { dx /= n; dz /= n; }
-      const ride = this.rideIndex >= 0 ? RIDES[this.rideIndex] : null, flying = !!ride?.flying, speed = PLAYER_MOVE_SPEED * (ride?.speed ?? 1) * (this.skillRuntime.active('wind',this.time)?1.6:1);
+      const ride = this.rideIndex >= 0 ? RIDES[this.rideIndex] : null, flying = !!ride?.flying, speed = PLAYER_MOVE_SPEED * (ride?.speed ?? 1) * (this.combatRuntime?.snapshot().speedMultiplier ?? (this.skillRuntime.active('wind',this.time)?1.6:1));
       const vx = (dx * .8 + dz * .6) * speed, vz = (-dx * .6 + dz * .8) * speed;
       const allowed = (x: number, z: number) => flying || (!this.colliders.some(c => (!c.id || this.entities.find(e => e.id === c.id)?.mesh.visible) && Math.hypot(x - c.x, z - c.z) < c.r + .32) && !this.platforms.some(t => Math.abs(x - t.x) < t.w / 2 + .2 && Math.abs(z - t.z) < t.d / 2 + .2 && p.y < t.h - .13));
       if (allowed(p.x + vx * dt, p.z)) p.x += vx * dt; if (allowed(p.x, p.z + vz * dt)) p.z += vz * dt;
+      if (this.chargeMotion) { const motion = this.chargeMotion, elapsed = Math.min(dt, motion.remaining), limits = this.inHunting ? { x: 19.4, z: 19.4 } : { x: 6.9, z: 7.9 }; const moved = advanceHuntCharge(p, motion.direction, elapsed * 12, (x, z) => Math.abs(x) <= limits.x && Math.abs(z) <= limits.z && allowed(x, z) && !this.water(x, z)); p.x = moved.x; p.z = moved.z; motion.remaining -= elapsed; if (moved.blocked || motion.remaining <= .00001) this.chargeMotion = null; }
       this.walkBlend = T.MathUtils.damp(this.walkBlend,n>.05?1:0,12,dt);
       if (n > .05) { const angle = Math.atan2(vx,vz), turn=Math.atan2(Math.sin(angle-this.player.rotation.y),Math.cos(angle-this.player.rotation.y));this.player.rotation.y += turn*(1-Math.exp(-14*dt)); }
       this.player.userData.feet?.forEach((f:T.Mesh,i:number)=>{f.position.y=.18+Math.max(0,Math.sin(this.time*13+i*Math.PI))*.12*this.walkBlend;});
@@ -1659,7 +1767,7 @@ export class World {
       const platform = flying ? undefined : this.platforms.find(t => Math.abs(p.x - t.x) < t.w / 2 + .15 && Math.abs(p.z - t.z) < t.d / 2 + .15); const floor = flying ? 1.65 + Math.sin(this.time * 2.2) * .08 : platform?.h ?? 0;
       this.shadowFloor = flying?0:floor;
       this.vy -= 18 * dt; p.y += this.vy * dt; if (p.y <= floor && this.vy <= 0) { const landed=!this.grounded&&this.vy< -3;p.y = floor; this.vy = 0; this.grounded = true;if(landed&&!reduced)this.burst(p,0xd5c5a1,3); } else this.grounded = false;
-      const bounds = this.inAcademy ? {x:8.5,z:6.6} : this.inHomestead ? { x: 13.4, z: 29.4 } : this.inRoom ? { x: 6.8, z: 5.2 } : stageSize(this.stage);
+      const bounds = this.inHunting ? { x: 21, z: 21 } : this.inAcademy ? {x:8.5,z:this.inTraining?9.5:6.6} : this.inHomestead ? { x: 13.4, z: 29.4 } : this.inRoom ? { x: 6.8, z: 5.2 } : stageSize(this.stage);
       // 가장자리에서는 순간이동 대신 덤불 앞에서 멈춰요. 물에 빠질 때만 안전한 곳으로 돌아가요.
       const edge = this.inHomestead || this.inRoom ? .5 : 1.6; p.x = T.MathUtils.clamp(p.x, -bounds.x + edge, bounds.x - edge); p.z = T.MathUtils.clamp(p.z, -bounds.z + edge, bounds.z - edge);
       if ((this.inHomestead && p.z < -12.9) || Math.abs(p.x) > bounds.x - .5 || Math.abs(p.z) > bounds.z - .5 || (!flying && this.water(p.x, p.z) && p.y <= .2)) { p.copy(this.lastSafe); this.vy = 0; this.onRescue(); }
@@ -1705,6 +1813,8 @@ export class World {
         if (target && distanceToTarget < .55 && target.mesh.visible) { target.mesh.visible = false; this.petTargetId = null; this.burst(target.mesh.position, 0xff9fb4, 6); this.onCollect(target.id); }
       }
     }
+    this.updateCombat(dt);
+    if (this.combatRuntime && this.combatAimUntil > this.time) this.player.rotation.y += Math.atan2(Math.sin(this.combatAimAngle - this.player.rotation.y), Math.cos(this.combatAimAngle - this.player.rotation.y)) * (1 - Math.exp(-dt * 18));
     if (this.storyActivityFocus && this.storyActivityRoot) this.storyActivityRoot.traverse(o => { if (o.userData.storyWheel && o.parent?.userData.storyActivity) { const water = this.storyActivityRoot!.userData.waterSolved; if (water) o.rotation.z -= dt; } });
     for (const o of this.craftAnimated) { if (o.userData.homeRotor) { if(!matchMedia('(prefers-reduced-motion: reduce)').matches)o.rotation.z-=dt*.8; } else if (o.userData.fieldWheel) { if (!matchMedia('(prefers-reduced-motion: reduce)').matches) o.rotation.z -= dt * .7; } else if (o.userData.storyWheel) o.rotation.z -= dt * .7; else { o.rotation.y += dt * .6; o.scale.setScalar(1.5 + Math.sin(this.time * 1.7 + Number(o.userData.storySparkle)) * .12); } }
     for (const c of this.coins) { c.mesh.rotation.y += dt; c.mesh.position.y = c.y + Math.sin(this.time * 2.8 + c.mesh.position.x) * .12; }

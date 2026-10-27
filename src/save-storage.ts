@@ -1,4 +1,4 @@
-/** Main save stays v21. Recovery copies use separate keys and never accept unvalidated data. */
+/** Recovery copies use separate keys and never accept unvalidated data. */
 export type SaveStatus = 'saved' | 'error' | 'recovered';
 type Store = Pick<Storage, 'getItem' | 'setItem'>;
 export class SafeSaveStore<T> {

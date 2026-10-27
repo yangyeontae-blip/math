@@ -8,7 +8,7 @@ test('version 18 migrates to 21 preserving currency, equipment, learning, villag
   const s = start(3); s.berries = 543; s.learning.correct = 12; s.adventure.completed = [0];
   const old = { ...structuredClone(s), version: 18 } as Record<string, unknown>; delete old.forestTrail;
   const restored = validateSave(old);
-  assert.equal(restored.version, 21); assert.deepEqual(restored.forestTrail, emptyForestTrail());
+  assert.equal(restored.version, 22); assert.deepEqual(restored.forestTrail, emptyForestTrail());
   for (const key of ['berries', 'weapons', 'learning', 'adventure', 'additionJourney'] as const) assert.deepEqual(restored[key], s[key]);
 });
 test('trail belongs only to addition stage 1, and cannot change another forest or expedition', () => {
@@ -45,5 +45,5 @@ test('malformed or impossible trail states and future saves are rejected', () =>
   const s = start();
   for (const value of [null, {}, { ...emptyForestTrail(), seeds: [0, 0] }, { ...emptyForestTrail(), seeds: [6] }, { ...emptyForestTrail(), lit: [1] }, { ...emptyForestTrail(), placed: [3, 0, 0] }, { ...emptyForestTrail(), drafts: ['<x>', '', ''] }]) assert.equal(validForestTrail(value), false);
   for (const id of [-1, 6, 0.5, NaN]) assert.equal(collectTrailSeed(s, id), false);
-  assert.throws(() => validateSave({ ...s, version: 22 }));
+  assert.throws(() => validateSave({ ...s, version: 23 }));
 });

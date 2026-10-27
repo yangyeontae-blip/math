@@ -7,6 +7,9 @@ import { emptyExpedition, expeditionLayout, EXPEDITION_TITLES, type ExpeditionPr
 import { DAILY_MISSIONS, DAILY_GOAL_LIMITS, DATE_KEY, recordDaily, type DailyState } from './daily';
 import { sha256Hex } from './sha256';
 import { j } from './grade-helpers';
+import {emptyCareer,validCareer,type CareerProgress} from './academy';
+import {HUNT_ZONES,type HuntDefeatEvent} from './hunting';
+import {todayKey} from './daily';
 export const WEAPONS = [
   { name: '새싹 나무검', price: 0, bonus: 0, multiplier: 1, treePower: 1, icon: '🌱', color: 0x96bf6a },
   { name: '도토리 망치', price: 80, bonus: 2, multiplier: 1.2, treePower: 2, icon: '🔨', color: 0xbf8c52 },
@@ -186,7 +189,7 @@ import { emptyAdventure, defaultDesign, validAdventure, type AdventureProgress }
 export const ROOM_GRID_COLUMNS = 5;
 export const ROOM_GRID_ROWS = 4;
 export interface Save {
-  version: 21; grade: SchoolGrade; nickname: string; character: number; berries: number; level: number; xp: number;
+  version: 22; career: CareerProgress; grade: SchoolGrade; nickname: string; character: number; berries: number; level: number; xp: number;
   weapon: number; outfit: number; weapons: Record<string, number>; outfits: Record<string, number>;
   ride: number; rides: Record<string, boolean>; pet: number; pets: Record<string, boolean>;
   hairstyle: number; hairstyles: Record<string, boolean>; face: number; faces: Record<string, boolean>; teacherMode: boolean;
@@ -241,7 +244,7 @@ export const STAGE_DIVISION_DIFFICULTY = [
 export function newSave(nickname: string, character: number, grade: SchoolGrade = 3): Save {
   if (!nickname.trim() || [...nickname.trim()].length > 10 || !Number.isInteger(character) || character < 0 || character > 3 || !Number.isInteger(grade) || grade < 1 || grade > 6) throw new Error('이름은 1~10자, 학년과 캐릭터를 골라 주세요.');
   const hairstyle = CHARACTERS[character].style;
-  return { version: 21, grade, nickname: nickname.trim(), character, berries: 0, level: 1, xp: 0, weapon: 0, outfit: 0, weapons: { 0: 0 }, outfits: { 0: 0 }, ride: -1, rides: {}, pet: -1, pets: {}, hairstyle, hairstyles: { 0: true, [hairstyle]: true }, face: 0, faces: { 0: true }, teacherMode: false, best: 0, position: { x: 0, z: 8 }, tutorial: { collected: false, battle: false, shop: false }, settings: { music: true, sound: true, lowQuality: false, maxDividend: 0, multiplicationRange: 'stage', sessionMinutes: 0, focusUnit: 'all', spiralReview: true, practice: { operation: 'auto', tier: 1, skipPicker: false } }, learning: { elapsedSeconds: 0, correct: 0, wrong: 0, wrongQuestions: [] }, discoveries: { monsters: [], pets: [], outfits: [0] }, room: { furniture: [], inside: false, positions: {} }, forest: grade <= 2 ? 'addition' : 'division', journey: emptyJourney(), multiplicationJourney: emptyJourney(), multiplicationFinal: null, multiplicationCompleted: false, multiplicationRewardClaimed: false, additionJourney: emptyJourney(), subtractionJourney: emptyJourney(), additionCompleted: false, subtractionCompleted: false, curriculum: emptyCurriculumProgress(), potions: { stock: POTIONS.map(() => 0), berryMultiplier: 1, berryUntil: 0, xpMultiplier: 1, xpUntil: 0 }, garden: { rescued: 0, flowers: [-1, -1, -1] }, expedition: emptyExpedition(), story: emptyStory(), homestead: emptyHomestead(), exploration: emptyExploration(), forestTrail: emptyForestTrail(), forestActivities: emptyForestActivities(), petFriends: {}, adventure: emptyAdventure(grade) };
+  return { version: 22, career: emptyCareer(), grade, nickname: nickname.trim(), character, berries: 0, level: 1, xp: 0, weapon: 0, outfit: 0, weapons: { 0: 0 }, outfits: { 0: 0 }, ride: -1, rides: {}, pet: -1, pets: {}, hairstyle, hairstyles: { 0: true, [hairstyle]: true }, face: 0, faces: { 0: true }, teacherMode: false, best: 0, position: { x: 0, z: 8 }, tutorial: { collected: false, battle: false, shop: false }, settings: { music: true, sound: true, lowQuality: false, maxDividend: 0, multiplicationRange: 'stage', sessionMinutes: 0, focusUnit: 'all', spiralReview: true, practice: { operation: 'auto', tier: 1, skipPicker: false } }, learning: { elapsedSeconds: 0, correct: 0, wrong: 0, wrongQuestions: [] }, discoveries: { monsters: [], pets: [], outfits: [0] }, room: { furniture: [], inside: false, positions: {} }, forest: grade <= 2 ? 'addition' : 'division', journey: emptyJourney(), multiplicationJourney: emptyJourney(), multiplicationFinal: null, multiplicationCompleted: false, multiplicationRewardClaimed: false, additionJourney: emptyJourney(), subtractionJourney: emptyJourney(), additionCompleted: false, subtractionCompleted: false, curriculum: emptyCurriculumProgress(), potions: { stock: POTIONS.map(() => 0), berryMultiplier: 1, berryUntil: 0, xpMultiplier: 1, xpUntil: 0 }, garden: { rescued: 0, flowers: [-1, -1, -1] }, expedition: emptyExpedition(), story: emptyStory(), homestead: emptyHomestead(), exploration: emptyExploration(), forestTrail: emptyForestTrail(), forestActivities: emptyForestActivities(), petFriends: {}, adventure: emptyAdventure(grade) };
 }
 
 export function defaultRoomFurniturePosition(index: number): RoomFurniturePosition {
@@ -644,6 +647,29 @@ export function grantReward(s: Save, monster: number, arena: boolean, now = Date
   }
   return { ...reward, levels, milestones };
 }
+/** Combat power is separate from all learning reward bonuses. */
+export function huntingPower(s:Pick<Save,'level'|'weapon'|'weapons'>){const w=WEAPONS[s.weapon]??WEAPONS[0],upgrade=Math.max(0,Math.min(3,s.weapons[s.weapon]??0));return (8+Math.min(100000,s.level)*.35)*(1+(w.treePower-1)*.1+upgrade*.12);}
+export function huntingRewardFor(s:Save,zone:number,now=Date.now()){
+  const z=HUNT_ZONES[zone];if(!z||s.level<z.level||!Number.isFinite(now)||!Number.isFinite(new Date(now).getTime()))return {berries:0,xp:0,eligible:false,multiplier:0};
+  const date=todayKey(new Date(now)),count=s.career.daily.date===date?s.career.daily.counts[zone]:0;
+  const multiplier=(s.level>=z.level+20?.1:1)*(count>=100?.25:1),potion=potionEffects(s,now);
+  return {berries:Math.floor(z.berries*multiplier*potion.berryMultiplier),xp:Math.floor(z.xp*multiplier*potion.xpMultiplier),eligible:true,multiplier};
+}
+const huntingClaims=new WeakMap<Save,Set<string>>();
+export function grantHuntingReward(s:Save,zoneOrEvent:number|HuntDefeatEvent,enemyTypeOrNow:string|number='melee',now=Date.now()){
+  const zero={berries:0,xp:0,score:0,levels:0,milestones:[] as {level:number;berries:number}[],eligible:false,multiplier:0};
+  const event=typeof zoneOrEvent==='number'?null:zoneOrEvent,zone=typeof zoneOrEvent==='number'?zoneOrEvent:zoneOrEvent.zone;
+  if(event?.practice)return zero;if(typeof enemyTypeOrNow==='number')now=enemyTypeOrNow;
+  if(event){const claims=huntingClaims.get(s)??new Set<string>();if(claims.has(event.id))return zero;claims.add(event.id);huntingClaims.set(s,claims);}
+  const reward=huntingRewardFor(s,zone,now);if(!reward.eligible)return zero;
+  const date=todayKey(new Date(now));if(s.career.daily.date!==date)s.career.daily={date,counts:[0,0,0,0]};
+  s.career.daily.counts[zone]++;s.career.stats.defeats++;s.career.stats.byZone[zone]++;s.career.stats.totalBerries+=reward.berries;s.career.stats.totalXp+=reward.xp;
+  const enemyType=event?.enemyType??(typeof enemyTypeOrNow==='string'?enemyTypeOrNow:'melee');if(['melee','charge','ranged'].includes(enemyType)&&!s.career.stats.seen.includes(enemyType))s.career.stats.seen.push(enemyType);
+  s.berries=Math.min(1e9,s.berries+reward.berries);s.xp+=reward.xp;let levels=0;const milestones:{level:number;berries:number}[]=[];
+  while(s.level<100000&&s.xp>=s.level*40){s.xp-=s.level*40;s.level++;levels++;s.berries=Math.min(1e9,s.berries+20);const gift=s.level===30?30000:s.level===50?50000:s.level===100?100000:0;if(gift){s.berries=Math.min(1e9,s.berries+gift);milestones.push({level:s.level,berries:gift});}}
+  if(s.level===100000)s.xp=Math.min(s.xp,s.level*40-1);
+  return {...reward,score:0,levels,milestones};
+}
 export function buy(s: Save, kind: 'weapon' | 'outfit', id: number): string {
   const items = kind === 'weapon' ? WEAPONS : OUTFITS;
   const owned = kind === 'weapon' ? s.weapons : s.outfits;
@@ -859,6 +885,7 @@ export function validateSave(value: unknown): Save {
   if (migrated.version === 18) { migrated.version = 19; migrated.forestTrail = emptyForestTrail(); }
   if (migrated.version === 19) { migrated.version = 20; migrated.forestActivities = emptyForestActivities(); }
   if (migrated.version === 20) { migrated.version = 21; migrated.homestead = emptyHomestead(); migrated.exploration = emptyExploration(); }
+  if (migrated.version === 21) { migrated.version = 22; migrated.career = emptyCareer(); }
   const s = migrated as unknown as Save;
   if (s.garden === undefined) s.garden = { rescued: 0, flowers: [-1, -1, -1] };
   // 4학년 '각도와 삼각형길'을 각도·삼각형 두 지역으로 나눴어요. 예전 진행은 삼각형 지역에도 그대로 이어 줘요(저장 구조 버전은 그대로예요).
@@ -877,7 +904,7 @@ export function validateSave(value: unknown): Save {
   }
   const integer = (v: unknown, min: number, max: number): v is number => typeof v === 'number' && Number.isSafeInteger(v) && v >= min && v <= max;
   if (!s.garden || !integer(s.garden.rescued, 0, 3) || !Array.isArray(s.garden.flowers) || s.garden.flowers.length !== 3 || s.garden.flowers.some(f => !integer(f, -1, 2)) || s.garden.flowers.filter(f => f >= 0).length > s.garden.rescued) return fail();
-  if (s.version !== 21 || !integer(s.grade, 1, 6) || !OPERATIONS.includes(s.forest) || typeof s.teacherMode !== 'boolean' || typeof s.nickname !== 'string' || !s.nickname.trim() || [...s.nickname].length > 10 || !integer(s.character, 0, 3) || !integer(s.berries, 0, 1e9) || !integer(s.level, 1, 100000) || !integer(s.xp, 0, s.level * 40 - 1) || !integer(s.best, 0, 1e9)) return fail();
+  if (s.version !== 22 || !validCareer(s.career) || !integer(s.grade, 1, 6) || !OPERATIONS.includes(s.forest) || typeof s.teacherMode !== 'boolean' || typeof s.nickname !== 'string' || !s.nickname.trim() || [...s.nickname].length > 10 || !integer(s.character, 0, 3) || !integer(s.berries, 0, 1e9) || !integer(s.level, 1, 100000) || !integer(s.xp, 0, s.level * 40 - 1) || !integer(s.best, 0, 1e9)) return fail();
   if (!validHomestead(s.homestead) || !validExploration(s.exploration) || s.homestead.inside && s.room?.inside || !validForestActivities(s.forestActivities, s.grade) || !validForestTrail(s.forestTrail) || !validAdventure(s.adventure) || !s.pets || !validPetFriends(s.petFriends, s.pets)) return fail();
   const story = s.story;
   if (!story || !Array.isArray(story.completed) || story.completed.some(id => !integer(id, 0, 2)) || new Set(story.completed).size !== story.completed.length) return fail();

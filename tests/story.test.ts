@@ -18,7 +18,7 @@ test('old version 14 save keeps progress and items while adding story state', ()
   const old = structuredClone(before) as unknown as Record<string, unknown>;
   old.version = 14; delete old.story;
   const after = validateSave(old);
-  assert.equal(after.version, 21); assert.equal(after.berries, 521);
+  assert.equal(after.version, 22); assert.equal(after.berries, 521);
   assert.equal(after.weapons[2], 1); assert.equal(after.journey.maps[1].cleared, true);
   assert.deepEqual(after.story, emptyStory());
 });

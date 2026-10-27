@@ -26,7 +26,7 @@ test('resolutions are mutually exclusive and reset separately from the v21 game 
  recordResolution(st,'addition',false,false);recordResolution(st,'addition',false,true);recordResolution(st,'addition',true,true);
  assert.deepEqual(readLearningRecords(st).units.addition,{independent:1,assisted:1,retried:1});
  resetLearningRecords(st);assert.deepEqual(readLearningRecords(st).units,{});assert.equal(st.getItem('berry-forest-entitlements-v1'),'keep');
- assert.equal(newSave('탐험가',0).version,21);
+ assert.equal(newSave('탐험가',0).version,22);
 });
 test('basic reports distinguish insufficient evidence from lack of difficulty and show new resolutions',()=>{
  const st=memory(),save=newSave('탐험가',0),regions=[{id:'addition' as const,name:'덧셈',icon:'+'}];

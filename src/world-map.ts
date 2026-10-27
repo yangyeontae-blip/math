@@ -1,7 +1,7 @@
 import { operationsForGrade, journeyFor, type Save } from './rules';
-export function worldMap(s: Save,inMarket=false){
+export function worldMap(s: Save,inMarket=false,inHunting=false){
  const places=[['addition','사과 덧셈숲',205,155],['subtraction','낙엽 뺄셈숲',465,105],['multiplication','해바라기 곱셈숲',710,205],['division','베리 나눗셈숲',720,435],['home','나의 집',190,415],['shops','상점거리',475,420],['school','중앙 광장',410,290]] as const;
- const allowed=operationsForGrade(s.grade),current=s.homestead.inside||s.room.inside?'home':journeyFor(s).stage?s.forest:inMarket?'shops':'school';
+ const allowed=operationsForGrade(s.grade),current=inHunting?'hunting':s.homestead.inside||s.room.inside?'home':journeyFor(s).stage?s.forest:inMarket?'shops':'school';
  const tree=(x:number,y:number,c:string,scale=1)=>`<g transform="translate(${x} ${y}) scale(${scale})"><path d="M-3 4v20h7V4" fill="#846344"/><ellipse cy="-5" rx="18" ry="24" fill="${c}" stroke="#537a52" stroke-width="2"/><ellipse cx="-8" cy="-12" rx="12" ry="14" fill="#ffffff" opacity=".15"/></g>`;
  const trees=Array.from({length:45},(_,i)=>{const region=i%4,x=[155,420,670,670][region]+Math.sin(i*2.4)*65,y=[125,80,170,385][region]+Math.cos(i*1.7)*35;return tree(x,y,['#78a966','#bd995b','#8cba65','#72a59b'][region],.6+(i%3)*.12);}).join('');
  const house=(x:number,y:number,roof:string)=>`<g transform="translate(${x} ${y})"><path d="M-25 0h50v32h-50z" fill="#f6e4b6" stroke="#896c48" stroke-width="2"/><path d="M-34 1L0-30 34 1Z" fill="${roof}" stroke="#896c48" stroke-width="2"/><path d="M-5 32V11h12v21" fill="#95714e"/><path d="M-18 9h9v10h-9M13 9h9v10h-9" fill="#aed6d5" stroke="#896c48"/></g>`;
