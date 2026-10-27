@@ -388,7 +388,7 @@ function equipmentEffectText(s: Save, now = Date.now()) {
   const effect = potionEffects(s, now), potion = `${effect.berrySeconds ? ` · 🍓×${effect.berryMultiplier} ${buffTime(effect.berrySeconds)}` : ''}${effect.xpSeconds ? ` · 🧪경험×${effect.xpMultiplier} ${buffTime(effect.xpSeconds)}` : ''}`;
   return `시합 ×${(WEAPONS[s.weapon].multiplier + s.weapons[s.weapon] * .1).toFixed(1)} · 나무 힘 ${treeDamage(s)} · ${s.ride >= 0 ? `${RIDES[s.ride].icon} 속도 ×${RIDES[s.ride].speed}` : `옷: ${OUTFITS[s.outfit].effect}`}${s.pet >= 0 ? ` · ${PETS[s.pet].icon} 펫` : ''}${potion}`;
 }
-function weaponExplanation(id: number, level = 0) { const item = WEAPONS[id], power = item.treePower + level; return `사냥 공격력은 약 ${Math.round(huntingPower({level:state?.level??1,weapon:id,weapons:{[id]:level}}))}이에요. 강화하면 공격력이 올라가요.<br>수학 몬스터 1마리를 이길 때마다 기본 보상에 ${item.bonus}베리를 더 받아요.<br>시합장에서는 문제를 맞혀 받는 기본 점수가 ${(item.multiplier + level * .1).toFixed(1)}배가 돼요.<br>베리나무에 한 번 휘두르면 힘 ${power}만큼 깎여서 약 ${Math.ceil(7 / power)}번이면 벨 수 있어요.`; }
+function weaponExplanation(id: number, level = 0) { const item = WEAPONS[id], power = item.treePower + level; return `사냥 공격력은 약 ${Math.round(huntingPower({level:state?.level??1,weapon:id,weapons:{[id]:level}}))}이에요. 좋은 무기일수록 몬스터를 더 빨리 쓰러뜨려서 같은 시간에 더 많이 사냥할 수 있어요. 기본 공격은 맞은 몬스터 옆에 있는 몬스터도 함께 때려요. 강화하면 공격력이 더 올라가요.<br>수학 몬스터 1마리를 이길 때마다 기본 보상에 ${item.bonus}베리를 더 받아요.<br>시합장에서는 문제를 맞혀 받는 기본 점수가 ${(item.multiplier + level * .1).toFixed(1)}배가 돼요.<br>베리나무에 한 번 휘두르면 힘 ${power}만큼 깎여서 약 ${Math.ceil(7 / power)}번이면 벨 수 있어요.`; }
 function outfitEffectBadges(id: number) {
   const item = OUTFITS[id], badges: string[] = [];
   if (item.berryBonus) badges.push(`<span class="stat-chip berry">🍓 길 베리 +${item.berryBonus}</span>`);

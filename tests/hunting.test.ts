@@ -59,11 +59,11 @@ test('hunting rewards combine level and daily reductions before flooring, includ
  const now=new Date(2026,9,26,12).getTime(),s=newSave('모험가',0);s.level=30;s.weapon=22;s.weapons[22]=3;s.outfit=5;s.outfits[5]=0;
  s.potions.berryMultiplier=3;s.potions.berryUntil=now+10000;s.potions.xpMultiplier=4;s.potions.xpUntil=now+10000;
  let event={type:'defeat' as const,id:'one',enemyId:'0',enemyType:'ranged' as const,zone:1,practice:false};const oldLearning=structuredClone(s.learning),oldDaily=structuredClone(s.daily),oldJourney=structuredClone(s.journey);
- const reward=grantHuntingReward(s,event,now);assert.equal(reward.berries,1);assert.equal(reward.xp,2);assert.equal(s.career.stats.defeats,1);assert.deepEqual(s.career.stats.seen,['ranged']);const once=structuredClone(s);assert.equal(grantHuntingReward(s,event,now).eligible,false);assert.deepEqual(s,once);
- s.career.daily.counts[1]=100;const reduced=huntingRewardFor(s,1,now);assert.equal(reduced.berries,Math.floor(4*.1*.25*3));assert.equal(reduced.xp,Math.floor(6*.1*.25*4));assert.deepEqual(s.learning,oldLearning);assert.deepEqual(s.daily,oldDaily);assert.deepEqual(s.journey,oldJourney);assert.equal(s.best,0);validateSave(s);
+ const reward=grantHuntingReward(s,event,now);assert.equal(reward.berries,Math.floor(15*.1*3));assert.equal(reward.xp,2);assert.equal(s.career.stats.defeats,1);assert.deepEqual(s.career.stats.seen,['ranged']);const once=structuredClone(s);assert.equal(grantHuntingReward(s,event,now).eligible,false);assert.deepEqual(s,once);
+ s.career.daily.counts[1]=100;const reduced=huntingRewardFor(s,1,now);assert.equal(reduced.berries,Math.floor(15*.1*.25*3));assert.equal(reduced.xp,Math.floor(6*.1*.25*4));assert.deepEqual(s.learning,oldLearning);assert.deepEqual(s.daily,oldDaily);assert.deepEqual(s.journey,oldJourney);assert.equal(s.best,0);validateSave(s);
 });
 test('weapon strength and upgrades are separate combat bonuses and baseline encounter duration stays within target bands',()=>{
- for(const z of HUNT_ZONES){const s=newSave('모험가',0);s.level=z.level;const plain=huntingPower(s);s.weapon=22;s.weapons[22]=3;const strong=huntingPower(s);assert.ok(strong>plain);const normalSeconds=Math.ceil(z.hp/plain)*.85,topSeconds=Math.ceil(z.hp/strong)*.85;assert.ok(normalSeconds>=4&&normalSeconds<=8,`${z.name}: ${normalSeconds}`);assert.ok(topSeconds>=2&&topSeconds<=4,`${z.name}: ${topSeconds}`);}
+ for(const z of HUNT_ZONES){const s=newSave('모험가',0);s.level=z.level;const plain=huntingPower(s);s.weapon=22;s.weapons[22]=3;const strong=huntingPower(s);assert.ok(strong>plain);const normalSeconds=Math.ceil(z.hp/plain)*.85,topSeconds=Math.ceil(z.hp/strong)*.85;assert.ok(normalSeconds>=4&&normalSeconds<=8,`${z.name}: ${normalSeconds}`);assert.ok(topSeconds>=1&&topSeconds<=4,`${z.name}: ${topSeconds}`);}
 });
 test('updating level and weapon power keeps the same battle, cooldowns and enemy health',()=>{
  const r=new HuntingRuntime({zone:0,level:10,power:5,job:'mage',learned:['starbolt'],practice:true});const p={x:0,z:2};r.cast('starbolt',p);r.step(.2,p);const before=r.snapshot();
@@ -82,5 +82,12 @@ test('disengaged enemies return to their spawn and recover while camp remains sa
 });
 test('the first hundred daily kills are full reward, then quarter reward, and a new day restores the allowance',()=>{
  const s=newSave('모험가',0);s.level=10;const now=new Date(2026,9,26,12).getTime();grantHuntingReward(s,1,'melee',now);s.career.daily.counts[1]=99;
- assert.equal(grantHuntingReward(s,1,'charge',now).berries,4);assert.equal(grantHuntingReward(s,1,'charge',now).berries,1);assert.equal(huntingRewardFor(s,1,now+86400000).berries,4);
+ assert.equal(grantHuntingReward(s,1,'charge',now).berries,15);assert.equal(grantHuntingReward(s,1,'charge',now).berries,Math.floor(15*.25));assert.equal(huntingRewardFor(s,1,now+86400000).berries,15);
+});
+test('basic attacks keep hitting the chosen enemy and splash nearby enemies (2026-10-27 hold-F fix)',()=>{
+ // 예전에는 매 공격마다 가장 가까운 몬스터로 대상이 바뀌어, 계속 눌러도 한 마리도 쓰러지지 않았어요.
+ const sticky=new HuntingRuntime({zone:0,level:1,power:10,job:'mage',practice:true,practiceMode:'multi'}),far=sticky.snapshot().enemies[2];
+ const hits=sticky.attack({x:-3,z:2},undefined,far.id).filter(e=>e.type==='hit');assert.equal(hits[0].type==='hit'&&hits[0].enemyId,far.id);assert.equal(sticky.snapshot().enemies[2].hp,far.hp-10);
+ const area=new HuntingRuntime({zone:0,level:1,power:10,job:'mage',practice:true,practiceMode:'multi'}),[left,mid,right]=area.snapshot().enemies;
+ area.attack({x:0,z:2},undefined,mid.id);const after=area.snapshot().enemies;assert.equal(after[1].hp,mid.hp-10);assert.equal(after[0].hp,left.hp-6);assert.equal(after[2].hp,right.hp-6);
 });

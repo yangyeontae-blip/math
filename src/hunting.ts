@@ -2,11 +2,13 @@ import {skillInfo,isSkill,type SkillId,type JobId} from './academy';
 
 export const HUNT_CAMP={x:0,z:10} as const;
 export const HUNT_CAMP_RADIUS=3;
+/** 기본 공격의 광역 범위와 주변 몬스터가 받는 피해 비율. */
+export const HUNT_SPLASH_RADIUS=3.2,HUNT_SPLASH_SHARE=.6;
 export const HUNT_ZONES=[
- {id:0,name:'새싹 사냥터',level:1,hp:48,damage:7,berries:2,xp:3},
- {id:1,name:'햇살 사냥터',level:10,hp:70,damage:10,berries:4,xp:6},
- {id:2,name:'달빛 사냥터',level:30,hp:125,damage:15,berries:7,xp:10},
- {id:3,name:'별빛 사냥터',level:60,hp:200,damage:21,berries:10,xp:14},
+ {id:0,name:'새싹 사냥터',level:1,hp:48,damage:7,berries:8,xp:3},
+ {id:1,name:'햇살 사냥터',level:10,hp:70,damage:10,berries:15,xp:6},
+ {id:2,name:'달빛 사냥터',level:30,hp:125,damage:15,berries:25,xp:10},
+ {id:3,name:'별빛 사냥터',level:60,hp:200,damage:21,berries:40,xp:14},
 ] as const;
 export const HUNTING_ZONES=HUNT_ZONES;
 export type HuntPoint={x:number;z:number};
@@ -41,7 +43,9 @@ export class HuntingRuntime{
  private active(id:SkillId){return (this.buffs[id]??0)>this.time;}
  private targets(player:HuntPoint,range:number,facing?:HuntPoint){const forward=facing?direction(facing):null;return this.enemies.filter(e=>e.hp>0&&distance(e,player)<=range&&(!forward||(e.x-player.x)*forward.x+(e.z-player.z)*forward.z>=0)).sort((a,b)=>distance(a,player)-distance(b,player));}
  private hurt(e:EnemyRuntime,power:number,skill:SkillId|'basic',events:HuntEvent[],precise=false){if(e.hp<=0||!Number.isFinite(power)||power<=0)return;const damage=Math.min(e.hp,precise?power:Math.max(1,Math.round(power)));e.hp=Math.max(0,e.hp-damage);events.push({type:'hit',enemyId:e.id,damage,skill});if(this.options.practice){if(skill!=='basic')events.push({type:'practiceEffect',skill,kind:'hit',enemyIds:[e.id]});else if(this.active('guardian'))events.push({type:'practiceEffect',skill:'guardian',kind:'hit',enemyIds:[e.id]});}if(e.hp<=1e-8){e.hp=0;e.state='defeated';e.respawnIn=12;e.telegraph=undefined;events.push({type:'defeat',id:`${this.session}:${++this.serial}`,enemyId:e.id,enemyType:e.type,zone:this.options.zone,practice:!!this.options.practice});}}
- attack(player:HuntPoint,facing?:HuntPoint):HuntEvent[]{const events:HuntEvent[]=[];if(!finitePoint(player)||this.time<this.nextAttack||!this.options.practice&&distance(player,HUNT_CAMP)<HUNT_CAMP_RADIUS)return events;const range=this.options.job==='ranger'?10:this.options.job==='mage'?8:2.8;const e=this.targets(player,range,facing)[0];if(!e)return events;this.nextAttack=this.time+.85;this.hurt(e,this.options.power*(this.active('guardian')?1.3:1),'basic',events);return events;}
+ // 기본 공격: 아이가 고른(화면이 바라보는) 몬스터를 그대로 때려요. 예전에는 매번 가장 가까운 몬스터로 바뀌어 피해가 흩어졌어요.
+ // 광역: 맞은 몬스터 둘레 3.2칸 안의 다른 몬스터도 60% 피해를 받아요.
+ attack(player:HuntPoint,facing?:HuntPoint,targetId?:string|null):HuntEvent[]{const events:HuntEvent[]=[];if(!finitePoint(player)||this.time<this.nextAttack||!this.options.practice&&distance(player,HUNT_CAMP)<HUNT_CAMP_RADIUS)return events;const range=this.options.job==='ranger'?10:this.options.job==='mage'?8:2.8;const chosen=targetId?this.enemies.find(e=>e.id===targetId&&e.hp>0&&distance(e,player)<=range):undefined;const e=chosen??this.targets(player,range,facing)[0];if(!e)return events;this.nextAttack=this.time+.85;const power=this.options.power*(this.active('guardian')?1.3:1),splash=this.enemies.filter(o=>o!==e&&o.hp>0&&distance(o,e)<=HUNT_SPLASH_RADIUS);this.hurt(e,power,'basic',events);for(const o of splash)this.hurt(o,power*HUNT_SPLASH_SHARE,'basic',events);return events;}
  cast(id:SkillId,player:HuntPoint,facing?:HuntPoint):HuntEvent[]{const events:HuntEvent[]=[];
   if(!isSkill(id)||!finitePoint(player)||(this.cooldowns[id]??0)>this.time)return events;
   const skill=skillInfo(id);if(!this.options.learned?.includes(id)||skill.job&&this.options.job!==skill.job||this.options.loadout&&!this.options.loadout.includes(id))return events;

@@ -106,7 +106,7 @@ test('outfit effects boost rewards but do not make problems or weapons optional'
 test('trees give only 2 to 4 berries once and stronger weapons cut faster', () => {
   const s = newSave('나무', 0); assert.ok(stageTrees(0).length > 0); assert.equal(treeDamage(s), 1);
   assert.equal(fellTree(s, 0, 4), 4); assert.equal(s.berries, 4); assert.equal(fellTree(s, 0, 2), 0); assert.equal(s.berries, 4);
-  s.berries = 20_000; buy(s, 'weapon', WEAPONS.length - 1); assert.equal(treeDamage(s), WEAPONS.at(-1)!.treePower); upgrade(s, 'weapon', WEAPONS.length - 1); assert.equal(treeDamage(s), WEAPONS.at(-1)!.treePower + 1);
+  s.berries = 30_000; buy(s, 'weapon', WEAPONS.length - 1); assert.equal(treeDamage(s), WEAPONS.at(-1)!.treePower); upgrade(s, 'weapon', WEAPONS.length - 1); assert.equal(treeDamage(s), WEAPONS.at(-1)!.treePower + 1);
   assert.equal(fellTree(s, 999, 2), 0); assert.equal(fellTree(s, 1, 1 as 2), 0); assert.equal(fellTree(s, 1, 5 as 2), 0);
 });
 test('version 2 saves migrate with untouched tree progress', () => {

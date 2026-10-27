@@ -179,6 +179,26 @@ export function makeCharacter(character: number, outfit: number, weapon: number,
     if (weapon === 20) { ball(w, 0xeaf7ff, 0, 1.18, .02, .3, .3, .2); mesh(new T.TorusGeometry(.16, .035, 6, 18), 0xffdb73, 0, 1.18, .25, w); }
     if (weapon === 21) { for (let i = 0; i < 10; i++) ball(w, i % 2 ? 0xffdc55 : 0xf0a635, Math.cos(i * Math.PI / 5) * .25, 1.25 + Math.sin(i * Math.PI / 5) * .25, .03, .09, .13, .06); ball(w, 0x855b35, 0, 1.25, .08, .14); }
     if (weapon === 22) { const comet = mesh(new T.ConeGeometry(.2, .72, 5), 0xff9cab, 0, 1.28, .02, w); comet.rotation.z = Math.PI; for (let i = 0; i < 3; i++) ball(w, i % 2 ? 0xffe690 : 0xffffff, -.2 - i * .1, 1.0 - i * .1, .03, .08 - i * .015); }
+    if (weapon === 23) { // 천둥 도토리 해머: 큰 도토리 머리, 모자, 번개 무늬
+      ball(w, 0xb9783f, 0, 1.3, .02, .34, .3, .3); const cap = ball(w, 0x6e4a2b, 0, 1.5, .02, .38, .16, .34); cap.rotation.z = .1; cylinder(w, 0x6e4a2b, 0, 1.68, .02, .03, .04, .14, 6);
+      for (let i = 0; i < 3; i++) { const bolt = box(w, 0xffe14d, -.12 + i * .12, 1.28, .3, .05, .2, .03); bolt.rotation.z = i % 2 ? .6 : -.6; }
+    }
+    if (weapon === 24) { // 서리꽃 쌍검: 엇갈린 얼음 칼날 두 개와 눈꽃 보석
+      for (const side of [-1, 1]) { const blade = mesh(new T.ConeGeometry(.12, .9, 4), 0xbfe8fb, side * .12, 1.5, .02, w); blade.rotation.z = Math.PI + side * .28; blade.scale.z = .45; }
+      for (let i = 0; i < 6; i++) { const ray = box(w, 0xffffff, 0, 1.14, .1, .04, .3, .02); ray.rotation.z = i * Math.PI / 3; }
+      mesh(new T.OctahedronGeometry(.08), 0x7fd0f2, 0, 1.14, .13, w);
+    }
+    if (weapon === 25) { // 불꽃 깃털 활: 주황 활대, 시위, 불꽃 깃털
+      const bow = mesh(new T.TorusGeometry(.42, .045, 6, 20, Math.PI), 0xf07a3c, .05, 1.3, .02, w); bow.rotation.z = -Math.PI / 2;
+      box(w, 0xfff1d6, .05, 1.3, .02, .015, .84, .015);
+      for (let i = 0; i < 3; i++) { const flame = mesh(new T.ConeGeometry(.07, .26, 6), [0xffd23d, 0xff8a3c, 0xff5a4a][i], .48, 1.08 + i * .22, .02, w); flame.rotation.z = -.4; }
+    }
+    if (weapon === 26) { // 은하수 왕관검: 보랏빛 긴 칼날, 별 왕관, 반짝이는 은하수 점
+      const blade = mesh(new T.ConeGeometry(.2, 1.1, 4), 0x8f7ff0, 0, 1.75, .02, w); blade.rotation.z = Math.PI; blade.scale.z = .4;
+      box(w, 0xffd76a, 0, 1.2, .02, .62, .1, .16);
+      for (let i = 0; i < 5; i++) mesh(new T.OctahedronGeometry(.07), 0xffe98a, -.24 + i * .12, 1.3 + (i % 2) * .06, .06, w);
+      for (let i = 0; i < 6; i++) ball(w, 0xffffff, Math.sin(i * 2.1) * .09, 1.5 + i * .14, .1, .03);
+    }
   }
   if (outfit === 8) { box(body, 0xf55f74, 0, .82, .39, .3, .34, .08); for (const side of [-1, 1]) box(body, 0xf8d9a0, side * .18, .98, .36, .06, .42, .04); }
   if (outfit === 9) { const brim = cylinder(body, o.accent, 0, 1.98, 0, .57, .57, .08); ball(body, o.color, 0, 2.12, 0, .38, .25, .34); }
@@ -1116,7 +1136,7 @@ export class World {
   }
   selectHuntTarget(id: string | null) { if (id !== null && !this.combatRuntime?.snapshot().enemies.some(enemy => enemy.id === id && enemy.hp > 0)) return; this.huntTarget = id; }
   private combatFacing(range = 12) { const target = autoHuntTarget(this.combatRuntime?.snapshot().enemies ?? [], this.player.position, range, this.huntTarget); this.huntTarget = target?.id ?? null; if (!target) return { x: Math.sin(this.player.rotation.y), z: Math.cos(this.player.rotation.y) }; const facing = { x: target.x - this.player.position.x, z: target.z - this.player.position.z }; if (Math.hypot(facing.x, facing.z) < .001) { facing.x = Math.sin(this.player.rotation.y); facing.z = Math.cos(this.player.rotation.y); } this.combatAimUntil = this.time + .35; this.combatAimAngle = Math.atan2(facing.x, facing.z); return facing; }
-  huntAttack() { if (!this.combatRuntime || this.paused || !this.active) return false; const job = this.trainingOptions?.job ?? this.combatProfile.job, range = job === 'mage' ? 8 : job === 'ranger' ? 10 : 2.8; const events = this.combatRuntime.attack(this.player.position, this.combatFacing(range)); if (events.length) this.swingUntil = this.time + .28; this.handleHuntEvents(events); return events.length > 0; }
+  huntAttack() { if (!this.combatRuntime || this.paused || !this.active) return false; const job = this.trainingOptions?.job ?? this.combatProfile.job, range = job === 'mage' ? 8 : job === 'ranger' ? 10 : 2.8; const events = this.combatRuntime.attack(this.player.position, this.combatFacing(range), this.huntTarget); if (events.length) this.swingUntil = this.time + .28; this.handleHuntEvents(events); return events.length > 0; }
   useHuntSkill(id: SkillId) { if (!this.combatRuntime || this.paused || !this.active) return false; const range = ['starbolt', 'arrow', 'pierce', 'lantern'].includes(id) ? 12 : id === 'charge' ? 7 : id === 'trap' ? 8 : 6, facing = this.combatFacing(range); const events = this.combatRuntime.cast(id, this.player.position, facing); this.handleHuntEvents(events); const cast = events.some(event => event.type === 'cast'); if (cast && id === 'charge') { this.chargeMotion = { remaining: .2, direction: facing }; this.swingUntil = this.time + .28; } if (cast && id === 'lantern') { const enemy = this.combatRuntime.snapshot().enemies.filter(enemy => enemy.hp > 0).sort((a, b) => Math.hypot(a.x - this.player.position.x, a.z - this.player.position.z) - Math.hypot(b.x - this.player.position.x, b.z - this.player.position.z))[0]; const object = enemy && this.combatWorld?.targetObject(enemy.id); if (object) { this.guideTarget = { object, name: this.inTraining ? '수련 허수아비' : '다음 사냥 대상', arrivalDistance: 2.5 }; this.guideElement.querySelector('b')!.textContent = this.guideTarget.name; this.guideElement.hidden = false; } } return cast; }
   private handleHuntEvents(events: HuntEvent[]) {
     if (!this.combatRuntime) return; const snapshot = this.combatRuntime.snapshot();
@@ -1740,7 +1760,7 @@ export class World {
   }
   private frame() {
     if (document.hidden || this.paused || !this.active) return;
-    const dt = Math.min(this.clock.getDelta(), .04); this.time += dt;
+    const frame = this.clock.getDelta(), dt = Math.min(frame, .04); this.time += dt;
     if(this.inHomestead)this.animateHomeVisitors(dt);
     this.updateSkills(dt);
     if (this.shadowSweep++ % 45 === 0) this.trimSmallShadows(); // 새로 생긴 펫·탈것·몬스터도 곧 정리돼요.
@@ -1813,7 +1833,8 @@ export class World {
         if (target && distanceToTarget < .55 && target.mesh.visible) { target.mesh.visible = false; this.petTargetId = null; this.burst(target.mesh.position, 0xff9fb4, 6); this.onCollect(target.id); }
       }
     }
-    this.updateCombat(dt);
+    // 느린 기기(저사양 태블릿, 그래픽 없는 검사 환경)에서도 전투는 실제 시간만큼 흘러가요. 밀린 시간을 0.04초씩 나눠 계산하고, 한 프레임에 최대 0.25초까지만 따라잡아요.
+    for (let left = Math.min(frame, .25); left > 1e-6; left -= .04) this.updateCombat(Math.min(.04, left));
     if (this.combatRuntime && this.combatAimUntil > this.time) this.player.rotation.y += Math.atan2(Math.sin(this.combatAimAngle - this.player.rotation.y), Math.cos(this.combatAimAngle - this.player.rotation.y)) * (1 - Math.exp(-dt * 18));
     if (this.storyActivityFocus && this.storyActivityRoot) this.storyActivityRoot.traverse(o => { if (o.userData.storyWheel && o.parent?.userData.storyActivity) { const water = this.storyActivityRoot!.userData.waterSolved; if (water) o.rotation.z -= dt; } });
     for (const o of this.craftAnimated) { if (o.userData.homeRotor) { if(!matchMedia('(prefers-reduced-motion: reduce)').matches)o.rotation.z-=dt*.8; } else if (o.userData.fieldWheel) { if (!matchMedia('(prefers-reduced-motion: reduce)').matches) o.rotation.z -= dt * .7; } else if (o.userData.storyWheel) o.rotation.z -= dt * .7; else { o.rotation.y += dt * .6; o.scale.setScalar(1.5 + Math.sin(this.time * 1.7 + Number(o.userData.storySparkle)) * .12); } }

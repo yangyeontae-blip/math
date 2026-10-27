@@ -34,6 +34,10 @@ export const WEAPONS = [
   { name: '구름방울 철퇴', price: 8500, bonus: 50, multiplier: 8, treePower: 11, icon: '🔔', color: 0xd9eaf5 },
   { name: '해바라기 창', price: 9600, bonus: 55, multiplier: 8.5, treePower: 12, icon: '🌻', color: 0xf2be45 },
   { name: '베리혜성 지팡이', price: 11000, bonus: 60, multiplier: 9, treePower: 12, icon: '☄️', color: 0xe86988 },
+  { name: '천둥 도토리 해머', price: 13000, bonus: 66, multiplier: 9.6, treePower: 13, icon: '⚡', color: 0xb9783f },
+  { name: '서리꽃 쌍검', price: 15500, bonus: 72, multiplier: 10.2, treePower: 14, icon: '❄️', color: 0x9fd8f2 },
+  { name: '불꽃 깃털 활', price: 18500, bonus: 79, multiplier: 10.9, treePower: 15, icon: '🔥', color: 0xf07a3c },
+  { name: '은하수 왕관검', price: 22000, bonus: 86, multiplier: 11.6, treePower: 16, icon: '🌌', color: 0x8f7ff0 },
 ] as const;
 export const OUTFITS = [
   { name: '새싹 탐험복', price: 0, color: 0x4d9c78, accent: 0xffe4a3, desc: '처음 떠나는 모험의 설렘', effect: '추가 효과가 없는 기본 옷이에요.', berryBonus: 0, xpBonus: 0, clearBonus: 0 },
@@ -648,7 +652,7 @@ export function grantReward(s: Save, monster: number, arena: boolean, now = Date
   return { ...reward, levels, milestones };
 }
 /** Combat power is separate from all learning reward bonuses. */
-export function huntingPower(s:Pick<Save,'level'|'weapon'|'weapons'>){const w=WEAPONS[s.weapon]??WEAPONS[0],upgrade=Math.max(0,Math.min(3,s.weapons[s.weapon]??0));return (8+Math.min(100000,s.level)*.35)*(1+(w.treePower-1)*.1+upgrade*.12);}
+export function huntingPower(s:Pick<Save,'level'|'weapon'|'weapons'>){const w=WEAPONS[s.weapon]??WEAPONS[0],upgrade=Math.max(0,Math.min(3,s.weapons[s.weapon]??0));return (8+Math.min(100000,s.level)*.35)*(1+(w.treePower-1)*.22+upgrade*.15);} // 좋은 무기일수록 사냥이 확실히 빨라져요(최고 무기 약 4.3배)
 export function huntingRewardFor(s:Save,zone:number,now=Date.now()){
   const z=HUNT_ZONES[zone];if(!z||s.level<z.level||!Number.isFinite(now)||!Number.isFinite(new Date(now).getTime()))return {berries:0,xp:0,eligible:false,multiplier:0};
   const date=todayKey(new Date(now)),count=s.career.daily.date===date?s.career.daily.counts[zone]:0;

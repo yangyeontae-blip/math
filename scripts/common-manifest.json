@@ -78,15 +78,15 @@
     "tests/common-line-endings.test.mjs": "a26a99e5f73e489d088fd03eebdf2582aa148ff378b8c094e142fb570e2e82bf",
     "src/home-exit.ts": "055824644f9cc9bba4ba9f4166170b636f6e3849a7288e2ace60ebdbb4b9e0ad",
     "tests/home-exit.test.ts": "55615d3f051ce152b5d39ebd346777997051e6fa71344602999a10962db4efc3",
-    "src/hunting.ts": "ab3a3f9478e10788a9e8c078aa17b7a698de969012757fa43d26af17d98ea1c4",
+    "src/hunting.ts": "be1a6c1723bb4145ea15de4bd2b62a863a43b500a5097f2203b016fbf1435740",
     "src/hunting-world.ts": "1f292b7a7ee07b328292183b1fab820584d70c689d8330754cff794a765d7112",
     "src/career-controller.ts": "c25dacc72e05219f73d0513f1d253035d3ea19e817d92df59501bafa04008e40",
     "src/career-ui.ts": "1b7fec15b585429aef10ed0fcbf49d2f4ceb84883ec23c14c5f4f6af89cbac49",
     "src/career.css": "cbfbdd0929eddeb6e7aadf562e4037c681a11b60d4af865e832119fa56bdf39b",
     "src/village-layout.ts": "ccdb173cd4384aac0d833d7442c913ccf81fb0fddc4f747b78ed4f1534033dbb",
-    "tests/hunting.test.ts": "502191aa0cf79e1dd121d1cfe16e609765728d8817a67d461a52743a98fee93c",
+    "tests/hunting.test.ts": "d8d5bcac3cd9fa4800f2bde333d6922f469dd493d70d3165ef67d1f26ad08af0",
     "tests/hunting-world.test.ts": "5eb5fad7f3dab86cc894a3c8e85909d73e4ae6e6231cec0440904ab294c7653a",
-    "e2e/hunting.spec.mjs": "212d289b05ff21e14d55491200f181149b6558be6509a1e11808743633157023"
+    "e2e/hunting.spec.mjs": "e3d281c090f29031b551088de3d00a184b5149f3989f07c0b73f4a84e40cc693"
   },
-  "generation": "84b513a7327e2605a0f9ba707b23b0434e183c3baf8bf146cf0d2c7737a0f8eb"
+  "generation": "cad7503dac2571697a69747d013eae8f0c5744879de132de819d29d7eac52a00"
 }
