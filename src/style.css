@@ -454,3 +454,6 @@ input:not([type=checkbox]):not([type=radio]),select,textarea{min-height:44px}
   #game #hud .academy-bar button[data-cast-skill] small{display:none}
   .touch-actions button{white-space:nowrap;font-size:.7rem;padding-left:4px;padding-right:4px}
 }
+
+/* 휴대폰 사냥 화면: 비어 있는 스킬 칸은 숨겨 몬스터가 가려지지 않게 */
+@media(max-width:600px){body #career-hud .career-combat-skill:not([data-cast-skill]){display:none!important}}
