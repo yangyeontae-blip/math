@@ -60,13 +60,14 @@ const extraSigils:Record<string,string>={
  galeShot:'<path d="M6 25h35m-7-7 7 7-7 7M9 17c2-10 18-12 23-3M16 36c12 8 26-2 25-13M8 33c-4 0-5 7 0 7M23 8c-5-5-12 1-8 6"/>',
  moonArrow:'<path d="M24 7C6 8 4 34 22 40 14 31 16 15 24 7Z" fill="currentColor" fill-opacity=".24"/><path d="m18 34 24-24M31 10h11v11M26 33l-5-5M32 27l-5-5"/>',
 };
+const expandedPaintedIds=['acornRush','vinePull','dawnSlash','leafOrb','thunderChain','comet','tripleShot','galeShot','moonArrow'];
 export function renderSkillIcon(id:string,index:number,label=''){
- const custom=Object.hasOwn(extraSigils,id)?extraSigils[id]:undefined;
+ const custom=Object.hasOwn(extraSigils,id)?extraSigils[id]:undefined,expandedIndex=expandedPaintedIds.indexOf(id);
  const paintedId=Object.hasOwn(jobSigils,id)?jobSigils[id]:id,knownIndex=paintedSkillIds.indexOf(paintedId);
  const legacyIndex=Number.isInteger(index)&&index>=0&&index<paintedSkillIds.length?index:-1;
  const i=custom?-1:knownIndex>=0?knownIndex:legacyIndex,vector=custom||sigils[i>=0?i:0];
- const position=i>=0?` style="--sigil-x:${(i%5)*25}%;--sigil-y:${Math.floor(i/5)*50}%"`:'';
- return `<span class="career-sigil${i<0?' is-vector':''}" data-skill-icon="${attr(id)}"${position} aria-hidden="true"><svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">${vector}</svg>${i>=0?'<span class="career-painted-sigil"></span>':''}</span>${label?`<span class="career-skill-name">${escape(label)}</span>`:''}`;
+ const position=expandedIndex>=0?` style="--sigil-x:${(expandedIndex%3)*50}%;--sigil-y:${Math.floor(expandedIndex/3)*50}%"`:i>=0?` style="--sigil-x:${(i%5)*25}%;--sigil-y:${Math.floor(i/5)*50}%"`:'';
+ return `<span class="career-sigil${expandedIndex>=0?' is-expanded':i<0?' is-vector':''}" data-skill-icon="${attr(id)}"${position} aria-hidden="true"><svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">${vector}</svg>${expandedIndex>=0?'<span class="career-painted-sigil career-painted-expanded"></span>':i>=0?'<span class="career-painted-sigil"></span>':''}</span>${label?`<span class="career-skill-name">${escape(label)}</span>`:''}`;
 }
 function skillCards(vm:CareerSchoolView){
  return `<div class="career-skill-list">${vm.skills.map(s=>{

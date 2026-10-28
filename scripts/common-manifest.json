@@ -74,15 +74,15 @@
     "src/academy.ts": "0d2fea1b59e41794da054239f71770d0ddfd7ceaac92b092928bb714f984dbf8",
     "src/academy.css": "b132f46aa2488e36b87784aa90ed7f1945b405439b9523df193f5348c51d7848",
     "tests/academy.test.ts": "5c6185e192829591e1f3601d2e253e36eba258964cdca225a13e2ffb399ef8d3",
-    "e2e/academy.spec.mjs": "214237a3a1ebb21d71512e645558ee662de64446bae86ff5e7ac061efe106c3a",
+    "e2e/academy.spec.mjs": "5e1dad94d64a468f424f6e6694e4d190bc09dc3189de2db8cedf0475c73624b3",
     "tests/common-line-endings.test.mjs": "a26a99e5f73e489d088fd03eebdf2582aa148ff378b8c094e142fb570e2e82bf",
     "src/home-exit.ts": "055824644f9cc9bba4ba9f4166170b636f6e3849a7288e2ace60ebdbb4b9e0ad",
     "tests/home-exit.test.ts": "55615d3f051ce152b5d39ebd346777997051e6fa71344602999a10962db4efc3",
     "src/hunting.ts": "f8f334ab8ca80a0ec221a8ff80b042e29c89acfd2a27e5c0e97389f1a8e440ee",
     "src/hunting-world.ts": "67c3b3fc4263c02cf80ee824dd087c3b1c1182a67909bcbcf83c70ed18fba1ef",
-    "src/career-controller.ts": "7f41dffaf99c4e7c3ace15b487d4d8f1c77baa21bc4830f6e71424a685a414b8",
-    "src/career-ui.ts": "042cbd7b741b09a37f47ffc707d6a0ea9d4fef4413e47e60089676152cb8a8e8",
-    "src/career.css": "cbfbdd0929eddeb6e7aadf562e4037c681a11b60d4af865e832119fa56bdf39b",
+    "src/career-controller.ts": "392a1188aaf16be42c5b9cc48f23f442955278a576fbed35b238916ee7d9bf0a",
+    "src/career-ui.ts": "d53dbb7e90a8e0d796b44030e0d4335342c134e87b9587f97aeb40f3770853a4",
+    "src/career.css": "1be27432ad718a74c7c036891294f67ab99e15047885a52f1ec1ec4cdda4cb72",
     "src/village-layout.ts": "ccdb173cd4384aac0d833d7442c913ccf81fb0fddc4f747b78ed4f1534033dbb",
     "tests/hunting.test.ts": "546e5429beb9b09e2dffb9c4ee81a9e1630773adf23bc98f7fb1894c84da0ec1",
     "tests/hunting-world.test.ts": "9b9fd34a1c8e730ac2b73165a218dd62b7d816a5c8eb26e0ca10e830baa1339d",
@@ -94,8 +94,9 @@
     "tests/item-rarity.test.ts": "92bd0ca07d346019962f61989723363ea4d5d4ffdf8faea0c50b49d787b185ea",
     "tests/legendary-pet.test.ts": "e3c86d6c288bd9f18a0366bf40dbe2f7169a52188bcbd8e772ece1c63c1fcff2",
     "tests/salon-models.test.ts": "c8f4b2b9b3aa187d257082eb258ab8327cc679858acd1a26477246a203ebef0f",
-    "tests/career-ui.test.ts": "e6ae8f91f645a8b02d44387f67eedf99a8b0c0513c8f7ba58ccf3fe7302807f9",
-    "e2e/legendary-style.spec.mjs": "7496bc180ad29f8231221502874985a132cb784c7dd90af16082a78d6d7e1552"
+    "tests/career-ui.test.ts": "a2b2d96811210bde5d1e27fb9c17f2292acd5ccc75b35da67186d26125e29c26",
+    "e2e/legendary-style.spec.mjs": "7496bc180ad29f8231221502874985a132cb784c7dd90af16082a78d6d7e1552",
+    "public/art/skill-sigils-expanded-v1.webp": "c96246cd52fb3dac36447d21e92fdf464fc1405f903d86c2ce92e9440614f6b0"
   },
-  "generation": "9e4062b9bee4304aa3c072bc1bfef76b67acdf7ef4e734abc4783b004b4619d6"
+  "generation": "fc7f237ecd1898dbc4e7899d3c9ce8e30753fc29dd04677cf36b3845011b882f"
 }

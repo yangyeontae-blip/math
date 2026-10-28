@@ -20,6 +20,7 @@ const esc=(s:unknown)=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&l
 /** Connects school, training and hunting to the same saved career. */
 export function mountCareer(h:Hooks){
  document.documentElement.style.setProperty('--career-skill-atlas',`url("${new URL(import.meta.env.BASE_URL+'art/skill-sigils-v1.webp',document.baseURI).href}")`);
+ document.documentElement.style.setProperty('--career-expanded-skill-atlas',`url("${new URL(import.meta.env.BASE_URL+'art/skill-sigils-expanded-v1.webp',document.baseURI).href}")`);
  const hud=document.createElement('div');hud.id='career-hud';hud.hidden=true;document.querySelector('#hud')!.append(hud);
  const bar=document.createElement('div');bar.id='academy-skills';bar.className='academy-bar career-exploration-bar';bar.hidden=true;document.querySelector('#hud')!.append(bar);
  const status=document.createElement('div');status.className='academy-status';document.querySelector('#hud')!.append(status);
