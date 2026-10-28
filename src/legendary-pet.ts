@@ -26,9 +26,9 @@ export function createPpojjakiPet(): T.Group {
   const root = new T.Group(), body = new T.Group(); root.add(body);
   root.name = '뽀짝이'; root.userData.petModel = true; root.userData.petBody = body;
   const sphere = new T.SphereGeometry(1, 12, 8), curlGeometry = new T.SphereGeometry(1, 8, 6);
-  const fur = new T.MeshStandardMaterial({ color: 0xd9a574, roughness: .92 });
-  const earFur = new T.MeshStandardMaterial({ color: 0xbe8356, roughness: .95 });
-  const cream = new T.MeshStandardMaterial({ color: 0xffe8c6, roughness: .85 });
+  const fur = new T.MeshStandardMaterial({ color: 0xb96a2f, roughness: .92 });
+  const earFur = new T.MeshStandardMaterial({ color: 0x955025, roughness: .95 });
+  const cream = new T.MeshStandardMaterial({ color: 0xffd5a4, roughness: .85 });
   const dark = new T.MeshStandardMaterial({ color: 0x2c211e, roughness: .28 });
   const shine = new T.MeshBasicMaterial({ color: 0xfffaf0 });
   const gold = new T.MeshStandardMaterial({ color: 0xf1c76e, metalness: .45, roughness: .38 });
@@ -86,11 +86,11 @@ export function createPpojjakiPet(): T.Group {
 
 /** Gold flower on the floor and small paw/star ornaments; no screen-covering transparency. */
 export function createPpojjakiAura(_ride = -1): T.Group {
-  const root = new T.Group(), flower = new T.Group(); flower.position.y = .035; root.add(flower); root.name = '뽀짝이 꽃빛';
-  const sphere = new T.SphereGeometry(1, 8, 6), ring = new T.TorusGeometry(1, .018, 5, 40);
-  const gold = new T.MeshBasicMaterial({ color: 0xf1cc78, transparent: true, opacity: .56, depthWrite: false });
+  const root = new T.Group(), flower = new T.Group(); flower.position.y = .16; root.add(flower); root.name = '뽀짝이 꽃빛';
+  const sphere = new T.SphereGeometry(1, 8, 6), ring = new T.TorusGeometry(1, .032, 5, 40);
+  const gold = new T.MeshBasicMaterial({ color: 0xf6b52a, transparent: true, opacity: .75, depthWrite: false });
   const cream = new T.MeshBasicMaterial({ color: 0xffe8ac, transparent: true, opacity: .75, depthWrite: false });
-  for (const radius of [.62, .87]) { const hoop = new T.Mesh(ring, gold); hoop.rotation.x = Math.PI / 2; hoop.scale.setScalar(radius); flower.add(hoop); }
+  for (const radius of [.8, 1.08]) { const hoop = new T.Mesh(ring, gold); hoop.rotation.x = Math.PI / 2; hoop.scale.setScalar(radius); flower.add(hoop); }
   const petals = new T.InstancedMesh(sphere, gold, 8), dummy = new T.Object3D();
   for (let i = 0; i < 8; i++) { const a = i * Math.PI / 4; dummy.position.set(Math.cos(a) * .44, 0, Math.sin(a) * .44); dummy.rotation.set(0, -a, 0); dummy.scale.set(.27, .012, .11); dummy.updateMatrix(); petals.setMatrixAt(i, dummy.matrix); }
   petals.computeBoundingSphere(); flower.add(petals);
