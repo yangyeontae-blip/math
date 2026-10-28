@@ -1,0 +1,12 @@
+export type ItemKind='weapon'|'outfit'|'ride'|'pet'|'potion'|'furniture'|'garden'|'hairstyle'|'face';
+export const ITEM_RARITIES=[{id:'common',name:'일반',color:'#61705e'},{id:'rare',name:'레어',color:'#277044'},{id:'epic',name:'희귀',color:'#285fa5'},{id:'unique',name:'유니크',color:'#8245a6'},{id:'legendary',name:'전설',color:'#946000'}] as const;
+export type ItemRarity=typeof ITEM_RARITIES[number];
+const thresholds:Record<ItemKind,readonly number[]>={weapon:[300,1200,5000,20000],outfit:[300,1000,3500,10000],ride:[800,2500,8000,25000],pet:[1000,5000,20000,100000],potion:[200,500,1200,3500],furniture:[200,700,2000,7000],garden:[300,1200,5000,15000],hairstyle:[100,350,800,1200],face:[100,400,1000,2000]};
+export function itemRarity(kind:ItemKind,id:number,price=0):ItemRarity {if(kind==='pet'&&id===20)return ITEM_RARITIES[4];const value=Number.isFinite(price)?Math.max(0,price):0;return ITEM_RARITIES[thresholds[kind].filter(t=>value>=t).length];}
+export type CatalogEntry={name:string;kind:ItemKind;id:number;price:number};
+/** Decorate text labels, never input values, attributes or game/save data. */
+export function decorateItemCatalog(root:HTMLElement,entries:readonly CatalogEntry[]){
+ const byName=new Map(entries.map(e=>[e.name,e]));const names=[...byName.keys()].sort((a,b)=>b.length-a.length);const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);const nodes:Text[]=[];let node:Node|null;
+ while((node=walker.nextNode())){const p=node.parentElement;if(!p||p.closest('[data-rarity],textarea,input,option,script,style,[contenteditable]')||!p.closest('strong,b,h3,h4,button,.item-name,.furniture-name'))continue;if(names.some(n=>node!.textContent?.includes(n)))nodes.push(node as Text);}
+ for(const text of nodes){let rest=text.data;const fragment=document.createDocumentFragment();while(rest){let found:CatalogEntry|undefined,at=-1;for(const name of names){const pos=rest.indexOf(name);if(pos>=0&&(at<0||pos<at)){at=pos;found=byName.get(name);}}if(!found){fragment.append(document.createTextNode(rest));break;}fragment.append(document.createTextNode(rest.slice(0,at)));const rarity=itemRarity(found.kind,found.id,found.price),label=document.createElement('span');label.dataset.rarity=rarity.id;label.className='item-rarity-name rarity-'+rarity.id;label.textContent='['+rarity.name+'] '+found.name;label.title=rarity.name+' 등급';fragment.append(label);rest=rest.slice(at+found.name.length);}text.replaceWith(fragment);}
+}

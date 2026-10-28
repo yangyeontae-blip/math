@@ -457,3 +457,8 @@ input:not([type=checkbox]):not([type=radio]),select,textarea{min-height:44px}
 
 /* 휴대폰 사냥 화면: 비어 있는 스킬 칸은 숨겨 몬스터가 가려지지 않게 */
 @media(max-width:600px){body #career-hud .career-combat-skill:not([data-cast-skill]){display:none!important}}
+
+/* Current career stays below the name without replacing earned adventure titles. */
+.career-title{display:block;width:fit-content;max-width:100%;margin:-1px 0 4px;padding:1px 7px;border:1px solid #b2cba2;border-radius:7px;background:#e9f2da;color:#365b3e;font-size:11px;font-weight:900;line-height:15px;white-space:nowrap}.career-title[data-job="mage"]{background:#efe7f7;border-color:#c7b3dc;color:#654485}.career-title[data-job="ranger"]{background:#e0f2e9;border-color:#9ac9b7;color:#286751}.career-title[data-job="knight"]{background:#fff0cd;border-color:#d9bf7e;color:#74541f}
+
+.career-badges{display:flex;align-items:center;gap:3px;max-width:100%;white-space:nowrap}.career-badges .career-title{margin-bottom:3px;padding:0 5px;font-size:10px}.career-badges .guardian-title{font-size:9px;padding:0 4px;margin:0 0 3px}.guardian-title[hidden]{display:none}

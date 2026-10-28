@@ -5,10 +5,10 @@ export const HUNT_CAMP_RADIUS=3;
 /** 기본 공격의 광역 범위와 주변 몬스터가 받는 피해 비율. */
 export const HUNT_SPLASH_RADIUS=3.2,HUNT_SPLASH_SHARE=.6;
 export const HUNT_ZONES=[
- {id:0,name:'새싹 사냥터',level:1,hp:48,damage:7,berries:8,xp:3},
- {id:1,name:'햇살 사냥터',level:10,hp:70,damage:10,berries:15,xp:6},
- {id:2,name:'달빛 사냥터',level:30,hp:125,damage:15,berries:25,xp:10},
- {id:3,name:'별빛 사냥터',level:60,hp:200,damage:21,berries:40,xp:14},
+ {id:0,name:'새싹 사냥터',level:1,hp:48,damage:7,berries:20,xp:12},
+ {id:1,name:'햇살 사냥터',level:10,hp:70,damage:10,berries:50,xp:30},
+ {id:2,name:'달빛 사냥터',level:30,hp:125,damage:15,berries:100,xp:60},
+ {id:3,name:'별빛 사냥터',level:60,hp:200,damage:21,berries:200,xp:120},
 ] as const;
 export const HUNTING_ZONES=HUNT_ZONES;
 export type HuntPoint={x:number;z:number};
@@ -17,24 +17,26 @@ export type HuntEnemy={id:string;type:'melee'|'charge'|'ranged';x:number;z:numbe
 export type HuntEffect={id:string;skill:SkillId;x:number;z:number;radius:number;remaining:number;duration:number};
 export type HuntDefeatEvent={type:'defeat';id:string;enemyId:string;enemyType:'melee'|'charge'|'ranged';zone:number;practice:boolean};
 export type HuntEvent=HuntDefeatEvent|{type:'hit';enemyId:string;damage:number;skill:SkillId|'basic'}|{type:'playerHit';damage:number;hp:number}|{type:'retreat';x:number;z:number}|{type:'cast';skill:SkillId}|{type:'respawn';enemyId:string}|{type:'practiceEffect';skill:SkillId;kind:'block'|'root'|'escape'|'reveal'|'hit';enemyIds?:string[]};
-export type HuntingOptions={zone:number;level:number;power:number;job?:JobId|null;learned?:readonly SkillId[];loadout?:readonly(SkillId|null)[];practice?:boolean;practiceMode?:PracticeMode};
+export type HuntingOptions={zone:number;level:number;power:number;job?:JobId|null;learned?:readonly SkillId[];loadout?:readonly(SkillId|null)[];practice?:boolean;practiceMode?:PracticeMode;maxHpMultiplier?:number;damageReduction?:number};
 export type HuntSnapshot={time:number;zone:number;playerHp:number;maxHp:number;invulnerable:number;enemies:HuntEnemy[];cooldowns:Partial<Record<SkillId,number>>;effects:HuntEffect[];speedMultiplier:number};
 type EnemyRuntime=HuntEnemy&{spawn:HuntPoint;ready:number;rootUntil:number};
 type Area=HuntEffect&{damage:number;root:number;trigger:boolean;hit:boolean};
 let runtimeSerial=0;
 const distance=(a:HuntPoint,b:HuntPoint)=>Math.hypot(a.x-b.x,a.z-b.z);
 const finitePoint=(p:HuntPoint)=>Number.isFinite(p.x)&&Number.isFinite(p.z);
+const validCompanionOptions=(p:Pick<HuntingOptions,'maxHpMultiplier'|'damageReduction'>)=>(p.maxHpMultiplier===undefined||Number.isFinite(p.maxHpMultiplier)&&p.maxHpMultiplier>0&&p.maxHpMultiplier<=10)&&(p.damageReduction===undefined||Number.isFinite(p.damageReduction)&&p.damageReduction>=0&&p.damageReduction<=1);
 const direction=(p?:HuntPoint)=>{const len=p?Math.hypot(p.x,p.z):0;return len&&Number.isFinite(len)?{x:p!.x/len,z:p!.z/len}:{x:0,z:-1};};
 /** A separate simulation: no DOM, learning, storage, wall clock, or online writes. */
 export class HuntingRuntime{
  private time=0;private hp:number;private maxHp:number;private invincibleUntil=0;private nextAttack=0;private cooldowns:Partial<Record<SkillId,number>>={};private buffs:Partial<Record<SkillId,number>>={};private enemies:EnemyRuntime[]=[];private effects:Area[]=[];private serial=0;private readonly session:string;private windStart:HuntPoint|null=null;
  constructor(private readonly options:HuntingOptions){
-  if(!Number.isInteger(options.zone)||options.zone<0||options.zone>3||!Number.isFinite(options.level)||options.level<1||!Number.isFinite(options.power)||options.power<=0||!options.practice&&options.level<HUNT_ZONES[options.zone].level)throw Error('아직 갈 수 없는 사냥터예요.');
-  this.maxHp=100+Math.min(500,Math.floor(options.level*2));this.hp=this.maxHp;
+  if(!Number.isInteger(options.zone)||options.zone<0||options.zone>3||!Number.isFinite(options.level)||options.level<1||!Number.isFinite(options.power)||options.power<=0||!validCompanionOptions(options)||!options.practice&&options.level<HUNT_ZONES[options.zone].level)throw Error('아직 갈 수 없는 사냥터예요.');
+  this.maxHp=this.profileMaxHp(options);this.hp=this.maxHp;
   this.session=`hunt-${globalThis.crypto?.randomUUID?.()??++runtimeSerial}`;
   this.reset();
  }
- updateProfile(profile:Pick<HuntingOptions,'level'|'power'>&Partial<Pick<HuntingOptions,'job'|'learned'|'loadout'>>){if(!Number.isFinite(profile.level)||profile.level<1||!Number.isFinite(profile.power)||profile.power<=0)return false;const maxHp=100+Math.min(500,Math.floor(profile.level*2));this.hp=Math.min(maxHp,this.hp+Math.max(0,maxHp-this.maxHp));this.maxHp=maxHp;Object.assign(this.options,profile);return true;}
+ private profileMaxHp(profile:HuntingOptions){return Math.floor((100+Math.min(500,Math.floor(profile.level*2)))*(profile.practice?1:profile.maxHpMultiplier??1));}
+ updateProfile(profile:Pick<HuntingOptions,'level'|'power'>&Partial<Pick<HuntingOptions,'job'|'learned'|'loadout'|'maxHpMultiplier'|'damageReduction'>>){if(!Number.isFinite(profile.level)||profile.level<1||!Number.isFinite(profile.power)||profile.power<=0||!validCompanionOptions(profile))return false;const maxHp=this.profileMaxHp({...this.options,...profile});this.hp=Math.min(maxHp,this.hp+Math.max(0,maxHp-this.maxHp));this.maxHp=maxHp;Object.assign(this.options,profile);return true;}
  reset(){this.time=0;this.hp=this.maxHp;this.invincibleUntil=0;this.nextAttack=0;this.cooldowns={};this.buffs={};this.effects=[];this.windStart=null;const positions=[[-6,-3],[0,-6],[6,-3],[-8,-10],[0,-13],[8,-10]];
   const count=this.options.practice?(this.options.practiceMode==='multi'?3:this.options.practiceMode==='attacking'?2:1):6;
   this.enemies=positions.slice(0,count).map(([x,z],i)=>({id:String(i),type:(['melee','charge','ranged'] as const)[i%3],x:this.options.practice?i*3-((count-1)*1.5):x,z:this.options.practice?0:z,hp:HUNT_ZONES[this.options.zone].hp,maxHp:HUNT_ZONES[this.options.zone].hp,state:'idle',respawnIn:0,ready:0,rootUntil:0,spawn:{x:this.options.practice?i*3-((count-1)*1.5):x,z:this.options.practice?0:z}}));
@@ -50,6 +52,25 @@ export class HuntingRuntime{
   if(!isSkill(id)||!finitePoint(player)||(this.cooldowns[id]??0)>this.time)return events;
   const skill=skillInfo(id);if(!this.options.learned?.includes(id)||skill.job&&this.options.job!==skill.job||this.options.loadout&&!this.options.loadout.includes(id))return events;
   if(skill.job&&!this.options.practice&&distance(player,HUNT_CAMP)<HUNT_CAMP_RADIUS)return events;
+  if(['acornRush','vinePull','dawnSlash','leafOrb','thunderChain','comet','tripleShot','galeShot','moonArrow'].includes(id)){
+   const range=id==='moonArrow'?14:id==='vinePull'?8:id==='dawnSlash'?7:id==='acornRush'?5:12;
+   const directional=['acornRush','dawnSlash','leafOrb','tripleShot','moonArrow'].includes(id),area=id==='comet'||id==='galeShot';
+   let targets=this.targets(player,range,directional?facing:undefined);
+   const primary=targets[0];if(!primary)return events;
+   if(area)targets=this.targets(primary,id==='comet'?6:5);
+   else targets=targets.slice(0,id==='moonArrow'?1:id==='thunderChain'?4:['vinePull','leafOrb','tripleShot'].includes(id)?3:6);
+   this.cooldowns[id]=this.time+skill.cooldown;events.push({type:'cast',skill:id});
+   this.addEffect(id,primary,area?(id==='comet'?6:5):id==='dawnSlash'?7:id==='acornRush'?5:1,skill.duration,0,0,false);
+   for(const enemy of targets){
+    if(id==='acornRush')for(let hit=0;hit<3;hit++)this.hurt(enemy,this.options.power*skill.power/3,id,events,true);
+    else this.hurt(enemy,this.options.power*skill.power,id,events);
+    if(enemy.hp<=0)continue;
+    const root=id==='vinePull'?1.5:id==='thunderChain'||id==='galeShot'?1:0;
+    if(id==='vinePull'){const d=distance(enemy,player);if(d>1.8){const factor=1.8/d;enemy.x=Math.max(-16,Math.min(16,player.x+(enemy.x-player.x)*factor));enemy.z=Math.max(-18,Math.min(5,player.z+(enemy.z-player.z)*factor));}}
+    if(root){enemy.rootUntil=this.time+root;enemy.state='rooted';enemy.telegraph=undefined;if(this.options.practice)events.push({type:'practiceEffect',skill:id,kind:'root',enemyIds:[enemy.id]});}
+   }
+   return events;
+  }
   const aim=direction(facing),needsLine=id==='pierce';
   const areaSkill=['vortex','starfall','storm'].includes(id);
   const areaTarget=areaSkill?(this.targets(player,12,facing)[0]??this.targets(player,12)[0]):undefined;
@@ -81,7 +102,7 @@ export class HuntingRuntime{
    if(e.rootUntil>this.time){e.state='rooted';continue;}if(e.state==='rooted')e.state='idle';
    if(safe||!this.options.practice&&(distance(e,player)>16||distance(e,e.spawn)>12)){e.telegraph=undefined;e.state='idle';const d=distance(e,e.spawn);if(d>.05){const move=Math.min(3*dt,d);e.x+=(e.spawn.x-e.x)/d*move;e.z+=(e.spawn.z-e.z)/d*move;}else{e.x=e.spawn.x;e.z=e.spawn.z;e.hp=e.maxHp;}continue;}
    if(this.options.practice&&this.options.practiceMode!=='attacking'){e.telegraph=undefined;e.state='idle';continue;}
-   if(e.telegraph){e.telegraph.remaining-=dt;if(e.telegraph.remaining<=0){if(distance(player,e.telegraph)<=e.telegraph.radius&&this.time>=this.invincibleUntil){const reduction=Math.min(this.active('shield')?.5:1,this.active('guardian')?.6:1);const damage=Math.max(1,Math.round(HUNT_ZONES[this.options.zone].damage*reduction));this.hp=Math.max(0,this.hp-damage);events.push({type:'playerHit',damage,hp:this.hp});if(this.options.practice)for(const skill of ['shield','guardian'] as const)if(this.active(skill))events.push({type:'practiceEffect',skill,kind:'block'});this.invincibleUntil=this.time+.5;
+   if(e.telegraph){e.telegraph.remaining-=dt;if(e.telegraph.remaining<=0){if(distance(player,e.telegraph)<=e.telegraph.radius&&this.time>=this.invincibleUntil){const reduction=Math.min(this.active('shield')?.5:1,this.active('guardian')?.6:1,this.options.practice?1:1-(this.options.damageReduction??0));const damage=Math.max(1,Math.round(HUNT_ZONES[this.options.zone].damage*reduction));this.hp=Math.max(0,this.hp-damage);events.push({type:'playerHit',damage,hp:this.hp});if(this.options.practice)for(const skill of ['shield','guardian'] as const)if(this.active(skill))events.push({type:'practiceEffect',skill,kind:'block'});this.invincibleUntil=this.time+.5;
       if(this.hp===0){this.hp=this.maxHp;this.invincibleUntil=this.time+3;this.effects=[];events.push({type:'retreat',...HUNT_CAMP});for(const enemy of this.enemies){enemy.telegraph=undefined;enemy.ready=this.time+3;enemy.x=enemy.spawn.x;enemy.z=enemy.spawn.z;enemy.state=enemy.hp>0?'idle':'defeated';}return;}}
      if(e.type==='charge'){e.x=e.telegraph.x;e.z=e.telegraph.z;}e.telegraph=undefined;e.state='recovery';e.ready=this.time+1.5;}continue;}
    if(e.ready>this.time)continue;e.state='idle';const d=distance(e,player),range=e.type==='ranged'?10:e.type==='charge'?6:2;

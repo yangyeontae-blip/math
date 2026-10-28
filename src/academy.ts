@@ -1,5 +1,5 @@
 export type JobId = 'knight' | 'mage' | 'ranger';
-export type SkillId = 'shield' | 'wind' | 'lantern' | 'crescent' | 'charge' | 'roots' | 'guardian' | 'starbolt' | 'frost' | 'vortex' | 'starfall' | 'arrow' | 'pierce' | 'trap' | 'storm';
+export type SkillId = 'shield' | 'wind' | 'lantern' | 'crescent' | 'charge' | 'roots' | 'guardian' | 'starbolt' | 'frost' | 'vortex' | 'starfall' | 'arrow' | 'pierce' | 'trap' | 'storm' | 'acornRush' | 'vinePull' | 'dawnSlash' | 'leafOrb' | 'thunderChain' | 'comet' | 'tripleShot' | 'galeShot' | 'moonArrow';
 export const ACADEMY_KEY='berry-forest-academy-v1';
 const COMMON_SKILLS = [
  {id:'shield',key:'1',icon:'🌿',name:'잎새 방패',subtitle:'숲의 숨결을 두르다',description:'6초 동안 받는 피해를 절반으로 줄여요.',lesson:'잎사귀를 몸 주위에 펼쳐 공격을 막아요. 몬스터의 공격 표시를 보고 방패를 펼쳐 보세요.',trial:'방패를 펼치고 수련실에서 3초 동안 유지해 보세요.',duration:6,cooldown:20,color:'#77b38a'},
@@ -27,6 +27,15 @@ export const ACADEMY_SKILLS:readonly SkillDefinition[]=[
  combatSkill('pierce','ranger',1,'관통 사격','➶',1.5,7,.4,'일직선의 적 최대 셋에게 1.5배 피해를 줘요.'),
  combatSkill('trap','ranger',2,'덩굴 덫','🪴',1,12,3,'다가온 적에게 1배 피해를 주고 주변 적을 3초 동안 묶어요.'),
  combatSkill('storm','ranger',3,'폭풍 화살','🍃',4,25,2,'2초 동안 주변 적에게 총 4배 피해를 줘요.'),
+ combatSkill('acornRush','knight',1,'도토리 연격','🌰',2.4,7,.5,'앞쪽의 가까운 적에게 세 번 연속으로 총 2.4배 피해를 줘요.'),
+ combatSkill('vinePull','knight',2,'덩굴 끌어오기','🌱',1.4,11,1.5,'8칸 안의 적 최대 셋을 가까이 끌어와 1.4배 피해를 주고 1.5초 묶어요.'),
+ combatSkill('dawnSlash','knight',3,'여명 가르기','🌅',3.6,20,.8,'앞쪽 7칸의 넓은 범위에 3.6배 피해를 줘요.'),
+ combatSkill('leafOrb','mage',1,'초록별 구슬','🟢',1.4,7,.6,'앞쪽 12칸 안의 적 최대 셋에게 각각 1.4배 피해를 줘요.'),
+ combatSkill('thunderChain','mage',2,'번개 줄기','⚡',1.8,11,1,'12칸 안의 적 최대 넷에게 각각 1.8배 피해를 주고 1초 묶어요.'),
+ combatSkill('comet','mage',3,'혜성 낙하','☄️',5,24,1.2,'12칸 안의 목표 주변 6칸에 혜성을 떨어뜨려 5배 피해를 줘요.'),
+ combatSkill('tripleShot','ranger',1,'세갈래 화살','🏹',1.7,7,.6,'앞쪽 12칸 안의 적 최대 셋에게 각각 1.7배 피해를 줘요.'),
+ combatSkill('galeShot','ranger',2,'회오리 사격','🌪️',2.4,11,1,'12칸 안의 목표 주변 5칸에 2.4배 피해를 주고 1초 묶어요.'),
+ combatSkill('moonArrow','ranger',3,'달빛 저격','🌙',6,22,.8,'14칸 안의 적 하나를 정확히 겨누어 6배 피해를 줘요.'),
 ];
 export type CareerRank=0|1|2|3;
 export type SkillLoadout=[SkillId|null,SkillId|null,SkillId|null,SkillId|null];
@@ -37,7 +46,9 @@ export function careerSkills(p:CareerProgress,level:number):SkillId[]{return p.l
 export function selectJob(p:CareerProgress,job:JobId|null,level:number){if(!Number.isFinite(level)||job!==null&&(!isJob(job)||level<10)||p.job===job)return false;p.job=job;return true;}
 export function learnCareerSkill(p:CareerProgress,id:SkillId,level:number){const s=skillInfo(id);if(!s||s.job&&(p.job!==s.job||level<10||p.ranks[s.job]<s.rank))return false;return learnSkill(p,id);}
 export function recordCareerTrial(p:CareerProgress,job:JobId,rank:CareerRank){if(!isJob(job)||p.job!==job||rank!==p.ranks[job]+1||rank>3||p.trials[job]>=rank)return false;p.trials[job]=rank;return true;}
-export function advanceJob(p:CareerProgress,job:JobId,level:number){if(!isJob(job)||!Number.isFinite(level))return false;const rank=p.ranks[job]+1;if(p.job!==job||rank>3||level<[0,10,30,60][rank]||p.trials[job]<rank)return false;p.ranks[job]=rank as CareerRank;for(const s of ACADEMY_SKILLS)if(s.job===job&&s.rank<=rank)learnSkill(p,s.id);if(rank===1){learnSkill(p,'shield');learnSkill(p,'wind');}const allowed=careerSkills(p,level);if(rank===1||!p.loadouts[job].some(Boolean)){const ids=[...allowed.filter(id=>skillInfo(id).job===job),...allowed.filter(id=>!skillInfo(id).job)];p.loadouts[job]=[ids[0]??null,ids[1]??null,ids[2]??null,ids[3]??null];}return true;}
+/** Existing earned ranks receive newly added skills without changing any equipped slots. */
+export function syncCareerRankSkills(p:CareerProgress){let changed=false;for(const s of ACADEMY_SKILLS)if(s.job&&s.rank<=p.ranks[s.job])changed=learnSkill(p,s.id)||changed;return changed;}
+export function advanceJob(p:CareerProgress,job:JobId,level:number){if(!isJob(job)||!Number.isFinite(level))return false;const rank=p.ranks[job]+1;if(p.job!==job||rank>3||level<[0,10,30,60][rank]||p.trials[job]<rank)return false;p.ranks[job]=rank as CareerRank;syncCareerRankSkills(p);if(rank===1){learnSkill(p,'shield');learnSkill(p,'wind');}const allowed=careerSkills(p,level);if(rank===1||!p.loadouts[job].some(Boolean)){const jobIds=allowed.filter(id=>skillInfo(id).job===job),ids=[...(rank===1?jobIds.slice(0,2):jobIds),...allowed.filter(id=>!skillInfo(id).job)];p.loadouts[job]=[ids[0]??null,ids[1]??null,ids[2]??null,ids[3]??null];}return true;}
 export function equipCareerSkill(p:CareerProgress,slot:number,id:SkillId|null,level:number){if(!Number.isInteger(slot)||slot<0||slot>3||id!==null&&!careerSkills(p,level).includes(id))return false;const slots=p.loadouts[p.job??'novice'];if(id!==null&&slots.some((s,i)=>s===id&&i!==slot))return false;slots[slot]=id;return true;}
 export function validCareer(value:unknown):value is CareerProgress{const p=value as CareerProgress;const integer=(n:unknown)=>Number.isSafeInteger(n)&&Number(n)>=0&&Number(n)<=1e9;const counts=(x:unknown):x is number[]=>Array.isArray(x)&&x.length===4&&x.every(integer);if(!p||p.location!==null&&(!p.location||p.location.kind!=='hunting'||!Number.isInteger(p.location.zone)||p.location.zone<0||p.location.zone>3)||!p.stats||!integer(p.stats.totalBerries)||!integer(p.stats.totalXp)||!Array.isArray(p.stats.seen)||p.stats.seen.some(id=>!['melee','charge','ranged'].includes(id))||new Set(p.stats.seen).size!==p.stats.seen.length||p.version!==1||p.job!==null&&!isJob(p.job)||!p.ranks||!p.trials||!p.loadouts||!Array.isArray(p.learned)||p.learned.some(id=>!isSkill(id))||new Set(p.learned).size!==p.learned.length||!Array.isArray(p.practiced)||p.practiced.some(id=>!p.learned.includes(id))||new Set(p.practiced).size!==p.practiced.length||typeof p.legacyImported!=='boolean'||!p.stats||!integer(p.stats.defeats)||!counts(p.stats.byZone)||p.stats.byZone.reduce((a,b)=>a+b,0)!==p.stats.defeats||!p.daily||typeof p.daily.date!=='string'||p.daily.date!==''&&!/^\d{4}-\d{2}-\d{2}$/.test(p.daily.date)||!counts(p.daily.counts))return false;for(const job of ['knight','mage','ranger'] as const){if(![0,1,2,3].includes(p.ranks[job])||![0,1,2,3].includes(p.trials[job])||p.ranks[job]>p.trials[job])return false;}for(const job of ['novice','knight','mage','ranger'] as const){const slots=p.loadouts[job];if(!Array.isArray(slots)||slots.length!==4||slots.some(id=>id!==null&&(!isSkill(id)||!p.learned.includes(id)||skillInfo(id).job!==null&&skillInfo(id).job!==job))||new Set(slots.filter(Boolean)).size!==slots.filter(Boolean).length)return false;}return true;}
 export type AcademyProgress={version:1;owner:string;learned:SkillId[];practiced:SkillId[]};

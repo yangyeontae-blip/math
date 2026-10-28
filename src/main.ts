@@ -1,6 +1,8 @@
 import { type SkillId } from './academy';
 import { mountCareer } from './career-controller';
-import { huntingPower } from './rules';
+import { huntingPower, PPOJJAK_PET_ID } from './rules';
+import {decorateItemCatalog,type CatalogEntry} from './item-rarity';
+import './item-rarity.css';
 import './academy.css';
 import { SafeSaveStore } from './save-storage';
 import { readLearningRecords, recordResolution, resetLearningRecords } from './learning-records';
@@ -61,7 +63,7 @@ import './adventure.css';
 import './navigation.css';
 import { toolSpec, toolHtml, adjustTool } from './learning-tools';
 
-const CLIENT_BUILD = '2026-10-27.hunting.1';
+const CLIENT_BUILD = '2026-10-28.impact.1';
 document.documentElement.dataset.clientBuild = CLIENT_BUILD;
 
 const $ = <T extends HTMLElement = HTMLElement>(selector: string) => document.querySelector<T>(selector)!;
@@ -69,7 +71,7 @@ const root = $('#game');
 const COPYRIGHT_OWNER = '양연태';
 const COPYRIGHT_YEAR = 2026;
 root.innerHTML = `<div id="world" aria-label="베리숲 3D 마을"></div><div id="hud" hidden>
-  <header class="topbar"><div class="player-card"><span class="level-badge" id="level">1</span><div><strong id="nickname"></strong><div class="xp-track"><div id="xp-fill"></div></div><small id="xp-text"></small><span id="save-status" class="save-status" role="status" aria-live="polite">✓ 저장됨</span></div></div><div class="brand-mini">베리숲 <span>모험학교</span></div><div class="top-actions"><span class="wallet">🍓 <b id="berries">0</b><span>베리</span></span><button id="inventory" class="icon-button" aria-label="내 가방">🎒</button><button id="stage-map" class="icon-button" aria-label="지도">🗺</button><button id="settings" class="icon-button" aria-label="설정과 저장">⚙</button></div></header>
+  <header class="topbar"><div class="player-card"><span class="level-badge" id="level">1</span><div><strong id="nickname"></strong><div class="career-badges"><span id="career-title" class="career-title" aria-label="현재 직업">새싹 모험가</span><span id="guardian-title" class="guardian-title" hidden>뽀짝이의 수호자</span></div><div class="xp-track"><div id="xp-fill"></div></div><small id="xp-text"></small><span id="save-status" class="save-status" role="status" aria-live="polite">✓ 저장됨</span></div></div><div class="brand-mini">베리숲 <span>모험학교</span></div><div class="top-actions"><span class="wallet">🍓 <b id="berries">0</b><span>베리</span></span><button id="inventory" class="icon-button" aria-label="내 가방">🎒</button><button id="stage-map" class="icon-button" aria-label="지도">🗺</button><button id="settings" class="icon-button" aria-label="설정과 저장">⚙</button></div></header>
   <aside class="quest-card"><button id="quest-toggle" class="quest-toggle" aria-expanded="true" aria-controls="quest-body"><span>🌿 지금 할 일</span><span class="quest-chevron" aria-hidden="true">⌃</span><span class="quest-peek" id="quest-peek"></span></button><div id="quest-body" class="quest-body"><strong id="quest-title">베리숲에 오신 걸 환영해요</strong><div id="quest-list"></div><button id="daily-open" class="text-button codex-open daily-open">📅 오늘의 미션<i class="daily-dot" aria-hidden="true"></i></button><button id="boss-open" class="text-button codex-open">🐉 우리 반 협동 보스</button><button id="codex-open" class="text-button codex-open">📖 모험 도감</button></div></aside>
   <div class="location-pill">❋ 베리숲 마을 <span>평화로운 오후</span></div>
   <div class="equipment-card"><span id="weapon-name"></span><small id="weapon-effect"></small></div>
@@ -388,7 +390,7 @@ function equipmentEffectText(s: Save, now = Date.now()) {
   const effect = potionEffects(s, now), potion = `${effect.berrySeconds ? ` · 🍓×${effect.berryMultiplier} ${buffTime(effect.berrySeconds)}` : ''}${effect.xpSeconds ? ` · 🧪경험×${effect.xpMultiplier} ${buffTime(effect.xpSeconds)}` : ''}`;
   return `시합 ×${(WEAPONS[s.weapon].multiplier + s.weapons[s.weapon] * .1).toFixed(1)} · 나무 힘 ${treeDamage(s)} · ${s.ride >= 0 ? `${RIDES[s.ride].icon} 속도 ×${RIDES[s.ride].speed}` : `옷: ${OUTFITS[s.outfit].effect}`}${s.pet >= 0 ? ` · ${PETS[s.pet].icon} 펫` : ''}${potion}`;
 }
-function weaponExplanation(id: number, level = 0) { const item = WEAPONS[id], power = item.treePower + level; return `사냥 공격력은 약 ${Math.round(huntingPower({level:state?.level??1,weapon:id,weapons:{[id]:level}}))}이에요. 좋은 무기일수록 몬스터를 더 빨리 쓰러뜨려서 같은 시간에 더 많이 사냥할 수 있어요. 기본 공격은 맞은 몬스터 옆에 있는 몬스터도 함께 때려요. 강화하면 공격력이 더 올라가요.<br>수학 몬스터 1마리를 이길 때마다 기본 보상에 ${item.bonus}베리를 더 받아요.<br>시합장에서는 문제를 맞혀 받는 기본 점수가 ${(item.multiplier + level * .1).toFixed(1)}배가 돼요.<br>베리나무에 한 번 휘두르면 힘 ${power}만큼 깎여서 약 ${Math.ceil(7 / power)}번이면 벨 수 있어요.`; }
+function weaponExplanation(id: number, level = 0) { const item = WEAPONS[id], power = item.treePower + level; return `사냥 공격력은 약 ${Math.round(huntingPower({level:state?.level??1,weapon:id,weapons:{[id]:level},pet:state?.pet??-1}))}이에요. 좋은 무기일수록 몬스터를 더 빨리 쓰러뜨려서 같은 시간에 더 많이 사냥할 수 있어요. 기본 공격은 맞은 몬스터 옆에 있는 몬스터도 함께 때려요. 강화하면 공격력이 더 올라가요.<br>수학 몬스터 1마리를 이길 때마다 기본 보상에 ${item.bonus}베리를 더 받아요.<br>시합장에서는 문제를 맞혀 받는 기본 점수가 ${(item.multiplier + level * .1).toFixed(1)}배가 돼요.<br>베리나무에 한 번 휘두르면 힘 ${power}만큼 깎여서 약 ${Math.ceil(7 / power)}번이면 벨 수 있어요.`; }
 function outfitEffectBadges(id: number) {
   const item = OUTFITS[id], badges: string[] = [];
   if (item.berryBonus) badges.push(`<span class="stat-chip berry">🍓 길 베리 +${item.berryBonus}</span>`);
@@ -398,7 +400,8 @@ function outfitEffectBadges(id: number) {
   return `<div class="stat-chips">${badges.join('')}</div>`;
 }
 function rideEffectBadges(id: number) { const item = RIDES[id]; return `<div class="stat-chips"><span class="stat-chip speed">➜ 걷기보다 ${item.speed}배 빠름</span><span class="stat-chip ${item.flying ? 'fly' : 'ground'}">${item.flying ? '🪽 물과 장애물 위로 비행' : '🐾 땅 위를 빠르게 달림'}</span></div>`; }
-function petEffectBadges(id: number) { const item = PETS[id]; return `<div class="stat-chips"><span class="stat-chip pet-range">🍓 ${item.radius}칸 안의 베리 발견</span><span class="stat-chip pet-move">🐾 직접 가서 한 번만 수집</span>${item.flying ? '<span class="stat-chip pet-fly">🪽 땅 위를 둥실 날아서 따라와요</span>' : ''}${id === HERO_BREAD_PET_ID ? '<span class="stat-chip pet-hero">✨ 캐릭터 주위에 황금빛 광채</span><span class="stat-chip pet-hero">👑 현재 가장 넓은 수집 범위</span>' : ''}</div>`; }
+function petEffectBadges(id: number) { const item = PETS[id]; if(id===PPOJJAK_PET_ID)return '<div class="stat-chips"><span class="stat-chip pet-hero">[전설] 귀염둥이 뽀짝이</span><span class="stat-chip">🍓 탐색 22칸</span><span class="stat-chip">⚔ 사냥 공격 +45%</span><span class="stat-chip">♥ 체력 +35% · 피해 20% 감소</span><span class="stat-chip">🍓 사냥 베리 +50% · 경험치 +40%</span><span class="stat-chip">👑 뽀짝이의 수호자 · 황금 발자국 후광</span></div>'; return `<div class="stat-chips"><span class="stat-chip pet-range">🍓 ${item.radius}칸 안의 베리 발견</span><span class="stat-chip pet-move">🐾 직접 가서 한 번만 수집</span>${item.flying ? '<span class="stat-chip pet-fly">🪽 땅 위를 둥실 날아서 따라와요</span>' : ''}${id === HERO_BREAD_PET_ID ? '<span class="stat-chip pet-hero">✨ 캐릭터 주위에 황금빛 광채</span><span class="stat-chip pet-hero">👑 황금빛 영웅 펫</span>' : ''}</div>`; }
+function decorateCatalogUI(root:HTMLElement){const entries:CatalogEntry[]=[];const add=(kind:CatalogEntry['kind'],items:readonly {name:string;price:number}[])=>items.forEach((item,id)=>entries.push({kind,id,name:item.name,price:item.price}));add('weapon',WEAPONS);add('outfit',OUTFITS);add('ride',RIDES);add('pet',PETS);add('potion',POTIONS);add('hairstyle',HAIRSTYLES);add('face',FACES);add('garden',HOME_ITEMS);FURNITURE.forEach((_,id)=>entries.push({kind:'furniture',id,name:furnitureName(id),price:0}));decorateItemCatalog(root,entries);}
 function itemColor(color: number) { return `#${color.toString(16).padStart(6, '0')}`; }
 function toast(message: string) { $('#toast').textContent = message; $('#toast').classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => $('#toast').classList.remove('show'), 2400); }
 function persist() {
@@ -420,9 +423,9 @@ function refresh() {
   todayButton.textContent = world?.inHomestead ? '🏡 마을 꾸미기' : `🧭 ${suggested.title}`; todayButton.title = '오늘의 모험 하나 추천받기';
   petCareButton.hidden = s.pet < 0;plazaReturn.hidden=!world?.inMarket&&!world?.inAcademy&&!world?.inHomestead&&!world?.inHunting&&!world?.trainingStatus;
   const activeTitle = s.curriculum.graduationClaimed ? `${s.grade}학년 수학 탐험가` : s.expedition.selectedTitle ? EXPEDITION_TITLES[s.expedition.selectedTitle].name : s.multiplicationCompleted ? '곱셈숲 탐험가' : '';
-  $('#level').textContent = `${s.level}`; $('#nickname').textContent = `${s.nickname}${activeTitle ? ` · ${activeTitle}` : ''}${s.teacherMode ? ' · 선생님' : ''}`; $('#berries').textContent = s.berries.toLocaleString();
+  $('#level').textContent = `${s.level}`; $('#nickname').textContent = `${s.nickname}${activeTitle ? ` · ${activeTitle}` : ''}${s.teacherMode ? ' · 선생님' : ''}`; $('#berries').textContent = s.berries.toLocaleString();const careerBadge=$('#career-title');const careerRank=s.career.job?s.career.ranks[s.career.job]:0;careerBadge.textContent=career.jobName()+(careerRank&&s.pet!==PPOJJAK_PET_ID?' · '+careerRank+'차':'');$('#guardian-title').hidden=s.pet!==PPOJJAK_PET_ID;careerBadge.dataset.job=s.career.job??'novice';careerBadge.setAttribute('aria-label','현재 직업 '+career.jobName()+(careerRank?' '+careerRank+'차 전직':''));
   $('#xp-fill').style.width = `${s.xp / (s.level * 40) * 100}%`; $('#xp-text').textContent = `경험치 ${s.xp} / ${s.level * 40}`;
-  $('#weapon-name').textContent = `${WEAPONS[s.weapon].icon} ${WEAPONS[s.weapon].name} +${s.weapons[s.weapon]} · ${OUTFITS[s.outfit].name}`;
+  $('#weapon-name').textContent = `${WEAPONS[s.weapon].icon} ${WEAPONS[s.weapon].name} +${s.weapons[s.weapon]} · ${OUTFITS[s.outfit].name}`;decorateCatalogUI($('#weapon-name'));
   $('#weapon-effect').textContent = equipmentEffectText(s);
   const expedition = s.forest === 'division' ? s.expedition.active : null;
   $('.location-pill').innerHTML = world?.trainingStatus ? '🎯 수련 마당 <span>실제 스킬 연습 · 보상 없음</span>' : world?.inHunting ? '⚔ 가시덩굴 숲 <span>몬스터 사냥 · '+career.jobName()+'</span>' : world?.inAcademy ? '🏛 모험학교 <span>배움의 홀 · 스킬과 수련</span>' : world?.inMarket ? '🛍️ 상점거리 <span>여섯 가게 · 몬스터 없는 쉼터</span>' : world?.inHomestead ? '🏡 나의 집 <span>직접 만든 정원 · 주민과 펫의 쉼터</span>' : world?.inRoom ? '⌂ 나의 집 <span>가구를 눌러 꾸며요</span>' : journey.stage ? `${s.forest === 'division' ? '❋' : FOREST_INFO[s.forest].icon} ${journey.stage}단계 숲 <span>${expedition?.stage === journey.stage ? '✦ 별빛 원정' : `${forestName} · ${STAGES[journey.stage - 1].name}`}</span>` : '🌿 중앙 광장 <span>선생님과 만나는 모험의 출발점</span>';
@@ -430,7 +433,7 @@ function refresh() {
   renderCurrentFocus();renderAcademyBar();
   audio.music = s.settings.music; audio.effects = s.settings.sound;
 }
-function syncAvatar() { if (state) { world.setAvatar(state.character, state.outfit, state.weapon, state.outfits[state.outfit], state.weapons[state.weapon], world.inHunting||world.trainingStatus?-1:state.ride, state.pet, state.hairstyle, state.face); world.dressPet(state.pet >= 0 && !!state.petFriends[state.pet]?.accessory); } }
+function syncAvatar() { if (state) { world.setAvatar(state.character, state.outfit, state.weapon, state.outfits[state.outfit], state.weapons[state.weapon], world.inHunting||world.trainingStatus?-1:state.ride, state.pet, state.hairstyle, state.face); world.dressPet(state.pet >= 0 && !!state.petFriends[state.pet]?.accessory);career.configure(); } }
 function openGarden() {
   if (!state) return;
   rememberMenu('meadow', openGarden);
@@ -478,6 +481,7 @@ function openModal(html: string, cls = '') {
   const tracked = menuPending, parent = tracked ? (menuHistory.hasParent ? previousMenu : null) : menuHistory.current;
   menuPending = false;
   dialog.className = cls; $('#modal-content').innerHTML = `<div class="modal-navigation"><button id="modal-back" type="button" class="secondary" ${!battle && !parent ? 'hidden' : ''}>${battle ? '게임으로 돌아가기' : '← 이전 메뉴'}</button></div>`+html; if (!dialog.open) dialog.showModal();
+  if(/shop|inventory|salon|room|home/.test(cls)||/data-room|home-editor|data-home/.test(html))decorateCatalogUI($('#modal-content'));
   dialog.scrollTop = 0;
   $('#modal-back').onclick=()=>{if(battle){exitBattle();return;}if(parent)parent();else closeModal();};
   $('#modal-content').querySelectorAll<HTMLElement>('[data-close]').forEach(el => {
@@ -1819,7 +1823,7 @@ if (import.meta.env.PROD && 'serviceWorker' in navigator && window.isSecureConte
 }
 
 if ((import.meta as unknown as { env?: { DEV?: boolean; VITE_BROWSER_TEST?: string } }).env?.DEV || import.meta.env.VITE_BROWSER_TEST === '1') {
-  const devApi = { getWorld:()=>world, careerSchool:()=>career.showSchool(),careerPractice:()=>career.showPractice(),careerRecords:()=>career.showRecords(),huntingMenu:()=>career.showHunting(), openArena, beginHuntBattle, openStageMap, openSettings, openDaily, openInventory, openShop, openPetShop, openGuide, openNotebook, openRoom, openCurriculumUnit, switchStage, refresh, getState: () => state, begin, openReport, persist, openHomestead, enterHomeGarden, closeModal, testBattleQuestion: () => battle ? ({ answer: formatScaled(battle.encounter.question.answer, battle.encounter.question.places?.[2] ?? 0), remainder: battle.encounter.question.remainder }) : null, testHomeEditor: () => { if (state) showHomeEditor(state, homesteadHooks(), 0); } };
+  const devApi = { getWorld:()=>world, careerSchool:()=>career.showSchool(),careerPractice:()=>career.showPractice(),careerRecords:()=>career.showRecords(),huntingMenu:()=>career.showHunting(), openArena, beginHuntBattle, openStageMap, openSettings, openDaily, openInventory, openShop, openPetShop, openGuide, openNotebook, openRoom, openCurriculumUnit, switchStage, refresh, getState: () => state, begin, openReport, openBeauty, persist, openHomestead, enterHomeGarden, closeModal, testBattleQuestion: () => battle ? ({ answer: formatScaled(battle.encounter.question.answer, battle.encounter.question.places?.[2] ?? 0), remainder: battle.encounter.question.remainder }) : null, testHomeEditor: () => { if (state) showHomeEditor(state, homesteadHooks(), 0); } };
   Object.assign(window, { __berry: devApi }); void import('./dev-audit').then(module => module.installAudit(devApi as never));
 }
 

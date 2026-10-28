@@ -2,7 +2,9 @@ import { HOME_PLAZA_EXIT, homeExitInReach } from './home-exit';
 import { SkillRuntime, trialComplete, type SkillId, type JobId } from './academy';
 import { HuntingRuntime, type HuntEvent, type HuntSnapshot } from './hunting';
 import { advanceHuntCharge, autoHuntTarget, HuntingWorld, HUNT_THEMES, huntingScenery } from './hunting-world';
-import { huntingPower } from './rules';
+import { huntingPower, huntingCompanionStats, PPOJJAK_PET_ID } from './rules';
+import {createPpojjakiPet,createPpojjakiAura,animatePpojjakiPet,animatePpojjakiAura,disposePpojjakiAssets} from './legendary-pet';
+import {salonHairModel,salonFaceModel,disposeSalonMaterials} from './salon-models';
 import { HUNT_ZONES, HUNT_CAMP } from './hunting';
 import { academyBuilding, academyInterior, skillEffectModel, VILLAGE_ART, PLAZA_BERRY_TREES, berryTreeModel, plazaGarden, fountainModel, cottageModel, marketGarden, homesteadGarden, stoneLane, districtBorder, flowerBed } from './village-art';
 import { shopSignText, shopInteraction } from './shop-signs';
@@ -86,56 +88,8 @@ export function makeCharacter(character: number, outfit: number, weapon: number,
   }
   if (outfit === 2 || outfit === 5) { const cape = cylinder(body, o.color, 0, .73, -.2, .25, .64, 1, 12); cape.scale.z = .6; }
   ball(body, c.skin, 0, 1.5, 0, .53, .52, .46);
-  ball(body, c.hair, 0, 1.77, -.065, .55, hairstyle === 3 ? .38 : .31, .46);
-  for (const side of [-1, 1]) {
-    ball(body, c.skin, side * .51, 1.47, 0, .1, .14, .12);
-    const bigEye = face === 1 || face === 4;
-    const eye = ball(body, face === 3 ? 0x563e55 : 0x343a39, side * .19, 1.5, .424, bigEye ? .065 : .047, bigEye ? .085 : .065, .026);
-    eye.userData.blinkHeight = eye.scale.y; (g.userData.eyes ??= []).push(eye);
-    if (face !== 4) ball(body, 0xffffff, side * .18, 1.524, .444, face === 1 ? .022 : .014);
-    ball(body, face === 4 ? 0xf6c85f : 0xf1a69d, side * .31, 1.37, .397, face === 3 ? .065 : .086, .043, .021);
-    if (hairstyle === 1 || hairstyle === 5) { ball(body, c.hair, side * .55, 1.68, -.06, hairstyle === 5 ? .3 : .24); ball(body, o.accent, side * .43, 1.84, .04, .12); }
-    if (hairstyle === 2) ball(body, c.hair, side * .43, 1.47, -.13, .18, .43, .3);
-    if (hairstyle === 4 && side > 0) { ball(body, c.hair, .53, 1.58, -.16, .25, .5, .27); ball(body, o.accent, .43, 1.88, -.02, .12); }
-    if (face === 2) { const brow = box(body, 0x4d4039, side * .19, 1.61, .445, .13, .025, .02); brow.rotation.z = side * -.16; }
-    if (face === 3) { // 방긋 고양이상: 속눈썹과 수염
-      const lash = box(body, 0x563e55, side * .3, 1.54, .44, .1, .018, .016); lash.rotation.z = side * .42;
-      for (const y of [1.37, 1.42]) { const whisker = box(body, 0x8e6171, side * .43, y, .42, .18, .014, .012); whisker.rotation.z = side * (y === 1.37 ? -.18 : .18); }
-    }
-    if (face === 4) { // 별눈 반짝이: 눈동자 대신 또렷한 별
-      const star = mesh(particleGeometry, 0xffdd65, side * .19, 1.5, .456, body); star.scale.set(.72, .72, .34); star.rotation.z = side * .25;
-      ball(body, 0xffffff, side * .14, 1.54, .47, .018, .025, .01);
-    }
-    if (face === 5) { // 졸린 달눈: 눈꺼풀과 작은 달빛 볼
-      const lid = ball(body, c.skin, side * .19, 1.55, .452, .09, .045, .018); lid.rotation.z = side * .16;
-      ball(body, 0xd3c5f2, side * .34, 1.36, .43, .055, .035, .014);
-    }
-    if (face === 7) { // 하트 반짝눈: 두 개의 둥근 조각으로 만든 하트
-      ball(body, 0xf05f91, side * .16, 1.52, .46, .055, .07, .018); ball(body, 0xf05f91, side * .22, 1.52, .46, .055, .07, .018);
-      const point = mesh(new T.ConeGeometry(.09, .16, 3), 0xf05f91, side * .19, 1.45, .46, body); point.rotation.z = Math.PI;
-    }
-    if (face === 8) { // 용감한 번개눈: 노란 번개와 각진 눈썹
-      const bolt = box(body, 0xffd85e, side * .19, 1.5, .455, .06, .13, .018); bolt.rotation.z = side * .58;
-      const brow = box(body, 0x5b4a42, side * .19, 1.62, .45, .16, .025, .02); brow.rotation.z = side * -.24;
-    }
-    if (face === 9) { // 무지개 웃음: 양볼의 세 줄 무지개
-      for (let stripe = 0; stripe < 3; stripe++) ball(body, [0xf58aa4, 0xf5cf65, 0x85cfa0][stripe], side * .34, 1.4 - stripe * .045, .43, .07, .012, .012);
-    }
-    if (face >= 10) { const color = [0xf7c947, 0xe8a75c, 0xf2c640, 0xffdf76][face - 10] ?? 0xffdf76; ball(body, color, side * .19, 1.51, .462, .065, .075, .02); ball(body, 0xffffff, side * .17, 1.54, .476, .018, .022, .008); }
-  }
-  const smile = mesh(new T.TorusGeometry(.075, .012, 5, 10, Math.PI), 0x975e57, 0, 1.35, .44, body); smile.rotation.z = Math.PI;
-  if (face === 1) { smile.scale.set(.72, 1.25, 1); ball(body, 0xf7a4b6, 0, 1.34, .45, .032, .05, .014); }
-  if (face === 2) { smile.scale.x = 1.2; }
-  if (face === 3) { smile.scale.x = 1.35; for (const side of [-1, 1]) ball(body, 0x6a4f48, side * .08, 1.37, .452, .018, .045, .012); }
-  if (face === 4) { smile.scale.set(1.12, .85, 1); for (const side of [-1, 1]) ball(body, 0xffe98a, side * .38, 1.66, .435, .04); }
-  if (face === 5) { smile.scale.set(.65, .75, 1); }
-  if (face === 6) { smile.scale.set(.82, .72, 1); for (const side of [-1, 1]) ball(body, 0xf6b1be, side * .34, 1.38, .43, .1, .055, .018); box(body, 0xfffdf2, -.055, 1.31, .452, .1, .1, .018); box(body, 0xfffdf2, .055, 1.31, .452, .1, .1, .018); }
-  if (face === 7) { smile.scale.set(1.28, 1.12, 1); }
-  if (face === 8) { smile.scale.set(1.05, .62, 1); }
-  if (face === 9) { smile.scale.set(1.5, 1.25, 1); }
-  const curls = hairstyle === 3 ? 7 : 4; for (let i = 0; i < curls; i++) ball(body, c.hair, -.38 + i * (hairstyle === 3 ? .125 : .23), 1.86 + Math.sin(i) * .045, .19, hairstyle === 3 ? .18 : .16, .18, .2);
-  if (hairstyle === 5) for (const side of [-1, 1]) ball(body, c.hair, side * .38, 2.05, -.02, .26);
-  if (hairstyle >= 6) { for (const side of [-1, 1]) ball(body, c.hair, side * .42, hairstyle === 7 ? 2.04 : 1.75, -.06, hairstyle === 7 ? .25 : .2, hairstyle === 6 ? .36 : .24, .2); for (let i = 0; i < 3; i++) ball(body, o.accent, -.22 + i * .22, 2.02 + Math.sin(i) * .06, .02, .08); }
+  for(const side of [-1,1])ball(body,c.skin,side*.51,1.47,0,.1,.14,.12);
+  body.add(salonHairModel(hairstyle,c.hair,o.accent));const faceModel=salonFaceModel(face);body.add(faceModel);g.userData.eyes=faceModel.userData.eyes;
   if (outfit === 5) { cylinder(body, o.color, 0, 1.97, 0, .65, .65, .08); mesh(new T.ConeGeometry(.46, .75, 12), o.color, 0, 2.32, 0, body); }
   if (outfit === 7) { cylinder(body, o.accent, 0, 2.02, 0, .33, .35, .2, 6); ball(body, 0xe781a5, 0, 2.15, .28, .13); }
   if (outfitLevel >= 1) {
@@ -444,6 +398,7 @@ function buildRide(id: number) {
 
 const makePet = smoothModel(buildPet);
 function buildPet(id: number) {
+  if(id===PPOJJAK_PET_ID)return createPpojjakiPet();
   const g = new T.Group(), pet = PETS[id];
   const body = new T.Group(); g.add(body);
   const eye = (side: number, x: number, y: number, z: number, color = 0x35423e, scale = 1) => {
@@ -1005,7 +960,7 @@ export class World {
     if (this.storyScenery) this.disposeModel(this.storyScenery);
     this.storyScenery = null; this.craftAnimated = []; this.restoredBridge = false; this.butterflies = []; this.particles = [];
     this.clearGuide(); this.selectedId = null; this.petTargetId = null; this.onNear(null, null); this.entities.forEach(e => e.label.remove()); this.stars.forEach(star => star.label.remove()); this.entities = []; this.coins = []; this.stars = []; this.colliders = [];
-    for (const child of [...this.scene.children]) if (child !== this.player && child !== this.petModel && child !== this.weatherMesh && !(child instanceof T.Light)) { this.scene.remove(child);child.traverse(o=>{if(o instanceof T.Mesh){if(!sharedGeometries.has(o.geometry)&&!o.geometry.userData.sharedStorybookAsset)o.geometry.dispose();if(o instanceof T.InstancedMesh)o.dispose();}}); }
+    for (const child of [...this.scene.children]) if (child !== this.player && child !== this.petModel && child !== this.weatherMesh && !(child instanceof T.Light)) { this.scene.remove(child);disposeSalonMaterials(child);disposePpojjakiAssets(child);child.traverse(o=>{if(o instanceof T.Mesh){if(!sharedGeometries.has(o.geometry)&&!o.geometry.userData.sharedSalonAsset&&!o.geometry.userData.ppoDisposed&&!o.geometry.userData.sharedStorybookAsset)o.geometry.dispose();if(o instanceof T.InstancedMesh)o.dispose();}}); }
     this.furnitureRoot = null;
   }
   /**
@@ -1049,7 +1004,7 @@ export class World {
     // 모든 조각이 합쳐진 맨 위 조각만 치워요. 하나라도 남았으면 그 묶음은 그대로 둬요(합친 조각만 숨김).
     for (const top of tops) {
       const meshes: T.Mesh[] = []; top.traverse(o => { if (o instanceof T.Mesh) meshes.push(o); });
-      if (meshes.every(m => merged.has(m))) { this.scene.remove(top); meshes.forEach(m => { if (!sharedGeometries.has(m.geometry)) m.geometry.dispose(); }); }
+      if (meshes.every(m => merged.has(m))) { this.scene.remove(top); meshes.forEach(m => { if (!sharedGeometries.has(m.geometry)&&!m.geometry.userData.sharedSalonAsset&&!m.geometry.userData.ppoDisposed) m.geometry.dispose(); }); }
       else meshes.forEach(m => { if (merged.has(m)) m.visible = false; });
     }
   }
@@ -1094,7 +1049,7 @@ export class World {
   }
   configureCombat(profile: { job?: JobId | null; learned: readonly SkillId[]; loadout: readonly (SkillId | null)[] }) {
     this.combatProfile = { job: profile.job ?? null, learned: [...profile.learned], loadout: [...profile.loadout] };
-    if (this.inHunting && this.combatRuntime && this.combatSave) this.combatRuntime.updateProfile({ level: this.combatSave.level, power: huntingPower(this.combatSave), ...this.combatProfile });
+    if (this.inHunting && this.combatRuntime && this.combatSave) this.combatRuntime.updateProfile({ level: this.combatSave.level, power: huntingPower(this.combatSave), ...huntingCompanionStats(this.combatSave), ...this.combatProfile });
   }
   get huntingStatus(): (HuntSnapshot & { targetId: string | null; safe: boolean; player: { x: number; z: number } }) | null { const snapshot = this.combatRuntime?.snapshot(); return snapshot ? { ...snapshot, targetId: this.huntTarget, safe: this.inHunting && Math.hypot(this.player.position.x - HUNT_CAMP.x, this.player.position.z - HUNT_CAMP.z) < 3, player: { x: this.player.position.x, z: this.player.position.z } } : null; }
   get selectedHuntTarget() { return this.huntTarget; }
@@ -1120,8 +1075,8 @@ export class World {
     const gate = this.gate(0x8ca980); this.addEntity('huntingExit', '중앙 광장 · 사냥터 나가기', 0, 15.5, gate); this.sign(gate, '마을로 돌아가기', 0, 4.6, 0, 5, '#254b35', true);
     for (const area of HUNT_ZONES) { const x = -12 + area.id * 8; this.addEntity(`huntingZone${area.id}`, `${area.name} · 레벨 ${area.level}`, x, 5.5, new T.Group()); this.sign(this.scene, `${area.name} Lv.${area.level}`, x, 2.4, 5.5, 4.5, s.level >= area.level ? '#365842' : '#8b7866', true); }
     this.sign(this.scene, HUNT_ZONES[zone].name, 0, 3.2, -17, 6, '#365842', true);
-    this.combatRuntime = new HuntingRuntime({ zone, level: s.level, power: huntingPower(s), ...this.combatProfile });
-    this.combatWorld = new HuntingWorld(false, zone); this.scene.add(this.combatWorld.root); this.mergeStaticScenery();
+    this.combatRuntime = new HuntingRuntime({ zone, level: s.level, power: huntingPower(s), ...huntingCompanionStats(s), ...this.combatProfile });
+    this.combatWorld = new HuntingWorld(false, zone, {lowQuality:s.settings.lowQuality,reducedMotion:matchMedia('(prefers-reduced-motion: reduce)').matches}); this.scene.add(this.combatWorld.root); this.mergeStaticScenery();
     this.setAvatar(s.character, s.outfit, s.weapon, s.outfits[s.outfit], s.weapons[s.weapon], -1, s.pet, s.hairstyle, s.face); this.placeAt(HUNT_CAMP.x, HUNT_CAMP.z); this.onStageLoaded(0); return true;
   }
   enterTraining(s: Save, options: TrainingOptions) {
@@ -1135,8 +1090,8 @@ export class World {
     for (const side of [-1, 1]) for (let i = 0; i < 4; i++) cylinder(this.scene, 0x9a7957, side * 8.7, .6, -7 + i * 4, .09, .12, 1.2, 8);
     this.sign(this.scene, options.mode === 'single' ? '하나씩 맞혀 보는 연습' : options.mode === 'multi' ? '여러 허수아비 함께 맞히기' : '예고 공격 피하고 막기', 0, 4, -5, 7, '#345641', true);
     this.addEntity('trainingExit', '배움의 홀 · 수련 마치기', 0, 6, new T.Group()); this.sign(this.scene, '배움의 홀로 돌아가기', 0, 2.5, 6, 5, '#345641', true);
-    const skills = [...new Set(options.skills)]; this.combatRuntime = new HuntingRuntime({ zone: 0, level: s.level, power: Math.min(huntingPower(s), 15), job: options.job ?? this.combatProfile.job, learned: skills, loadout: skills, practice: true, practiceMode: options.mode });
-    this.combatWorld = new HuntingWorld(true); this.scene.add(this.combatWorld.root); this.mergeStaticScenery(); this.setAvatar(s.character, s.outfit, s.weapon, s.outfits[s.outfit], s.weapons[s.weapon], -1, s.pet, s.hairstyle, s.face); this.placeAt(practiceSpawn.x, practiceSpawn.z); this.onStageLoaded(0);
+    const skills = [...new Set(options.skills)]; this.combatRuntime = new HuntingRuntime({ zone: 0, level: s.level, power: Math.min(huntingPower({...s,pet:-1}), 15), job: options.job ?? this.combatProfile.job, learned: skills, loadout: skills, practice: true, practiceMode: options.mode });
+    this.combatWorld = new HuntingWorld(true, 0, {lowQuality:s.settings.lowQuality,reducedMotion:matchMedia('(prefers-reduced-motion: reduce)').matches}); this.scene.add(this.combatWorld.root); this.mergeStaticScenery(); this.setAvatar(s.character, s.outfit, s.weapon, s.outfits[s.outfit], s.weapons[s.weapon], -1, s.pet, s.hairstyle, s.face); this.placeAt(practiceSpawn.x, practiceSpawn.z); this.onStageLoaded(0);
   }
   selectHuntTarget(id: string | null) { if (id !== null && !this.combatRuntime?.snapshot().enemies.some(enemy => enemy.id === id && enemy.hp > 0)) return; this.huntTarget = id; }
   private combatFacing(range = 12) { const target = autoHuntTarget(this.combatRuntime?.snapshot().enemies ?? [], this.player.position, range, this.huntTarget); this.huntTarget = target?.id ?? null; if (!target) return { x: Math.sin(this.player.rotation.y), z: Math.cos(this.player.rotation.y) }; const facing = { x: target.x - this.player.position.x, z: target.z - this.player.position.z }; if (Math.hypot(facing.x, facing.z) < .001) { facing.x = Math.sin(this.player.rotation.y); facing.z = Math.cos(this.player.rotation.y); } this.combatAimUntil = this.time + .35; this.combatAimAngle = Math.atan2(facing.x, facing.z); return facing; }
@@ -1145,7 +1100,7 @@ export class World {
   private handleHuntEvents(events: HuntEvent[]) {
     if (!this.combatRuntime) return; const snapshot = this.combatRuntime.snapshot();
     for (const event of events) {
-      this.combatWorld?.onEvent(event, snapshot);
+      this.combatWorld?.onEvent(event, snapshot, {x:this.player.position.x,z:this.player.position.z,job:this.trainingOptions?.job??this.combatProfile.job});
       if (event.type === 'retreat') this.placeAt(event.x, event.z);
       if (this.inTraining) {
         if (event.type === 'hit') { this.trainingStats.damage += event.damage; this.trainingStats.hits++; this.trainingTargets.add(event.enemyId); this.trainingStats.targetsHit = this.trainingTargets.size; if (event.skill !== 'basic') this.trainingHitSkills.add(event.skill); }
@@ -1160,7 +1115,7 @@ export class World {
     if (!this.combatRuntime) return;
     this.handleHuntEvents(this.combatRuntime.step(dt, this.player.position));
     if (this.keys.has('f')) this.huntAttack();
-    const snapshot = this.combatRuntime.snapshot(); this.combatWorld?.update(snapshot, this.camera, this.huntTarget, dt);
+    const snapshot = this.combatRuntime.snapshot(); this.combatWorld?.update(snapshot, this.camera, this.huntTarget, dt, {x:this.player.position.x,z:this.player.position.z});
     if (this.inTraining) {
       this.trainingStats.elapsed = snapshot.time; this.trainingStats.rooted = Math.max(this.trainingStats.rooted, snapshot.enemies.filter(enemy => enemy.state === 'rooted').length);
       const distance = this.trainingLast.distanceTo(this.player.position); if (distance < 2 && snapshot.effects.some(effect => effect.skill === 'wind')) this.trainingWindDistance += distance; this.trainingLast.copy(this.player.position);
@@ -1601,6 +1556,7 @@ export class World {
     if (this.petModel) { this.scene.remove(this.petModel); this.disposeModel(this.petModel); }
     this.rideIndex = ride; this.petIndex = pet; this.petModel = null; this.petTargetId = null; this.rideAnimated = []; this.petAnimated = []; this.petIdle = 0; this.petReaction = null; this.petCharm = null;
     if (ride >= 0 && RIDES[ride]) { const body = this.player.userData.body as T.Group; body.position.y = riderHeight(ride); const rideModel = makeRide(ride); rideModel.traverse(o => { if (o.userData.rideWing || o.userData.ridePropeller || o.userData.rideGlow) this.rideAnimated.push(o); }); this.player.add(rideModel); }
+    if(pet===PPOJJAK_PET_ID){const aura=createPpojjakiAura();aura.position.y=ride>=0?riderHeight(ride):0;this.player.add(aura);this.player.userData.ppoAura=aura;}
     if (pet === HERO_BREAD_PET_ID) { const aura = makeHeroPetAura(ride); this.player.add(aura); this.player.userData.heroPetAura = aura; }
     if (pet >= 0 && PETS[pet]) {
       this.petModel = makePet(pet); this.scene.add(this.petModel); this.placePetNearPlayer();
@@ -1642,7 +1598,7 @@ export class World {
     const face = near ? Math.atan2(p.x - e.x, p.z - e.z) : Math.hypot(mx, mz) > .0005 ? Math.atan2(mx, mz) : e.mesh.rotation.y;
     e.mesh.rotation.y += Math.atan2(Math.sin(face - e.mesh.rotation.y), Math.cos(face - e.mesh.rotation.y)) * Math.min(1, dt * 4);
   }
-  private disposeModel(g: T.Group) { g.traverse(o => { if (o instanceof T.Mesh && !sharedGeometries.has(o.geometry) && !o.geometry.userData.sharedStorybookAsset) o.geometry.dispose(); }); }
+  private disposeModel(g: T.Group) { disposeSalonMaterials(g);disposePpojjakiAssets(g);g.traverse(o => { if (o instanceof T.Mesh && !sharedGeometries.has(o.geometry)&&!o.geometry.userData.sharedSalonAsset&&!o.geometry.userData.ppoDisposed && !o.geometry.userData.sharedStorybookAsset) o.geometry.dispose(); }); }
   /** 날씨는 화면 위 필터가 아니라 캐릭터 주변 3D 공간에서 움직여 글자와 지형을 가리지 않아요. */
   setWeather(scene: AmbienceScene | null) {
     const kind = !scene || matchMedia('(prefers-reduced-motion: reduce)').matches ? 'none' : scene.weather === 'rain' ? 'rain' : scene.weather === 'snow' ? 'snow' : scene.season === 'autumn' ? 'leaves' : scene.mood === 'night' ? 'fireflies' : 'none';
@@ -1712,7 +1668,7 @@ export class World {
   }
   private renderOnce() { if (!document.hidden) { this.scene.fog=null;this.storybook.update(this.time,this.player.position,this.petModel?.position??null,this.shadowFloor);this.renderer.render(this.scene, this.camera); } }
   restore(s: Save) { this.setAvatar(s.character, s.outfit, s.weapon, s.outfits[s.outfit], s.weapons[s.weapon], s.ride, s.pet, s.hairstyle, s.face); if (s.homestead.inside) this.enterHomestead(s,true); else if (s.room.inside) this.enterRoom(s); else this.loadStage(s); this.quality(s.settings.lowQuality); }
-  quality(low: boolean) { this.lowQuality = low;this.storybook.quality(low); const touchDevice = matchMedia('(pointer: coarse)').matches; this.renderer.setPixelRatio(Math.min(devicePixelRatio, low || touchDevice ? 1 : 1.25)); this.renderer.shadowMap.enabled = !low; this.sun.castShadow = !low;this.homeVisitors.forEach((v,i)=>v.entity.mesh.visible=i<(low?2:3)); }
+  quality(low: boolean) { this.lowQuality = low;this.combatWorld?.setQuality({lowQuality:low,reducedMotion:matchMedia('(prefers-reduced-motion: reduce)').matches});this.storybook.quality(low); const touchDevice = matchMedia('(pointer: coarse)').matches; this.renderer.setPixelRatio(Math.min(devicePixelRatio, low || touchDevice ? 1 : 1.25)); this.renderer.shadowMap.enabled = !low; this.sun.castShadow = !low;this.homeVisitors.forEach((v,i)=>v.entity.mesh.visible=i<(low?2:3)); }
   clearInput() { this.keys.clear(); this.stick = { x: 0, z: 0 }; }
   guideTo(kind: GuideKind) {
     const entityMatch = (entity: Entity) => kind === 'homeVisitor' ? entity.id.startsWith('homeVisitor') : kind === 'forestWork' ? entity.id === `forestWork${this.trailNext}` : kind === 'trailSeed' ? entity.id.startsWith('trailSeed') && Math.floor(Number(entity.id.slice(9)) / 2) === this.trailNext : kind === 'trailLamp' ? entity.id === `trailLamp${this.trailNext}` : kind === 'monster' ? entity.id.startsWith('monster') : kind === 'expMonster' ? entity.id.startsWith('expMonster') : kind === 'storyClue' ? entity.id.startsWith('storyClue') : kind === 'shop' ? ['weapon', 'outfit', 'ride', 'pet', 'potion', 'beauty'].includes(entity.id) : entity.id === kind;
@@ -1815,6 +1771,7 @@ export class World {
         const step = petChaseSpeed(rideSpeed) * dt;
         if (distanceToTarget > step) this.petModel.position.addScaledVector(this.tempWorld, step / distanceToTarget); else this.petModel.position.copy(this.tempTarget);
         const petMoving = distanceToTarget > .15;
+        if(this.petIndex===PPOJJAK_PET_ID)animatePpojjakiPet(this.petModel,this.time,petMoving,this.lowQuality,matchMedia('(prefers-reduced-motion: reduce)').matches);
         this.petMotion = petMoving; this.petEating = !!target && distanceToTarget < .9;
         this.petIdle = petMoving || target ? 0 : this.petIdle + dt;
         if (this.petReactUntil <= this.time) this.petReaction = null;
@@ -1899,6 +1856,7 @@ export class World {
       if (o.userData.petPaw) o.rotation.x = rest.x + (this.petMotion ? Math.sin(this.time * 12 + Number(o.userData.petPaw) * Math.PI / 2) * .3 : 0);
       if (o.userData.petEye) { const scale = o.userData.restScale as T.Vector3; o.scale.y = scale.y * (sleeping || Math.sin(this.time * 1.7) > .995 ? .13 : 1); }
     }
+    const ppoAura=this.player.userData.ppoAura as T.Group|undefined;if(ppoAura)animatePpojjakiAura(ppoAura,this.time,this.lowQuality,matchMedia('(prefers-reduced-motion: reduce)').matches);
     const heroAura = this.player.userData.heroPetAura as T.Group | undefined;
     if (heroAura) {
       heroAura.rotation.y += dt * 1.35;
@@ -1937,7 +1895,7 @@ export class AvatarPreview {
     this.resizeObserver = new ResizeObserver(() => this.draw()); this.resizeObserver.observe(element); this.animate(performance.now());
   }
   private replaceModel(model: T.Group, camera: [number, number, number], lookY: number, fit = false) {
-    this.scene.remove(this.model); this.model.traverse(x => { if (x instanceof T.Mesh && !sharedGeometries.has(x.geometry)) x.geometry.dispose(); }); this.model = model; this.model.rotation.y = -.18;
+    this.scene.remove(this.model); disposeSalonMaterials(this.model);disposePpojjakiAssets(this.model);this.model.traverse(x => { if (x instanceof T.Mesh && !sharedGeometries.has(x.geometry)&&!x.geometry.userData.sharedSalonAsset&&!x.geometry.userData.ppoDisposed) x.geometry.dispose(); }); this.model = model; this.model.rotation.y = -.18;
     this.camera.position.set(...camera); this.camera.lookAt(0, lookY, 0);
     if (fit) this.fitCamera(new T.Vector3(...camera).sub(new T.Vector3(0, lookY, 0)).normalize());
     this.scene.add(this.model); this.draw();
@@ -1964,7 +1922,7 @@ export class AvatarPreview {
   showRide(id: number, c: number, o: number, w: number, ol = 0, wl = 0, hairstyle = 0, face = 0) { const model = makeCharacter(c, o, w, ol, wl, hairstyle, face), body = model.userData.body as T.Group; body.position.y = riderHeight(id); model.add(makeRide(id)); model.userData.previewKind = 'ride'; this.replaceModel(model, [3.4, 2.35, 7.7], 1.15, true); }
   private draw() { const w = this.element.clientWidth, h = this.element.clientHeight; if (!w || !h) return; if (w !== this.drawWidth || h !== this.drawHeight) { this.drawWidth = w; this.drawHeight = h; this.renderer.setSize(w, h); this.camera.aspect = w / h; this.camera.updateProjectionMatrix(); } this.renderer.render(this.scene, this.camera); }
   private animate = (time: number) => { this.animationFrame = requestAnimationFrame(this.animate); if (time - this.lastFrame < 33 || document.hidden || !this.element.isConnected) return; this.lastFrame = time; this.model.rotation.y = -.18 + Math.sin(time * .0007) * .16; const body = this.model.userData.body as T.Group | undefined; if (body) { body.userData.baseY ??= body.position.y; body.position.y = (body.userData.baseY as number) + Math.sin(time * .003) * .035; } const sparkles = this.model.userData.sparkles as T.Group | undefined; if (sparkles) sparkles.rotation.y += .025; this.model.traverse(o => { if (o.userData.petCharm) { o.rotation.y += .06; o.userData.baseScale ??= o.scale.clone(); o.scale.copy(o.userData.baseScale as T.Vector3).multiplyScalar(1 + Math.sin(time * .006) * .12); } if (o.userData.petWing) o.rotation.z = Number(o.userData.petWing) * (.4 + Math.sin(time * .011) * .14); if (o.userData.rideWing) o.rotation.z = Number(o.userData.rideWing) * (-.72 + Math.sin(time * .009) * .14); if (o.userData.ridePropeller) o.rotation.z += .18; if (o.userData.rideGlow) o.rotation.z += .025; }); this.draw(); };
-  dispose() { cancelAnimationFrame(this.animationFrame); this.resizeObserver.disconnect(); this.model.traverse(x => { if (x instanceof T.Mesh && !sharedGeometries.has(x.geometry)) x.geometry.dispose(); }); this.renderer.dispose(); this.renderer.forceContextLoss(); this.renderer.domElement.remove(); } // 미리보기를 자주 바꿔도 WebGL 창이 쌓여 게임 화면이 꺼지지 않도록 바로 돌려줘요.
+  dispose() { cancelAnimationFrame(this.animationFrame); this.resizeObserver.disconnect(); disposeSalonMaterials(this.model);disposePpojjakiAssets(this.model);this.model.traverse(x => { if (x instanceof T.Mesh && !sharedGeometries.has(x.geometry)&&!x.geometry.userData.sharedSalonAsset&&!x.geometry.userData.ppoDisposed) x.geometry.dispose(); }); this.renderer.dispose(); this.renderer.forceContextLoss(); this.renderer.domElement.remove(); } // 미리보기를 자주 바꿔도 WebGL 창이 쌓여 게임 화면이 꺼지지 않도록 바로 돌려줘요.
 }
 
 /** Render the four selection portraits from the same 3D character models using one temporary WebGL context. */
@@ -1987,7 +1945,7 @@ export function characterPortraits(): string[] {
       scene.add(model); renderer.render(scene, camera);
       const image = renderer.domElement.toDataURL('image/png');
       scene.remove(model);
-      model.traverse(o => { if (o instanceof T.Mesh && !sharedGeometries.has(o.geometry)) o.geometry.dispose(); });
+      disposeSalonMaterials(model);disposePpojjakiAssets(model);model.traverse(o => { if (o instanceof T.Mesh && !sharedGeometries.has(o.geometry)&&!o.geometry.userData.sharedSalonAsset&&!o.geometry.userData.ppoDisposed) o.geometry.dispose(); });
       return image;
     });
   } finally { renderer.dispose(); renderer.forceContextLoss(); }

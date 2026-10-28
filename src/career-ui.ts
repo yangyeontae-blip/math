@@ -45,9 +45,28 @@ const sigils=[
  '<path d="M8 35c3-16 29-16 32 0L24 42Z"/><path d="m13 31-4-9M35 31l4-9M24 9v18M18 15l6-6 6 6"/>',
  '<path d="M9 12h30M7 21h28M12 30h22M19 39h9M30 9 18 23l11-1-10 19"/>',
 ];
+// Painted cells remain tied to skill IDs when new skills are inserted into a job's list.
+const paintedSkillIds=['shield','wind','lantern','crescent','charge','roots','guardian','starbolt','frost','vortex','starfall','arrow','pierce','trap','storm'];
+const jobSigils:Record<string,string>={knight:'crescent',mage:'starbolt',ranger:'arrow',attack:'crescent'};
+// Broad, original silhouettes also read at the compact 20–24px icon size.
+const extraSigils:Record<string,string>={
+ acornRush:'<path d="M14 22c0 14 10 19 10 19s10-5 10-19Z" fill="currentColor" fill-opacity=".16"/><path d="M12 22c0-7 6-11 12-11s12 4 12 11ZM24 11l3-5M17 17l4 4 5-5 5 5M5 28h5M7 35h7"/>',
+ vinePull:'<path d="M12 39c16 0 26-10 24-20-2-9-12-10-16-3-4 6 2 12 7 8"/><path d="M16 31c-10 0-12-7-12-7 11-2 15 3 12 7ZM30 35c9 0 13-8 13-8-11-1-15 3-13 8Z" fill="currentColor" fill-opacity=".22"/><path d="m19 37-7 2 3-7"/>',
+ dawnSlash:'<path d="m10 39 27-29-5 14Z" fill="currentColor" fill-opacity=".24"/><path d="m8 30 10 10M9 17h5M17 7l3 5M30 5l-1 5M39 29l5 1M37 38l4 4M8 24a13 13 0 0 1 17-13"/>',
+ leafOrb:'<circle cx="24" cy="25" r="14"/><path d="M17 30c-2-10 5-13 14-13 1 10-4 16-14 13Zm0 0 10-10" fill="currentColor" fill-opacity=".18"/><path d="m10 5 1 4 4 1-4 1-1 4-1-4-4-1 4-1ZM39 7v7M36 10h6"/>',
+ thunderChain:'<path d="m26 7-13 19h10l-3 15 15-21H24Z" fill="currentColor" fill-opacity=".2"/><path d="M14 12a6 6 0 1 0-4 11M34 36a6 6 0 1 0 4-11M8 29l4 5M36 14l4 5"/>',
+ comet:'<path d="m12 27 21-20-5 16L43 10 29 32"/><circle cx="18" cy="32" r="10" fill="currentColor" fill-opacity=".2"/><path d="M13 31a5 5 0 0 1 6-4M6 15l8-8M32 42l8-8"/>',
+ tripleShot:'<path d="M24 42V7M24 7l-6 7M24 7l6 7M24 37 7 16M7 16l-1 9M7 16l9 2M24 37l17-21M41 16l1 9M41 16l-9 2"/>',
+ galeShot:'<path d="M6 25h35m-7-7 7 7-7 7M9 17c2-10 18-12 23-3M16 36c12 8 26-2 25-13M8 33c-4 0-5 7 0 7M23 8c-5-5-12 1-8 6"/>',
+ moonArrow:'<path d="M24 7C6 8 4 34 22 40 14 31 16 15 24 7Z" fill="currentColor" fill-opacity=".24"/><path d="m18 34 24-24M31 10h11v11M26 33l-5-5M32 27l-5-5"/>',
+};
 export function renderSkillIcon(id:string,index:number,label=''){
- const i=Math.max(0,Math.min(14,Math.trunc(index)||0));
- return `<span class="career-sigil" data-skill-icon="${attr(id)}" style="--sigil-x:${(i%5)*25}%;--sigil-y:${Math.floor(i/5)*50}%" aria-hidden="true"><svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">${sigils[i]}</svg><span class="career-painted-sigil"></span></span>${label?`<span class="career-skill-name">${escape(label)}</span>`:''}`;
+ const custom=Object.hasOwn(extraSigils,id)?extraSigils[id]:undefined;
+ const paintedId=Object.hasOwn(jobSigils,id)?jobSigils[id]:id,knownIndex=paintedSkillIds.indexOf(paintedId);
+ const legacyIndex=Number.isInteger(index)&&index>=0&&index<paintedSkillIds.length?index:-1;
+ const i=custom?-1:knownIndex>=0?knownIndex:legacyIndex,vector=custom||sigils[i>=0?i:0];
+ const position=i>=0?` style="--sigil-x:${(i%5)*25}%;--sigil-y:${Math.floor(i/5)*50}%"`:'';
+ return `<span class="career-sigil${i<0?' is-vector':''}" data-skill-icon="${attr(id)}"${position} aria-hidden="true"><svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">${vector}</svg>${i>=0?'<span class="career-painted-sigil"></span>':''}</span>${label?`<span class="career-skill-name">${escape(label)}</span>`:''}`;
 }
 function skillCards(vm:CareerSchoolView){
  return `<div class="career-skill-list">${vm.skills.map(s=>{

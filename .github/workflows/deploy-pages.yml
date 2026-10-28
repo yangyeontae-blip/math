@@ -32,6 +32,14 @@ jobs:
       - run: pnpm test
       - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm test:browser
+      - name: Keep isolated browser screenshots and traces
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: browser-visuals-web
+          path: test-results/
+          if-no-files-found: ignore
+          retention-days: 3
       - run: pnpm build
       - run: test -z "$(rg -l testBattleQuestion dist/assets/*.js || true)"
       - uses: actions/upload-pages-artifact@v5

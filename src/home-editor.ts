@@ -1,3 +1,4 @@
+import {decorateItemCatalog} from './item-rarity';
 import * as T from 'three';
 import { HOME_ITEMS, STARTER_BLUEPRINTS, GARDEN_PRESETS, applyGardenPreset, availableHome, blueprintIds, presetReady, type HomeObject } from './homestead';
 import { homeItemModel } from './homestead-models';
@@ -48,6 +49,7 @@ export function showHomeEditor(s:Save,h:HomeHooks,initialKind?:number){
     $('editor-selection').textContent=selected?`${item!.name} · ${selected.uid?'옮기는 중':`보관 ${availableHome(s,selected.kind)}개`} · ${selected.column+1}열 ${selected.row+1}행`:'물건을 고르거나 놓인 물건을 눌러 보세요.';
     for(const id of ['editor-place','editor-rotate','editor-cancel'])$(id).hidden=!selected;
     $('editor-nudge').hidden=!selected;
+    decorateItemCatalog($('editor-items'),HOME_ITEMS.map(i=>({kind:'garden' as const,id:i.id,name:i.name,price:i.price})));
     document.querySelectorAll<HTMLButtonElement>('[data-editor-kind]').forEach(b=>b.setAttribute('aria-pressed',String(!selected?.uid&&selected?.kind===Number(b.dataset.editorKind))));
     $('editor-store').hidden=!selected?.uid;$<HTMLButtonElement>('editor-place').disabled=!!edit.error();$<HTMLButtonElement>('editor-undo').disabled=!edit.canUndo;
     $('editor-craft').hidden=!selected||!!selected.uid;

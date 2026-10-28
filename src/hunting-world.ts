@@ -1,5 +1,5 @@
 import * as T from 'three';
-import { skillInfo } from './academy';
+import { skillInfo, type JobId, type SkillId } from './academy';
 import type { HuntEnemy, HuntEvent, HuntSnapshot } from './hunting';
 
 /** A touched target wins while it is alive and in range; otherwise aim at the nearest living enemy. */
@@ -80,6 +80,14 @@ export class HuntingWorld {
   private colors = new Map<string, T.Material>();
   private enemies = new Map<string, { root: T.Group; body: T.Group; hp: T.Mesh; bar: T.Group; target: T.Mesh; warning: T.Mesh }>();
   private effects = new Map<string, T.Group>();
+  private effectOrigins = new Map<string, { x: number; z: number }>();
+  private effectPool = new Map<SkillId, T.Group[]>();
+  private impacts: { group: T.Group; life: number; duration: number }[] = [];
+  private impactPool: T.Group[] = [];
+  private projectiles: { group: T.Group; skill: SkillId; origin: { x: number; z: number }; target: { x: number; z: number }; elapsed: number }[] = [];
+  private projectilePool = new Map<SkillId, T.Group[]>();
+  private castOrigins = new Map<SkillId, { x: number; z: number }>();
+  private lastBasicShot = -Infinity;
   private numbers: { sprite: T.Sprite; texture: T.CanvasTexture; material: T.SpriteMaterial; life: number }[] = [];
   private pendingDamage = new Map<string, number>(); private damageClock = 0;
   private sphere = this.geometry(new T.SphereGeometry(1, 12, 8));
@@ -89,7 +97,8 @@ export class HuntingWorld {
   private ring = this.geometry(new T.RingGeometry(.88, 1, 32));
   private plane = this.geometry(new T.PlaneGeometry(1, 1));
   private arc = this.geometry(new T.TorusGeometry(1, .075, 6, 24, Math.PI));
-  constructor(readonly training = false, readonly zone = 0) { this.root.userData.huntingRuntime = true; }
+  constructor(readonly training = false, readonly zone = 0, readonly options: { lowQuality?: boolean; reducedMotion?: boolean } = {}) { this.root.userData.huntingRuntime = true; }
+  setQuality(options: { lowQuality: boolean; reducedMotion: boolean }) { Object.assign(this.options, options); }
   private glowing = new Map<number, T.MeshBasicMaterial>();
   private glow(color: number) { let m = this.glowing.get(color); if (!m) { m = new T.MeshBasicMaterial({ color }); this.glowing.set(color, m); this.materials.add(m); } return m; }
   private geometry<G extends T.BufferGeometry>(geometry: G): G { this.geometries.add(geometry); return geometry; }
@@ -137,7 +146,8 @@ export class HuntingWorld {
     const warning = new T.Mesh(this.circle, this.material(0xef795d, .4)); warning.rotation.x = -Math.PI / 2; warning.visible = false; this.root.add(warning);
     const value = { root, body, hp, bar, target, warning }; this.enemies.set(id, value); this.root.add(root); return value;
   }
-  update(snapshot: HuntSnapshot, camera: T.Camera, selected: string | null, dt: number) {
+  update(snapshot: HuntSnapshot, camera: T.Camera, selected: string | null, dt: number, player?: { x: number; z: number }) {
+    dt = Number.isFinite(dt) ? Math.max(0, dt) : 0;
     this.damageClock += dt;
     if (this.damageClock >= .25) { this.damageClock = 0; for (const [id, damage] of this.pendingDamage) { const enemy = snapshot.enemies.find(value => value.id === id); if (enemy) this.damageNumber(damage, enemy.x, enemy.z); } this.pendingDamage.clear(); }
     for (const [index, enemy] of snapshot.enemies.entries()) {
@@ -151,30 +161,162 @@ export class HuntingWorld {
       visual.warning.visible = !!enemy.telegraph && visual.root.visible;
       if (enemy.telegraph) { visual.warning.position.set(enemy.telegraph.x, .035, enemy.telegraph.z); visual.warning.scale.setScalar(enemy.telegraph.radius); }
     }
-    const live = new Set(snapshot.effects.map(effect => effect.id));
-    for (const [id, mesh] of this.effects) if (!live.has(id)) { this.root.remove(mesh); this.effects.delete(id); }
-    for (const effect of snapshot.effects) {
+    // Keep a fixed visual budget even if a future runtime exposes many overlapping areas.
+    const visibleEffects = snapshot.effects.filter(effect => !(['leafOrb', 'thunderChain', 'tripleShot', 'moonArrow'].includes(effect.skill) && this.castOrigins.has(effect.skill))).slice(-24), live = new Set(visibleEffects.map(effect => effect.id));
+    for (const [id, mesh] of this.effects) if (!live.has(id)) {
+      this.root.remove(mesh); this.effects.delete(id); this.effectOrigins.delete(id);
+      const skill = mesh.userData.skill as SkillId, pool = this.effectPool.get(skill) ?? [];
+      if (pool.length < 2) pool.push(mesh); this.effectPool.set(skill, pool);
+    }
+    for (const id of this.effectOrigins.keys()) if (!live.has(id)) this.effectOrigins.delete(id);
+    for (const effect of visibleEffects) {
       let mesh = this.effects.get(effect.id);
-      if (!mesh) { mesh = this.makeEffect(effect.skill); this.effects.set(effect.id, mesh); this.root.add(mesh); }
-      mesh.position.set(effect.x, .12, effect.z); const progress = 1 - effect.remaining / Math.max(.01, effect.duration);
-      mesh.scale.setScalar(Math.max(.2, effect.radius * (.65 + progress * .35))); mesh.rotation.y = snapshot.time * (effect.skill === 'vortex' || effect.skill === 'storm' ? 2 : .35);
+      if (!mesh) { mesh = this.effectPool.get(effect.skill)?.pop() ?? this.makeEffect(effect.skill); this.effects.set(effect.id, mesh); this.root.add(mesh); }
+      this.animateEffect(mesh, effect, this.effectOrigins.get(effect.id));
+      if (player && Number.isFinite(player.x) && Number.isFinite(player.z) && ['shield', 'wind', 'guardian'].includes(effect.skill)) { mesh.position.x = player.x; mesh.position.z = player.z; }
+    }
+    for (let i = this.impacts.length - 1; i >= 0; i--) {
+      const impact = this.impacts[i]; impact.life -= dt;
+      if (impact.life <= 0) { this.root.remove(impact.group); this.impactPool.push(impact.group); this.impacts.splice(i, 1); continue; }
+      const p = 1 - impact.life / impact.duration;
+      impact.group.scale.setScalar(this.options.reducedMotion ? .7 : .35 + p * .65);
+      impact.group.rotation.y = this.options.reducedMotion ? 0 : p * .5;
+      impact.group.children.forEach((child, index) => { child.visible = index < (this.options.lowQuality || this.options.reducedMotion ? 3 : 7); });
+    }
+    for (let i = this.projectiles.length - 1; i >= 0; i--) {
+      const shot = this.projectiles[i]; shot.elapsed += dt;
+      if (shot.elapsed >= .48) { this.root.remove(shot.group); const pool = this.projectilePool.get(shot.skill) ?? []; if (pool.length < 3) pool.push(shot.group); this.projectilePool.set(shot.skill, pool); this.projectiles.splice(i, 1); continue; }
+      this.animateEffect(shot.group, { id: '', skill: shot.skill, ...shot.target, radius: 1, duration: .48, remaining: .48 - shot.elapsed }, shot.origin);
     }
     for (let i = this.numbers.length - 1; i >= 0; i--) { const value = this.numbers[i]; value.life -= dt; value.sprite.position.y += dt * .8; value.material.opacity = Math.min(1, value.life * 2); if (value.life <= 0) { this.root.remove(value.sprite); value.texture.dispose(); value.material.dispose(); this.numbers.splice(i, 1); } }
   }
-  onEvent(event: HuntEvent, snapshot: HuntSnapshot) {
+  onEvent(event: HuntEvent, snapshot: HuntSnapshot, origin?: { x: number; z: number; job?: JobId | null }) {
+    if (event.type === 'cast') {
+      const effect = snapshot.effects.filter(effect => effect.skill === event.skill).at(-1);
+      if (origin && Number.isFinite(origin.x) && Number.isFinite(origin.z)) { this.castOrigins.set(event.skill, { ...origin }); if (effect) this.effectOrigins.set(effect.id, { ...origin }); }
+      if ((event.skill === 'storm' || event.skill === 'galeShot') && effect && origin) this.launchProjectile('arrow', origin, effect);
+      return;
+    }
     if (event.type !== 'hit' || !snapshot.enemies.some(enemy => enemy.id === event.enemyId)) return;
     this.pendingDamage.set(event.enemyId, (this.pendingDamage.get(event.enemyId) ?? 0) + event.damage);
+    const enemy = snapshot.enemies.find(enemy => enemy.id === event.enemyId)!;
+    if (event.skill === 'basic' && origin?.job === 'ranger' && this.lastBasicShot !== snapshot.time) { this.lastBasicShot = snapshot.time; this.launchProjectile('arrow', origin, enemy); }
+    if (event.skill !== 'basic' && ['leafOrb', 'thunderChain', 'tripleShot', 'moonArrow'].includes(event.skill)) {
+      const from = this.castOrigins.get(event.skill) ?? origin;
+      if (from) { this.launchProjectile(event.skill, from, enemy); if (event.skill === 'thunderChain') this.castOrigins.set(event.skill, { x: enemy.x, z: enemy.z }); }
+    }
+    // Continuous damage is coalesced per enemy: never create one burst per simulation tick.
+    if (!this.impacts.some(value => value.group.userData.enemyId === event.enemyId && value.life > .12)) {
+      const group = this.impactPool.pop() ?? (this.impacts.length < 24 ? this.makeImpact() : this.impacts.shift()!.group);
+      group.userData.enemyId = event.enemyId; group.position.set(enemy.x, .8, enemy.z); group.rotation.set(0, 0, 0); group.scale.setScalar(.35);
+      this.root.add(group); this.impacts.push({ group, life: .28, duration: .28 });
+    }
   }
   targetObject(id: string) { return this.enemies.get(id)?.root ?? null; }
-  private makeEffect(id: import('./academy').SkillId) {
-    const group = new T.Group(), color = new T.Color(skillInfo(id).color).getHex();
-    const ground = new T.Mesh(this.ring, this.material(color, .65)); ground.rotation.x = -Math.PI / 2; group.add(ground);
-    if (id === 'shield' || id === 'guardian') { const shell = new T.Mesh(this.sphere, this.material(color, .17)); shell.position.y = .6; shell.scale.set(.7, .8, .7); group.add(shell); }
-    else if (id === 'crescent' || id === 'charge' || id === 'pierce' || id === 'arrow') { const arc = new T.Mesh(id === 'crescent' ? this.arc : this.cone, this.material(color, .85)); arc.rotation.x = id === 'crescent' ? -Math.PI / 3 : Math.PI / 2; arc.position.y = .55; arc.scale.set(.9, id === 'crescent' ? .9 : 1.6, .22); group.add(arc); }
-    else if (id === 'roots' || id === 'trap' || id === 'frost') for (let i = 0; i < 6; i++) { const stem = this.piece(group, this.cone, id === 'frost' ? 0xc0e8ef : color, Math.cos(i * Math.PI / 3) * .7, .24, Math.sin(i * Math.PI / 3) * .7, .11, .65, .11); stem.rotation.z = Math.cos(i) * .25; }
-    else if (id === 'starbolt' || id === 'lantern') { this.piece(group, this.sphere, 0xffe6a1, 0, .85, 0, .3); for (let i = 0; i < 4; i++) this.piece(group, this.cone, color, Math.cos(i * Math.PI / 2) * .5, .85, Math.sin(i * Math.PI / 2) * .5, .08, .3, .08); }
-    else for (let i = 0; i < (id === 'starfall' ? 8 : 5); i++) { const mote = this.piece(group, id === 'starfall' ? this.cone : this.sphere, i % 2 ? color : 0xe3f5a8, Math.cos(i * 2.399) * (.35 + i * .07), .2 + i * .17, Math.sin(i * 2.399) * (.35 + i * .07), .09, id === 'starfall' ? .35 : .1, .09); mote.rotation.z = .4; }
-    group.traverse(object => { if (object instanceof T.Mesh) object.castShadow = false; }); return group;
+  private launchProjectile(skill: SkillId, origin: { x: number; z: number }, target: { x: number; z: number }) {
+    if (![origin.x, origin.z, target.x, target.z].every(Number.isFinite)) return;
+    if (this.projectiles.length >= 12) { const old = this.projectiles.shift()!; this.root.remove(old.group); const pool = this.projectilePool.get(old.skill) ?? []; if (pool.length < 3) pool.push(old.group); this.projectilePool.set(old.skill, pool); }
+    const group = this.projectilePool.get(skill)?.pop() ?? this.makeEffect(skill);
+    delete group.userData.skill; group.userData.huntProjectile = true;
+    this.projectiles.push({ group, skill, origin: { x: origin.x, z: origin.z }, target: { x: target.x, z: target.z }, elapsed: 0 }); this.root.add(group);
+    this.animateEffect(group, { id: '', skill, x: target.x, z: target.z, radius: 1, duration: .48, remaining: .48 }, origin);
+  }
+  private makeImpact() {
+    const group = new T.Group(); group.userData.huntImpact = true;
+    const slash = new T.Mesh(this.arc, this.glow(0xffdf93)); slash.scale.set(.65, .4, .4); slash.rotation.set(-.5, .2, -.6); group.add(slash);
+    for (let i = 0; i < 6; i++) {
+      const ray = new T.Mesh(this.cone, this.glow(i % 2 ? 0xffd181 : 0xfff2c0)), a = i * Math.PI / 3;
+      ray.position.set(Math.cos(a) * .48, Math.sin(a) * .4, .06); ray.rotation.z = a - Math.PI / 2; ray.scale.set(.045, .35, .045); group.add(ray);
+    }
+    return group;
+  }
+  private makeEffect(id: SkillId) {
+    const group = new T.Group(); group.userData.skill = id;
+    const palette: Partial<Record<SkillId, number>> = { starbolt: 0xffd981, frost: 0x99ddf3, vortex: 0xff9e51, starfall: 0xc8b2ff, arrow: 0x8dded2, pierce: 0xb9f3be, storm: 0x80d9ed, acornRush: 0xe3b477, vinePull: 0x83d78c, dawnSlash: 0xffcd70, leafOrb: 0x99efb5, thunderChain: 0xffe98b, comet: 0xffa96c, tripleShot: 0xb3efc4, galeShot: 0x8ed9ee, moonArrow: 0xcdbdff };
+    const color = palette[id] ?? new T.Color(skillInfo(id).color).getHex();
+    const add = (geometry: T.BufferGeometry, x: number, y: number, z: number, sx: number, sy = sx, sz = sx, opacity = .85, tint = color) => {
+      const mesh = new T.Mesh(geometry, this.material(tint, opacity)); mesh.position.set(x, y, z); mesh.scale.set(sx, sy, sz); group.add(mesh); return mesh;
+    };
+    const ground = add(this.ring, 0, 0, 0, 1, 1, 1, .42); ground.rotation.x = -Math.PI / 2; ground.userData.role = 'ground';
+    if (id === 'shield' || id === 'guardian') {
+      add(this.sphere, 0, .65, 0, .65, .85, .65, .13);
+      for (let i = 0; i < (id === 'guardian' ? 6 : 3); i++) {
+        const a = i * Math.PI * 2 / (id === 'guardian' ? 6 : 3);
+        const leaf = add(id === 'guardian' ? this.cone : this.arc, Math.cos(a) * .75, .6, Math.sin(a) * .75, .12, .48, .08);
+        leaf.rotation.set(id === 'shield' ? .4 : 0, -a, -.3); leaf.userData.role = 'orbit';
+      }
+    } else if (id === 'crescent' || id === 'charge' || id === 'acornRush' || id === 'dawnSlash') {
+      for (let i = 0; i < 3; i++) { const slash = add(this.arc, 0, .6, i * .12, 1 - i * .1, .7, .32, .8 - i * .2); slash.rotation.set(-.7, 0, -.5); slash.userData.role = 'blade'; slash.userData.phase = i; }
+      if (id === 'charge') add(this.sphere, 0, .7, -.1, .6, .7, .15, .38);
+      if (id === 'acornRush') for (let i = 0; i < 3; i++) add(this.sphere, (i - 1) * .4, .65, 0, .12, .2, .12, .9);
+    } else if (id === 'thunderChain') {
+      for (let i = 0; i < 5; i++) { const bolt = add(this.cube, 0, 1.05, 0, .075, .075, 1, .92); bolt.userData.role = 'lightning'; bolt.userData.phase = i; }
+    } else if (id === 'starbolt' || id === 'arrow' || id === 'pierce' || id === 'leafOrb' || id === 'tripleShot' || id === 'moonArrow') {
+      const orb = id === 'starbolt' || id === 'leafOrb', moon = id === 'moonArrow';
+      const head = add(orb ? this.sphere : this.cone, 0, 1.05, 0, moon ? .32 : .23, orb ? .23 : moon ? .95 : .7, .23, .95, orb || moon ? color : 0xffe2a0); head.rotation.x = -Math.PI / 2;
+      // An opaque pale shaft remains legible against both the dark forest and bright camp.
+      add(this.cube, 0, 1.05, .55, .12, .12, .9, .95, 0xfff0c2);
+      for (let i = 0; i < 3; i++) { const tail = add(this.cube, 0, 1.05, 1.05 + i * .34, .11 - i * .025, .09 - i * .02, id === 'pierce' ? .7 : .38, .65 - i * .16); tail.userData.role = 'tail'; }
+      if (orb) for (let i = 0; i < 4; i++) { const shard = add(this.cone, Math.cos(i * Math.PI / 2) * .3, .8, Math.sin(i * Math.PI / 2) * .3, .06, .24, .06); shard.userData.role = 'orbit'; }
+    } else if (id === 'frost' || id === 'roots' || id === 'trap' || id === 'vinePull') {
+      for (let i = 0; i < 6; i++) {
+        const a = i * Math.PI / 3, shard = add(this.cone, Math.cos(a) * .7, .25, Math.sin(a) * .7, .1, id === 'trap' ? .24 : .75, .1);
+        shard.rotation.set(Math.cos(a) * .35, 0, Math.sin(a) * .35); shard.userData.role = 'sprout'; shard.userData.phase = i;
+        if (id === 'frost') { const petal = add(this.cube, Math.cos(a) * .4, .08, Math.sin(a) * .4, .06, .035, .42, .7); petal.rotation.y = -a; }
+      }
+      if (id === 'vinePull') for (let i = 0; i < 2; i++) { const vine = add(this.arc, 0, .18 + i * .3, 0, .8, .6, .8, .6); vine.rotation.x = Math.PI / 2; vine.userData.role = 'ribbon'; vine.userData.phase = i; }
+    } else if (id === 'comet') {
+      const core = add(this.sphere, 0, 3.5, 0, .45, .55, .45, .9, 0xffda82); core.userData.role = 'comet';
+      for (let i = 0; i < 4; i++) { const flame = add(this.cone, i * .06, 3.9 + i * .3, 0, .23 - i * .04, .65, .18, .7 - i * .1); flame.userData.role = 'cometTail'; flame.userData.phase = i; }
+    } else if (id === 'lantern') {
+      add(this.sphere, 0, 1, 0, .18, .28, .18, .9, 0xffd77c);
+      for (let i = 0; i < 4; i++) { const pointer = add(this.cone, Math.cos(i * Math.PI / 2) * .65, .08, Math.sin(i * Math.PI / 2) * .65, .1, .35, .1); pointer.rotation.set(Math.PI / 2, 0, i * Math.PI / 2); }
+    } else if (id === 'wind') {
+      for (let i = 0; i < 3; i++) { const ribbon = add(this.arc, 0, .15 + i * .17, 0, .65 + i * .1, .45, .65, .55); ribbon.rotation.set(Math.PI / 2, 0, i * 2); ribbon.userData.role = 'ribbon'; ribbon.userData.phase = i; }
+    } else {
+      // Falling arrows/stars and a rising fire helix share tiny unlit geometry, never lights or postprocessing.
+      for (let i = 0; i < 8; i++) {
+        const a = i * 2.399, r = .25 + (i % 3) * .23;
+        const mote = add(id === 'vortex' ? this.sphere : this.cone, Math.cos(a) * r, .3 + i * .14, Math.sin(a) * r, id === 'vortex' ? .11 : .065, id === 'vortex' ? .16 : .4, .075, .8, i % 2 ? color : id === 'vortex' ? 0xffcb6b : 0xffe4a4);
+        mote.userData.role = 'rain'; mote.userData.phase = i; mote.rotation.z = id === 'storm' ? -.4 : .3;
+      }
+      if (id === 'vortex') for (let i = 0; i < 2; i++) { const helix = add(this.arc, 0, .3 + i * .5, 0, .8 - i * .2, .7, .8, .5); helix.rotation.x = Math.PI / 2; helix.userData.role = 'ribbon'; helix.userData.phase = i; }
+    }
+    group.children.forEach(child => { child.userData.basePosition = child.position.clone(); child.userData.baseScale = child.scale.clone(); child.userData.baseRotation = child.rotation.clone(); });
+    return group;
+  }
+  private animateEffect(group: T.Group, effect: HuntSnapshot['effects'][number], origin?: { x: number; z: number }) {
+    const id = effect.skill, elapsed = Math.max(0, effect.duration - effect.remaining), progress = T.MathUtils.clamp(elapsed / Math.max(.01, effect.duration), 0, 1), reduced = !!this.options.reducedMotion;
+    const projectile = ['starbolt', 'arrow', 'pierce', 'leafOrb', 'tripleShot', 'moonArrow'].includes(id), melee = ['crescent', 'charge', 'acornRush', 'dawnSlash'].includes(id);
+    // A radius-six gameplay area has a low silhouette; never grow a six-metre-tall effect over labels.
+    group.position.set(effect.x, .12, effect.z); group.rotation.set(0, 0, 0);
+    group.scale.setScalar(projectile ? 1 : melee ? 1.3 : Math.min(4.6, Math.max(.7, effect.radius)));
+    group.scale.y = projectile || melee ? 1 : 1.15;
+    if (id === 'dawnSlash') group.scale.x = 2.4;
+    if (projectile && origin) {
+      const travel = reduced ? 1 : Math.min(1, elapsed / Math.min(.36, effect.duration * .9));
+      group.position.x = T.MathUtils.lerp(origin.x, effect.x, travel); group.position.z = T.MathUtils.lerp(origin.z, effect.z, travel);
+      group.rotation.y = Math.atan2(effect.x - origin.x, effect.z - origin.z) + Math.PI;
+    } else if (melee && origin) group.rotation.y = Math.atan2(effect.x - origin.x, effect.z - origin.z);
+    if (id === 'thunderChain' && origin) { group.position.set(origin.x, .12, origin.z); group.rotation.y = Math.atan2(effect.x - origin.x, effect.z - origin.z) + Math.PI; group.scale.set(1, 1, 1); }
+    if (!reduced && (id === 'vortex' || id === 'wind' || id === 'storm' || id === 'galeShot')) group.rotation.y += elapsed * (id === 'vortex' ? 1.8 : .8);
+    const budget = this.options.lowQuality || reduced ? 6 : 16;
+    group.children.forEach((child, index) => {
+      child.visible = index < budget; child.position.copy(child.userData.basePosition); child.scale.copy(child.userData.baseScale); child.rotation.copy(child.userData.baseRotation);
+      const role = child.userData.role, phase = child.userData.phase ?? index;
+      if (role === 'lightning' && origin) { const length = Math.hypot(effect.x - origin.x, effect.z - origin.z); child.position.z = -length * (phase + .5) / 5; child.position.x = (phase % 2 ? 1 : -1) * .12; child.scale.z = length / 5 + .08; child.rotation.y = (phase % 2 ? 1 : -1) * Math.atan2(.24, Math.max(.1, length / 5)); }
+      if (reduced) { if (role === 'comet' || role === 'cometTail') child.position.y = .35 + (role === 'cometTail' ? phase * .12 : 0); return; }
+      if (role === 'blade') { const swing = id === 'acornRush' ? (progress * 3 + phase / 3) % 1 : progress; child.rotation.y += swing * Math.PI * 1.3 - phase * .16; child.scale.multiplyScalar(Math.max(.15, Math.sin(swing * Math.PI))); }
+      else if (role === 'ground') child.scale.multiplyScalar(.85 + Math.min(1, elapsed * 5) * .15);
+      else if (role === 'sprout') child.scale.y *= Math.min(1, elapsed * 7 + .12);
+      else if (role === 'rain') {
+        const p = (elapsed * (id === 'vortex' ? .85 : 1.7) + phase * .137) % 1;
+        child.position.y = id === 'vortex' ? .15 + p * 1.6 : .12 + (1 - p) * 2.5;
+        child.scale.multiplyScalar(.65 + Math.sin(p * Math.PI) * .35);
+      } else if (role === 'comet' || role === 'cometTail') { child.position.y = Math.max(role === 'comet' ? .35 : .4, child.userData.basePosition.y - elapsed * 8); child.position.x -= Math.min(.4, elapsed) * .5; }
+      else if (role === 'ribbon') child.rotation.z += elapsed * 1.7 + phase;
+      else if (role === 'orbit') child.position.y += Math.sin(elapsed * 2 + index) * .07;
+    });
   }
   private damageNumber(damage: number, x: number, z: number) {
     if (typeof document === 'undefined') return;
@@ -190,5 +332,5 @@ export class HuntingWorld {
     for (const hit of ray.intersectObjects([...this.enemies.values()].filter(value => value.root.visible).map(value => value.root), true)) { let node: T.Object3D | null = hit.object; while (node) { if (typeof node.userData.huntEnemyId === 'string') return node.userData.huntEnemyId; node = node.parent; } }
     return null;
   }
-  dispose() { this.root.removeFromParent(); for (const value of this.numbers) { value.texture.dispose(); value.material.dispose(); } this.numbers = []; for (const geometry of this.geometries) geometry.dispose(); for (const material of this.materials) material.dispose(); this.geometries.clear(); this.materials.clear(); this.enemies.clear(); this.effects.clear(); this.pendingDamage.clear(); this.root.clear(); }
+  dispose() { this.root.removeFromParent(); for (const value of this.numbers) { value.texture.dispose(); value.material.dispose(); } this.numbers = []; for (const geometry of this.geometries) geometry.dispose(); for (const material of this.materials) material.dispose(); this.geometries.clear(); this.materials.clear(); this.enemies.clear(); this.effects.clear(); this.effectOrigins.clear(); this.effectPool.clear(); this.impacts = []; this.impactPool = []; this.projectiles = []; this.projectilePool.clear(); this.castOrigins.clear(); this.colors.clear(); this.glowing.clear(); this.pendingDamage.clear(); this.root.clear(); }
 }

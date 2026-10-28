@@ -134,7 +134,9 @@ export const PETS = [
   { name: '구름양 아기 메에', price: 37000, radius: 13.5, flying: false, icon: '🐑', color: 0xe7eef5, desc: '구름처럼 포근한 털로 먼 베리도 찾아내요' },
   { name: '무지개 해파리 젤리', price: 44000, radius: 15.5, flying: true, icon: '🪼', color: 0x8eced9, desc: '빛나는 촉수를 흔들며 장애물 위를 둥실 떠다녀요' },
   { name: '별꼬리 여우 라온', price: 49000, radius: 15.8, flying: true, icon: '🦊', color: 0x7e87d5, desc: '별빛 꼬리로 가장 먼 베리까지 빠르게 찾아가요' },
+  { name: '귀염둥이 뽀짝이', price: 150000, radius: 22, flying: false, icon: '🐩', color: 0xc9864b, desc: '살구빛 곱슬털의 전설 친구. 장착하면 사냥 공격력 45%·체력 35%·베리 50%·경험치 40% 증가, 받는 피해 20% 감소로 모험을 지켜요' },
 ] as const;
+export const PPOJJAK_PET_ID = 20;
 export const SHINBI_STAR_PET_ID = 8;
 export const HERO_BREAD_PET_ID = 11;
 export const HAIRSTYLES = [
@@ -652,12 +654,13 @@ export function grantReward(s: Save, monster: number, arena: boolean, now = Date
   return { ...reward, levels, milestones };
 }
 /** Combat power is separate from all learning reward bonuses. */
-export function huntingPower(s:Pick<Save,'level'|'weapon'|'weapons'>){const w=WEAPONS[s.weapon]??WEAPONS[0],upgrade=Math.max(0,Math.min(3,s.weapons[s.weapon]??0));return (8+Math.min(100000,s.level)*.35)*(1+(w.treePower-1)*.22+upgrade*.15);} // 좋은 무기일수록 사냥이 확실히 빨라져요(최고 무기 약 4.3배)
+export function huntingCompanionStats(s:{pet?:number}){return s.pet===PPOJJAK_PET_ID?{maxHpMultiplier:1.35,damageReduction:.2}:{maxHpMultiplier:1,damageReduction:0};}
+export function huntingPower(s:Pick<Save,'level'|'weapon'|'weapons'>&{pet?:number}){const w=WEAPONS[s.weapon]??WEAPONS[0],upgrade=Math.max(0,Math.min(3,s.weapons[s.weapon]??0)),level=Math.min(100000,s.level);return (8+level*1.15+Math.sqrt(level)*1.8)*(1+(w.treePower-1)*.22+upgrade*.15)*(s.pet===PPOJJAK_PET_ID?1.45:1);} // 레벨의 힘을 키우되 기존 무기·강화 배율은 유지해요.
 export function huntingRewardFor(s:Save,zone:number,now=Date.now()){
   const z=HUNT_ZONES[zone];if(!z||s.level<z.level||!Number.isFinite(now)||!Number.isFinite(new Date(now).getTime()))return {berries:0,xp:0,eligible:false,multiplier:0};
   const date=todayKey(new Date(now)),count=s.career.daily.date===date?s.career.daily.counts[zone]:0;
   const multiplier=(s.level>=z.level+20?.1:1)*(count>=100?.25:1),potion=potionEffects(s,now);
-  return {berries:Math.floor(z.berries*multiplier*potion.berryMultiplier),xp:Math.floor(z.xp*multiplier*potion.xpMultiplier),eligible:true,multiplier};
+  return {berries:Math.floor(z.berries*multiplier*potion.berryMultiplier*(s.pet===PPOJJAK_PET_ID?1.5:1)),xp:Math.floor(z.xp*multiplier*potion.xpMultiplier*(s.pet===PPOJJAK_PET_ID?1.4:1)),eligible:true,multiplier};
 }
 const huntingClaims=new WeakMap<Save,Set<string>>();
 export function grantHuntingReward(s:Save,zoneOrEvent:number|HuntDefeatEvent,enemyTypeOrNow:string|number='melee',now=Date.now()){
