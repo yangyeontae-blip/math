@@ -86,11 +86,12 @@ export function createPpojjakiPet(): T.Group {
 
 /** Gold flower on the floor and small paw/star ornaments; no screen-covering transparency. */
 export function createPpojjakiAura(_ride = -1): T.Group {
-  const root = new T.Group(), flower = new T.Group(); flower.position.y = .16; root.add(flower); root.name = '뽀짝이 꽃빛';
+  const root = new T.Group(), flower = new T.Group(); flower.position.y = .24; root.add(flower); root.name = '뽀짝이 꽃빛';
   const sphere = new T.SphereGeometry(1, 8, 6), ring = new T.TorusGeometry(1, .032, 5, 40);
-  const gold = new T.MeshBasicMaterial({ color: 0xf6b52a, transparent: true, opacity: .75, depthWrite: false });
-  const cream = new T.MeshBasicMaterial({ color: 0xffe8ac, transparent: true, opacity: .75, depthWrite: false });
+  const gold = new T.MeshBasicMaterial({ color: 0xf6b52a, transparent: true, opacity: .75, depthWrite: false, depthTest: false, toneMapped: false });
+  const cream = new T.MeshBasicMaterial({ color: 0xffe8ac, transparent: true, opacity: .75, depthWrite: false, depthTest: false, toneMapped: false });
   for (const radius of [.8, 1.08]) { const hoop = new T.Mesh(ring, gold); hoop.rotation.x = Math.PI / 2; hoop.scale.setScalar(radius); flower.add(hoop); }
+  const crown = new T.Mesh(ring, gold); crown.rotation.x = Math.PI / 2; crown.scale.setScalar(.42); crown.position.y = 2.25; root.add(crown);
   const petals = new T.InstancedMesh(sphere, gold, 8), dummy = new T.Object3D();
   for (let i = 0; i < 8; i++) { const a = i * Math.PI / 4; dummy.position.set(Math.cos(a) * .44, 0, Math.sin(a) * .44); dummy.rotation.set(0, -a, 0); dummy.scale.set(.27, .012, .11); dummy.updateMatrix(); petals.setMatrixAt(i, dummy.matrix); }
   petals.computeBoundingSphere(); flower.add(petals);
@@ -100,6 +101,7 @@ export function createPpojjakiAura(_ride = -1): T.Group {
   const stars = new T.InstancedMesh(new T.ShapeGeometry(starShape), cream, 4); cream.side = T.DoubleSide;
   root.add(paws, stars); root.userData.ppoAuraParts = { flower, paws, stars, dummy } satisfies AuraParts;
   animatePpojjakiAura(root, 0, false, false); paws.computeBoundingSphere(); stars.computeBoundingSphere();
+  root.traverse(object => { if (object instanceof T.Mesh) object.renderOrder = 7; });
   ownAssets(root);
   return root;
 }

@@ -53,6 +53,11 @@ test('legendary Ppojjaki purchase, guardian title, reload and resting preserve o
   expect(state.pets['20']).toBe(true);
   expect(state.berries).toBe(0);
   await page.evaluate(() => window.__berry.closeModal());
+  const auraState = await page.evaluate(() => {
+    const world = window.__berry.getWorld(), aura = world.player.userData.ppoAura;
+    return {present:!!aura, attached:aura?.parent===world.player, avatarVisible:world.player.visible, auraVisible:aura?.visible, parts:aura?.children.length??0};
+  });
+  expect(auraState).toEqual({present:true,attached:true,avatarVisible:true,auraVisible:true,parts:5});
   await expect(page.locator('#guardian-title')).toBeVisible();
   await expect(page.locator('#guardian-title')).toHaveText(/뽀짝이의\s*수호자/);
   await page.screenshot({path:test.info().outputPath('ppo-aura.png')});expectNoLearningCredit(state, fixture);

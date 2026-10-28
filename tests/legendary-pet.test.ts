@@ -42,7 +42,7 @@ test('small golden aura has no scene-covering shell and respects low quality and
   assert.equal(instances.find(mesh => mesh.instanceMatrix.count === 20)?.count, 10);
   assert.equal(instances.find(mesh => mesh.instanceMatrix.count === 4)?.count, 2);
   animatePpojjakiAura(aura, 55, true, true); assert.deepEqual(instances.map(mesh => [...mesh.instanceMatrix.array]), reduced);
-  const bounds = new T.Box3().setFromObject(aura), size = bounds.getSize(new T.Vector3()); assert.ok(size.x < 2.5 && size.z < 2.5 && size.y < 1.6);
+  const bounds = new T.Box3().setFromObject(aura), size = bounds.getSize(new T.Vector3()); assert.ok(size.x < 2.5 && size.z < 2.5 && size.y < 2.6);
 });
 
 test('pet and aura dispose once without touching materials attached later by the world', () => {
