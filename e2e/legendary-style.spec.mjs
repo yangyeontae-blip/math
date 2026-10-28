@@ -46,7 +46,7 @@ test('legendary Ppojjaki purchase, guardian title, reload and resting preserve o
   await page.evaluate(() => window.__berry.openPetShop(20));
   await expect(page.locator('[data-shop-pet="20"]')).toHaveAttribute('aria-pressed', 'true');
   await expect(page.locator('.collection-detail .pet-hero')).toContainText('[전설]');
-  await expect(page.locator('#buy-pet')).toBeEnabled();await page.screenshot({path:info.outputPath('ppo-shop.png')});
+  await expect(page.locator('#buy-pet')).toBeEnabled();await page.screenshot({path:test.info().outputPath('ppo-shop.png')});
   await page.locator('#buy-pet').click();
   await expect.poll(async () => (await saved(page)).pet, { timeout: 30000 }).toBe(20);
   let state = await saved(page);
@@ -55,7 +55,7 @@ test('legendary Ppojjaki purchase, guardian title, reload and resting preserve o
   await page.evaluate(() => window.__berry.closeModal());
   await expect(page.locator('#guardian-title')).toBeVisible();
   await expect(page.locator('#guardian-title')).toHaveText(/뽀짝이의\s*수호자/);
-  await page.screenshot({path:info.outputPath('ppo-aura.png')});expectNoLearningCredit(state, fixture);
+  await page.screenshot({path:test.info().outputPath('ppo-aura.png')});expectNoLearningCredit(state, fixture);
 
   await resume(page);
   state = await saved(page);
@@ -87,7 +87,7 @@ test('salon hairstyles have distinct portraits and purchasing persists while own
   const portraits = await Promise.all(ids.map(id => page.locator(`[data-salon-image="${id}"]`).getAttribute('src')));
   expect(new Set(portraits).size).toBe(ids.length);
   expect(portraits[ids.indexOf(6)]).not.toBe(portraits[ids.indexOf(8)]);
-  expect((await saved(page)).berries).toBe(10000);await page.screenshot({path:info.outputPath('salon-hair.png')});
+  expect((await saved(page)).berries).toBe(10000);await page.screenshot({path:test.info().outputPath('salon-hair.png')});
   await page.locator('#buy-look').click();
   await expect.poll(async () => (await saved(page)).hairstyle, { timeout: 30000 }).toBe(6);
   const balance = 10000 - HAIRSTYLES[6].price;
