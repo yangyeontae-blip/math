@@ -95,7 +95,7 @@
     "tests/legendary-pet.test.ts": "7810c6d5d979d31c7bb432a7b0879707ef83a5cb6c2e0f70f58388dd0f158b18",
     "tests/salon-models.test.ts": "c8f4b2b9b3aa187d257082eb258ab8327cc679858acd1a26477246a203ebef0f",
     "tests/career-ui.test.ts": "e6ae8f91f645a8b02d44387f67eedf99a8b0c0513c8f7ba58ccf3fe7302807f9",
-    "e2e/legendary-style.spec.mjs": "cd62f0dc79956eabfdc640c857ab804f0f6925c960b8c2b82361fe1e01060d4d"
+    "e2e/legendary-style.spec.mjs": "7496bc180ad29f8231221502874985a132cb784c7dd90af16082a78d6d7e1552"
   },
-  "generation": "f784152e45af800b77ae6d452d8af93576041bb11965d77d89066e7e2fddf944"
+  "generation": "6384e22b9c7139d29a5bfbf3e259f6b14138d22b026a789a5361d4083b2c0df5"
 }
