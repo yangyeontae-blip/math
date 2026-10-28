@@ -1889,6 +1889,8 @@ export class World {
 }
 
 export class AvatarPreview {
+  private static salonCache=new Map<string,string>();
+  private portraitMode=false;
   private scene = new T.Scene(); private camera = new T.PerspectiveCamera(30, 1, .1, 20); private renderer: T.WebGLRenderer; private model = new T.Group(); private resizeObserver: ResizeObserver; private animationFrame = 0; private lastFrame = 0; private drawWidth = 0; private drawHeight = 0;
   constructor(private element: HTMLElement) {
     this.renderer = new T.WebGLRenderer({ alpha: true, antialias: true }); this.renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5)); this.renderer.setClearColor(0x000000, 0); this.renderer.toneMapping = T.ACESFilmicToneMapping; this.renderer.toneMappingExposure = 1.4; element.append(this.renderer.domElement); this.scene.add(new T.HemisphereLight(0xffffff, 0xa6ba93, 3)); const light = new T.DirectionalLight(0xffedcd, 3); light.position.set(-3, 4, 5); this.scene.add(light); this.camera.position.set(2.2, 1.9, 5.8); this.camera.lookAt(0, 1.1, 0);
@@ -1912,15 +1914,17 @@ export class AvatarPreview {
   showSalon(c: number, o: number, hairstyle: number, face: number) {
     const model = makeCharacter(c, o, 0, 0, 0, hairstyle, face);
     (model.userData.weapon as T.Group | undefined)?.removeFromParent();
-    this.replaceModel(model, [0, 1.62, 3.05], 1.43);
+    this.replaceModel(model, [0, 1.64, 3.45], 1.5);
   }
   salonPortrait(c: number, o: number, hairstyle: number, face: number): string {
-    this.showSalon(c, o, hairstyle, face);
-    return this.renderer.domElement.toDataURL('image/png');
+    const key=[c,o,hairstyle,face].join(':'),cache=AvatarPreview.salonCache,cached=cache.get(key);if(cached)return cached;
+    const ratio=this.renderer.getPixelRatio();this.portraitMode=true;this.renderer.setPixelRatio(1);
+    try{this.showSalon(c,o,hairstyle,face);const image=this.renderer.domElement.toDataURL('image/png');if(cache.size>=96){const first=cache.keys().next().value;if(first!==undefined)cache.delete(first);}cache.set(key,image);return image;}
+    finally{this.portraitMode=false;this.renderer.setPixelRatio(ratio);this.drawWidth=this.drawHeight=0;}
   }
   showPet(id: number) { const model = makePet(id); model.position.set(0, PETS[id].flying ? -.18 : .08, 0); model.scale.setScalar(id === 10 ? 1.48 : id === HERO_BREAD_PET_ID ? 1.6 : id >= 12 ? 1.55 : 1.72); model.userData.previewKind = 'pet'; this.replaceModel(model, [2.1, 1.35, 4.15], id === 10 ? .68 : .62, true); }
   showRide(id: number, c: number, o: number, w: number, ol = 0, wl = 0, hairstyle = 0, face = 0) { const model = makeCharacter(c, o, w, ol, wl, hairstyle, face), body = model.userData.body as T.Group; body.position.y = riderHeight(id); model.add(makeRide(id)); model.userData.previewKind = 'ride'; this.replaceModel(model, [3.4, 2.35, 7.7], 1.15, true); }
-  private draw() { const w = this.element.clientWidth, h = this.element.clientHeight; if (!w || !h) return; if (w !== this.drawWidth || h !== this.drawHeight) { this.drawWidth = w; this.drawHeight = h; this.renderer.setSize(w, h); this.camera.aspect = w / h; this.camera.updateProjectionMatrix(); } this.renderer.render(this.scene, this.camera); }
+  private draw() { const w = this.portraitMode?144:this.element.clientWidth, h = this.portraitMode?160:this.element.clientHeight; if (!w || !h) return; if (w !== this.drawWidth || h !== this.drawHeight) { this.drawWidth = w; this.drawHeight = h; this.renderer.setSize(w, h,!this.portraitMode); this.camera.aspect = w / h; this.camera.updateProjectionMatrix(); } this.renderer.render(this.scene, this.camera); }
   private animate = (time: number) => { this.animationFrame = requestAnimationFrame(this.animate); if (time - this.lastFrame < 33 || document.hidden || !this.element.isConnected) return; this.lastFrame = time; this.model.rotation.y = -.18 + Math.sin(time * .0007) * .16; const body = this.model.userData.body as T.Group | undefined; if (body) { body.userData.baseY ??= body.position.y; body.position.y = (body.userData.baseY as number) + Math.sin(time * .003) * .035; } const sparkles = this.model.userData.sparkles as T.Group | undefined; if (sparkles) sparkles.rotation.y += .025; this.model.traverse(o => { if (o.userData.petCharm) { o.rotation.y += .06; o.userData.baseScale ??= o.scale.clone(); o.scale.copy(o.userData.baseScale as T.Vector3).multiplyScalar(1 + Math.sin(time * .006) * .12); } if (o.userData.petWing) o.rotation.z = Number(o.userData.petWing) * (.4 + Math.sin(time * .011) * .14); if (o.userData.rideWing) o.rotation.z = Number(o.userData.rideWing) * (-.72 + Math.sin(time * .009) * .14); if (o.userData.ridePropeller) o.rotation.z += .18; if (o.userData.rideGlow) o.rotation.z += .025; }); this.draw(); };
   dispose() { cancelAnimationFrame(this.animationFrame); this.resizeObserver.disconnect(); disposeSalonMaterials(this.model);disposePpojjakiAssets(this.model);this.model.traverse(x => { if (x instanceof T.Mesh && !sharedGeometries.has(x.geometry)&&!x.geometry.userData.sharedSalonAsset&&!x.geometry.userData.ppoDisposed) x.geometry.dispose(); }); this.renderer.dispose(); this.renderer.forceContextLoss(); this.renderer.domElement.remove(); } // 미리보기를 자주 바꿔도 WebGL 창이 쌓여 게임 화면이 꺼지지 않도록 바로 돌려줘요.
 }
