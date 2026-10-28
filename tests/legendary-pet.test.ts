@@ -62,3 +62,15 @@ test('pet and aura dispose once without touching materials attached later by the
     sharedGeometry.dispose(); sharedMaterial.dispose(); avatar.clear();
   }
 });
+
+test('puppy diagonal feet step clearly, settle gradually and stop under reduced motion', () => {
+  const pet=createPpojjakiPet(), parts=pet.userData.ppoParts as {legs:T.Group[];ears:T.Group[];body:T.Group};
+  animatePpojjakiPet(pet,.12,true,false,false);
+  const moving=parts.legs.map(leg=>leg.rotation.x);
+  assert.ok(Math.abs(moving[0])>.4);
+  assert.equal(moving[0],moving[3]);assert.equal(moving[1],moving[2]);assert.equal(moving[0],-moving[1]);
+  animatePpojjakiPet(pet,.13,false,false,false);assert.ok(Math.abs(parts.legs[0].rotation.x)>.1,'coming to rest retains a short settling step');
+  for(let t=.2;t<1.5;t+=.1)animatePpojjakiPet(pet,t,false,false,false);
+  assert.ok(parts.legs.every(leg=>Math.abs(leg.rotation.x)<.001));
+  animatePpojjakiPet(pet,1.6,true,false,true);assert.ok(parts.legs.every(leg=>leg.rotation.x===0));assert.equal(parts.body.position.y,0);
+});
