@@ -6,7 +6,7 @@
     "src/storybook-scene.ts": "2f1a32b13eb7ac784ec0852eaf29484f1e7d2f153d1b42b6b263c5960de2e8b4",
     "tests/storybook-art.test.ts": "ddefef8a1e556afdff88f34a5505004c3df51b95824c82640ee79dc8d95489de",
     "e2e/core-flows.spec.mjs": "16adec630f4c96b06cfdd06359d34bec0bd497df7c4827d4df6ab798f7152020",
-    "playwright.config.mjs": "d2b507453d0e61b0220c4ede5dfe10039b6b21a2a3894ee5b89b7d31d83e2c90",
+    "playwright.config.mjs": "d5e47ee2c12704e5924e14f900b20e7bccafc6dc44bc48879c7183e32feace36",
     "scripts/check-common.mjs": "04faf72d9b67113d1cc1e04718198933a4d1e4451cc4585a385b5c9dd3311d39",
     "scripts/sync-common.mjs": "4375626348ebfdf9f60d9ef355b5baf310a1c480c007f20d41c5258c95e698cb",
     "src/adaptive.ts": "b943e7d99164396cd587e3191cecee50107276a776c78824f28bf3c6f8ae46c2",
@@ -97,5 +97,5 @@
     "tests/career-ui.test.ts": "e6ae8f91f645a8b02d44387f67eedf99a8b0c0513c8f7ba58ccf3fe7302807f9",
     "e2e/legendary-style.spec.mjs": "cd75436f85123aa01308be94a170e46fcf7d079c432618afd029f98b23b1b683"
   },
-  "generation": "c6ed2c9d6f25ffc1f073178b99e7db8bab15f30dd7ec4d43d8aa91c559d6d9e8"
+  "generation": "7065aa08c274973fd7c95afa7f60e0a109d1d96c98ba50a2afa1b05f99f2bb2e"
 }
