@@ -6,7 +6,7 @@
     "src/storybook-scene.ts": "2f1a32b13eb7ac784ec0852eaf29484f1e7d2f153d1b42b6b263c5960de2e8b4",
     "tests/storybook-art.test.ts": "ddefef8a1e556afdff88f34a5505004c3df51b95824c82640ee79dc8d95489de",
     "e2e/core-flows.spec.mjs": "16adec630f4c96b06cfdd06359d34bec0bd497df7c4827d4df6ab798f7152020",
-    "playwright.config.mjs": "dadd3e2a8c38f5b5960eed9c0bbdb130dfa22a785919057d30c18fcd463e474b",
+    "playwright.config.mjs": "d2b507453d0e61b0220c4ede5dfe10039b6b21a2a3894ee5b89b7d31d83e2c90",
     "scripts/check-common.mjs": "04faf72d9b67113d1cc1e04718198933a4d1e4451cc4585a385b5c9dd3311d39",
     "scripts/sync-common.mjs": "4375626348ebfdf9f60d9ef355b5baf310a1c480c007f20d41c5258c95e698cb",
     "src/adaptive.ts": "b943e7d99164396cd587e3191cecee50107276a776c78824f28bf3c6f8ae46c2",
@@ -95,7 +95,7 @@
     "tests/legendary-pet.test.ts": "217e816347bf36a3311a918ac76da01b84c41870d97db7c9d85cdf21c69225ec",
     "tests/salon-models.test.ts": "c8f4b2b9b3aa187d257082eb258ab8327cc679858acd1a26477246a203ebef0f",
     "tests/career-ui.test.ts": "e6ae8f91f645a8b02d44387f67eedf99a8b0c0513c8f7ba58ccf3fe7302807f9",
-    "e2e/legendary-style.spec.mjs": "00a362ee1a45dbcc72140cc0ee6a1e6b08dcb2677f04374320ff4dc15c5edb42"
+    "e2e/legendary-style.spec.mjs": "378838a0709a13c28bb0d1bf657b0ed56f12194e14a891ae67087df45df1ad98"
   },
-  "generation": "6ef6b0c681c3a928520f33c16c4fa587ca272bfccc2ec5b472ba39b62aee714b"
+  "generation": "11f9cff1dcf4762dae7b99d387964d1d85b3279fed324fb954ef0a3273cda020"
 }

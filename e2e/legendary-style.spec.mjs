@@ -8,6 +8,8 @@ async function saved(page) {
 async function start(page, berries) {
   const fixture = newSave('숲꾸밈모험가', 0, 3);
   fixture.berries = berries;
+  // The house has no loose berries: a newly equipped pet must not change balance during this purchase-only check.
+  fixture.room.inside = true;
   fixture.settings.lowQuality = true;
   fixture.settings.music = fixture.settings.sound = false;
   fixture.tutorial = { collected: true, battle: true, shop: true };
