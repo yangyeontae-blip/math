@@ -1,3 +1,4 @@
+import {HUNT_RECOVERY_ITEMS,LEGACY_POTION_COUNT,huntingSupply,supplyFailure,type SupplyUseResult} from './hunt-supplies';
 import { emptyHomestead, validHomestead, type Homestead } from './homestead';
 import { emptyExploration, validExploration, syncDiscoveries, type Exploration } from './exploration';
 import { emptyForestActivities, validForestActivities, type ForestActivities } from './forest-activities';
@@ -162,6 +163,7 @@ export const POTIONS = [
   { name: '긴밤 베리차', icon: '🌙', price: 420, kind: 'berry', multiplier: 2, durationMinutes: 20, desc: '사용한 뒤 20분 동안 몬스터에게 받는 베리가 2배가 돼요. 오래 모험할 때 좋아요.' },
   { name: '포근 공부물약', icon: '📘', price: 420, kind: 'xp', multiplier: 2, durationMinutes: 20, desc: '사용한 뒤 20분 동안 몬스터에게 받는 경험치가 2배가 돼요. 천천히 오래 공부할 때 좋아요.' },
   { name: '별빛 집중물약', icon: '✨', price: 680, kind: 'xp', multiplier: 4, durationMinutes: 5, desc: '사용한 뒤 5분 동안 몬스터에게 받는 경험치가 4배가 돼요. 짧고 힘이 센 물약이에요.' },
+  ...HUNT_RECOVERY_ITEMS,
 ] as const;
 export const WEAPON_UPGRADES = [60, 120, 240];
 export const OUTFIT_UPGRADES = [50, 100];
@@ -723,8 +725,15 @@ export function buyPotion(s: Save, id: number) {
   if (s.berries < potion.price) throw new Error(`${potion.price - s.berries}베리가 더 필요해요.`);
   s.berries -= potion.price; s.potions.stock[id]++; return `${j(potion.name, '을를')} 가방에 넣었어요!`;
 }
+export function useHuntingSupply(s:Save,id:number,activate:(id:number)=>SupplyUseResult){
+ const item=huntingSupply(id);if(!item||!s.potions.stock[id])throw new Error('가방에 이 보급품이 없어요.');
+ const result=activate(id);if(!result.used)throw new Error(supplyFailure(result.reason));
+ s.potions.stock[id]--;
+ return item.kind==='food'?item.name+' 먹는 중 · '+item.durationSeconds+'초 동안 체력을 회복해요.':item.name+' 사용 · 체력 '+Math.round(result.healed)+' 회복!';
+}
 export function usePotion(s: Save, id: number, now = Date.now()) {
   const potion = POTIONS[id]; if (!Number.isInteger(id) || !potion || !s.potions.stock[id]) throw new Error('가방에 이 물약이 없어요.');
+  if (potion.kind !== 'berry' && potion.kind !== 'xp') throw new Error('사냥터의 음식·물약 빠른 버튼으로 사용해 주세요.');
   const effects = potionEffects(s, now);
   if (potion.kind === 'berry' && effects.berrySeconds) throw new Error(`베리 물약 효과가 ${Math.ceil(effects.berrySeconds / 60)}분 정도 남아 있어요.`);
   if (potion.kind === 'xp' && effects.xpSeconds) throw new Error(`경험치 물약 효과가 ${Math.ceil(effects.xpSeconds / 60)}분 정도 남아 있어요.`);
@@ -896,6 +905,8 @@ export function validateSave(value: unknown): Save {
   if (migrated.version === 20) { migrated.version = 21; migrated.homestead = emptyHomestead(); migrated.exploration = emptyExploration(); }
   if (migrated.version === 21) { migrated.version = 22; migrated.career = emptyCareer(); }
   const s = migrated as unknown as Save;
+  // Older v22 saves retain their six potion quantities; new recovery slots start empty.
+  if(s.potions&&Array.isArray(s.potions.stock)&&s.potions.stock.length===LEGACY_POTION_COUNT)s.potions.stock.push(...HUNT_RECOVERY_ITEMS.map(()=>s.teacherMode?9:0));
   if (s.garden === undefined) s.garden = { rescued: 0, flowers: [-1, -1, -1] };
   // 4학년 '각도와 삼각형길'을 각도·삼각형 두 지역으로 나눴어요. 예전 진행은 삼각형 지역에도 그대로 이어 줘요(저장 구조 버전은 그대로예요).
   if (s.curriculum?.units && !s.curriculum.units.triangle) { const angle = s.curriculum.units.lengthTime; s.curriculum.units.triangle = s.grade === 4 && angle ? structuredClone(angle) : emptyCurriculumUnit(); }

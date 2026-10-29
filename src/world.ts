@@ -1,3 +1,5 @@
+import {roomAction,ROOM_BOOK_PAGES,type RoomActionKind} from './room-life';
+import {type SupplyUseResult,huntingSupply} from './hunt-supplies';
 import { HOME_PLAZA_EXIT, homeExitInReach } from './home-exit';
 import { SkillRuntime, trialComplete, type SkillId, type JobId } from './academy';
 import { HuntingRuntime, type HuntEvent, type HuntSnapshot } from './hunting';
@@ -77,14 +79,14 @@ export function makeCharacter(character: number, outfit: number, weapon: number,
   const body = new T.Group(); g.add(body); g.userData.body = body;
   // Short, rounded chibi proportions. All costumes are visible 3D geometry.
   const left = ball(body, 0x574840, -.19, .18, .05, .19, .2, .28), right = ball(body, 0x574840, .19, .18, .05, .19, .2, .28);
-  g.userData.feet = [left, right];
+  g.userData.feet = [left, right];g.userData.arms=[];g.userData.hands=[];
   cylinder(body, o.color, 0, .67, 0, .31, outfit > 2 ? .53 : .42, .88);
   box(body, o.accent, 0, .81, .32, .63, .12, .1);
   const collar = box(body, o.accent, -.06, 1, .27, .12, .45, .07); collar.rotation.z = -.45;
   ball(body, o.accent, .19, .8, .4, .1, .12, .05);
   for (const sign of [-1, 1]) {
-    const arm = cylinder(body, outfit === 1 && sign < 0 ? 0xffd27f : o.color, sign * .4, .85, 0, .17, .2, .55); arm.rotation.z = sign * .3;
-    ball(body, c.skin, sign * .49, .57, .02, .16);
+    const arm = cylinder(body, outfit === 1 && sign < 0 ? 0xffd27f : o.color, sign * .4, .85, 0, .17, .2, .55); arm.rotation.z = sign * .3;g.userData.arms.push(arm);
+    const hand=ball(body, c.skin, sign * .49, .57, .02, .16);g.userData.hands.push(hand);
   }
   if (outfit === 2 || outfit === 5) { const cape = cylinder(body, o.color, 0, .73, -.2, .25, .64, 1, 12); cape.scale.z = .6; }
   ball(body, c.skin, 0, 1.5, 0, .53, .52, .46);
@@ -700,6 +702,8 @@ export class World {
   inHomestead=false; private homeRoot:T.Group|null=null; private homeSave:Save|null=null; private homeTargets:ReturnType<typeof visitorTargets>=[]; private discoveryRoot:T.Group|null=null;
   private homeVisitors:{entity:Entity;cell:number;path:number[];pause:number;turn:number;kind:number}[]=[];
   active = false; paused = true; inRoom = false; onCollect = (_id: number) => {}; onStar = (_id: number) => {}; onInteract = (_id: string) => {}; onAttack = (_id: string | null) => {}; onNear = (_name: string | null, _id: string | null) => {}; onJump = () => {}; onRescue = () => {}; onStageLoaded = (_stage: number) => {};
+  private roomActivity:{id:number;kind:RoomActionKind;stand:T.Vector3;book:T.Group|null;page:number}|null=null;
+  private roomActivityPanel!:HTMLDivElement;
   constructor(private container: HTMLElement) {
     this.scene.background = new T.Color(0xd0eade); this.scene.fog = new T.Fog(0xd0eade, 58, 112);
     const touchDevice = matchMedia('(pointer: coarse)').matches;
@@ -710,6 +714,7 @@ export class World {
     const fill = new T.DirectionalLight(0xd8f3ff, .7); fill.position.set(18, 12, -14); this.scene.add(fill);
     this.labelLayer = document.createElement('div'); this.labelLayer.className = 'world-labels'; container.append(this.labelLayer);
     this.guideElement = document.createElement('div'); this.guideElement.className = 'navigation-guide'; this.guideElement.hidden = true; this.guideElement.innerHTML = '<span aria-hidden="true">➜</span><div><b></b><small></small></div>'; container.append(this.guideElement);
+    this.roomActivityPanel=document.createElement('div');this.roomActivityPanel.className='room-activity-panel';this.roomActivityPanel.hidden=true;container.append(this.roomActivityPanel);this.roomActivityPanel.addEventListener('click',event=>{const action=(event.target as HTMLElement).closest<HTMLElement>('[data-room-life]')?.dataset.roomLife;if(action==='stop')this.stopRoomActivity();else if(action==='next'&&this.roomActivity){this.roomActivity.page=(this.roomActivity.page+1)%ROOM_BOOK_PAGES.length;this.renderRoomActivity();}});
     this.buildVillage(); this.mergeStaticScenery(); this.setAvatar(0, 0, 0); this.player.position.set(0, 0, 8); this.scene.add(this.player);
     window.addEventListener('resize', () => { this.resize(); this.renderOnce(); }); this.resize();
     document.addEventListener('visibilitychange', () => { if (document.hidden) this.clearInput(); this.syncAnimation(); });
@@ -945,6 +950,7 @@ export class World {
     this.addBerries();
   }
   private clearMap() {
+    this.stopRoomActivity();
     this.chargeMotion = null;
     const combatAvatar = this.combatSave;
     this.combatWorld?.dispose(); this.combatWorld = null; this.combatRuntime = null; this.inHunting = this.inTraining = false; this.huntTarget = null; this.combatSave = null; this.trainingOptions = null;
@@ -1095,6 +1101,7 @@ export class World {
   }
   selectHuntTarget(id: string | null) { if (id !== null && !this.combatRuntime?.snapshot().enemies.some(enemy => enemy.id === id && enemy.hp > 0)) return; this.huntTarget = id; }
   private combatFacing(range = 12) { const target = autoHuntTarget(this.combatRuntime?.snapshot().enemies ?? [], this.player.position, range, this.huntTarget); this.huntTarget = target?.id ?? null; if (!target) return { x: Math.sin(this.player.rotation.y), z: Math.cos(this.player.rotation.y) }; const facing = { x: target.x - this.player.position.x, z: target.z - this.player.position.z }; if (Math.hypot(facing.x, facing.z) < .001) { facing.x = Math.sin(this.player.rotation.y); facing.z = Math.cos(this.player.rotation.y); } this.combatAimUntil = this.time + .35; this.combatAimAngle = Math.atan2(facing.x, facing.z); return facing; }
+  useHuntSupply(id:number):SupplyUseResult{if(!this.combatRuntime||!this.inHunting||this.inTraining||!this.active||this.paused)return {used:false,reason:'location'};const result=this.combatRuntime.consumeSupply(id);if(result.used)this.burst(this.player.position,huntingSupply(id)?.kind==='food'?0xf0bf70:0x81d7a0);return result;}
   huntAttack() { if (!this.combatRuntime || this.paused || !this.active) return false; const job = this.trainingOptions?.job ?? this.combatProfile.job, range = job === 'mage' ? 8 : job === 'ranger' ? 10 : 2.8; const events = this.combatRuntime.attack(this.player.position, this.combatFacing(range), this.huntTarget); if (events.length) this.swingUntil = this.time + .28; this.handleHuntEvents(events); return events.length > 0; }
   useHuntSkill(id: SkillId) { if (!this.combatRuntime || this.paused || !this.active) return false; const range = id==='moonArrow'?14:id==='vinePull'?8:id==='dawnSlash'?7:['starbolt','arrow','pierce','lantern','leafOrb','thunderChain','comet','galeShot','tripleShot','vortex','starfall','storm'].includes(id)?12:id==='charge'?7:id==='trap'?8:6, facing = this.combatFacing(range); const events = this.combatRuntime.cast(id, this.player.position, facing); this.handleHuntEvents(events); const cast = events.some(event => event.type === 'cast'); if (cast && id === 'charge') { this.chargeMotion = { remaining: .2, direction: facing }; this.swingUntil = this.time + .28; } if (cast && id === 'lantern') { const enemy = this.combatRuntime.snapshot().enemies.filter(enemy => enemy.hp > 0).sort((a, b) => Math.hypot(a.x - this.player.position.x, a.z - this.player.position.z) - Math.hypot(b.x - this.player.position.x, b.z - this.player.position.z))[0]; const object = enemy && this.combatWorld?.targetObject(enemy.id); if (object) { this.guideTarget = { object, name: this.inTraining ? '수련 허수아비' : '다음 사냥 대상', arrivalDistance: 2.5 }; this.guideElement.querySelector('b')!.textContent = this.guideTarget.name; this.guideElement.hidden = false; } } return cast; }
   private handleHuntEvents(events: HuntEvent[]) {
@@ -1472,8 +1479,15 @@ export class World {
     this.player.position.copy(roomPosition); this.placePetNearPlayer(); this.lastSafe.copy(this.player.position); this.follow.copy(this.player.position);
     this.camera.position.copy(this.follow).add(ROOM_CAMERA_OFFSET); this.camera.lookAt(this.follow); this.renderOnce();
   }
+  get roomActivityStatus(){return this.roomActivity?{id:this.roomActivity.id,kind:this.roomActivity.kind,page:this.roomActivity.page}:null;}
+  beginRoomActivity(id:number){const action=roomAction(id),entity=this.entities.find(e=>e.id==='roomUse'+id);if(!this.inRoom||!action||!entity||!this.active||this.paused||Math.hypot(this.player.position.x-entity.x,this.player.position.z-entity.z)>3)return false;if(this.roomActivity?.id===id){this.stopRoomActivity();return true;}this.stopRoomActivity();const stand=this.player.position.clone();this.clearInput();this.player.position.set(entity.x,0,entity.z+(action.kind==='read'?1.15:0));this.player.rotation.y=0;let book:T.Group|null=null;if(action.kind==='read'){book=new T.Group();book.name='room-reading-book';for(const side of [-1,1]){const cover=box(book,0x769c86,side*.2,.79,.5,.44,.045,.47);cover.rotation.z=side*.2;const page=box(book,0xfff1cd,side*.2,.83,.5,.4,.035,.43);page.rotation.z=side*.2;}this.player.userData.body.add(book);}this.roomActivity={id,kind:action.kind,stand,book,page:0};this.renderRoomActivity();this.applyRoomActivityPose();this.renderOnce();return true;}
+  stopRoomActivity(){const activity=this.roomActivity;if(!activity)return;this.roomActivity=null;this.roomActivityPanel.hidden=true;if(activity.book){activity.book.removeFromParent();this.disposeModel(activity.book);}const body=this.player.userData.body as T.Group|undefined;if(body){body.position.y=0;body.rotation.x=body.rotation.z=0;body.scale.y=1;}for(const foot of (this.player.userData.feet??[]) as T.Mesh[]){foot.position.y=.18;foot.position.z=.05;}for(const arm of (this.player.userData.arms??[]) as T.Mesh[])arm.rotation.x=0;for(const hand of (this.player.userData.hands??[]) as T.Mesh[]){hand.position.y=.57;hand.position.z=.02;}const weapon=this.player.userData.weapon as T.Group|undefined;if(weapon)weapon.visible=true;this.player.position.copy(activity.stand);this.clearInput();this.renderOnce();}
+  private renderRoomActivity(){const activity=this.roomActivity;if(!activity)return;this.roomActivityPanel.hidden=false;if(activity.kind==='sit'){this.roomActivityPanel.innerHTML='<strong>버섯 의자에서 쉬는 중</strong><p>이동하거나 E를 누르면 일어나요.</p><button data-room-life="stop">일어나기</button>';return;}const page=ROOM_BOOK_PAGES[activity.page];this.roomActivityPanel.innerHTML='<small>모험 책장 · '+(activity.page+1)+' / '+ROOM_BOOK_PAGES.length+'</small><h3>'+page.title+'</h3><p>'+page.text+'</p><div><button data-room-life="next">다음 장 읽기</button><button data-room-life="stop">책 덮기</button></div>';}
+  private applyRoomActivityPose(){const activity=this.roomActivity;if(!activity)return;const body=this.player.userData.body as T.Group;if(activity.kind==='sit'){body.position.y=.48;body.scale.y=.78;body.rotation.z=0;for(const foot of this.player.userData.feet as T.Mesh[]){foot.position.y=-.3;foot.position.z=.58;}}else{body.rotation.x=.07;for(const arm of this.player.userData.arms as T.Mesh[])arm.rotation.x=-.7;for(const hand of this.player.userData.hands as T.Mesh[]){hand.position.y=.8;hand.position.z=.4;}}const weapon=this.player.userData.weapon as T.Group|undefined;if(weapon)weapon.visible=false;}
   updateRoomFurniture(s: Save, render = true) {
     if (!this.inRoom || !this.furnitureRoot) return;
+    this.stopRoomActivity();
+    for(const entity of this.entities.filter(e=>e.id.startsWith('roomUse'))){this.scene.remove(entity.mesh);this.disposeModel(entity.mesh);entity.label.remove();}this.entities=this.entities.filter(e=>!e.id.startsWith('roomUse'));
     for (const child of [...this.furnitureRoot.children]) { this.furnitureRoot.remove(child); this.disposeModel(child as T.Group); }
     for (const id of s.room.furniture) {
       const position = roomFurniturePosition(s, id);
@@ -1499,6 +1513,7 @@ export class World {
       else if (id === 17) { box(g, 0xa77858, 0, 1.12, 0, 1.65, 1.35, .16); box(g, 0xfff2d3, 0, 1.12, .1, 1.35, 1.05, .06); box(g, 0xe9a2ad, 0, 1.1, .16, .72, .42, .035); box(g, 0xffdf99, 0, 1.1, .19, .13, .13, .04); }
       else if (id === 18) { cylinder(g, 0xb8875f, 0, .22, 0, .55, .6, .4, 12); cylinder(g, 0x96c9dc, 0, .85, 0, .38, .3, .92, 14); ball(g, 0xd9f5ff, 0, 1.32, 0, .32, .14, .32); for (const side of [-1, 1]) ball(g, 0xffe9b5, side * .22, .93, .3, .09); }
       else if (id === 19) { cylinder(g, 0xb58c63, 0, .23, 0, .56, .62, .38, 10); cylinder(g, 0x8a6850, 0, .68, 0, .11, .13, .55, 7); ball(g, 0x8fc386, 0, 1.2, 0, .52, .48, .4); for (let p = 0; p < 5; p++) ball(g, 0xffe7a5, Math.cos(p * 1.26) * .4, 1.27 + Math.sin(p * 1.26) * .3, .32, .1); }
+      const action=roomAction(id);if(action){this.furnitureRoot.remove(g);g.position.set(0,0,0);this.addEntity('roomUse'+id,action.name,x,z,g);}
     }
     if (render) this.renderOnce();
   }
@@ -1550,6 +1565,7 @@ export class World {
     this.entities.push({ id, name, x, z, mesh: model, label });
   }
   setAvatar(character: number, outfit: number, weapon: number, outfitLevel = 0, weaponLevel = 0, ride = -1, pet = -1, hairstyle = 0, face = 0) {
+    this.stopRoomActivity();
     if (this.inHunting || this.inTraining) ride = -1;
     const position = this.player.position.clone(), rotation = this.player.rotation.y;
     this.scene.remove(this.player); this.disposeModel(this.player); this.player = makeCharacter(character, outfit, weapon, outfitLevel, weaponLevel, hairstyle, face); this.player.position.copy(position); this.player.rotation.y = rotation; this.player.scale.setScalar(matchMedia('(max-width: 600px)').matches ? 1.08 : 1); this.scene.add(this.player); this.addXray();
@@ -1686,7 +1702,7 @@ export class World {
   }
   private clearGuide() { this.guideTarget = null; this.guideElement.hidden = true; }
   moveStick(x: number, z: number) { this.stick = { x, z }; }
-  jump() { if (this.active && !this.paused && !this.storyActivityFocus && this.grounded) { this.vy = 7.4; this.grounded = false; this.onJump(); } }
+  jump() { if(this.roomActivity)this.stopRoomActivity();if (this.active && !this.paused && !this.storyActivityFocus && this.grounded) { this.vy = 7.4; this.grounded = false; this.onJump(); } }
   interact() { if (this.active && !this.paused && !this.storyActivityFocus) {if(this.inHomestead&&atHomeExit(this.player.position.x,this.player.position.z))this.onInteract('homeExit');else if(this.selectedId)this.onInteract(this.selectedId);} }
   attack() { if (!this.active || this.paused || this.storyActivityFocus) return; if (this.combatRuntime) { this.huntAttack(); return; } this.swingUntil = this.time + .28; this.onAttack(this.selectedId?.startsWith('tree') ? this.selectedId : null); }
   hitTree(id: string, damage: number) {
@@ -1730,6 +1746,7 @@ export class World {
       const oldX = p.x, oldZ = p.z;
       let dx = Number(this.keys.has('d') || this.keys.has('arrowright')) - Number(this.keys.has('a') || this.keys.has('arrowleft')) + this.stick.x;
       let dz = Number(this.keys.has('s') || this.keys.has('arrowdown')) - Number(this.keys.has('w') || this.keys.has('arrowup')) + this.stick.z;
+      if (this.roomActivity&&Math.hypot(dx,dz)>.05)this.stopRoomActivity();
       if (this.chargeMotion) dx = dz = 0;
       const n = Math.hypot(dx, dz); if (n > 1) { dx /= n; dz /= n; }
       const ride = this.rideIndex >= 0 ? RIDES[this.rideIndex] : null, flying = !!ride?.flying, speed = PLAYER_MOVE_SPEED * (ride?.speed ?? 1) * (this.combatRuntime?.snapshot().speedMultiplier ?? (this.skillRuntime.active('wind',this.time)?1.6:1));
@@ -1743,6 +1760,7 @@ export class World {
       const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
       const body=this.player.userData.body as T.Group|undefined;
       if(body&&this.rideIndex<0){body.position.y=reduced?0:Math.sin(this.time*2)*.012+Math.abs(Math.sin(this.time*13))*.025*this.walkBlend;body.rotation.z=reduced?0:Math.sin(this.time*6.5)*.025*this.walkBlend;}
+      this.applyRoomActivityPose();
       for(const eye of (this.player.userData.eyes??[]) as T.Mesh[])eye.scale.y=eye.userData.blinkHeight*(!reduced&&this.time%4.7>4.56?.12:1);
       const platform = flying ? undefined : this.platforms.find(t => Math.abs(p.x - t.x) < t.w / 2 + .15 && Math.abs(p.z - t.z) < t.d / 2 + .15); const floor = flying ? 1.65 + Math.sin(this.time * 2.2) * .08 : platform?.h ?? 0;
       this.shadowFloor = flying?0:floor;

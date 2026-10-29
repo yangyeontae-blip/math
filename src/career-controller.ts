@@ -1,12 +1,13 @@
+import {HUNT_RECOVERY_ITEMS,LEGACY_POTION_COUNT,huntingSupply,type SupplyKind} from './hunt-supplies';
 import { ACADEMY_SKILLS, skillInfo, isSkill, emptyAcademy, saveAcademy, migrateAcademy, syncCareerRankSkills, selectJob, advanceJob, recordCareerTrial, careerSkills, equipCareerSkill, type SkillId, type JobId } from './academy';
 import { HUNTING_ZONES } from './hunting';
-import { grantHuntingReward, huntingPower, huntingRewardFor } from './rules';
-import { renderCareerSchool, renderCareerJournal, renderCombatHud, renderSkillIcon, renderTrainingSettings, type CareerSchoolView, type CareerSkillView, type CareerJournalTab, type CareerTrainingMode, type CareerCombatView } from './career-ui';
+import { grantHuntingReward, huntingPower, huntingRewardFor, useHuntingSupply } from './rules';
+import { renderCareerSchool, renderCareerJournal, renderCombatHud, renderSkillIcon, renderTrainingSettings, type CareerSupplyView, type CareerSchoolView, type CareerSkillView, type CareerJournalTab, type CareerTrainingMode, type CareerCombatView } from './career-ui';
 import './career.css';
 import type { Save } from './rules';
 import type { World } from './world';
 
-type Hooks={state:()=>Save|null;world:()=>World;persist:()=>void;stored:()=>boolean;refresh:()=>void;open:(html:string,cls?:string)=>void;close:()=>void;toast:(s:string)=>void;enterSchool:()=>void;learning:()=>void;plaza:()=>void};
+type Hooks={state:()=>Save|null;world:()=>World;persist:()=>void;stored:()=>boolean;refresh:()=>void;open:(html:string,cls?:string)=>void;close:()=>void;toast:(s:string)=>void;enterSchool:()=>void;learning:()=>void;plaza:()=>void;supplyShop:()=>void};
 const JOBS=[
  {id:'knight' as const,name:'숲의 기사',subtitle:'묵직한 검과 든든한 방패',description:'가까운 적을 함께 공격하고 숲의 힘으로 버텨요.',names:['새싹 모험가','기사','수호기사','고대숲 기사']},
  {id:'mage' as const,name:'별빛 마법사',subtitle:'별과 꽃에 담긴 마법',description:'멀리서 마법을 쏘고 여러 적을 얼리거나 함께 공격해요.',names:['새싹 모험가','마법사','마도사','별빛 현자']},
@@ -28,6 +29,12 @@ export function mountCareer(h:Hooks){
  let selectedSlot=0,mode:CareerTrainingMode='single',journal:CareerJournalTab='career',held=false,attackPointer:number|null=null,notice='',current:'school'|'journal'|'practice'|'lesson'|null=null;
  let trial:{job:JobId;rank:1|2|3;skill?:SkillId}|null=null,practiceSkill:SkillId|undefined,completed=false,skillKey='',saveBlocked=false;
  let trainingSetup:Parameters<World['enterTraining']>[1]|null=null;
+ const selectedSupplies:Record<SupplyKind,number>={food:6,health:8};
+ function selectedSupply(kind:SupplyKind){const s=h.state()!,chosen=selectedSupplies[kind];if(s.potions.stock[chosen]>0)return chosen;const next=HUNT_RECOVERY_ITEMS.findIndex((item,i)=>item.kind===kind&&s.potions.stock[i+LEGACY_POTION_COUNT]>0);return next<0?chosen:next+LEGACY_POTION_COUNT;}
+ function selectSupply(id:number){const item=huntingSupply(id);if(item){selectedSupplies[item.kind]=id;render();}}
+ function supplyViews():CareerSupplyView[]{const s=h.state()!,w=h.world(),snap=w.huntingStatus!;return (['health','food'] as const).map(kind=>{const id=selectedSupply(kind),item=huntingSupply(id)!,stock=s.potions.stock[id],remaining=snap.supplies[kind];const note=!stock?'가방에 없어요':remaining>0?Math.ceil(remaining)+'초':snap.playerHp>=snap.maxHp?'체력 가득':kind==='food'?'천천히 회복':'즉시 회복';return {id,name:item.name,icon:item.icon,stock,key:kind==='health'?'Q':'R',disabled:!stock||remaining>0||snap.playerHp>=snap.maxHp||w.paused||saveBlocked,note};});}
+ function useSupply(id:number){const s=h.state();if(!s)return;try{const message=useHuntingSupply(s,id,x=>h.world().useHuntSupply(x));h.persist();if(!h.stored()){saveBlocked=true;h.world().setPaused(true);h.toast('보급품 사용을 저장하지 못했어요. 다시 저장해 주세요.');}else h.toast(message);h.refresh();render();}catch(error){h.toast((error as Error).message);}}
+ function showSupplies(){const s=h.state();if(!s)return;held=false;attackPointer=null;const owned=HUNT_RECOVERY_ITEMS.map((item,i)=>({item,id:i+LEGACY_POTION_COUNT})).filter(({id})=>s.potions.stock[id]>0);h.open('<section class="career-sheet"><header class="career-heading"><small>사냥 보급 가방</small><h2>음식과 회복물약</h2><p>보유한 물건을 골라 빠른 칸에 넣어요. 게임으로 돌아가 Q(물약) · R(음식) 또는 큰 버튼으로 사용해요.</p></header><div class="career-supply-list">'+owned.map(({item,id})=>'<article><h3>'+item.icon+' '+item.name+'</h3><p>'+item.desc+'</p><p>가방에 '+s.potions.stock[id]+'개</p><button data-career-action="select-supply" data-supply="'+id+'">'+(selectedSupply(item.kind)===id?'빠른 칸에 선택됨':'빠른 칸에 넣기')+'</button></article>').join('')+'</div>'+(!owned.length?'<p>보급품이 없어요. 상점에서 음식과 물약을 살 수 있어요.</p>':'')+'<button class="career-primary" data-career-action="supply-shop">음식·물약 사러 가기</button><button class="career-return" data-career-action="close">게임으로 돌아가기</button></section>','academy-modal');}
  const credited=new Set<string>();
  const skillVM=(id:SkillId):CareerSkillView=>{const s=h.state()!,a=skillInfo(id),available=careerSkills(s.career,s.level).includes(id);return {id,name:a.name,description:a.description,iconIndex:ACADEMY_SKILLS.findIndex(x=>x.id===id),unlocked:available,cooldown:a.cooldown,practiced:s.career.practiced.includes(id),requirement:id==='shield'||id==='wind'||id==='lantern'?'학교에서 배워요':'직업을 선택하고 전직 수련을 마쳐요'};};
  function vm():CareerSchoolView{
@@ -75,6 +82,7 @@ export function mountCareer(h:Hooks){
   const dialog=document.querySelector<HTMLDialogElement>('#modal')!,scroll=dialog.scrollTop;
   const reopen=()=>{current==='journal'?showRecords(journal):showSchool();dialog.scrollTop=scroll;};
   if(action==='choose-job'&&validJob(job)){if(!h.world().inAcademy)h.enterSchool();if(!h.world().inAcademy)return;selectJob(s.career,job,s.level);notice='전직 수련을 마치면 직업 스킬을 사용할 수 있어요.';store();showSchool();}
+  else if(action==='next-career-step'){const next=vm();const target=next.canAdvance?'advance-job':next.trialAvailable?'start-trial':null;if(target)document.querySelector<HTMLButtonElement>('#modal [data-career-action="'+target+'"]')?.click();else document.querySelector('.career-job-grid')?.scrollIntoView({block:'start',behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});}
   else if(action==='start-trial'&&validJob(job)){const rank=Number(b.dataset.rank);if(rank>=1&&rank<=3&&s.level>=LEVELS[rank-1])startTraining(job,rank as 1|2|3);}
   else if(action==='advance-job'&&s.career.job){if(!h.world().inAcademy)h.enterSchool();if(advanceJob(s.career,s.career.job,s.level)){for(const id of JOB_SKILLS[s.career.job].filter(x=>s.career.learned.includes(x)))if(!s.career.practiced.includes(id))s.career.practiced.push(id);}notice=jobName()+'로 전직했어요!';mirror();store();showSchool();}
   else if(action==='select-slot'){selectedSlot=Math.max(0,Math.min(3,Number(b.dataset.slot)));reopen();}
@@ -90,6 +98,10 @@ export function mountCareer(h:Hooks){
   else if(action==='open-school')showSchool();
   else if(action==='walk-school'){h.close();if(!h.world().inAcademy)h.enterSchool();}
   else if(action==='learning-records')h.learning();
+  else if(action==='show-supplies')showSupplies();
+  else if(action==='select-supply'){selectSupply(Number(b.dataset.supply));showSupplies();}
+  else if(action==='use-supply')useSupply(Number(b.dataset.supply));
+  else if(action==='supply-shop')h.supplyShop();
   else if(action==='close')h.close();
   else if(action==='enter-hunting')enterHunting(Number(b.dataset.zone));
   else if(action==='exit-combat'){h.world().trainingStatus?exitTraining():exitHunting();}
@@ -102,18 +114,20 @@ export function mountCareer(h:Hooks){
  const releaseAttack=(e:Event)=>{if((e as PointerEvent).pointerId===attackPointer){held=false;attackPointer=null;}};
  for(const event of ['pointerup','pointercancel','lostpointercapture'])hud.addEventListener(event,releaseAttack);
  window.addEventListener('blur',()=>{held=false;attackPointer=null;});
- window.addEventListener('keydown',e=>{if(e.repeat||e.ctrlKey||e.metaKey||e.altKey||/INPUT|TEXTAREA|SELECT/.test((e.target as HTMLElement)?.tagName)||document.querySelector<HTMLDialogElement>('#modal')!.open)return;const slot=Number(e.key)-1,s=h.state();if(s&&slot>=0&&slot<4){const id=h.world().trainingStatus?trainingSlots()[slot]:s.career.loadouts[s.career.job??'novice'][slot];if(id){e.preventDefault();cast(id);}}});
+ window.addEventListener('keydown',e=>{if(e.repeat||e.ctrlKey||e.metaKey||e.altKey||/INPUT|TEXTAREA|SELECT/.test((e.target as HTMLElement)?.tagName)||document.querySelector<HTMLDialogElement>('#modal')!.open)return;if((e.code==='KeyQ'||e.code==='KeyR')&&h.state()&&h.world().inHunting){e.preventDefault();useSupply(selectedSupply(e.code==='KeyQ'?'health':'food'));return;}const slot=Number(e.key)-1,s=h.state();if(s&&slot>=0&&slot<4){const id=h.world().trainingStatus?trainingSlots()[slot]:s.career.loadouts[s.career.job??'novice'][slot];if(id){e.preventDefault();cast(id);}}});
  function trainingSlots(){const world=h.world();return (world.trainingSkills??ACADEMY_SKILLS.map(a=>a.id)).slice(0,4);}
  function updateHud(view:CareerCombatView,key:string,menu:string){
   if(hud.dataset.layout!==key){hud.dataset.layout=key;hud.innerHTML=renderCombatHud(view)+menu;return;}
   const health=(selector:string,hp:number,max:number)=>{const el=hud.querySelector(selector);if(!el)return;el.querySelector('b')!.textContent=`${Math.ceil(hp)} / ${Math.ceil(max)}`;const track=el.querySelector<HTMLElement>('[role="meter"]')!;track.setAttribute('aria-valuenow',String(Math.ceil(hp)));track.setAttribute('aria-valuemax',String(Math.ceil(max)));track.querySelector<HTMLElement>('i')!.style.width=`${Math.max(0,Math.min(100,hp/max*100))}%`;};
+  for(const [i,b] of Array.from(hud.querySelectorAll<HTMLButtonElement>('.career-supply')).entries()){const item=view.supplies?.[i];if(!item)continue;b.disabled=item.disabled;b.querySelector('.career-supply-stock')!.textContent=item.stock+'개';b.querySelector('.career-supply-note')!.textContent=item.note;b.setAttribute('aria-label',item.name+' '+item.stock+'개, '+item.note);}
   health('.career-hp',view.hp,view.maxHp);if(view.target)health('.career-target-hp',view.target.hp,view.target.maxHp);
   const message=hud.querySelector('.career-combat-status');if(message&&message.textContent!==view.status)message.textContent=view.status??'';
   hud.querySelectorAll<HTMLButtonElement>('[data-career-action="cast-skill"]').forEach((b,i)=>{const skill=view.skills[i],remaining=skill?.remaining??0;b.disabled=!skill||!skill.unlocked||remaining>0;b.classList.toggle('is-active',!!skill?.active);b.classList.toggle('is-cooling',remaining>0);b.style.setProperty('--cooldown-angle',`${Math.min(360,remaining/(skill?.cooldown||1)*360)}deg`);let counter=b.querySelector<HTMLElement>('.career-cooldown');if(remaining>0){if(!counter){counter=document.createElement('b');counter.className='career-cooldown';b.append(counter);}counter.textContent=String(Math.ceil(remaining));}else counter?.remove();});
  }
  function render(){const s=h.state();if(!s){bar.hidden=hud.hidden=true;return;}const w=h.world();if(!w?.active){bar.hidden=hud.hidden=true;return;}const snap=w.huntingStatus,training=w.trainingStatus;hud.hidden=!snap;bar.hidden=!!snap;document.querySelector('#hud')!.classList.toggle('has-career-combat',!!snap);
   if(snap){const slots=training?trainingSlots():s.career.loadouts[s.career.job??'novice'];const target=snap.enemies.find(e=>e.id===snap.targetId);const text=training?`${completed?'✦ 수련 성공! · ':''}맞힌 횟수 ${training.hits} · 피해 ${Math.round(training.damage)}`:saveBlocked?'저장 실패 · 다시 저장해 주세요.':snap.safe?'야영지 · 체력을 회복해요.':'적을 누르면 공격 대상을 바꿀 수 있어요.';
-   updateHud({hp:snap.playerHp,maxHp:snap.maxHp,target:target?{name:({melee:'덩굴 통통이',charge:'가시 돌진이',ranged:'씨앗 마법이'}[target.type]),hp:target.hp,maxHp:target.maxHp}:null,skills:slots.map(id=>id?{...skillVM(id),unlocked:true,remaining:w.skillState(id).cooldown,active:w.skillState(id).active}:null),status:text,training:!!training},slots.join('|')+'|'+target?.id+'|'+!!training+'|'+saveBlocked,`<div class="career-combat-menu"><button data-career-action="exit-combat">${training?'수련 마치기':'광장으로 돌아가기'}</button>${training?'<button data-career-action="reset-training">처음부터 연습</button>':''}${saveBlocked?'<button data-career-action="retry-save">다시 저장</button>':''}</div>`);
+   const supplies=training?undefined:supplyViews();
+   updateHud({supplies,hp:snap.playerHp,maxHp:snap.maxHp,target:target?{name:({melee:'덩굴 통통이',charge:'가시 돌진이',ranged:'씨앗 마법이'}[target.type]),hp:target.hp,maxHp:target.maxHp}:null,skills:slots.map(id=>id?{...skillVM(id),unlocked:true,remaining:w.skillState(id).cooldown,active:w.skillState(id).active}:null),status:text+(snap.supplies.mealRemaining>0?' · 음식 회복 '+Math.ceil(snap.supplies.mealRemaining)+'초':''),training:!!training},slots.join('|')+'|'+target?.id+'|'+!!training+'|'+saveBlocked+'|'+supplies?.map(item=>item.id).join('|'),`<div class="career-combat-menu"><button data-career-action="exit-combat">${training?'수련 마치기':'광장으로 돌아가기'}</button>${!training?'<button data-career-action="show-supplies">음식·물약 가방</button>':''}${training?'<button data-career-action="reset-training">처음부터 연습</button>':''}${saveBlocked?'<button data-career-action="retry-save">다시 저장</button>':''}</div>`);
    if(training?.complete&&!completed){completed=true;if(trial)recordCareerTrial(s.career,trial.job,trial.rank);if(practiceSkill&&s.career.learned.includes(practiceSkill)&&!s.career.practiced.includes(practiceSkill))s.career.practiced.push(practiceSkill);mirror();h.persist();h.toast(trial?'전직 수련을 마쳤어요! 학교에서 전직하세요.':'✦ 수련 완료! 모험 기록에 남겼어요.');}
   }else{
    const slots=s.career.loadouts[s.career.job??'novice'];const key=slots.join('|')+s.career.learned.join('|');if(skillKey!==key){skillKey=key;bar.innerHTML=slots.map((id,i)=>`<button ${id?`data-cast-skill="${id}"`:''} ${!id?'disabled':''}><kbd>${i+1}</kbd>${id?renderSkillIcon(id,ACADEMY_SKILLS.findIndex(a=>a.id===id)):'<span>＋</span>'}<small>${id?skillInfo(id).name:'빈 칸'}</small><span class="academy-cooldown"></span></button>`).join('')+'<button id="academy-open" class="academy-menu-button" aria-label="모험학교와 스킬 안내">🏛<small>학교</small></button>';}
@@ -121,5 +135,5 @@ export function mountCareer(h:Hooks){
   }status.textContent='';
  }
  setInterval(()=>{if(held&&h.state()&&!document.hidden&&!h.world().paused)h.world().huntAttack();},90);setInterval(render,300);
- return {begin,render,showSchool,showRecords,showPractice,showLesson,showHunting,enterHunting,exitHunting,exitTraining,cast,configure,jobName};
+ return {begin,render,showSchool,showRecords,showPractice,showLesson,showHunting,enterHunting,exitHunting,exitTraining,cast,configure,jobName,selectSupply,showSupplies};
 }
