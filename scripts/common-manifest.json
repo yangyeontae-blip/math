@@ -86,7 +86,7 @@
     "src/village-layout.ts": "ccdb173cd4384aac0d833d7442c913ccf81fb0fddc4f747b78ed4f1534033dbb",
     "tests/hunting.test.ts": "96ccefb2699b0e46ce788123657d1190d881fafc8efbb7b74743e03b069408e1",
     "tests/hunting-world.test.ts": "9b9fd34a1c8e730ac2b73165a218dd62b7d816a5c8eb26e0ca10e830baa1339d",
-    "e2e/hunting.spec.mjs": "0c6fccc554dd07b4b8cde38b528086a4c807f7b21c525e128ec6ee7ec3b560bf",
+    "e2e/hunting.spec.mjs": "4b1c52c7849f135ce20fb271f109bc77871ee876ca9d7c075eca2872f198ca45",
     "src/item-rarity.ts": "764c577e84aff9552d4e15d419d7d5d662d77e80f1d6166e5c971f975adb4695",
     "src/item-rarity.css": "a082b792039009205f444a227c1b824c20a6ea3acd5f4a13d9ac58bf03e599c3",
     "src/legendary-pet.ts": "8f3169d988e96a56e7fa0984fc61d9b9ba6c7b1e25c321a3cb8975d51d08181d",
@@ -102,5 +102,5 @@
     "src/room-life.ts": "b2643232cc11704590d3968e72e2377e25ac4870a5ca121abcf3b7ff2d4575b1",
     "tests/room-life.test.ts": "9f649fe5d8c6cd164915934cd55500536929c660bba0d7a49c776c51c1ae21d6"
   },
-  "generation": "fe2a461c2a2b680ed312db049883fbf797e4e72d976f38d3ea0bf42d9be72d01"
+  "generation": "ceedf1427cb059a3d3468bd053264ebf836c254f1d621d88eda7717912c7a52a"
 }
