@@ -77,7 +77,7 @@ test('the strengthened level base preserves weapon strength and every upgrade mu
 test('each unlocked hunting zone grants the increased base reward without learning bonuses',()=>{
  const now=new Date(2026,9,28,12).getTime(),expected=[[20,12],[50,30],[100,60],[200,120]];
  for(const zone of HUNT_ZONES){const s=newSave('모험가',0);s.level=zone.level;const before=structuredClone(s.learning);const reward=grantHuntingReward(s,zone.id,'melee',now);assert.equal(reward.berries,expected[zone.id][0]);assert.equal(reward.xp,expected[zone.id][1]);assert.equal(s.berries,reward.berries);assert.equal(s.xp,reward.xp);assert.deepEqual(s.learning,before);validateSave(s);}
- const s=newSave('모험가',0);s.level=80;grantHuntingReward(s,3,'melee',now);s.career.daily.counts[3]=100;const minimum=huntingRewardFor(s,3,now);assert.equal(minimum.berries,5);assert.equal(minimum.xp,3);
+ const s=newSave('모험가',0);s.level=80;grantHuntingReward(s,3,'melee',now);s.career.daily.counts[3]=100;const minimum=huntingRewardFor(s,3,now);assert.equal(minimum.berries,50);assert.equal(minimum.xp,30);
 });
 test('updating level and weapon power keeps the same battle, cooldowns and enemy health',()=>{
  const r=new HuntingRuntime({zone:0,level:10,power:5,job:'mage',learned:['starbolt'],practice:true});const p={x:0,z:2};r.cast('starbolt',p);r.step(.2,p);const before=r.snapshot();
@@ -126,4 +126,29 @@ test('Ppojjaki keeps old pet indices, costs 150000 and grants combat and reward 
 });
 test('Ppojjaki health and reduction update without resetting combat and never stack with stronger skill reductions',()=>{
  const base={zone:1,level:10,power:1},stats=huntingCompanionStats({pet:PPOJJAK_PET_ID});const r=new HuntingRuntime({...base,...stats,job:'knight',learned:['shield','guardian']});assert.equal(r.snapshot().maxHp,162);const p={x:-6,z:-2};let hit=r.step(1.2,p).find(e=>e.type==='playerHit');assert.ok(hit&&hit.type==='playerHit');assert.equal(hit.damage,8);const before=r.snapshot();assert.equal(r.updateProfile({...base,...huntingCompanionStats({pet:-1})}),true);assert.equal(r.snapshot().maxHp,120);assert.deepEqual(r.snapshot().enemies,before.enemies);assert.equal(r.snapshot().time,before.time);assert.equal(r.updateProfile({...base,...stats}),true);assert.equal(r.snapshot().maxHp,162);r.cast('shield',p);r.cast('guardian',p);hit=r.step(3,p).find(e=>e.type==='playerHit');assert.ok(hit&&hit.type==='playerHit');assert.equal(hit.damage,5);const practice=new HuntingRuntime({...base,...stats,practice:true,practiceMode:'attacking'});assert.equal(practice.snapshot().maxHp,120);const trainingHit=practice.step(2,{x:-1.5,z:0}).find(e=>e.type==='playerHit');assert.ok(trainingHit&&trainingHit.type==='playerHit');assert.equal(trainingHit.damage,10);assert.equal(r.updateProfile({...base,maxHpMultiplier:Infinity}),false);
+});
+
+
+test('highest enterable hunting zones retain full level rewards at every boundary',()=>{
+ const now=new Date(2026,9,29,12).getTime();
+ for(const level of [...Array.from({length:121},(_,i)=>i+1),1000,100000]){
+  const s=newSave('모험가',0);s.level=level;const highest=HUNT_ZONES.filter(z=>z.level<=level).at(-1)!;const reward=huntingRewardFor(s,highest.id,now);
+  assert.equal(reward.multiplier,1,'level '+level);assert.equal(reward.berries,highest.berries);assert.equal(reward.xp,highest.xp);
+ }
+ const s=newSave('모험가',0);s.level=59;assert.equal(huntingRewardFor(s,2,now).multiplier,1);assert.equal(huntingRewardFor(s,3,now).eligible,false);
+ s.level=60;assert.equal(huntingRewardFor(s,2,now).multiplier,.1);assert.equal(huntingRewardFor(s,3,now).multiplier,1);
+});
+
+test('level 50 zone 30 deposits 100 berries and 60 XP, then 25 and 15 after daily 100, across save restore',()=>{
+ const now=new Date(2026,9,29,12).getTime(),s=newSave('모험가',0);s.level=50;
+ const event={type:'defeat' as const,id:'level50-99',enemyId:'0',enemyType:'melee' as const,zone:2,practice:false};
+ grantHuntingReward(s,{...event,id:'seed'},now);s.career.daily.counts[2]=99;
+ const berries=s.berries,xp=s.xp,full=grantHuntingReward(s,event,now);
+ assert.equal(full.berries,100);assert.equal(full.xp,60);assert.equal(s.berries-berries,100);assert.equal(s.xp-xp,60);assert.equal(s.career.daily.counts[2],100);
+ const restored=validateSave(JSON.parse(JSON.stringify(s))),reduced=grantHuntingReward(restored,{...event,id:'level50-100'},now);
+ assert.equal(reduced.berries,25);assert.equal(reduced.xp,15);assert.equal(reduced.multiplier,.25);assert.equal(restored.berries-s.berries,25);assert.equal(restored.xp-s.xp,15);assert.equal(restored.career.stats.totalBerries-s.career.stats.totalBerries,25);
+ const once=structuredClone(restored);assert.equal(grantHuntingReward(restored,{...event,id:'level50-100'},now).eligible,false);assert.deepEqual(restored,once);
+ assert.equal(huntingRewardFor(restored,2,now+86400000).berries,100);
+ restored.potions.berryMultiplier=3;restored.potions.berryUntil=now+10000;restored.potions.xpMultiplier=4;restored.potions.xpUntil=now+10000;
+ assert.equal(huntingRewardFor(restored,2,now).berries,75);assert.equal(huntingRewardFor(restored,2,now).xp,60);
 });

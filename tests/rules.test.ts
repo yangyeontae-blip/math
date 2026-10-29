@@ -49,8 +49,8 @@ test('all weapons and upgrades give the documented rewards for every monster', (
   const s = newSave('베리', 0);
   WEAPONS.forEach((w, wi) => { s.weapon = wi; for (let u = 0; u <= 3; u++) { s.weapons[wi] = u; MONSTERS.forEach((m, mi) => { assert.deepEqual(rewardFor(s, mi, true), { berries: m.berry + w.bonus, xp: m.xp, score: Math.round(m.score * (w.multiplier + u * .1)) }); assert.equal(rewardFor(s, mi, false).berries, m.berry + w.bonus + 2); assert.equal(rewardFor(s, mi, false).score, 0); }); } });
 });
-test('named forest friends appear across the stages and require several correct answers', () => {
-  assert.deepEqual(MONSTERS.slice(4).map(monster => monster.name.split(' · ')[0]), ['김나현', '송하나', '박가현', '권소희', '김민준']);
+test('species-named forest creatures appear across the stages and require several correct answers', () => {
+  assert.deepEqual(MONSTERS.slice(4).map(monster => monster.name), ['반짝 별꿀벌', '말랑 민들레 고양이', '살금 달빛 여우', '폭신 꽃구름 양', '씩씩 별도토리 곰']);
   assert.ok(MONSTERS.slice(4).every((_, id) => monsterBattleRounds(id + 4) >= 2));
   assert.ok(MONSTERS.slice(4).every((_, id) => Array.from({ length: 10 }, (__, stage) => stageMonsters(stage + 1)).flat().some(monster => monster.type === id + 4)));
   assert.equal(monsterBattleRounds(8), 3); assert.equal(monsterBattleRounds(8, true), 1);

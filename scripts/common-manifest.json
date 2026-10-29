@@ -80,13 +80,13 @@
     "tests/home-exit.test.ts": "55615d3f051ce152b5d39ebd346777997051e6fa71344602999a10962db4efc3",
     "src/hunting.ts": "f8f334ab8ca80a0ec221a8ff80b042e29c89acfd2a27e5c0e97389f1a8e440ee",
     "src/hunting-world.ts": "67c3b3fc4263c02cf80ee824dd087c3b1c1182a67909bcbcf83c70ed18fba1ef",
-    "src/career-controller.ts": "392a1188aaf16be42c5b9cc48f23f442955278a576fbed35b238916ee7d9bf0a",
+    "src/career-controller.ts": "6dcfda250f48cfc03e820af43828c6920447381bd8b5dcddabb1df7d07ae3d99",
     "src/career-ui.ts": "d53dbb7e90a8e0d796b44030e0d4335342c134e87b9587f97aeb40f3770853a4",
     "src/career.css": "1be27432ad718a74c7c036891294f67ab99e15047885a52f1ec1ec4cdda4cb72",
     "src/village-layout.ts": "ccdb173cd4384aac0d833d7442c913ccf81fb0fddc4f747b78ed4f1534033dbb",
-    "tests/hunting.test.ts": "546e5429beb9b09e2dffb9c4ee81a9e1630773adf23bc98f7fb1894c84da0ec1",
+    "tests/hunting.test.ts": "96ccefb2699b0e46ce788123657d1190d881fafc8efbb7b74743e03b069408e1",
     "tests/hunting-world.test.ts": "9b9fd34a1c8e730ac2b73165a218dd62b7d816a5c8eb26e0ca10e830baa1339d",
-    "e2e/hunting.spec.mjs": "f76e7786693f50519f71e4bfb465c580d8b23f28adfa8dc42d112570dd7dd09c",
+    "e2e/hunting.spec.mjs": "6cb62fb897f65b9612bc3396a01dc198247031980449b946afd397a51cbc576f",
     "src/item-rarity.ts": "764c577e84aff9552d4e15d419d7d5d662d77e80f1d6166e5c971f975adb4695",
     "src/item-rarity.css": "a082b792039009205f444a227c1b824c20a6ea3acd5f4a13d9ac58bf03e599c3",
     "src/legendary-pet.ts": "8f3169d988e96a56e7fa0984fc61d9b9ba6c7b1e25c321a3cb8975d51d08181d",
@@ -98,5 +98,5 @@
     "e2e/legendary-style.spec.mjs": "7496bc180ad29f8231221502874985a132cb784c7dd90af16082a78d6d7e1552",
     "public/art/skill-sigils-expanded-v1.webp": "c96246cd52fb3dac36447d21e92fdf464fc1405f903d86c2ce92e9440614f6b0"
   },
-  "generation": "fc7f237ecd1898dbc4e7899d3c9ce8e30753fc29dd04677cf36b3845011b882f"
+  "generation": "2eae0d64959a4168fffd8018fa7de6684e6f6f5c22412c12a5960997524ee841"
 }

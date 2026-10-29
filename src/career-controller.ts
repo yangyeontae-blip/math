@@ -13,6 +13,7 @@ const JOBS=[
  {id:'ranger' as const,name:'바람 궁수',subtitle:'빠른 화살과 자유로운 발걸음',description:'거리를 유지하며 관통 화살과 덩굴 덫을 사용해요.',names:['새싹 모험가','궁수','레인저','폭풍의 궁수']},
 ];
 const LEVELS=[10,30,60];
+const rewardNotice=(multiplier:number)=>multiplier===1?'':multiplier===.25?' · 오늘 100마리 이후 25%':multiplier===.1?' · 낮은 구역 보상 10%':' · 낮은 구역·오늘 처치 수 감액 2.5%';
 const JOB_SKILLS:Record<JobId,SkillId[]>={knight:['crescent','charge','roots','guardian'],mage:['starbolt','frost','vortex','starfall'],ranger:['arrow','pierce','trap','storm']};
 const validJob=(id:unknown):id is JobId=>JOBS.some(j=>j.id===id);
 const esc=(s:unknown)=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]!));
@@ -51,9 +52,9 @@ export function mountCareer(h:Hooks){
   if(fresh)s.career.legacyImported=true;else migrateAcademy(localStorage,s,s.career);syncCareerRankSkills(s.career);configure();
   h.world().onHuntEvent=e=>{
    if(e.type==='defeat'){
-    if(h.world().trainingStatus||e.practice||credited.has(e.id))return;credited.add(e.id);const reward=grantHuntingReward(s,e.zone,e.enemyType);h.persist();
+    if(h.world().trainingStatus||e.practice||credited.has(e.id))return;credited.add(e.id);const reward=grantHuntingReward(s,e);h.persist();
     if(!h.stored()){saveBlocked=true;h.world().setPaused(true);h.toast('사냥 보상을 저장하지 못했어요. 저장 공간을 확인하고 다시 저장해 주세요.');}
-    else {configure();h.refresh();h.toast(`🍓 +${reward.berries} · 경험치 +${reward.xp}${reward.levels?' · 레벨 업!':''}`);}
+    else {configure();h.refresh();h.toast(`🍓 +${reward.berries} · 경험치 +${reward.xp}${reward.levels?' · 레벨 업!':''}${rewardNotice(reward.multiplier)}`);}
    }else if(e.type==='retreat')h.toast('잠깐 쉬었다 다시 시작해요. 보상은 그대로예요.');
   };mirror();
  }
@@ -66,7 +67,7 @@ export function mountCareer(h:Hooks){
   trainingSetup={job:useJob,mode:practiceMode,skills,trialRank:rank,skill:id};h.close();h.world().enterTraining(s,trainingSetup);render();h.refresh();
  }
  function exitTraining(){const s=h.state();if(!s)return;held=false;h.world().exitTraining(s);trial=null;practiceSkill=undefined;configure();h.refresh();render();}
- function showHunting(){const s=h.state();if(!s)return;h.open(`<section class="career-sheet"><header class="career-heading"><small>왼쪽 위 숲길</small><h2>가시덩굴 숲</h2><p>몬스터의 공격 표시를 보고 피하면서 사냥해요. 쓰러져도 가진 것은 잃지 않아요.</p><p class="career-notice">레벨 ${s.level} · 현재 사냥 공격력 ${Math.round(huntingPower(s)).toLocaleString()}<br>레벨이 오르면 기본 공격과 모든 공격 스킬이 함께 강해져요.</p></header><div class="career-training-modes">${HUNTING_ZONES.map((z,i)=>`<button data-career-action="enter-hunting" data-zone="${i}" ${s.level<z.level?'disabled':''}><strong>${z.name}</strong><small>권장 레벨 ${z.level} · 기본 베리 ${z.berries} · 경험치 ${z.xp}</small><small>${s.level<z.level?'권장 레벨부터 입장해요.':`지금 받을 보상: 베리 ${huntingRewardFor(s,i).berries} · 경험치 ${huntingRewardFor(s,i).xp}${huntingRewardFor(s,i).multiplier<1?' · 쉬운 구역·오늘 처치 수에 따른 감소 적용':''}`}</small></button>`).join('')}</div><button class="text-button wide" data-career-action="close">게임으로 돌아가기</button></section>`,'academy-modal');}
+ function showHunting(){const s=h.state();if(!s)return;h.open(`<section class="career-sheet"><header class="career-heading"><small>왼쪽 위 숲길</small><h2>가시덩굴 숲</h2><p>몬스터의 공격 표시를 보고 피하면서 사냥해요. 쓰러져도 가진 것은 잃지 않아요.</p><p class="career-notice">레벨 ${s.level} · 현재 사냥 공격력 ${Math.round(huntingPower(s)).toLocaleString()}<br>레벨이 오르면 기본 공격과 모든 공격 스킬이 함께 강해져요.</p></header><p class="career-note">지금 갈 수 있는 가장 높은 구역은 레벨 차이로 감액되지 않아요. 각 구역에서 오늘 첫 100마리는 정상 보상, 이후에는 25%를 받아요.</p><div class="career-training-modes">${HUNTING_ZONES.map((z,i)=>`<button data-career-action="enter-hunting" data-zone="${i}" ${s.level<z.level?'disabled':''}><strong>${z.name}</strong><small>권장 레벨 ${z.level} · 기본 베리 ${z.berries} · 경험치 ${z.xp}</small><small>${s.level<z.level?'권장 레벨부터 입장해요.':`지금 받을 보상: 베리 ${huntingRewardFor(s,i).berries} · 경험치 ${huntingRewardFor(s,i).xp}${rewardNotice(huntingRewardFor(s,i).multiplier)}`}</small></button>`).join('')}</div><button class="text-button wide" data-career-action="close">게임으로 돌아가기</button></section>`,'academy-modal');}
  function enterHunting(zone=0){const s=h.state();if(!s)return;if(s.expedition.active){h.toast('진행 중인 원정을 마친 뒤 사냥터에 가요.');return;}if(!HUNTING_ZONES[zone]||s.level<HUNTING_ZONES[zone].level){h.toast('레벨을 올리면 열리는 사냥 구역이에요.');return;}if(h.world().trainingStatus)exitTraining();if(!h.world().inHunting)h.plaza();s.career.location={kind:'hunting',zone};configure();h.close();h.world().enterHunting(s,zone);h.refresh();h.persist();render();h.toast('가시덩굴 숲 · F 또는 공격 버튼으로 사냥해요.');}
  function exitHunting(){const s=h.state();if(!s)return;held=false;s.career.location=null;h.world().exitHunting(s);configure();h.refresh();h.persist();render();}
  function cast(id:SkillId){const s=h.state();if(!s||document.querySelector<HTMLDialogElement>('#modal')!.open)return;const world=h.world();if(skillInfo(id).job&&!world.huntingStatus){h.toast('공격 스킬은 사냥터와 수련 마당에서 사용해요.');return;}const allowed=world.trainingStatus||careerSkills(s.career,s.level).includes(id);if(!allowed)return;if(world.useSkill(id,world.trainingStatus?ACADEMY_SKILLS.map(a=>a.id):careerSkills(s.career,s.level)))render();}

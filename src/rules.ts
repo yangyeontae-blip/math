@@ -78,11 +78,11 @@ export const MONSTERS = [
   { name: '버섯 요정', icon: '🍄', berry: 10, xp: 12, score: 15, color: 0xf493a6, rounds: 1 },
   { name: '구름 토끼', icon: '☁️', berry: 12, xp: 15, score: 20, color: 0xeaf4fc, rounds: 1 },
   { name: '도토리 정령', icon: '🌰', berry: 15, xp: 20, score: 25, color: 0xd3aa74, rounds: 1 },
-  { name: '김나현 · 별꿀벌', icon: '🐝', berry: 18, xp: 23, score: 28, color: 0xf2c94c, rounds: 2 },
-  { name: '송하나 · 민들레 고양이', icon: '🐱', berry: 20, xp: 25, score: 31, color: 0xf3ad79, rounds: 2 },
-  { name: '박가현 · 달빛 여우', icon: '🦊', berry: 22, xp: 28, score: 35, color: 0xb99be7, rounds: 2 },
-  { name: '권소희 · 꽃구름 양', icon: '🐑', berry: 25, xp: 31, score: 39, color: 0xf0b7cf, rounds: 3 },
-  { name: '김민준 · 별도토리 곰', icon: '🐻', berry: 28, xp: 35, score: 44, color: 0x8eb7d6, rounds: 3 },
+  { name: '반짝 별꿀벌', icon: '🐝', berry: 18, xp: 23, score: 28, color: 0xf2c94c, rounds: 2 },
+  { name: '말랑 민들레 고양이', icon: '🐱', berry: 20, xp: 25, score: 31, color: 0xf3ad79, rounds: 2 },
+  { name: '살금 달빛 여우', icon: '🦊', berry: 22, xp: 28, score: 35, color: 0xb99be7, rounds: 2 },
+  { name: '폭신 꽃구름 양', icon: '🐑', berry: 25, xp: 31, score: 39, color: 0xf0b7cf, rounds: 3 },
+  { name: '씩씩 별도토리 곰', icon: '🐻', berry: 28, xp: 35, score: 44, color: 0x8eb7d6, rounds: 3 },
 ] as const;
 export function monsterBattleRounds(monster: number, arena = false) { return arena ? 1 : MONSTERS[monster]?.rounds ?? 1; }
 export const RIDES = [
@@ -659,7 +659,9 @@ export function huntingPower(s:Pick<Save,'level'|'weapon'|'weapons'>&{pet?:numbe
 export function huntingRewardFor(s:Save,zone:number,now=Date.now()){
   const z=HUNT_ZONES[zone];if(!z||s.level<z.level||!Number.isFinite(now)||!Number.isFinite(new Date(now).getTime()))return {berries:0,xp:0,eligible:false,multiplier:0};
   const date=todayKey(new Date(now)),count=s.career.daily.date===date?s.career.daily.counts[zone]:0;
-  const multiplier=(s.level>=z.level+20?.1:1)*(count>=100?.25:1),potion=potionEffects(s,now);
+  // Never penalize the highest zone this player can actually enter.
+  const higherZoneOpen=HUNT_ZONES.some(next=>next.level>z.level&&s.level>=next.level);
+  const multiplier=(higherZoneOpen&&s.level>=z.level+20?.1:1)*(count>=100?.25:1),potion=potionEffects(s,now);
   return {berries:Math.floor(z.berries*multiplier*potion.berryMultiplier*(s.pet===PPOJJAK_PET_ID?1.5:1)),xp:Math.floor(z.xp*multiplier*potion.xpMultiplier*(s.pet===PPOJJAK_PET_ID?1.4:1)),eligible:true,multiplier};
 }
 const huntingClaims=new WeakMap<Save,Set<string>>();
