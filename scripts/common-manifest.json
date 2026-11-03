@@ -111,16 +111,16 @@
     "src/plaza-identity.ts": "5c3ad345959140202593bcf6c11c200e7941cb6e656822f28029319b6c848d11",
     "src/plaza-client.ts": "1bdc4f9db3729e62ddff1033eab1362669e094d768c0c057a2ff957438416bb5",
     "src/plaza-controller.ts": "f88ced597af76f386cd5a51d4f401a79f87d4f4bda132dae2245dcd7c5c61a7a",
-    "src/plaza-world.ts": "a366819b74646c6d6eac25c1dccf30bad7a0040bb3e78a13610a15bc6b3e87e4",
+    "src/plaza-world.ts": "924737c1ecbeb80d09c8afcf0dfb07f66394794b13c56ed316a0d436a50d81c8",
     "src/plaza-endpoint.ts": "8209e54c95cbd78b65a44eefd6bfd658759567b7d8af6af4a2e87a102249e790",
     "src/plaza.css": "45036798cb647845cb0ea9322a0c17e68977a85801bbe6c744c1c64e4c3ed4ea",
     "tests/plaza.test.ts": "3107b669899a2a935bd8e1426803e19dedfe019477e9fb1c8e1f4814e8e32e22",
-    "e2e/plaza.spec.mjs": "1a7688d3d2c8f71791d29672c12f56037ec33cc92668ade1049896d76abf5dfa",
+    "e2e/plaza.spec.mjs": "7ccdf8f3c9642a5f82a3d291f8b55c510548fad39eb4fb509b041d782f80a13d",
     "e2e/plaza-server.mjs": "163dbafc5b0612d8ed957f5c75eaad121a7b187c4ca2fa653593ae5c9ebd4cab",
     "scripts/build-plaza.mjs": "cd9262c9c77bdb2ed4bb6589c14f3d211405f5b8f9a37b815832200d7c15538d",
     "realtime/index.mjs": "12c30bc3e9d9d17d250b176672e3a451baad85e324cfed0f8a295338aac59483",
     "realtime/wrangler.jsonc": "369e0937b30c5f18109e14036d63a062edd4eeeea55fb465e374a17d6c420e7d",
     "realtime/plaza.test.mjs": "bd53eb2cdb7238d05a39e06cc4a3c3e8cbe11245c97668c0a36e29d983eaa9cb"
   },
-  "generation": "3dc28b2967a86d5b83f9b47f6d91da24f0491d6784ce253c320072261e4bd3ae"
+  "generation": "2f56048c9386956a68448ecb5a45eb678cad685925a5bf9d2c4bfc0037109aae"
 }
