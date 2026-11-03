@@ -82,7 +82,7 @@ root.innerHTML = `<div id="world" aria-label="베리숲 3D 마을"></div><div id
 </div><div id="start-screen" class="start-layer"></div><dialog id="modal"><div id="modal-content"></div></dialog><div id="toast" role="status" aria-live="polite"></div><input type="file" id="import-file" accept="application/json,.json" hidden>`;
 
 let nearNpcName = '';
-const career = mountCareer({state:()=>state,world:()=>world,persist,stored:()=>saveStore.status!=='error',refresh,open:(html,cls)=>openModal(html,cls),close:closeModal,toast,enterSchool:enterAcademy,learning:()=>openAdventureBook('learning'),plaza:()=>switchStage(0),equipmentShop:(kind,id)=>openShop(kind,id),supplyShop:()=>openPotionShop('recovery')});
+const career = mountCareer({state:()=>state,world:()=>world,persist,stored:()=>saveStore.status!=='error',refresh,open:(html,cls)=>openModal(html,cls),close:closeModal,toast,enterSchool:enterAcademy,learning:()=>openAdventureBook('learning'),plaza:()=>switchStage(0),equipmentShop:(kind,id)=>openShop(kind,id),openWorldTwo:html=>{rememberMenu('world2',()=>career.showWorldTwo());openModal(html,'academy-modal');},supplyShop:()=>openPotionShop('recovery')});
 function renderAcademyBar(){career.render();}
 function enterAcademy(){
  if(!state)return;if(state.expedition.active){toast('진행 중인 원정을 마친 뒤 학교에 들러 주세요.');return;}

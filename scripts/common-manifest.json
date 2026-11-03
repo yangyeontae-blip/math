@@ -80,7 +80,7 @@
     "tests/home-exit.test.ts": "55615d3f051ce152b5d39ebd346777997051e6fa71344602999a10962db4efc3",
     "src/hunting.ts": "ab724d92813db77b6be3d73540519376d5fb6d71852e848b8cab059ec4acae01",
     "src/hunting-world.ts": "4b81a69057856475ed108fc98d00378a476b7cd5ea527d4ac7d0abfba7caa8a2",
-    "src/career-controller.ts": "05090edddd6ff2e77f3df24ce16f6f25b2db6e25a8f9033ac44a616dd24872d5",
+    "src/career-controller.ts": "9614ca0d5c52cdd5138f8092161c70994883ea744fe1cc3d73a47dffed088942",
     "src/career-ui.ts": "587b5e9da749307bcab735e224b135a05dac6ef0e500a047e7696fc692f1d849",
     "src/career.css": "744a404006935d30cf127d7c4fcc27a9d897d14fc54e006ce0fbae090ea8c09b",
     "src/village-layout.ts": "ccdb173cd4384aac0d833d7442c913ccf81fb0fddc4f747b78ed4f1534033dbb",
@@ -106,7 +106,7 @@
     "src/world-two-ui.ts": "047cc9fc3a4bb4c1a69ae5767e1c43f56b052308c97b42ec198b6a61101b9db5",
     "src/world-two-models.ts": "6fba7341ea2f5666519672899854dd22a46dfb43b1b5be9fb29e84839ff6ea2c",
     "tests/world-two.test.ts": "9c5277d02b02dfea21d5c7fe929252c02e69816663f1a030b8d3de861b17600e",
-    "e2e/world-two.spec.mjs": "9ee0584e594458d62b3cfd65ef91c70c5debf2e4706b1462d609b0e40700cd49"
+    "e2e/world-two.spec.mjs": "ff19a69d2992d1bce2d1ca3599c60bb4390604fdb5722e45f23b1392c5f9751d"
   },
-  "generation": "4c9d748e14d2218706fea2e27217e4f8e6ab93b8f0b12fb93ebe3929f8b121b8"
+  "generation": "d3c2ce71b92978dda1cf7fb786b4d1102057c5073720236b7cc5613b21a3664f"
 }
