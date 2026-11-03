@@ -33,13 +33,17 @@ jobs:
       - run: pnpm exec tsc --noEmit
       - run: pnpm test
       - run: pnpm exec playwright install --with-deps chromium
-      - run: pnpm test:browser
+      - name: Verify World 2 exploration before the existing flows
+        run: pnpm test:browser e2e/world-two.spec.mjs --output=test-results-world2
+      - run: pnpm test:browser --grep-invert "World 2"
       - name: Keep isolated browser screenshots and traces
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: browser-visuals-web
-          path: test-results/
+          path: |
+            test-results/
+            test-results-world2/
           if-no-files-found: ignore
           retention-days: 3
       - run: pnpm build

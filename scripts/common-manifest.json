@@ -106,7 +106,7 @@
     "src/world-two-ui.ts": "047cc9fc3a4bb4c1a69ae5767e1c43f56b052308c97b42ec198b6a61101b9db5",
     "src/world-two-models.ts": "6fba7341ea2f5666519672899854dd22a46dfb43b1b5be9fb29e84839ff6ea2c",
     "tests/world-two.test.ts": "9c5277d02b02dfea21d5c7fe929252c02e69816663f1a030b8d3de861b17600e",
-    "e2e/world-two.spec.mjs": "c8abd75599845ace06a3c6da7590e876b659580a38dbe01d59645220c1581219"
+    "e2e/world-two.spec.mjs": "cf24ea355ebad55555fa19d9a8cbaa96342f04f67dee3e1b4d32b486b6ace34a"
   },
-  "generation": "29f54c0140b66b5956bdfa5141eb02122b996c385c5293dda4051fc2640bc397"
+  "generation": "1779a6be1fd5811f7811701f679cb0daa1cafaf3b5b19f74fcd7b57944e83969"
 }
