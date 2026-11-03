@@ -40,10 +40,10 @@ export class SharedPlaza extends DurableObject {
  }
  webSocketMessage(ws,raw){
   const s=ws.deserializeAttachment();if(!s)return;
-  const now=Date.now();this.prune(now);
+  const now=Date.now();this.prune(now);if(ws.readyState!==WebSocket.OPEN)return;
   if(typeof raw!=='string'||raw.length>4096){ws.close(1009,'message_size');return;}
   if(now-s.window>=1000){s.window=now;s.hits=0;}s.hits++;
-  if(s.hits>16){ws.close(1008,'rate_limit');return;}s.seen=now;
+  if(s.hits>16){ws.close(1008,'rate_limit');return;}s.seen=now;ws.serializeAttachment(s);
   let m;try{m=JSON.parse(raw);}catch{ws.close(1008,'invalid_message');return;}
   if(!m||typeof m!=='object'){ws.close(1008,'invalid_message');return;}
   if(m.type==='join'&&!s.joined){

@@ -118,9 +118,9 @@
     "e2e/plaza.spec.mjs": "7ccdf8f3c9642a5f82a3d291f8b55c510548fad39eb4fb509b041d782f80a13d",
     "e2e/plaza-server.mjs": "163dbafc5b0612d8ed957f5c75eaad121a7b187c4ca2fa653593ae5c9ebd4cab",
     "scripts/build-plaza.mjs": "cd9262c9c77bdb2ed4bb6589c14f3d211405f5b8f9a37b815832200d7c15538d",
-    "realtime/index.mjs": "12c30bc3e9d9d17d250b176672e3a451baad85e324cfed0f8a295338aac59483",
+    "realtime/index.mjs": "7b1ca24c4013be11e7f5622ce9107634e7ec37ce20527d5a455106079e886298",
     "realtime/wrangler.jsonc": "369e0937b30c5f18109e14036d63a062edd4eeeea55fb465e374a17d6c420e7d",
-    "realtime/plaza.test.mjs": "bd53eb2cdb7238d05a39e06cc4a3c3e8cbe11245c97668c0a36e29d983eaa9cb"
+    "realtime/plaza.test.mjs": "8b4b702c353ca4b7043ab3585553be5e967408d259bec5065c27e13ee64486a2"
   },
-  "generation": "2f56048c9386956a68448ecb5a45eb678cad685925a5bf9d2c4bfc0037109aae"
+  "generation": "79b0916f39554b3be5318a60f83d7df9c51e97edbed67d448c67493068893e79"
 }
