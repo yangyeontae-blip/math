@@ -10,7 +10,9 @@
     "db:generate": "drizzle-kit generate",
     "check:common": "node scripts/check-common.mjs",
     "build:browser": "VITE_BROWSER_TEST=1 vite build",
-    "test:browser": "playwright test"
+    "test:browser": "playwright test",
+    "build:plaza": "node scripts/build-plaza.mjs",
+    "test:plaza": "node scripts/build-plaza.mjs && node --test realtime/*.test.mjs"
   },
   "dependencies": {
     "onnxruntime-web": "1.24.3",
@@ -22,8 +24,10 @@
     "@types/three": "^0.180.0",
     "drizzle-kit": "0.31.10",
     "drizzle-orm": "0.45.2",
+    "miniflare": "4.20260730.0",
     "tsx": "^4.20.5",
     "typescript": "^5.9.2",
-    "vite": "^7.1.7"
+    "vite": "^7.1.7",
+    "wrangler": "4.156.1"
   }
 }

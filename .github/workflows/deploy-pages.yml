@@ -32,6 +32,7 @@ jobs:
       - run: pnpm check:common
       - run: pnpm exec tsc --noEmit
       - run: pnpm test
+      - run: pnpm test:plaza
       - run: pnpm exec playwright install --with-deps chromium
       - name: Verify World 2 exploration before the existing flows
         run: pnpm test:browser e2e/world-two.spec.mjs --output=test-results-world2

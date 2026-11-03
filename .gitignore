@@ -11,3 +11,6 @@ presentation-worksheet/
 
 playwright-report/
 test-results/
+
+.wrangler/
+.plaza-worker/

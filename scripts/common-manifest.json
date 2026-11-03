@@ -6,7 +6,7 @@
     "src/storybook-scene.ts": "2f1a32b13eb7ac784ec0852eaf29484f1e7d2f153d1b42b6b263c5960de2e8b4",
     "tests/storybook-art.test.ts": "ddefef8a1e556afdff88f34a5505004c3df51b95824c82640ee79dc8d95489de",
     "e2e/core-flows.spec.mjs": "16adec630f4c96b06cfdd06359d34bec0bd497df7c4827d4df6ab798f7152020",
-    "playwright.config.mjs": "a84d340bd1ee30c96d5a482ddb22941fb6e8dc215cf733318afcf497e6ec7f8c",
+    "playwright.config.mjs": "971ad136a4702806688b7f752b3618367fc912b171486b87d04491a33bbe0bf3",
     "scripts/check-common.mjs": "04faf72d9b67113d1cc1e04718198933a4d1e4451cc4585a385b5c9dd3311d39",
     "scripts/sync-common.mjs": "4375626348ebfdf9f60d9ef355b5baf310a1c480c007f20d41c5258c95e698cb",
     "src/adaptive.ts": "b943e7d99164396cd587e3191cecee50107276a776c78824f28bf3c6f8ae46c2",
@@ -106,7 +106,21 @@
     "src/world-two-ui.ts": "047cc9fc3a4bb4c1a69ae5767e1c43f56b052308c97b42ec198b6a61101b9db5",
     "src/world-two-models.ts": "6fba7341ea2f5666519672899854dd22a46dfb43b1b5be9fb29e84839ff6ea2c",
     "tests/world-two.test.ts": "9c5277d02b02dfea21d5c7fe929252c02e69816663f1a030b8d3de861b17600e",
-    "e2e/world-two.spec.mjs": "c41e1f6c678756206e5614cbd0b5566515f55fb2e10c8e47dd253aa3d633f291"
+    "e2e/world-two.spec.mjs": "c41e1f6c678756206e5614cbd0b5566515f55fb2e10c8e47dd253aa3d633f291",
+    "src/plaza-protocol.ts": "4cbdf8fae8431b1cd25db45f583986471293d2c48cd757d321231d5bf440b755",
+    "src/plaza-identity.ts": "5c3ad345959140202593bcf6c11c200e7941cb6e656822f28029319b6c848d11",
+    "src/plaza-client.ts": "1bdc4f9db3729e62ddff1033eab1362669e094d768c0c057a2ff957438416bb5",
+    "src/plaza-controller.ts": "f88ced597af76f386cd5a51d4f401a79f87d4f4bda132dae2245dcd7c5c61a7a",
+    "src/plaza-world.ts": "a366819b74646c6d6eac25c1dccf30bad7a0040bb3e78a13610a15bc6b3e87e4",
+    "src/plaza-endpoint.ts": "8209e54c95cbd78b65a44eefd6bfd658759567b7d8af6af4a2e87a102249e790",
+    "src/plaza.css": "45036798cb647845cb0ea9322a0c17e68977a85801bbe6c744c1c64e4c3ed4ea",
+    "tests/plaza.test.ts": "3107b669899a2a935bd8e1426803e19dedfe019477e9fb1c8e1f4814e8e32e22",
+    "e2e/plaza.spec.mjs": "1a7688d3d2c8f71791d29672c12f56037ec33cc92668ade1049896d76abf5dfa",
+    "e2e/plaza-server.mjs": "163dbafc5b0612d8ed957f5c75eaad121a7b187c4ca2fa653593ae5c9ebd4cab",
+    "scripts/build-plaza.mjs": "cd9262c9c77bdb2ed4bb6589c14f3d211405f5b8f9a37b815832200d7c15538d",
+    "realtime/index.mjs": "12c30bc3e9d9d17d250b176672e3a451baad85e324cfed0f8a295338aac59483",
+    "realtime/wrangler.jsonc": "369e0937b30c5f18109e14036d63a062edd4eeeea55fb465e374a17d6c420e7d",
+    "realtime/plaza.test.mjs": "bd53eb2cdb7238d05a39e06cc4a3c3e8cbe11245c97668c0a36e29d983eaa9cb"
   },
-  "generation": "8c2d46ab76416c5aaf11123520f33957546a29254d421a2687c5f5e566bcefdf"
+  "generation": "3dc28b2967a86d5b83f9b47f6d91da24f0491d6784ce253c320072261e4bd3ae"
 }
