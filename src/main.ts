@@ -1,3 +1,5 @@
+import './plaza.css';
+import {mountPlaza} from './plaza-controller';
 import { type SkillId } from './academy';
 import { mountCareer } from './career-controller';
 import {WORLD_TWO_NAME,WORLD_TWO_REGIONS,worldTwoEquipmentSource,worldTwoEquipment} from './world-two';
@@ -64,7 +66,7 @@ import './adventure.css';
 import './navigation.css';
 import { toolSpec, toolHtml, adjustTool } from './learning-tools';
 
-const CLIENT_BUILD = '2026-10-28.impact.1';
+const CLIENT_BUILD = '2026-11-03.plaza.1';
 document.documentElement.dataset.clientBuild = CLIENT_BUILD;
 
 const $ = <T extends HTMLElement = HTMLElement>(selector: string) => document.querySelector<T>(selector)!;
@@ -83,6 +85,7 @@ root.innerHTML = `<div id="world" aria-label="베리숲 3D 마을"></div><div id
 
 let nearNpcName = '';
 const career = mountCareer({state:()=>state,world:()=>world,persist,stored:()=>saveStore.status!=='error',refresh,open:(html,cls)=>openModal(html,cls),close:closeModal,toast,enterSchool:enterAcademy,learning:()=>openAdventureBook('learning'),plaza:()=>switchStage(0),equipmentShop:(kind,id)=>openShop(kind,id),openWorldTwo:html=>{rememberMenu('world2',()=>career.showWorldTwo());openModal(html,'academy-modal');},supplyShop:()=>openPotionShop('recovery')});
+const plaza = mountPlaza({state:()=>state,world:()=>world,host:document.querySelector<HTMLElement>('#hud')!});
 function renderAcademyBar(){career.render();}
 function enterAcademy(){
  if(!state)return;if(state.expedition.active){toast('진행 중인 원정을 마친 뒤 학교에 들러 주세요.');return;}

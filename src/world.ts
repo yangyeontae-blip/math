@@ -1,3 +1,5 @@
+import {PlazaWorld,mergePlazaAvatar} from './plaza-world';
+import {type PlazaProfile,type PlazaPlayer,type PlazaEmote} from './plaza-protocol';
 import {worldTwoEquipmentModel} from './world-two-models';
 import {WORLD_TWO_REGIONS,WORLD_TWO_BEACONS,WORLD_TWO_GATE,WORLD_TWO_BOSS_NAME,canEnterWorldTwo,type WorldTwoLocation} from './world-two';
 import {roomAction,ROOM_BOOK_PAGES,type RoomActionKind} from './room-life';
@@ -675,6 +677,7 @@ export class World {
   private weatherDrops: { x: number; y: number; z: number; speed: number; sway: number; phase: number }[] = [];
   private weatherDummy = new T.Object3D();
   private sun: T.DirectionalLight; private labelLayer: HTMLDivElement; private selectedId: string | null = null;
+  private plazaVisual: PlazaWorld;
   private guideTarget: { object: T.Object3D; name: string; arrivalDistance: number } | null = null; private guideElement: HTMLDivElement;
   private swingUntil = 0; private rideIndex = -1; private petIndex = -1; private petModel: T.Group | null = null; private petTargetId: number | null = null; private animationRunning = false;
   private rideAnimated: T.Object3D[] = []; private butterflies: T.Object3D[] = []; private furnitureRoot: T.Group | null = null;
@@ -717,6 +720,13 @@ export class World {
     this.scene.add(new T.HemisphereLight(STORYBOOK_LIGHTING.sky, STORYBOOK_LIGHTING.ground, STORYBOOK_LIGHTING.hemisphereIntensity)); this.sun = new T.DirectionalLight(STORYBOOK_LIGHTING.sun, STORYBOOK_LIGHTING.sunIntensity); this.sun.position.set(-15, 30, 15); this.sun.castShadow = true; this.sun.shadow.mapSize.set(1024, 1024); Object.assign(this.sun.shadow.camera, { left: -34, right: 34, top: 32, bottom: -30, far: 85 }); this.sun.shadow.normalBias = .035; this.sun.shadow.bias = -.00015; this.scene.add(this.sun);
     const fill = new T.DirectionalLight(0xd8f3ff, .7); fill.position.set(18, 12, -14); this.scene.add(fill);
     this.labelLayer = document.createElement('div'); this.labelLayer.className = 'world-labels'; container.append(this.labelLayer);
+    this.plazaVisual = new PlazaWorld(this.scene,this.labelLayer,p=>{
+      const root=new T.Group(),avatar=makeCharacter(p.character,p.outfit,p.weapon,p.outfitLevel,p.weaponLevel,p.hairstyle,p.face);root.add(avatar);
+      const body=avatar.userData.body as T.Group;
+      if(p.ride>=0){const height=riderHeight(p.ride);body.position.y=height;body.userData.plazaRideHeight=height;avatar.add(makeRide(p.ride));}
+      const compact=mergePlazaAvatar(avatar);const pet=p.pet>=0?makePet(p.pet):null;if(pet)root.add(pet);
+      return {root,avatar,pet,dispose:()=>{compact();this.disposeModel(root);}};
+    },p=>({body:OUTFITS[p.outfit].color,hair:CHARACTERS[p.character].hair,skin:CHARACTERS[p.character].skin}));
     this.guideElement = document.createElement('div'); this.guideElement.className = 'navigation-guide'; this.guideElement.hidden = true; this.guideElement.innerHTML = '<span aria-hidden="true">➜</span><div><b></b><small></small></div>'; container.append(this.guideElement);
     this.roomActivityPanel=document.createElement('div');this.roomActivityPanel.className='room-activity-panel';this.roomActivityPanel.hidden=true;container.append(this.roomActivityPanel);this.roomActivityPanel.addEventListener('click',event=>{const action=(event.target as HTMLElement).closest<HTMLElement>('[data-room-life]')?.dataset.roomLife;if(action==='stop')this.stopRoomActivity();else if(action==='next'&&this.roomActivity){this.roomActivity.page=(this.roomActivity.page+1)%ROOM_BOOK_PAGES.length;this.renderRoomActivity();}});
     this.buildVillage(); this.mergeStaticScenery(); this.setAvatar(0, 0, 0); this.player.position.set(0, 0, 8); this.scene.add(this.player);
@@ -955,6 +965,7 @@ export class World {
     this.addBerries();
   }
   private clearMap() {
+    this.plazaVisual.detach();
     this.stopRoomActivity();
     this.chargeMotion = null;
     const combatAvatar = this.combatSave;
@@ -1683,6 +1694,13 @@ export class World {
     }
     mesh.instanceMatrix.needsUpdate = true;
   }
+  get isPublicPlaza(){return this.active&&this.stage===0&&!this.inRoom&&!this.inHomestead&&!this.inMarket&&!this.inAcademy&&!this.inHunting&&!this.inTraining;}
+  setPlazaIdentity(profile:PlazaProfile|null){this.plazaVisual.setSelf(profile,this.player);}
+  upsertPlazaPlayer(player:PlazaPlayer){if(this.isPublicPlaza)this.plazaVisual.upsert(player);}
+  removePlazaPlayer(id:string){this.plazaVisual.remove(id);}
+  clearPlazaPlayers(){this.plazaVisual.clearPeers();}
+  plazaEmote(id:string,emote:PlazaEmote){this.plazaVisual.emote(id,emote);}
+  selfPlazaEmote(emote:PlazaEmote){this.plazaVisual.selfEmote(emote);}
   setActive(active: boolean) { this.active = active; this.paused = !active; if (!active) this.clearInput(); this.syncAnimation(); }
   setPaused(paused: boolean) { this.paused = paused; if (paused) this.clearInput(); this.syncAnimation(); }
   private syncAnimation() {
@@ -1894,7 +1912,7 @@ export class World {
     if (this.player.userData.sparkles) this.player.userData.sparkles.rotation.y += dt;
     for (let i = this.particles.length - 1; i >= 0; i--) { const q = this.particles[i]; q.life -= dt; q.v.y -= dt * 5; q.mesh.position.addScaledVector(q.v, dt); q.mesh.scale.setScalar(Math.max(0, q.life)); if (q.life <= 0) { this.scene.remove(q.mesh); this.particles.splice(i, 1); } }
     const target = this.storyActivityFocus ?? (this.active ? p : this.cameraTarget.set(0, 0, -1)); this.follow.lerp(target, 1 - Math.exp(-dt * (this.storyActivityFocus ? 8 : 6))); if (this.active && !this.storyActivityFocus && (this.occlusionTick++ & 7) === 0) this.updateOcclusion();
-    this.camera.position.copy(this.follow).add(this.storyActivityFocus ? this.cameraTarget.set(0, 13, 16) : this.inRoom || this.inAcademy ? ROOM_CAMERA_OFFSET : CAMERA_OFFSET); this.camera.lookAt(this.follow); this.updateGuide();this.scene.fog=null;this.storybook.update(this.time,p,this.petModel?.position??null,this.shadowFloor); this.renderer.render(this.scene, this.camera);
+    this.camera.position.copy(this.follow).add(this.storyActivityFocus ? this.cameraTarget.set(0, 13, 16) : this.inRoom || this.inAcademy ? ROOM_CAMERA_OFFSET : CAMERA_OFFSET); this.camera.lookAt(this.follow); this.updateGuide();this.plazaVisual.update(dt,this.camera,this.player,this.isPublicPlaza,this.active&&!this.storyActivityFocus,this.lowQuality,matchMedia('(prefers-reduced-motion: reduce)').matches);this.scene.fog=null;this.storybook.update(this.time,p,this.petModel?.position??null,this.shadowFloor); this.renderer.render(this.scene, this.camera);
   }
   private updateGuide() {
     const target = this.guideTarget;
