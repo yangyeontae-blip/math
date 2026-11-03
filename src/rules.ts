@@ -1,3 +1,4 @@
+import {emptyWorldTwo,validWorldTwo,WORLD_TWO_WEAPONS,WORLD_TWO_OUTFITS,worldTwoEquipment,worldTwoEquipmentSource,type WorldTwoProgress} from './world-two';
 import {HUNT_RECOVERY_ITEMS,LEGACY_POTION_COUNT,huntingSupply,supplyFailure,type SupplyUseResult} from './hunt-supplies';
 import { emptyHomestead, validHomestead, type Homestead } from './homestead';
 import { emptyExploration, validExploration, syncDiscoveries, type Exploration } from './exploration';
@@ -39,6 +40,7 @@ export const WEAPONS = [
   { name: '서리꽃 쌍검', price: 15500, bonus: 72, multiplier: 10.2, treePower: 14, icon: '❄️', color: 0x9fd8f2 },
   { name: '불꽃 깃털 활', price: 18500, bonus: 79, multiplier: 10.9, treePower: 15, icon: '🔥', color: 0xf07a3c },
   { name: '은하수 왕관검', price: 22000, bonus: 86, multiplier: 11.6, treePower: 16, icon: '🌌', color: 0x8f7ff0 },
+...WORLD_TWO_WEAPONS,
 ] as const;
 export const OUTFITS = [
   { name: '새싹 탐험복', price: 0, color: 0x4d9c78, accent: 0xffe4a3, desc: '처음 떠나는 모험의 설렘', effect: '추가 효과가 없는 기본 옷이에요.', berryBonus: 0, xpBonus: 0, clearBonus: 0 },
@@ -67,6 +69,7 @@ export const OUTFITS = [
   { name: '딸기 마카롱 수트', price: 5900, color: 0xef8399, accent: 0xffe6b2, desc: '딸기 단추와 크림빛 망토를 갖춘 달콤한 수트', effect: '길의 베리마다 +7, 스테이지 통과 베리 +55를 받아요.', berryBonus: 7, xpBonus: 0, clearBonus: 55 },
   { name: '달토끼 수호복', price: 6800, color: 0xb5c9e8, accent: 0xffffff, desc: '달빛 귀와 은빛 망토가 달린 토끼 수호복', effect: '길의 베리마다 +5, 몬스터마다 경험치 +12를 받아요.', berryBonus: 5, xpBonus: 12, clearBonus: 0 },
   { name: '오로라 숲여왕 예복', price: 8000, color: 0x5f9e9a, accent: 0xffdf85, desc: '오로라 망토와 금빛 잎사귀 왕관의 특별 예복', effect: '길의 베리마다 +7, 몬스터마다 경험치 +12, 스테이지 통과 베리 +80을 받아요.', berryBonus: 7, xpBonus: 12, clearBonus: 80 },
+...WORLD_TWO_OUTFITS,
 ] as const;
 export const CHARACTERS = [
   { name: '봄이', desc: '동글동글 양 갈래', hair: 0x623d2e, skin: 0xffd8b1, style: 0 },
@@ -197,7 +200,7 @@ import { emptyAdventure, defaultDesign, validAdventure, type AdventureProgress }
 export const ROOM_GRID_COLUMNS = 5;
 export const ROOM_GRID_ROWS = 4;
 export interface Save {
-  version: 22; career: CareerProgress; grade: SchoolGrade; nickname: string; character: number; berries: number; level: number; xp: number;
+  version: 23; world2: WorldTwoProgress; career: CareerProgress; grade: SchoolGrade; nickname: string; character: number; berries: number; level: number; xp: number;
   weapon: number; outfit: number; weapons: Record<string, number>; outfits: Record<string, number>;
   ride: number; rides: Record<string, boolean>; pet: number; pets: Record<string, boolean>;
   hairstyle: number; hairstyles: Record<string, boolean>; face: number; faces: Record<string, boolean>; teacherMode: boolean;
@@ -252,7 +255,7 @@ export const STAGE_DIVISION_DIFFICULTY = [
 export function newSave(nickname: string, character: number, grade: SchoolGrade = 3): Save {
   if (!nickname.trim() || [...nickname.trim()].length > 10 || !Number.isInteger(character) || character < 0 || character > 3 || !Number.isInteger(grade) || grade < 1 || grade > 6) throw new Error('이름은 1~10자, 학년과 캐릭터를 골라 주세요.');
   const hairstyle = CHARACTERS[character].style;
-  return { version: 22, career: emptyCareer(), grade, nickname: nickname.trim(), character, berries: 0, level: 1, xp: 0, weapon: 0, outfit: 0, weapons: { 0: 0 }, outfits: { 0: 0 }, ride: -1, rides: {}, pet: -1, pets: {}, hairstyle, hairstyles: { 0: true, [hairstyle]: true }, face: 0, faces: { 0: true }, teacherMode: false, best: 0, position: { x: 0, z: 8 }, tutorial: { collected: false, battle: false, shop: false }, settings: { music: true, sound: true, lowQuality: false, maxDividend: 0, multiplicationRange: 'stage', sessionMinutes: 0, focusUnit: 'all', spiralReview: true, practice: { operation: 'auto', tier: 1, skipPicker: false } }, learning: { elapsedSeconds: 0, correct: 0, wrong: 0, wrongQuestions: [] }, discoveries: { monsters: [], pets: [], outfits: [0] }, room: { furniture: [], inside: false, positions: {} }, forest: grade <= 2 ? 'addition' : 'division', journey: emptyJourney(), multiplicationJourney: emptyJourney(), multiplicationFinal: null, multiplicationCompleted: false, multiplicationRewardClaimed: false, additionJourney: emptyJourney(), subtractionJourney: emptyJourney(), additionCompleted: false, subtractionCompleted: false, curriculum: emptyCurriculumProgress(), potions: { stock: POTIONS.map(() => 0), berryMultiplier: 1, berryUntil: 0, xpMultiplier: 1, xpUntil: 0 }, garden: { rescued: 0, flowers: [-1, -1, -1] }, expedition: emptyExpedition(), story: emptyStory(), homestead: emptyHomestead(), exploration: emptyExploration(), forestTrail: emptyForestTrail(), forestActivities: emptyForestActivities(), petFriends: {}, adventure: emptyAdventure(grade) };
+  return { version: 23, world2: emptyWorldTwo(), career: emptyCareer(), grade, nickname: nickname.trim(), character, berries: 0, level: 1, xp: 0, weapon: 0, outfit: 0, weapons: { 0: 0 }, outfits: { 0: 0 }, ride: -1, rides: {}, pet: -1, pets: {}, hairstyle, hairstyles: { 0: true, [hairstyle]: true }, face: 0, faces: { 0: true }, teacherMode: false, best: 0, position: { x: 0, z: 8 }, tutorial: { collected: false, battle: false, shop: false }, settings: { music: true, sound: true, lowQuality: false, maxDividend: 0, multiplicationRange: 'stage', sessionMinutes: 0, focusUnit: 'all', spiralReview: true, practice: { operation: 'auto', tier: 1, skipPicker: false } }, learning: { elapsedSeconds: 0, correct: 0, wrong: 0, wrongQuestions: [] }, discoveries: { monsters: [], pets: [], outfits: [0] }, room: { furniture: [], inside: false, positions: {} }, forest: grade <= 2 ? 'addition' : 'division', journey: emptyJourney(), multiplicationJourney: emptyJourney(), multiplicationFinal: null, multiplicationCompleted: false, multiplicationRewardClaimed: false, additionJourney: emptyJourney(), subtractionJourney: emptyJourney(), additionCompleted: false, subtractionCompleted: false, curriculum: emptyCurriculumProgress(), potions: { stock: POTIONS.map(() => 0), berryMultiplier: 1, berryUntil: 0, xpMultiplier: 1, xpUntil: 0 }, garden: { rescued: 0, flowers: [-1, -1, -1] }, expedition: emptyExpedition(), story: emptyStory(), homestead: emptyHomestead(), exploration: emptyExploration(), forestTrail: emptyForestTrail(), forestActivities: emptyForestActivities(), petFriends: {}, adventure: emptyAdventure(grade) };
 }
 
 export function defaultRoomFurniturePosition(index: number): RoomFurniturePosition {
@@ -656,7 +659,7 @@ export function grantReward(s: Save, monster: number, arena: boolean, now = Date
   return { ...reward, levels, milestones };
 }
 /** Combat power is separate from all learning reward bonuses. */
-export function huntingCompanionStats(s:{pet?:number}){return s.pet===PPOJJAK_PET_ID?{maxHpMultiplier:1.35,damageReduction:.2}:{maxHpMultiplier:1,damageReduction:0};}
+export function huntingCompanionStats(s:{pet?:number;outfit?:number}){const armor=s.outfit!==undefined&&worldTwoEquipment('outfit',s.outfit)?1.15:1;return s.pet===PPOJJAK_PET_ID?{maxHpMultiplier:1.35*armor,damageReduction:.2}:{maxHpMultiplier:armor,damageReduction:0};}
 export function huntingPower(s:Pick<Save,'level'|'weapon'|'weapons'>&{pet?:number}){const w=WEAPONS[s.weapon]??WEAPONS[0],upgrade=Math.max(0,Math.min(3,s.weapons[s.weapon]??0)),level=Math.min(100000,s.level);return (8+level*1.15+Math.sqrt(level)*1.8)*(1+(w.treePower-1)*.22+upgrade*.15)*(s.pet===PPOJJAK_PET_ID?1.45:1);} // 레벨의 힘을 키우되 기존 무기·강화 배율은 유지해요.
 export function huntingRewardFor(s:Save,zone:number,now=Date.now()){
   const z=HUNT_ZONES[zone];if(!z||s.level<z.level||!Number.isFinite(now)||!Number.isFinite(new Date(now).getTime()))return {berries:0,xp:0,eligible:false,multiplier:0};
@@ -670,7 +673,7 @@ const huntingClaims=new WeakMap<Save,Set<string>>();
 export function grantHuntingReward(s:Save,zoneOrEvent:number|HuntDefeatEvent,enemyTypeOrNow:string|number='melee',now=Date.now()){
   const zero={berries:0,xp:0,score:0,levels:0,milestones:[] as {level:number;berries:number}[],eligible:false,multiplier:0};
   const event=typeof zoneOrEvent==='number'?null:zoneOrEvent,zone=typeof zoneOrEvent==='number'?zoneOrEvent:zoneOrEvent.zone;
-  if(event?.practice)return zero;if(typeof enemyTypeOrNow==='number')now=enemyTypeOrNow;
+  if(event?.practice||event?.encounter)return zero;if(typeof enemyTypeOrNow==='number')now=enemyTypeOrNow;
   if(event){const claims=huntingClaims.get(s)??new Set<string>();if(claims.has(event.id))return zero;claims.add(event.id);huntingClaims.set(s,claims);}
   const reward=huntingRewardFor(s,zone,now);if(!reward.eligible)return zero;
   const date=todayKey(new Date(now));if(s.career.daily.date!==date)s.career.daily={date,counts:[0,0,0,0]};
@@ -686,6 +689,7 @@ export function buy(s: Save, kind: 'weapon' | 'outfit', id: number): string {
   const owned = kind === 'weapon' ? s.weapons : s.outfits;
   if (!Number.isInteger(id) || !items[id]) throw new Error('없는 장비예요.');
   if (Object.hasOwn(owned, id)) { s[kind] = id; return '장착했어요!'; }
+  if(worldTwoEquipment(kind,id))throw Error(worldTwoEquipmentSource(kind,id)+'으로 얻어요.');
   if (s.berries < items[id].price) throw new Error(`${items[id].price - s.berries}베리가 더 필요해요.`);
   s.berries -= items[id].price; owned[id] = 0; s[kind] = id; return '새 장비를 장착했어요!';
 }
@@ -904,6 +908,7 @@ export function validateSave(value: unknown): Save {
   if (migrated.version === 19) { migrated.version = 20; migrated.forestActivities = emptyForestActivities(); }
   if (migrated.version === 20) { migrated.version = 21; migrated.homestead = emptyHomestead(); migrated.exploration = emptyExploration(); }
   if (migrated.version === 21) { migrated.version = 22; migrated.career = emptyCareer(); }
+  if (migrated.version === 22) { migrated.version = 23; migrated.world2 = emptyWorldTwo(); }
   const s = migrated as unknown as Save;
   // Older v22 saves retain their six potion quantities; new recovery slots start empty.
   if(s.potions&&Array.isArray(s.potions.stock)&&s.potions.stock.length===LEGACY_POTION_COUNT)s.potions.stock.push(...HUNT_RECOVERY_ITEMS.map(()=>s.teacherMode?9:0));
@@ -924,7 +929,7 @@ export function validateSave(value: unknown): Save {
   }
   const integer = (v: unknown, min: number, max: number): v is number => typeof v === 'number' && Number.isSafeInteger(v) && v >= min && v <= max;
   if (!s.garden || !integer(s.garden.rescued, 0, 3) || !Array.isArray(s.garden.flowers) || s.garden.flowers.length !== 3 || s.garden.flowers.some(f => !integer(f, -1, 2)) || s.garden.flowers.filter(f => f >= 0).length > s.garden.rescued) return fail();
-  if (s.version !== 22 || !validCareer(s.career) || !integer(s.grade, 1, 6) || !OPERATIONS.includes(s.forest) || typeof s.teacherMode !== 'boolean' || typeof s.nickname !== 'string' || !s.nickname.trim() || [...s.nickname].length > 10 || !integer(s.character, 0, 3) || !integer(s.berries, 0, 1e9) || !integer(s.level, 1, 100000) || !integer(s.xp, 0, s.level * 40 - 1) || !integer(s.best, 0, 1e9)) return fail();
+  if (s.version !== 23 || !validWorldTwo(s.world2) || s.world2.location!==null&&(s.career?.location!==null||s.room?.inside||s.homestead?.inside) || !validCareer(s.career) || !integer(s.grade, 1, 6) || !OPERATIONS.includes(s.forest) || typeof s.teacherMode !== 'boolean' || typeof s.nickname !== 'string' || !s.nickname.trim() || [...s.nickname].length > 10 || !integer(s.character, 0, 3) || !integer(s.berries, 0, 1e9) || !integer(s.level, 1, 100000) || !integer(s.xp, 0, s.level * 40 - 1) || !integer(s.best, 0, 1e9)) return fail();
   if (!validHomestead(s.homestead) || !validExploration(s.exploration) || s.homestead.inside && s.room?.inside || !validForestActivities(s.forestActivities, s.grade) || !validForestTrail(s.forestTrail) || !validAdventure(s.adventure) || !s.pets || !validPetFriends(s.petFriends, s.pets)) return fail();
   const story = s.story;
   if (!story || !Array.isArray(story.completed) || story.completed.some(id => !integer(id, 0, 2)) || new Set(story.completed).size !== story.completed.length) return fail();

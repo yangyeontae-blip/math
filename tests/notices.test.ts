@@ -20,3 +20,5 @@ test('공지: 운영자 데이터의 고유 ID와 유효한 게시일', () => {
   assert.equal(new Set(VILLAGE_NOTICES.map(n => n.id)).size, VILLAGE_NOTICES.length);
   for (const n of VILLAGE_NOTICES) { assert.match(n.publishedAt, /^\d{4}-\d{2}-\d{2}$/); assert.equal(new Date(n.publishedAt).toISOString().slice(0, 10), n.publishedAt); assert.ok(n.title.trim() && n.body.trim()); }
 });
+
+test('공지: 세계 2 요청 범위와 이후 친구 서버 계획을 최신 고정 공지로 안내한다',()=>{const latest=sortedNotices()[0];assert.equal(latest.id,'world-two-plan-2026-11-03');assert.equal(latest.pinned,true);assert.equal(latest.body,'의견 보내기를 검토한 결과 ‘세계 2의 지역 3곳 + 새 장비 12종 + 혼자 도전 가능한 보스 1종’를 추가하고, 이후에 서버를 만들어 친구들과 만날 수 있도록 하겠습니다.');});

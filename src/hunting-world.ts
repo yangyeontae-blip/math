@@ -1,4 +1,5 @@
 import * as T from 'three';
+import {worldTwoScenery} from './world-two-models';
 import { skillInfo, type JobId, type SkillId } from './academy';
 import type { HuntEnemy, HuntEvent, HuntSnapshot } from './hunting';
 
@@ -25,10 +26,15 @@ export const HUNT_THEMES = [
   { title: '메마른 붉은 협곡', sky: 0x9a6a46, fog: 0x8a5a3a, ground: 0xa67645, path: 0x7d5232, foliage: 0x7c6a3a, tint: 0xb0703c, eye: 0xffa53a, glow: 0xffc46b },
   { title: '안개 낀 달빛 늪', sky: 0x23284a, fog: 0x1e2342, ground: 0x2f3557, path: 0x454a6a, foliage: 0x253049, tint: 0x5e6aa8, eye: 0xc9f0ff, glow: 0x9fd8ff },
   { title: '불타는 용암 폐허', sky: 0x2b1515, fog: 0x231010, ground: 0x3a2120, path: 0x4f3530, foliage: 0x2a1a18, tint: 0x8a3b30, eye: 0xff4a2e, glow: 0xff7a2e },
+ {title:'햇살바람 초원',sky:0xc8e5d3,fog:0xc8e5d3,ground:0x8faf6d,path:0xe4d5a9,foliage:0x67946b,tint:0x9bb575,eye:0xffe09c,glow:0xf3dc91},
+ {title:'수정물결 호수',sky:0xb7dfe7,fog:0xb7dfe7,ground:0x96bdb0,path:0xdce1c3,foliage:0x688e9c,tint:0x79b4c9,eye:0xe3fbff,glow:0xc2edf1},
+ {title:'별빛고리 유적',sky:0x9fa6c4,fog:0x9fa6c4,ground:0x8c93ad,path:0xd3c8ba,foliage:0x7a88a0,tint:0x9c8cb9,eye:0xffe4a0,glow:0xe9d396},
+ {title:'고대 별나무 성소',sky:0xc8dec5,fog:0xc8dec5,ground:0x93aa87,path:0xd7cca9,foliage:0x74916e,tint:0x64866e,eye:0xffe6a0,glow:0xf6d88a},
 ] as const;
 
 /** 구역마다 다른 장식(놀이 공간 바깥에만 둬요). 보상·충돌·저장과 상관없는 그림이에요. */
 export function huntingScenery(zone: number): T.Group {
+  if(zone>=4)return worldTwoScenery(Math.min(2,zone-4),zone===7);
   const g = new T.Group(), theme = HUNT_THEMES[zone] ?? HUNT_THEMES[0], cache = new Map<string, T.Material>();
   const mat = (c: number, glow = false) => { const key = `${c}:${glow}`; if (!cache.has(key)) cache.set(key, glow ? new T.MeshBasicMaterial({ color: c }) : new T.MeshStandardMaterial({ color: c, roughness: .9, flatShading: true })); return cache.get(key)!; };
   const put = (geo: T.BufferGeometry, c: number, x: number, y: number, z: number, glow = false) => { const m = new T.Mesh(geo, mat(c, glow)); m.position.set(x, y, z); m.castShadow = !glow; m.receiveShadow = true; g.add(m); return m; };
@@ -94,6 +100,7 @@ export class HuntingWorld {
   private cube = this.geometry(new T.BoxGeometry(1, 1, 1));
   private cone = this.geometry(new T.ConeGeometry(1, 1, 7));
   private circle = this.geometry(new T.CircleGeometry(1, 32));
+  private bossRing=this.geometry(new T.RingGeometry(.35,1,48));
   private ring = this.geometry(new T.RingGeometry(.88, 1, 32));
   private plane = this.geometry(new T.PlaneGeometry(1, 1));
   private arc = this.geometry(new T.TorusGeometry(1, .075, 6, 24, Math.PI));
@@ -119,10 +126,14 @@ export class HuntingWorld {
       this.piece(body, this.cube, 0xbc9970, 0, .9, 0, 1.6, .15, .16);
       this.piece(body, this.sphere, color, 0, .9, .12, .43, .5, .22);
       this.piece(body, this.sphere, 0xf7e7b8, 0, .95, .34, .25, .25, .025);
+    } else if(this.zone===7){
+      body.name='ancient-star-tree';this.piece(body,this.cube,0x7a654e,0,1.65,0,1.7,2.6,1.3);this.piece(body,this.sphere,0x61886a,0,3.45,0,2.1,1.1,1.5);
+      for(const side of [-1,1]){const arm=this.piece(body,this.cube,0x8b765b,side*1.4,1.8,0,.7,1.65,.65);arm.rotation.z=-side*.35;this.piece(body,this.sphere,0x91ad78,side*1.45,2.8,0,.9,.5,.65);this.piece(body,this.cube,0x705d45,side*.65,.35,.15,.8,.6,1.1);this.piece(body,this.sphere,0xffe6a0,side*.4,2.25,.7,.16,.12,.08);}
+      for(let i=0;i<5;i++)this.piece(body,this.cone,0xe6cc83,Math.cos(i*1.26)*1.05,4.15,Math.sin(i*1.26)*.6,.18,.65,.18);this.piece(body,this.sphere,0xc6dfa5,0,1.5,.7,.4,.5,.12);
     } else {
       // 구역이 높을수록 크고 어두우며, 볼터치 대신 빛나는 눈·찡그린 눈썹·이빨을 달아요.
       const theme = HUNT_THEMES[this.zone] ?? HUNT_THEMES[0], dark = new T.Color(color).lerp(new T.Color(theme.tint), .55).multiplyScalar(.82).getHex();
-      body.scale.setScalar(1 + this.zone * .14);
+      body.scale.setScalar(1 + Math.min(this.zone,3) * .14);
       this.piece(body, this.sphere, dark, 0, .68, 0, .7, .64, .61);
       for (const side of [-1, 1]) {
         const eye = new T.Mesh(this.sphere, this.glow(theme.eye)); eye.position.set(side * .22, .82, .56); eye.scale.set(.1, .07, .03); body.add(eye);
@@ -139,7 +150,7 @@ export class HuntingWorld {
       else if (index % 6 === 4) { this.piece(body, this.sphere, 0xf1d59c, 0, .65, .57, .25, .2, .05); for (const side of [-1, 1]) this.piece(body, this.cone, color, side * .36, 1.28, 0, .24, .52, .23); }
       else for (const side of [-1, 1]) { this.piece(body, this.cone, 0x8f7850, side * .36, 1.35, 0, .14, .6, .14); this.piece(body, this.sphere, 0xf1d990, side * .55, .7, 0, .25, .12, .5); }
     }
-    const bar = new T.Group(); bar.position.y = 2.2; root.add(bar);
+    const bar = new T.Group(); bar.position.y = this.zone===7?4.9:2.2; root.add(bar);
     const background = new T.Mesh(this.plane, this.material(0x473d39)); background.scale.set(1.5, .16, 1); bar.add(background);
     const hp = new T.Mesh(this.plane, this.material(0x87bd76)); hp.position.z = .009; hp.scale.set(1.44, .105, 1); bar.add(hp);
     const target = new T.Mesh(this.ring, this.material(0xffda6e, .9)); target.rotation.x = -Math.PI / 2; target.position.y = .045; target.visible = false; root.add(target);
@@ -159,7 +170,7 @@ export class HuntingWorld {
       const ratio = T.MathUtils.clamp(enemy.hp / Math.max(1, enemy.maxHp), 0, 1); visual.hp.scale.x = ratio * 1.44; visual.hp.position.x = -(1 - ratio) * .72;
       visual.target.visible = enemy.id === selected && visual.root.visible;
       visual.warning.visible = !!enemy.telegraph && visual.root.visible;
-      if (enemy.telegraph) { visual.warning.position.set(enemy.telegraph.x, .035, enemy.telegraph.z); visual.warning.scale.setScalar(enemy.telegraph.radius); }
+      if (enemy.telegraph) { visual.warning.geometry=enemy.telegraph.innerRadius?this.bossRing:this.circle;visual.warning.position.set(enemy.telegraph.x, .035, enemy.telegraph.z); visual.warning.scale.setScalar(enemy.telegraph.radius); }
     }
     // Keep a fixed visual budget even if a future runtime exposes many overlapping areas.
     const visibleEffects = snapshot.effects.filter(effect => !(['leafOrb', 'thunderChain', 'tripleShot', 'moonArrow'].includes(effect.skill) && this.castOrigins.has(effect.skill))).slice(-24), live = new Set(visibleEffects.map(effect => effect.id));

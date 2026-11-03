@@ -8,6 +8,7 @@ export interface VillageNotice {
 }
 
 export const VILLAGE_NOTICES: readonly VillageNotice[] = [
+  {id:'world-two-plan-2026-11-03',title:'🌌 여러분의 의견으로 준비하는 세계 2와 친구 모험',publishedAt:'2026-11-03',body:'의견 보내기를 검토한 결과 ‘세계 2의 지역 3곳 + 새 장비 12종 + 혼자 도전 가능한 보스 1종’를 추가하고, 이후에 서버를 만들어 친구들과 만날 수 있도록 하겠습니다.',pinned:true},
   {
     id: 'welcome-2026-10-24',
     title: '🌳 베리숲에 오신 모험가 여러분, 환영합니다!',
