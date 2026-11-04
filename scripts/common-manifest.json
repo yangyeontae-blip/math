@@ -111,16 +111,16 @@
     "src/plaza-identity.ts": "5c3ad345959140202593bcf6c11c200e7941cb6e656822f28029319b6c848d11",
     "src/plaza-client.ts": "1bdc4f9db3729e62ddff1033eab1362669e094d768c0c057a2ff957438416bb5",
     "src/plaza-controller.ts": "f88ced597af76f386cd5a51d4f401a79f87d4f4bda132dae2245dcd7c5c61a7a",
-    "src/plaza-world.ts": "924737c1ecbeb80d09c8afcf0dfb07f66394794b13c56ed316a0d436a50d81c8",
+    "src/plaza-world.ts": "438f1214f43c73aeea55c1f8433bd03295813fd5197ae448793949754757259e",
     "src/plaza-endpoint.ts": "8209e54c95cbd78b65a44eefd6bfd658759567b7d8af6af4a2e87a102249e790",
     "src/plaza.css": "45036798cb647845cb0ea9322a0c17e68977a85801bbe6c744c1c64e4c3ed4ea",
-    "tests/plaza.test.ts": "3107b669899a2a935bd8e1426803e19dedfe019477e9fb1c8e1f4814e8e32e22",
-    "e2e/plaza.spec.mjs": "ccee3239ef586e7c296302560726b4af48104d68f0ace1779a583bc6395164ca",
+    "tests/plaza.test.ts": "96ab5ded1cd8a4be3ec02fe497b7173fddff53e2b8b0d6ece5d178dc73e23eec",
+    "e2e/plaza.spec.mjs": "ac7979503356a46c7960686dbe2a9bbf453bfb78fb6ae194b03e49d7c896a673",
     "e2e/plaza-server.mjs": "163dbafc5b0612d8ed957f5c75eaad121a7b187c4ca2fa653593ae5c9ebd4cab",
     "scripts/build-plaza.mjs": "cd9262c9c77bdb2ed4bb6589c14f3d211405f5b8f9a37b815832200d7c15538d",
     "realtime/index.mjs": "7b1ca24c4013be11e7f5622ce9107634e7ec37ce20527d5a455106079e886298",
     "realtime/wrangler.jsonc": "369e0937b30c5f18109e14036d63a062edd4eeeea55fb465e374a17d6c420e7d",
     "realtime/plaza.test.mjs": "8b4b702c353ca4b7043ab3585553be5e967408d259bec5065c27e13ee64486a2"
   },
-  "generation": "5247683c9955e23dc94e3e10aa8fccfc15f381ca95c5b6f8ce4bfd60fae5f1e8"
+  "generation": "5953b27c1db37c8201c207d4534bdf0c8e53c0640889f133809551fafbe8bdcb"
 }

@@ -16,6 +16,18 @@ export function mergePlazaAvatar(root:T.Group){
  const merged=pieces.length?mergeGeometries(pieces):null;pieces.forEach(g=>g.dispose());if(!merged)return ()=>{};
  const material=new T.MeshStandardMaterial({vertexColors:true,roughness:.82});const mesh=new T.Mesh(merged,material);mesh.castShadow=true;root.add(mesh);return ()=>material.dispose();
 }
+type LabelRect={x:number;top:number;bottom:number;width:number};
+/** Prefer above the avatar; use a nearby free column when stacked greetings reach the top of a short screen. */
+export function placePlazaLabel(x:number,y:number,width:number,height:number,viewportWidth:number,viewportHeight:number,occupied:readonly LabelRect[]){
+ const minX=8+width/2,maxX=viewportWidth-8-width/2;if(minX>maxX||height>viewportHeight-33)return null;
+ const clamp=(v:number)=>Math.max(minX,Math.min(maxX,v));
+ const columns=[...new Set([clamp(x),...occupied.flatMap(r=>[clamp(r.x-(r.width+width)/2-6),clamp(r.x+(r.width+width)/2+6)])])].sort((a,b)=>Math.abs(a-x)-Math.abs(b-x));
+ for(const candidate of columns){let bottom=Math.min(y,viewportHeight-8);
+  for(let attempt=0;attempt<=occupied.length;attempt++){const overlap=occupied.filter(r=>Math.abs(r.x-candidate)<(r.width+width)/2+4&&bottom>r.top-4&&bottom-height<r.bottom+4);if(!overlap.length)break;bottom=Math.min(...overlap.map(r=>r.top))-5;}
+  if(bottom-height>=25)return {x:candidate,y:bottom};
+ }
+ return null;
+}
 export class PlazaWorld {
  private peers=new Map<string,Actor>();private self:T.Group|null=null;private own:ReturnType<PlazaWorld['label']>;private selfProfile:PlazaProfile|null=null;private selfSignature='';
  private farRoot=new T.Group();private far:{mesh:T.InstancedMesh;offset:T.Vector3;scale:T.Vector3;color:(p:PlazaProfile)=>number}[]=[];private matrix=new T.Matrix4();private quaternion=new T.Quaternion();private projected=new T.Vector3();private targetPosition=new T.Vector3();private partPosition=new T.Vector3();private partColor=new T.Color();private clock=0;
@@ -41,11 +53,11 @@ export class PlazaWorld {
  detach(){this.clearPeers();this.farRoot.removeFromParent();}
  emote(id:string,emote:PlazaEmote){const actor=this.peers.get(id);if(!actor)return;actor.bubble.textContent=PLAZA_EMOTES[emote];actor.bubble.hidden=false;actor.emoteUntil=this.clock+3;}
  selfEmote(emote:PlazaEmote){this.own.bubble.textContent=PLAZA_EMOTES[emote];this.own.bubble.hidden=false;this.own.bubble.dataset.until=String(this.clock+3);}
- private place(label:HTMLElement,position:T.Vector3,height:number,camera:T.Camera,width:number,heightPx:number,visible:boolean,occupied:{x:number;top:number;bottom:number;width:number}[]){
+ private place(label:HTMLElement,position:T.Vector3,height:number,camera:T.Camera,width:number,heightPx:number,visible:boolean,occupied:LabelRect[]){
   this.projected.copy(position);this.projected.y+=height;this.projected.project(camera);let hidden=!visible||this.projected.z>1||Math.abs(this.projected.x)>1.05||Math.abs(this.projected.y)>1.05;
   const x=(this.projected.x*.5+.5)*width;let y=(-this.projected.y*.5+.5)*heightPx;const compact=width<650,plateWidth=Math.min(compact?165:210,Number(label.dataset.plateWidth??160)),titleRows=Math.max(1,Math.ceil(Number(label.dataset.titleLength??0)*(compact?10:11)/(plateWidth-16))),plateHeight=(compact?25:29)+titleRows*(compact?13:14.3)+13+((label.lastElementChild as HTMLElement)?.hidden===false?46:0);
-  if(!hidden){for(let attempt=0;attempt<64;attempt++){const overlap=occupied.filter(r=>Math.abs(r.x-x)<(r.width+plateWidth)/2+4&&y>r.top-4&&y-plateHeight<r.bottom+4);if(!overlap.length)break;y=Math.min(...overlap.map(r=>r.top))-5;}if(y-plateHeight<25)hidden=true;}
-  if(label.hidden!==hidden)label.hidden=hidden;if(!hidden){const transform='translate(-50%,-100%) translate('+Math.round(x)+'px,'+Math.round(y)+'px)';if(label.style.transform!==transform)label.style.transform=transform;occupied.push({x,top:y-plateHeight,bottom:y,width:plateWidth});}
+  const placed=hidden?null:placePlazaLabel(x,y,plateWidth,plateHeight,width,heightPx,occupied);hidden=!placed;
+  if(label.hidden!==hidden)label.hidden=hidden;if(placed){const transform='translate(-50%,-100%) translate('+Math.round(placed.x)+'px,'+Math.round(placed.y)+'px)';if(label.style.transform!==transform)label.style.transform=transform;occupied.push({x:placed.x,top:placed.y-plateHeight,bottom:placed.y,width:plateWidth});}
  }
 
  update(dt:number,camera:T.Camera,player:T.Group,showPeers:boolean,active:boolean,low:boolean,reduced:boolean){
