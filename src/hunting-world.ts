@@ -26,10 +26,10 @@ export const HUNT_THEMES = [
   { title: '메마른 붉은 협곡', sky: 0x9a6a46, fog: 0x8a5a3a, ground: 0xa67645, path: 0x7d5232, foliage: 0x7c6a3a, tint: 0xb0703c, eye: 0xffa53a, glow: 0xffc46b },
   { title: '안개 낀 달빛 늪', sky: 0x23284a, fog: 0x1e2342, ground: 0x2f3557, path: 0x454a6a, foliage: 0x253049, tint: 0x5e6aa8, eye: 0xc9f0ff, glow: 0x9fd8ff },
   { title: '불타는 용암 폐허', sky: 0x2b1515, fog: 0x231010, ground: 0x3a2120, path: 0x4f3530, foliage: 0x2a1a18, tint: 0x8a3b30, eye: 0xff4a2e, glow: 0xff7a2e },
- {title:'햇살바람 초원',sky:0xc8e5d3,fog:0xc8e5d3,ground:0x8faf6d,path:0xe4d5a9,foliage:0x67946b,tint:0x9bb575,eye:0xffe09c,glow:0xf3dc91},
- {title:'수정물결 호수',sky:0xb7dfe7,fog:0xb7dfe7,ground:0x96bdb0,path:0xdce1c3,foliage:0x688e9c,tint:0x79b4c9,eye:0xe3fbff,glow:0xc2edf1},
- {title:'별빛고리 유적',sky:0x9fa6c4,fog:0x9fa6c4,ground:0x8c93ad,path:0xd3c8ba,foliage:0x7a88a0,tint:0x9c8cb9,eye:0xffe4a0,glow:0xe9d396},
- {title:'고대 별나무 성소',sky:0xc8dec5,fog:0xc8dec5,ground:0x93aa87,path:0xd7cca9,foliage:0x74916e,tint:0x64866e,eye:0xffe6a0,glow:0xf6d88a},
+ {title:'햇살바람 초원',sky:0x241d49,fog:0x241d49,ground:0x73618e,path:0xf0d2a6,foliage:0x80d6c2,tint:0xaaa1d2,eye:0xffe09c,glow:0xf3dc91},
+ {title:'수정물결 호수',sky:0x122d49,fog:0x122d49,ground:0x477e96,path:0xc5f1e5,foliage:0x8ae6ee,tint:0x79cbdc,eye:0xe3fbff,glow:0xc2edf1},
+ {title:'별빛고리 유적',sky:0x221d45,fog:0x221d45,ground:0x75689c,path:0xd7c8f3,foliage:0xb1a3ed,tint:0xb5a0da,eye:0xffe4a0,glow:0xe9d396},
+ {title:'고대 별나무 성소',sky:0x152c42,fog:0x152c42,ground:0x617e91,path:0xf4e2b5,foliage:0x90dccc,tint:0x89c6d0,eye:0xffe6a0,glow:0xf6d88a},
 ] as const;
 
 /** 구역마다 다른 장식(놀이 공간 바깥에만 둬요). 보상·충돌·저장과 상관없는 그림이에요. */
@@ -127,9 +127,16 @@ export class HuntingWorld {
       this.piece(body, this.sphere, color, 0, .9, .12, .43, .5, .22);
       this.piece(body, this.sphere, 0xf7e7b8, 0, .95, .34, .25, .25, .025);
     } else if(this.zone===7){
-      body.name='ancient-star-tree';this.piece(body,this.cube,0x7a654e,0,1.65,0,1.7,2.6,1.3);this.piece(body,this.sphere,0x61886a,0,3.45,0,2.1,1.1,1.5);
-      for(const side of [-1,1]){const arm=this.piece(body,this.cube,0x8b765b,side*1.4,1.8,0,.7,1.65,.65);arm.rotation.z=-side*.35;this.piece(body,this.sphere,0x91ad78,side*1.45,2.8,0,.9,.5,.65);this.piece(body,this.cube,0x705d45,side*.65,.35,.15,.8,.6,1.1);this.piece(body,this.sphere,0xffe6a0,side*.4,2.25,.7,.16,.12,.08);}
+      body.name='ancient-star-tree';this.piece(body,this.cube,0x52768a,0,1.65,0,1.7,2.6,1.3);this.piece(body,this.sphere,0x9cd7cf,0,3.45,0,2.1,1.1,1.5);
+      for(const side of [-1,1]){const arm=this.piece(body,this.cube,0x6f91a0,side*1.4,1.8,0,.7,1.65,.65);arm.rotation.z=-side*.35;this.piece(body,this.sphere,0xb6e2d8,side*1.45,2.8,0,.9,.5,.65);this.piece(body,this.cube,0x4b6b83,side*.65,.35,.15,.8,.6,1.1);this.piece(body,this.sphere,0xffe6a0,side*.4,2.25,.7,.16,.12,.08);}
       for(let i=0;i<5;i++)this.piece(body,this.cone,0xe6cc83,Math.cos(i*1.26)*1.05,4.15,Math.sin(i*1.26)*.6,.18,.65,.18);this.piece(body,this.sphere,0xc6dfa5,0,1.5,.7,.4,.5,.12);
+      const crown=new T.Mesh(this.geometry(new T.TorusGeometry(2.2,.06,6,36)),this.glow(0xf3ddaa));crown.position.y=3.5;crown.rotation.x=Math.PI/2;body.add(crown);
+    } else if(this.zone>=4){
+      const theme=HUNT_THEMES[this.zone],crystal=this.geometry(new T.OctahedronGeometry(1));body.name='planetary-spirit-'+this.zone;body.scale.setScalar(1.2);
+      if(this.zone===4){this.piece(body,this.sphere,0xb7a1cf,0,.75,0,.65,.65,.55);for(const side of [-1,1]){const petal=this.piece(body,this.sphere,theme.foliage,side*.55,.95,-.08,.35,.16,.5);petal.rotation.z=side*.5;this.piece(body,this.sphere,theme.glow,side*.3,1.42,0,.13,.25,.13);}}
+      else if(this.zone===5){this.piece(body,crystal,0x8bcddc,0,.85,0,.65,.9,.55);for(const side of [-1,1])this.piece(body,crystal,0xc7eced,side*.6,.7,0,.2,.45,.25);}
+      else{this.piece(body,this.cube,0x9d8bc4,0,.85,0,1.05,1.25,.8);for(const side of [-1,1])this.piece(body,crystal,theme.glow,side*.65,1.1,0,.16,.3,.2);}
+      for(const side of [-1,1]){const eye=new T.Mesh(this.sphere,this.glow(theme.eye));eye.position.set(side*.2,.95,.53);eye.scale.set(.085,.1,.035);body.add(eye);this.piece(body,this.sphere,theme.tint,side*.32,.15,.12,.22,.13,.28);}const orbit=new T.Mesh(this.ring,this.glow(theme.glow));orbit.position.y=.18;orbit.rotation.x=-Math.PI/2;orbit.scale.setScalar(.9);body.add(orbit);
     } else {
       // 구역이 높을수록 크고 어두우며, 볼터치 대신 빛나는 눈·찡그린 눈썹·이빨을 달아요.
       const theme = HUNT_THEMES[this.zone] ?? HUNT_THEMES[0], dark = new T.Color(color).lerp(new T.Color(theme.tint), .55).multiplyScalar(.82).getHex();

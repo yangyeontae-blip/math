@@ -43,6 +43,7 @@ export class StorybookScene {
   }
   prepare(scene: T.Scene, indoor: boolean, market: boolean, forest: boolean, forestColor: number) {
     this.clear(scene);
+    const otherworld=scene.children.some(o=>o.name==='world2-planetary-landscape');
     this.scene=scene;
     this.reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
     scene.fog = null;
@@ -55,8 +56,8 @@ export class StorybookScene {
       if((p.height??9)<=1.2&&(((p.width??0)>1&&(p.depth??0)>1)||(p.radiusTop??0)>3)) {
         const bounds=new T.Box3().setFromObject(o);if(bounds.max.y<2.5)this.floors.push(bounds);
       }
-      if ((p.width ?? 0) > 25 && (p.height ?? 9) <= 1.2) o.material = storybookMaterial('grass', color);
-      else if ((p.width ?? 0) > 3 && (p.depth ?? 0) > 1 && (p.height ?? 9) < .2) o.material = storybookMaterial(indoor ? 'wood' : 'stone', color);
+      if (!otherworld && (p.width ?? 0) > 25 && (p.height ?? 9) <= 1.2) o.material = storybookMaterial('grass', color);
+      else if (!otherworld && (p.width ?? 0) > 3 && (p.depth ?? 0) > 1 && (p.height ?? 9) < .2) o.material = storybookMaterial(indoor ? 'wood' : 'stone', color);
       // Restrict water recognition to existing large blue horizontal surfaces, not puzzles or signs.
       if ([0x59b9bf,0x8dcfc6,0xa0ded4,0x7ccada,0x7bc9dc,0x8ed4df,0x86cbd9,0x83c5d5,0x83cbd8,0x80c5db,0x79c8dc,0x75c3d5,0x89d1d9,0x88c9de,0x73c4db,0x80c9dc].includes(color) && ((p.width ?? 0) > 2 || (p.radiusTop ?? 0) > .5)) {
         o.material = storybookMaterial('water', color);
@@ -66,7 +67,7 @@ export class StorybookScene {
     });
     const root = this.root = new T.Group(); root.userData.storybookRuntime = true; scene.add(root);
     root.add(this.contact, this.petContact);
-    if (!indoor) {
+    if (!indoor && !otherworld) {
       // A single instanced draw for the meadow fringe; all entrances and paths remain clear.
       const geo = new T.BufferGeometry();
       geo.setAttribute('position', new T.Float32BufferAttribute([-.1,0,0,.06,0,0,.02,.42,.03, 0,0,-.08,0,0,.08,-.05,.3,0],3)); geo.computeVertexNormals();

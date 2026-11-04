@@ -5,17 +5,18 @@ type Model={root:T.Group;avatar:T.Group;pet:T.Group|null;dispose:()=>void};
 type Actor={state:PlazaPlayer;position:T.Vector3;angle:number;label:HTMLDivElement;name:HTMLElement;title:HTMLElement;bubble:HTMLElement;emoteUntil:number;phase:number;signature:string;model:Model|null};
 /** Merge opaque static pieces, keeping legs/arms and shader/instanced hair available for animation. */
 export function mergePlazaAvatar(root:T.Group){
- root.updateMatrixWorld(true);const pieces:T.BufferGeometry[]=[];const keep=new Set<T.Object3D>([...(root.userData.feet??[]),...(root.userData.arms??[]),...(root.userData.hands??[])]);
- const inverse=root.matrixWorld.clone().invert();
- root.traverse(o=>{if(!(o instanceof T.Mesh)||o instanceof T.InstancedMesh||Array.isArray(o.material)||!o.visible)return;let p:T.Object3D|null=o;while(p&&p!==root){if(!p.visible||keep.has(p))return;p=p.parent;}
+ root.updateMatrixWorld(true);const body=root.userData.body as T.Group|undefined;
+ const keep=new Set<T.Object3D>([...(root.userData.feet??[]),...(root.userData.arms??[]),...(root.userData.hands??[]),...(root.userData.eyes??[])]);
+ const groups=new Map<T.Object3D,{geometry:T.BufferGeometry;mesh:T.Mesh}[]>();
+ root.traverse(o=>{if(!(o instanceof T.Mesh)||o instanceof T.InstancedMesh||Array.isArray(o.material)||!o.visible)return;let at:T.Object3D|null=o,anchor:T.Object3D=root;while(at&&at!==root){if(!at.visible||keep.has(at))return;if(at===body)anchor=body;at=at.parent;}
   const material=o.material as T.MeshStandardMaterial;if(!material.color||material.map||material.transparent||material.emissive?.getHex())return;
-  let geo=o.geometry.clone();if(geo.index){const next=geo.toNonIndexed();geo.dispose();geo=next;}geo.applyMatrix4(new T.Matrix4().multiplyMatrices(inverse,o.matrixWorld));if(!geo.getAttribute('normal'))geo.computeVertexNormals();
-  for(const key of Object.keys(geo.attributes))if(!['position','normal'].includes(key))geo.deleteAttribute(key);
-  const colors=new Float32Array(geo.getAttribute('position').count*3);for(let i=0;i<colors.length;i+=3){colors[i]=material.color.r;colors[i+1]=material.color.g;colors[i+2]=material.color.b;}geo.setAttribute('color',new T.BufferAttribute(colors,3));pieces.push(geo);o.visible=false;
+  let geo=o.geometry.clone();if(geo.index){const next=geo.toNonIndexed();geo.dispose();geo=next;}geo.applyMatrix4(new T.Matrix4().copy(anchor.matrixWorld).invert().multiply(o.matrixWorld));if(!geo.getAttribute('normal'))geo.computeVertexNormals();for(const key of Object.keys(geo.attributes))if(!['position','normal'].includes(key))geo.deleteAttribute(key);
+  const colors=new Float32Array(geo.getAttribute('position').count*3);for(let i=0;i<colors.length;i+=3){colors[i]=material.color.r;colors[i+1]=material.color.g;colors[i+2]=material.color.b;}geo.setAttribute('color',new T.BufferAttribute(colors,3));const parts=groups.get(anchor)??[];parts.push({geometry:geo,mesh:o});groups.set(anchor,parts);
  });
- const merged=pieces.length?mergeGeometries(pieces):null;pieces.forEach(g=>g.dispose());if(!merged)return ()=>{};
- const material=new T.MeshStandardMaterial({vertexColors:true,roughness:.82});const mesh=new T.Mesh(merged,material);mesh.castShadow=true;root.add(mesh);return ()=>material.dispose();
+ const owned:T.Material[]=[];for(const [anchor,parts] of groups){const merged=mergeGeometries(parts.map(p=>p.geometry));parts.forEach(p=>p.geometry.dispose());if(!merged)continue;const material=new T.MeshStandardMaterial({vertexColors:true,roughness:.82,side:T.DoubleSide}),mesh=new T.Mesh(merged,material);mesh.name='plaza-preserved-body';mesh.castShadow=mesh.receiveShadow=true;anchor.add(mesh);parts.forEach(p=>p.mesh.visible=false);owned.push(material);}
+ return ()=>owned.forEach(m=>m.dispose());
 }
+
 type LabelRect={x:number;top:number;bottom:number;width:number};
 /** Prefer above the avatar; use a nearby free column when stacked greetings reach the top of a short screen. */
 export function placePlazaLabel(x:number,y:number,width:number,height:number,viewportWidth:number,viewportHeight:number,occupied:readonly LabelRect[]){
@@ -34,11 +35,13 @@ export class PlazaWorld {
  constructor(private scene:T.Scene,private layer:HTMLElement,private factory:(p:PlazaProfile)=>Model,private colors:(p:PlazaProfile)=>{body:number;hair:number;skin:number}){
   this.own=this.label(true);
   const part=(geometry:T.BufferGeometry,offset:T.Vector3,scale:T.Vector3,color:(p:PlazaProfile)=>number)=>{const mesh=new T.InstancedMesh(geometry,new T.MeshStandardMaterial({roughness:.9}),PLAZA_CAPACITY);mesh.count=0;mesh.instanceMatrix.setUsage(T.DynamicDrawUsage);mesh.frustumCulled=false;this.farRoot.add(mesh);this.far.push({mesh,offset,scale,color});};
-  part(new T.CapsuleGeometry(.33,.38,3,8),new T.Vector3(0,.7,0),new T.Vector3(1,1,1),p=>colors(p).body);
-  part(new T.SphereGeometry(.43,10,7),new T.Vector3(0,1.5,0),new T.Vector3(1,1,1),p=>colors(p).skin);
-  part(new T.SphereGeometry(.46,10,6,0,Math.PI*2,0,Math.PI*.48),new T.Vector3(0,1.53,0),new T.Vector3(1,1,1),p=>colors(p).hair);
-  for(const x of [-.15,.15])part(new T.SphereGeometry(.065,6,5),new T.Vector3(x,1.53,.39),new T.Vector3(1,1,1),()=>0x362b26);
+  part(new T.CylinderGeometry(.31,.46,.88,10),new T.Vector3(0,.67,0),new T.Vector3(1,1,1),p=>colors(p).body);
+  part(new T.SphereGeometry(.53,12,8),new T.Vector3(0,1.5,0),new T.Vector3(1,.98,.87),p=>colors(p).skin);
+  part(new T.SphereGeometry(.555,12,8,0,Math.PI*2,0,Math.PI*.455),new T.Vector3(0,1.51,-.04),new T.Vector3(1,1.03,.89),p=>colors(p).hair);
+  for(const x of [-.15,.15])part(new T.SphereGeometry(.065,6,5),new T.Vector3(x,1.53,.47),new T.Vector3(1,1,1),()=>0x362b26);
   for(const x of [-.18,.18])part(new T.SphereGeometry(.17,6,5),new T.Vector3(x,.18,.07),new T.Vector3(1,1,1.4),()=>0x574840);
+  for(const side of [-1,1]){part(new T.CylinderGeometry(.17,.2,.55,8),new T.Vector3(side*.4,.85,0),new T.Vector3(1,1,1),p=>colors(p).body);part(new T.SphereGeometry(.16,8,6),new T.Vector3(side*.49,.57,.02),new T.Vector3(1,1,1),p=>colors(p).skin);}
+  part(new T.TorusGeometry(.075,.018,4,10,Math.PI),new T.Vector3(0,1.3,.47),new T.Vector3(1,1,1),()=>0x694438);
   this.farRoot.name='plaza-distant-avatars';
  }
  private label(self=false){const root=document.createElement('div');root.className='plaza-nameplate'+(self?' is-self':'');root.hidden=true;const name=document.createElement('strong'),title=document.createElement('span'),bubble=document.createElement('b');bubble.className='plaza-emote';bubble.hidden=true;root.append(name,title,bubble);this.layer.append(root);return {root,name,title,bubble};}
@@ -71,7 +74,7 @@ export class PlazaWorld {
    const target=actor.state.pose,p=actor.state.profile,beforeX=actor.position.x,beforeZ=actor.position.z;
    actor.position.lerp(this.targetPosition.set(target.x,target.y,target.z),1-Math.exp(-dt*14));actor.angle+=Math.atan2(Math.sin(target.angle-actor.angle),Math.cos(target.angle-actor.angle))*(1-Math.exp(-dt*14));
    const moving=Math.hypot(actor.position.x-beforeX,actor.position.z-beforeZ)>.002;actor.phase+=dt*(moving?12:2);
-   const detail=nearCount<(low?4:8)&&actor.position.distanceToSquared(player.position)<225;if(detail)nearCount++;
+   const detail=nearCount<(low?6:10)&&actor.position.distanceToSquared(player.position)<625;if(detail)nearCount++;
    if(detail&&!actor.model){actor.model=this.factory(p);this.scene.add(actor.model.root);}
    if(actor.model){actor.model.root.visible=detail;actor.model.root.position.copy(actor.position);actor.model.avatar.rotation.y=actor.angle;
     const body=actor.model.avatar.userData.body as T.Group|undefined;if(body)body.position.y=(p.ride>=0?Number(body.userData.plazaRideHeight??0):0)+(reduced?0:Math.sin(actor.phase*.2)*.012);
@@ -83,7 +86,7 @@ export class PlazaWorld {
    actor.bubble.hidden=this.clock>actor.emoteUntil;
    this.place(actor.label,actor.position,p.ride>=0?4.4:3,camera,width,height,active,occupied);
   }
-  const cached=sorted.filter(a=>a.model&&!a.model.root.visible).reverse();let total=sorted.filter(a=>a.model).length;for(const a of cached){if(total<=(low?6:12))break;a.model!.root.removeFromParent();a.model!.dispose();a.model=null;total--;}
+  const cached=sorted.filter(a=>a.model&&!a.model.root.visible).reverse();let total=sorted.filter(a=>a.model).length;for(const a of cached){if(total<=(low?8:14))break;a.model!.root.removeFromParent();a.model!.dispose();a.model=null;total--;}
   for(const part of this.far){part.mesh.count=farCount;part.mesh.instanceMatrix.needsUpdate=true;if(part.mesh.instanceColor)part.mesh.instanceColor.needsUpdate=true;}
  }
 }

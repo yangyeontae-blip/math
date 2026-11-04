@@ -39,7 +39,7 @@ export function adventureFocus(s: Save): FocusKind {
 }
 
 export const HUB_DESTINATIONS = [
-  { id: 'explore', icon: '🌳', title: '숲으로 모험', detail: '숲을 고르고, 숨은 장소를 발견해요' },
+  { id: 'explore', icon: '🌳', title: '수학숲으로 모험하기', detail: '메인 모험 · 내 학년의 수학숲과 숨은 장소' },
   { id: 'home', icon: '🏡', title: '나의 집', detail: '방 · 정원 · 주민' },
   { id: 'shops', icon: '🛍️', title: '상점거리', detail: '옷과 얼굴, 펫과 무기를 골라요' },
 ] as const;

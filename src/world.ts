@@ -1,3 +1,4 @@
+import {PLANET_THEMES,planetaryTerrain,worldTwoGateway,updatePlanetaryScenery,disposePlanetaryScenery} from './world-two-planet';
 import {PlazaWorld,mergePlazaAvatar} from './plaza-world';
 import {type PlazaProfile,type PlazaPlayer,type PlazaEmote} from './plaza-protocol';
 import {worldTwoEquipmentModel} from './world-two-models';
@@ -12,7 +13,7 @@ import { huntingPower, huntingCompanionStats, PPOJJAK_PET_ID } from './rules';
 import {createPpojjakiPet,createPpojjakiAura,animatePpojjakiPet,animatePpojjakiAura,disposePpojjakiAssets} from './legendary-pet';
 import {salonHairModel,salonFaceModel,disposeSalonMaterials} from './salon-models';
 import { HUNT_ZONES, HUNT_CAMP } from './hunting';
-import { academyBuilding, academyInterior, skillEffectModel, VILLAGE_ART, PLAZA_BERRY_TREES, berryTreeModel, plazaGarden, fountainModel, cottageModel, marketGarden, homesteadGarden, stoneLane, districtBorder, flowerBed } from './village-art';
+import { mathForestGateway, academyBuilding, academyInterior, skillEffectModel, VILLAGE_ART, PLAZA_BERRY_TREES, berryTreeModel, plazaGarden, fountainModel, cottageModel, marketGarden, homesteadGarden, stoneLane, districtBorder, flowerBed } from './village-art';
 import { shopSignText, shopInteraction } from './shop-signs';
 import { showEntityLabel } from './navigation';
 import { MARKET_SCALE, MARKET_RADIUS, MARKET_DOOR_OFFSET, MARKET_SHOPS, VILLAGE_SPOTS, villageWelcomeClear, villageTreeSpot, villageMonsterSpot } from './village-layout';
@@ -678,6 +679,7 @@ export class World {
   private weatherDummy = new T.Object3D();
   private sun: T.DirectionalLight; private labelLayer: HTMLDivElement; private selectedId: string | null = null;
   private plazaVisual: PlazaWorld;
+  private planetVisual:T.Group|null=null;private astralGateway:T.Group|null=null;
   private guideTarget: { object: T.Object3D; name: string; arrivalDistance: number } | null = null; private guideElement: HTMLDivElement;
   private swingUntil = 0; private rideIndex = -1; private petIndex = -1; private petModel: T.Group | null = null; private petTargetId: number | null = null; private animationRunning = false;
   private rideAnimated: T.Object3D[] = []; private butterflies: T.Object3D[] = []; private furnitureRoot: T.Group | null = null;
@@ -787,9 +789,9 @@ export class World {
     this.sign(this.scene,'신비의 시합장',arena.x,5.2,arena.z,5.4,'#675282');
     const school=academyBuilding();school.position.set(0,0,-12);this.scene.add(school);this.colliders.push({x:0,z:-12,r:4});this.sign(this.scene,'베리숲 모험학교',0,7.4,-9.4,5.4,'#173f30',true);this.addEntity('academyGate','🏛 모험학교 · 스킬 배우러 들어가기',0,-7,new T.Group());for(const x of [-4.8,4.8])this.colliders.push({x,z:-12,r:2.1});
     const exit=(id:string,name:string,x:number,z:number,color:number)=>{const g=this.gate(color);this.addEntity(id,name,x,z,g);this.sign(g,name.split(' · ')[0],0,4.8,0,6);};
-    exit('world2Gate','별너머 군도 · 세계 2',WORLD_TWO_GATE.x,WORLD_TWO_GATE.z,0xa1acd7);const skyPath=box(this.scene,theme.path,13.5,.04,-3,3.4,.08,13);skyPath.rotation.y=-.6;
+    const gateway=this.astralGateway=worldTwoGateway();this.addEntity('world2Gate','별너머 군도 · 세계 2',WORLD_TWO_GATE.x,WORLD_TWO_GATE.z,gateway);this.sign(gateway,'별너머 군도',0,4.15,0,5.4,'#585282',true);const approachStart={x:15,z:-2},dx=WORLD_TWO_GATE.x-approachStart.x,dz=WORLD_TWO_GATE.z-approachStart.z;const skyPath=box(this.scene,theme.path,(approachStart.x+WORLD_TWO_GATE.x)/2,.035,(approachStart.z+WORLD_TWO_GATE.z)/2,2.8,.07,Math.hypot(dx,dz));skyPath.rotation.y=Math.atan2(dx,dz);skyPath.name='world2-fitted-approach';
     exit('huntingGate','가시덩굴숲 · 왼쪽 위 사냥터',PLAZA_COMBAT_GATES.hunting.x,PLAZA_COMBAT_GATES.hunting.z,0x6d9563);
-    exit('shopStreet','상점거리 · 왼쪽 아래 길',PLAZA_COMBAT_GATES.market.x,PLAZA_COMBAT_GATES.market.z,0xd69aa9);exit('journey','숲으로 모험 · 아래쪽 길',0,16,0x83b894);
+    exit('shopStreet','상점거리 · 왼쪽 아래 길',PLAZA_COMBAT_GATES.market.x,PLAZA_COMBAT_GATES.market.z,0xd69aa9);const mathGate=mathForestGateway();this.addEntity('journey','수학숲으로 모험하기 · 아래쪽 메인 입구',0,16,mathGate);this.sign(mathGate,'수학숲으로 모험하기',0,6.3,0,7.8,'#235c3d',true);
     for(const [x,z]of [[-17,-13],[-12,-15],[11,-15],[17,-13],[-19,14],[18,16],[-23,-5],[23,-6]])this.tree(x,z,1.05,false,theme.foliage);
     stageTrees(0).forEach(({x,z},id)=>{const at=villageTreeSpot(id,x,z);this.addChoppableTree(id,at.x,at.z,1,false,theme.foliage);});
     // Keep the earned story pond and bridge exactly where earlier saves expect them.
@@ -965,7 +967,7 @@ export class World {
     this.addBerries();
   }
   private clearMap() {
-    this.plazaVisual.detach();
+    this.plazaVisual.detach();this.planetVisual=null;this.astralGateway=null;
     this.stopRoomActivity();
     this.chargeMotion = null;
     const combatAvatar = this.combatSave;
@@ -982,7 +984,7 @@ export class World {
     if (this.storyScenery) this.disposeModel(this.storyScenery);
     this.storyScenery = null; this.craftAnimated = []; this.restoredBridge = false; this.butterflies = []; this.particles = [];
     this.clearGuide(); this.selectedId = null; this.petTargetId = null; this.onNear(null, null); this.entities.forEach(e => e.label.remove()); this.stars.forEach(star => star.label.remove()); this.entities = []; this.coins = []; this.stars = []; this.colliders = [];
-    for (const child of [...this.scene.children]) if (child !== this.player && child !== this.petModel && child !== this.weatherMesh && !(child instanceof T.Light)) { this.scene.remove(child);disposeSalonMaterials(child);disposePpojjakiAssets(child);child.traverse(o=>{if(o instanceof T.Mesh){if(!sharedGeometries.has(o.geometry)&&!o.geometry.userData.sharedSalonAsset&&!o.geometry.userData.ppoDisposed&&!o.geometry.userData.sharedStorybookAsset)o.geometry.dispose();if(o instanceof T.InstancedMesh)o.dispose();}}); }
+    for (const child of [...this.scene.children]) if (child !== this.player && child !== this.petModel && child !== this.weatherMesh && !(child instanceof T.Light)) { this.scene.remove(child);disposePlanetaryScenery(child);disposeSalonMaterials(child);disposePpojjakiAssets(child);child.traverse(o=>{if(o instanceof T.Mesh){if(!sharedGeometries.has(o.geometry)&&!o.geometry.userData.sharedSalonAsset&&!o.geometry.userData.ppoDisposed&&!o.geometry.userData.sharedStorybookAsset&&!o.geometry.userData.planetDisposed)o.geometry.dispose();if(o instanceof T.InstancedMesh)o.dispose();}}); }
     this.furnitureRoot = null;
   }
   /**
@@ -1088,6 +1090,7 @@ export class World {
     this.clearMap(); this.inHunting = true; this.inWorldTwo=world2??null;this.combatSave = s; this.stage = 0; this.platforms = []; s.room.inside = s.homestead.inside = false;
     // 구역마다 다른 하늘·안개·바닥과 장식. 야영지(아래쪽 모래밭)는 밝게 남겨 안전한 곳임을 보여 줘요.
     const visualZone=world2?(world2.boss?7:4+world2.region):zone;const theme = HUNT_THEMES[visualZone]; this.scene.background = new T.Color(theme.sky); this.scene.fog = new T.Fog(theme.fog, 48, 95);
+    if(world2){this.planetVisual=planetaryTerrain(world2.region,world2.boss);this.scene.add(this.planetVisual);this.scene.background=new T.Color(PLANET_THEMES[world2.boss?3:world2.region].sky);}else{
     box(this.scene, theme.ground, 0, -.5, -3, 43, 1, 49);
     box(this.scene, 0xe3d0a4, 0, .025, 8.5, 35, .05, 9); box(this.scene, theme.path, 0, .03, -8, 4.4, .06, 30);
     for (let i = 0; i < 12; i++) box(this.scene, new T.Color(theme.path).multiplyScalar(1.18).getHex(), (i % 2 ? .9 : -.9), .07, -21.5 + i * 2.4, 1.5, .03, 1.2);
@@ -1095,8 +1098,9 @@ export class World {
     this.scene.add(huntingScenery(visualZone));
     const tent = new T.Group(); tent.position.set(-11, 0, 10); const roof = mesh(new T.ConeGeometry(2.3, 3.2, 4), 0xd2ad72, 0, 1.7, 0, tent); roof.rotation.y = Math.PI / 4; box(tent, 0x5c6951, 0, .65, 1.25, 1.2, 1.2, .1); this.scene.add(tent);
     cylinder(this.scene, 0x9f7a51, 10, .4, 10, 1, 1, .7, 8); ball(this.scene, 0xf3ca79, 10, .9, 10, .45, .5, .45);
+    }
     this.sign(this.scene, '안전 야영지 · 쉬면 체력 회복', 0, 3.3, 12, 7, '#254b35', true);
-    const gate = this.gate(0x8ca980); this.addEntity('huntingExit', '중앙 광장 · 사냥터 나가기', 0, 15.5, gate); this.sign(gate, '마을로 돌아가기', 0, 4.6, 0, 5, '#254b35', true);
+    const gate = world2?worldTwoGateway():this.gate(0x8ca980); this.addEntity('huntingExit', '중앙 광장 · 사냥터 나가기', 0, 15.5, gate); this.sign(gate, '마을로 돌아가기', 0, 4.6, 0, 5, '#254b35', true);
     if(world2){this.addEntity('world2Board','군도 지도 · 다음 모험',-7,8,new T.Group());this.sign(this.scene,'군도 지도 · 다음 모험',-7,2.5,8,4.5,'#365842',true);if(!world2.boss)for(let i=0;i<3;i++){const p=WORLD_TWO_BEACONS[i],lantern=new T.Group();cylinder(lantern,0xb8a378,0,.6,0,.28,.4,1.2,8);lantern.userData.worldTwoLight=ball(lantern,0x718c9f,0,1.35,0,.48,.6,.48);const ring=mesh(new T.TorusGeometry(.7,.065,6,24),0xffe5a2,0,.08,0,lantern);ring.rotation.x=-Math.PI/2;this.addEntity('world2Beacon'+i,'꺼진 등불 '+(i+1),p.x,p.z,lantern);}}
     else for (const area of HUNT_ZONES) { const x = -12 + area.id * 8; this.addEntity(`huntingZone${area.id}`, `${area.name} · 레벨 ${area.level}`, x, 5.5, new T.Group()); this.sign(this.scene, `${area.name} Lv.${area.level}`, x, 2.4, 5.5, 4.5, s.level >= area.level ? '#365842' : '#8b7866', true); }
     this.sign(this.scene, world2?(world2.boss?WORLD_TWO_BOSS_NAME:WORLD_TWO_REGIONS[world2.region].name):HUNT_ZONES[zone].name, 0,world2?5:3.2,world2?-23:-17,6, '#365842', true);
@@ -1912,7 +1916,7 @@ export class World {
     if (this.player.userData.sparkles) this.player.userData.sparkles.rotation.y += dt;
     for (let i = this.particles.length - 1; i >= 0; i--) { const q = this.particles[i]; q.life -= dt; q.v.y -= dt * 5; q.mesh.position.addScaledVector(q.v, dt); q.mesh.scale.setScalar(Math.max(0, q.life)); if (q.life <= 0) { this.scene.remove(q.mesh); this.particles.splice(i, 1); } }
     const target = this.storyActivityFocus ?? (this.active ? p : this.cameraTarget.set(0, 0, -1)); this.follow.lerp(target, 1 - Math.exp(-dt * (this.storyActivityFocus ? 8 : 6))); if (this.active && !this.storyActivityFocus && (this.occlusionTick++ & 7) === 0) this.updateOcclusion();
-    this.camera.position.copy(this.follow).add(this.storyActivityFocus ? this.cameraTarget.set(0, 13, 16) : this.inRoom || this.inAcademy ? ROOM_CAMERA_OFFSET : CAMERA_OFFSET); this.camera.lookAt(this.follow); this.updateGuide();this.plazaVisual.update(dt,this.camera,this.player,this.isPublicPlaza,this.active&&!this.storyActivityFocus,this.lowQuality,matchMedia('(prefers-reduced-motion: reduce)').matches);this.scene.fog=null;this.storybook.update(this.time,p,this.petModel?.position??null,this.shadowFloor); this.renderer.render(this.scene, this.camera);
+    this.camera.position.copy(this.follow).add(this.storyActivityFocus ? this.cameraTarget.set(0, 13, 16) : this.inRoom || this.inAcademy ? ROOM_CAMERA_OFFSET : CAMERA_OFFSET); this.camera.lookAt(this.follow); this.updateGuide();this.plazaVisual.update(dt,this.camera,this.player,this.isPublicPlaza,this.active&&!this.storyActivityFocus,this.lowQuality,matchMedia('(prefers-reduced-motion: reduce)').matches);this.scene.fog=null;this.storybook.update(this.time,p,this.petModel?.position??null,this.shadowFloor);updatePlanetaryScenery(this.planetVisual,this.time,this.lowQuality,matchMedia('(prefers-reduced-motion: reduce)').matches);updatePlanetaryScenery(this.astralGateway,this.time,this.lowQuality,matchMedia('(prefers-reduced-motion: reduce)').matches); this.renderer.render(this.scene, this.camera);
   }
   private updateGuide() {
     const target = this.guideTarget;

@@ -26,7 +26,7 @@ export class PlazaClient {
   let url:URL;try{url=new URL(this.endpoint);if(!['wss:','ws:'].includes(url.protocol))throw Error();url.pathname='/connect';url.search='?v='+PLAZA_VERSION;}catch{this.hooks.status('offline',0);this.retryAt=now+60000;return;}
   this.openedAt=now;this.hooks.status(this.attempt?'retrying':'connecting',0);
   let socket:WebSocket;try{socket=this.createSocket(url.href);}catch{this.retryAt=now+5000;return;}this.socket=socket;
-  socket.onopen=()=>{if(this.socket!==socket)return;this.lastPong=Date.now();this.lastPing=Date.now();this.profileAt=Date.now();this.lastProfile=JSON.stringify(this.profile);this.lastSent=JSON.stringify(this.pose);this.send({type:'join',profile:this.profile,pose:this.pose});};
+  socket.onopen=()=>{if(this.socket!==socket)return;this.lastPong=Date.now();this.lastPing=Date.now();this.profileAt=Date.now();this.lastProfile=JSON.stringify(this.profile);this.lastSent=JSON.stringify(this.pose);this.send({type:'join',profile:this.profile,pose:this.pose,batchedPoses:true});};
   socket.onmessage=e=>{if(this.socket===socket)this.receive(e.data);};
   socket.onclose=()=>{if(this.socket===socket)this.fail(socket);};
   socket.onerror=()=>{if(this.socket===socket)this.fail(socket);};
@@ -42,6 +42,7 @@ export class PlazaClient {
   if(m.type==='error'&&(m.code==='full'||m.code==='profile')){this.retryAt=Date.now()+(m.code==='full'?15000:60000);this.disconnect();this.hooks.status(m.code==='full'?'full':'nickname',0);return;}
   if(!this.selfId)return;
   if(m.type==='upsert'){const p=parsePlazaPlayer(m.player);if(p&&p.id!==this.selfId&&this.peers.size<PLAZA_CAPACITY){this.peers.set(p.id,p);this.hooks.player(p);this.report();}}
+  if(m.type==='poses'&&Array.isArray(m.players)&&m.players.length<=PLAZA_CAPACITY){for(const item of m.players){if(!item||typeof item.id!=='string')continue;const old=this.peers.get(item.id),pose=parsePlazaPose(item.pose);if(old&&pose){old.pose=pose;this.hooks.player(old);}}}
   if(m.type==='pose'&&typeof m.id==='string'){const old=this.peers.get(m.id),pose=parsePlazaPose(m.pose);if(old&&pose){old.pose=pose;this.hooks.player(old);}}
   if(m.type==='leave'&&typeof m.id==='string'){if(this.peers.delete(m.id)){this.hooks.leave(m.id);this.report();}}
   if(m.type==='emote'&&typeof m.id==='string'&&isPlazaEmote(m.emote))this.hooks.emote(m.id,m.emote);

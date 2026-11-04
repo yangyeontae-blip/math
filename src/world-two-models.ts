@@ -10,12 +10,4 @@ export function worldTwoEquipmentModel(kind:'weapon'|'outfit',id:number,color:nu
  else if(id===27){put(new T.ConeGeometry(.48,.8,12),color,0,2.25,0);for(let i=0;i<4;i++)put(new T.OctahedronGeometry(.055),accent,Math.sin(i*1.8)*.22,1.7+i*.13,.34);}
  else{const hood=put(new T.SphereGeometry(.55,12,8,0,Math.PI*2,0,Math.PI*.55),color,0,1.6,-.06);hood.scale.z=.92;const plume=put(new T.ConeGeometry(.12,.65,5),accent,.33,2.08,-.12);plume.rotation.z=-.7;}
  }return g;}
-export function worldTwoScenery(region:number,boss=false){const g=new T.Group();g.name='world2-scenery-'+region+(boss?'-boss':'');const colors=new Map<number,T.Material>();const put=(geo:T.BufferGeometry,c:number,x:number,y:number,z:number)=>{if(!colors.has(c))colors.set(c,new T.MeshStandardMaterial({color:c,roughness:.83}));const m=new T.Mesh(geo,colors.get(c));m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;g.add(m);return m;};
- for(const side of [-1,1])for(let i=0;i<8;i++){const x=side*(13+i%2*3),z=-20+i*4.5;
- if(region===0&&!boss){put(new T.CylinderGeometry(.045,.06,1.4,6),0x75956a,x,.7,z);for(let k=0;k<6;k++){const petal=put(new T.SphereGeometry(.19,8,6),i%2?0xffe09a:0xf5b6bb,x+Math.cos(k*Math.PI/3)*.36,1.45+Math.sin(k*Math.PI/3)*.36,z);petal.scale.z=.4;}put(new T.SphereGeometry(.18,8,6),0xd49a45,x,1.45,z+.06);if(i%3===0){put(new T.CylinderGeometry(.08,.13,3,8),0xa38759,x,1.5,z-1);for(let k=0;k<4;k++){const vane=put(new T.BoxGeometry(.23,1.2,.07),0xf1dfad,x,3.05,z-.8);vane.rotation.z=k*Math.PI/2+.4;}}}
- else if(region===1&&!boss){const pool=put(new T.CircleGeometry(2.4,24),0x63abbc,x,.04,z);pool.rotation.x=-Math.PI/2;for(let k=0;k<3;k++){const crystal=put(new T.OctahedronGeometry(.58,0),k%2?0xb1e0e4:0x82b9d5,x+(k-1)*.6,.8+k*.2,z);crystal.scale.set(.6,1.9,.6);crystal.rotation.z=(k-1)*.25;}}
- else{put(new T.CylinderGeometry(.45,.6,2.7,8),0xb6b4c4,x,1.35,z);put(new T.BoxGeometry(1.35,.3,1.35),0xdcd2d5,x,2.8,z);const halo=put(new T.TorusGeometry(.85,.065,6,24),0xf0cf8a,x,3.6,z);halo.rotation.y=side*.2;if(boss){put(new T.SphereGeometry(1.1,10,8),0x8cb397,x,3.2,z-1);}}
- }
- if(region===1&&!boss)for(const side of [-1,1])for(let i=0;i<5;i++)put(new T.BoxGeometry(1.8,.15,.32),0xd6c095,side*12,.13,1+i*.4);
- if(region===2||boss){const arch=put(new T.TorusGeometry(3,.28,8,36,Math.PI),boss?0xc9d9a5:0xc2b7d3,0,3.9,-21);arch.rotation.z=0;for(let i=0;i<5;i++)put(new T.OctahedronGeometry(.18),0xf9dc89,-3+i*1.5,4.1+Math.sin(i*Math.PI/4)*2.9,-20.9);}
- return g;}
+export {planetaryScenery as worldTwoScenery} from './world-two-planet';

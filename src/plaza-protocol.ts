@@ -1,7 +1,7 @@
 import {isBlockedNickname} from './nickname';
 export const PLAZA_VERSION = 1;
 export const PLAZA_ROOM = 'central-plaza-v1';
-export const PLAZA_CAPACITY = 64;
+export const PLAZA_CAPACITY = 128;
 export const AVATAR_LIMITS = {character:4,outfit:29,weapon:36,hairstyle:10,face:14,pet:21,ride:19} as const;
 export const JOB_TITLES = {
  novice:['새싹 모험가','새싹 모험가','새싹 모험가','새싹 모험가'],

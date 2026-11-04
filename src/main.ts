@@ -66,7 +66,7 @@ import './adventure.css';
 import './navigation.css';
 import { toolSpec, toolHtml, adjustTool } from './learning-tools';
 
-const CLIENT_BUILD = '2026-11-03.plaza.1';
+const CLIENT_BUILD = '2026-11-04.otherworld.1';
 document.documentElement.dataset.clientBuild = CLIENT_BUILD;
 
 const $ = <T extends HTMLElement = HTMLElement>(selector: string) => document.querySelector<T>(selector)!;
@@ -156,7 +156,7 @@ function openNavigation() {
 function openAdventureMap() {
   if (!state) return;
   rememberMenu('adventure', openAdventureMap);
-  navPage('숲으로 모험', '<p class="nav-breadcrumb">지도 / 숲으로 모험</p><div class="nav-intro"><h3>발견한 만큼, 나의 집도 자라요</h3><p>숲을 고르고 열린 단계를 탐험해요. 발자국 끝의 장소를 되살리면 추억과 도안이 쌓여요.</p></div><div class="nav-list">' + operationsForGrade(state.grade).map(f => navButton(f,`${FOREST_INFO[f].icon} ${FOREST_INFO[f].name}`,`열린 단계 ${Array.from({length:10},(_,i)=>i+1).filter(n=>canEnter(state!,n,f)).length} · 발견 ${state!.exploration.solved.filter(id=>id.startsWith(f+':')).length}/10`)).join('') + '</div><div class="nav-links">' + navButton('subjects',`📚 ${state.grade}학년 단원 지도`) + navButton('stories','✉️ 이야기 의뢰') + navButton('back','← 전체 지도') + '</div>', {...Object.fromEntries(operationsForGrade(state.grade).map(f=>[f,()=>openStageMap(f)])), subjects:()=>openStageMap(), stories:openStoryBoard, back:openNavigation});
+  navPage('수학숲으로 모험하기', '<p class="nav-breadcrumb">지도 / 수학숲으로 모험하기</p><div class="nav-intro"><h3>발견한 만큼, 나의 집도 자라요</h3><p>숲을 고르고 열린 단계를 탐험해요. 발자국 끝의 장소를 되살리면 추억과 도안이 쌓여요.</p></div><div class="nav-list">' + operationsForGrade(state.grade).map(f => navButton(f,`${FOREST_INFO[f].icon} ${FOREST_INFO[f].name}`,`열린 단계 ${Array.from({length:10},(_,i)=>i+1).filter(n=>canEnter(state!,n,f)).length} · 발견 ${state!.exploration.solved.filter(id=>id.startsWith(f+':')).length}/10`)).join('') + '</div><div class="nav-links">' + navButton('subjects',`📚 ${state.grade}학년 단원 지도`) + navButton('stories','✉️ 이야기 의뢰') + navButton('back','← 전체 지도') + '</div>', {...Object.fromEntries(operationsForGrade(state.grade).map(f=>[f,()=>openStageMap(f)])), subjects:()=>openStageMap(), stories:openStoryBoard, back:openNavigation});
 }
 function enterHomeGarden() {
   if (!state) return false;
@@ -189,7 +189,8 @@ function enterShopStreet() {
   switchStage(0);world.enterMarket(state);closeModal();refresh();persist();toast('상점거리에 왔어요. 아래쪽 길로 나가면 중앙 광장이에요.');
 }
 function openPlazaWelcome() {
-  navPage('연태쌤의 마을 안내','<p>모험은 이 광장에서 시작해요. 원하는 길을 골라 자유롭게 다녀와요. 수학 시합을 하고 싶으면 분수 오른쪽의 신비를 만나요.</p><div class="nav-list">'+navButton('shops','← 왼쪽 · 상점거리','의상실, 미용실, 펫 가게와 모험 도구')+navButton('home','오른쪽 · 나의 집 →','내가 꾸민 집과 정원')+navButton('explore','↓ 아래쪽 · 숲으로 모험','내 학년에 맞는 숲과 단원 고르기')+navButton('academy','🏛 모험학교 · 스킬 배우기')+navButton('notice','운영자 소식')+'</div>',{shops:enterShopStreet,home:()=>{if(enterHomeGarden())closeModal();},explore:openAdventureMap,academy:enterAcademy,notice:openNoticeBoard});
+  if(!state)return;
+  navPage('연태쌤의 중앙광장 안내','<div class="nav-intro"><h3>우리의 메인 모험은 수학숲이에요!</h3><p>아래쪽 책과 별이 빛나는 숲 아치로 가 보세요. '+state.grade+'학년 수학을 풀고 숲을 탐험하며 베리와 추억을 모아요.</p></div><div class="nav-list">'+navButton('explore','🌳 ↓ 수학숲으로 모험하기','내 학년에 맞는 숲·단원·열린 단계 고르기')+navButton('academy','🏛 모험학교 · 직업과 스킬','10·30·60레벨 전직 실습, 수련 마당과 모험 기록')+navButton('hunt','⚔ 왼쪽 위 · 가시덩굴 숲','무기와 스킬로 사냥하고 음식·물약으로 회복해요')+navButton('world2','🪐 오른쪽 위 · 별너머 군도','60레벨부터 세 지역을 탐험하고 수호자에게 도전해요')+navButton('friends','👋 친구들과 만나는 중앙광장','학년과 관계없이 같은 광장 · 최대 128명')+navButton('shops','🛍 왼쪽 아래 · 상점거리','의상·미용·펫·탈것·무기·물약과 음식')+navButton('home','🏡 오른쪽 · 나의 집','내가 꾸민 집과 정원, 마을 친구들의 방문')+navButton('notice','📮 운영자 소식')+'</div><p>학습 문제와 진도는 각자 선택한 학년대로 유지돼요. 틀려도 손해는 없어요! 가까이 가서 PC E 또는 휴대폰 대화 버튼을 누르세요. 수학 시합은 분수 오른쪽 신비에게 부탁해요.</p>',{explore:openAdventureMap,academy:enterAcademy,hunt:()=>career.showHunting(),world2:()=>career.showWorldTwo(),friends:()=>{closeModal();$('#plaza-status').click();},shops:enterShopStreet,home:()=>{if(enterHomeGarden())closeModal();},notice:openNoticeBoard});
 }
 function openShopStreet() {
   rememberMenu('shops', openShopStreet);
@@ -695,7 +696,7 @@ function renderVillageProject(message = '', hint = false) {
 function openGuide() {
   if (!state) return;
   rememberMenu('help', openGuide);
-  navPage('도움말', '<div class="nav-intro"><h3>세 곳만 기억하세요</h3><p>숲에서 발견하고, 나의 집을 꾸미고, 상점에서 취향을 골라요.</p></div><div class="nav-section"><h3>어디에 있나요?</h3><p>이야기 의뢰 → <b>숲으로 모험</b><br>방·정원·주민 → <b>나의 집</b><br>오늘의 미션 → <b>오늘의 모험</b><br>발견·친구·학습 기록 → <b>모험 수첩</b><br>운영자 소식 → <b>광장 입구 공지판</b></p><p>PC: 방향키 또는 WASD로 이동, E로 대화, Space로 점프해요.<br>휴대폰: 왼쪽 조이스틱으로 이동하고 가까이 가서 대화 버튼을 눌러요.</p></div><button class="primary wide" data-nav="map">지도 펼치기</button>',{map:openNavigation});
+  navPage('도움말', '<div class="nav-intro"><h3>수학숲에서 시작하는 모험</h3><p>아래쪽 메인 입구에서 내 학년의 수학숲을 탐험해요. 광장에서는 학년과 관계없이 친구들을 만나요. 모험학교에서 직업과 스킬을 배우고, 상점과 나의 집도 둘러보세요.</p></div><div class="nav-section"><h3>어디에 있나요?</h3><p>이야기 의뢰 → <b>수학숲으로 모험하기</b><br>방·정원·주민 → <b>나의 집</b><br>오늘의 미션 → <b>오늘의 모험</b><br>발견·친구·학습 기록 → <b>모험 수첩</b><br>운영자 소식 → <b>광장 입구 공지판</b></p><p>PC: 방향키 또는 WASD로 이동, E로 대화, Space로 점프해요.<br>휴대폰: 왼쪽 조이스틱으로 이동하고 가까이 가서 대화 버튼을 눌러요.</p></div><button class="primary wide" data-nav="map">지도 펼치기</button>',{map:openNavigation});
 }
 async function loadWorld() {
   if (world!) return;
@@ -725,7 +726,7 @@ function openStoryBoard() {
     return `<div class="story-chapter"><span class="story-chapter-icon">${chapter.icon}</span><div><strong>${chapter.title}</strong><small>${s.forest === 'division' ? '나눗셈' : s.forest === 'multiplication' ? '곱셈' : s.forest === 'addition' ? '덧셈' : '뺄셈'}숲 ${chapter.stage}단계 · ${done ? '다시 보기 (보상 없음)' : unlocked ? `첫 완주 선물: ${chapter.gift}` : `${chapter.stage}단계를 먼저 열어 주세요`}</small></div><button data-story-start="${id}" ${!unlocked || !!active || !!s.expedition.active ? 'disabled' : ''}>${done ? '다시 보기' : '시작'}</button></div>`;
   }).join('');
   const progress = active ? `<p class="story-progress"><b>${STORY_CHAPTERS[active.chapter].title}</b> · 단서 ${active.found.length}/3${active.solved ? ' · 문제 해결!' : ''}<br>${s.expedition.active ? '별빛 원정을 마치면 편지 모험을 이어갈 수 있어요.' : '다른 곳에 가거나 새로고침해도 여기부터 이어져요.'}</p><button id="story-continue" class="primary wide" ${s.expedition.active ? 'disabled' : ''}>${active.solved ? '편지 전하고 이야기 마치기' : `${active.forest === 'division' ? '나눗셈' : active.forest === 'multiplication' ? '곱셈' : active.forest === 'addition' ? '덧셈' : '뺄셈'}숲 ${STORY_CHAPTERS[active.chapter].stage}단계로 가기`}</button>` : '';
-  openModal(title('숲으로 모험 / 이야기 의뢰', '숲 친구들의 부탁') + `<p class="shop-explainer">안전한 길의 단서 3개를 찾아 수학 문제를 풀어요. 틀려도 괜찮고, 시간제한도 없어요. 선물은 내 방에 놓는 장식이에요.</p>${progress}<div class="story-chapters">${cards}</div><button class="text-button wide" data-close>다음에 할게요</button>`, 'story-modal');
+  openModal(title('수학숲으로 모험하기 / 이야기 의뢰', '숲 친구들의 부탁') + `<p class="shop-explainer">안전한 길의 단서 3개를 찾아 수학 문제를 풀어요. 틀려도 괜찮고, 시간제한도 없어요. 선물은 내 방에 놓는 장식이에요.</p>${progress}<div class="story-chapters">${cards}</div><button class="text-button wide" data-close>다음에 할게요</button>`, 'story-modal');
   document.querySelectorAll<HTMLButtonElement>('[data-story-start]').forEach(button => button.onclick = () => {
     const chapter = Number(button.dataset.storyStart);
     if(world.inHomestead||world.inRoom||journeyFor(s).stage!==0) switchStage(0);

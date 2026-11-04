@@ -3,9 +3,9 @@ export const WORLD_TWO_NAME='별너머 군도';
 export const WORLD_TWO_LEVEL=60;
 export const WORLD_TWO_BOSS_NAME='고대 별나무 수호자';
 export const WORLD_TWO_REGIONS=[
- {id:0,name:'햇살바람 초원',level:60,icon:'🌼',description:'바람개비와 커다란 꽃 사이에서 꺼진 등불을 밝혀요.',hp:2600,damage:30,berries:300,xp:180,bonus:3000,killGoal:6,enemyNames:{melee:'민들레 뭉치',charge:'도토리 돌격대',ranged:'바람씨앗 정령'}},
- {id:1,name:'수정물결 호수',level:80,icon:'💎',description:'수정 기둥과 푸른 물결을 따라 호수의 기억을 되찾아요.',hp:5500,damage:38,berries:450,xp:280,bonus:4500,killGoal:6,enemyNames:{melee:'수정 조각이',charge:'물결 돌진이',ranged:'푸른방울 정령'}},
- {id:2,name:'별빛고리 유적',level:100,icon:'🌌',description:'무너진 별의 고리 세 개를 깨우고 수호자의 문을 열어요.',hp:9500,damage:46,berries:650,xp:400,bonus:6500,killGoal:6,enemyNames:{melee:'별돌 파수꾼',charge:'혜성 돌격대',ranged:'달그림자 정령'}},
+ {id:0,name:'햇살바람 초원',level:60,icon:'🌼',description:'두 개의 해와 떠 있는 섬, 빛나는 우산꽃 아래에서 별등불을 밝혀요.',hp:2600,damage:30,berries:300,xp:180,bonus:3000,killGoal:6,enemyNames:{melee:'민들레 뭉치',charge:'도토리 돌격대',ranged:'바람씨앗 정령'}},
+ {id:1,name:'수정물결 호수',level:80,icon:'💎',description:'고리 행성 아래의 청록빛 호수와 공중에 뜬 수정 사이를 탐험해요.',hp:5500,damage:38,berries:450,xp:280,bonus:4500,killGoal:6,enemyNames:{melee:'수정 조각이',charge:'물결 돌진이',ranged:'푸른방울 정령'}},
+ {id:2,name:'별빛고리 유적',level:100,icon:'🌌',description:'보랏빛 외계 대지와 궤도 유적에서 별의 고리를 깨워요.',hp:9500,damage:46,berries:650,xp:400,bonus:6500,killGoal:6,enemyNames:{melee:'별돌 파수꾼',charge:'혜성 돌격대',ranged:'달그림자 정령'}},
 ] as const;
 export const WORLD_TWO_BEACONS=[{x:-9,z:-14},{x:9,z:-14},{x:0,z:-17}] as const;
 export const WORLD_TWO_GATE={x:17,z:-8} as const;

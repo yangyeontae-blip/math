@@ -17,21 +17,25 @@ export default {
 };
 export class SharedPlaza extends DurableObject {
  constructor(ctx,env){
-  super(ctx,env);this.ctx=ctx;
+  super(ctx,env);this.ctx=ctx;this.pendingPoses=new Map();this.poseTimer=null;this.lastPrune=0;
   ctx.setWebSocketAutoResponse(new WebSocketRequestResponsePair('ping','pong'));
  }
  sessions(){return this.ctx.getWebSockets().map(ws=>[ws,ws.deserializeAttachment()]).filter(([ws,s])=>s&&ws.readyState===WebSocket.OPEN);}
  public(s){return {id:s.id,profile:s.profile,pose:s.pose};}
  send(ws,value){try{ws.send(JSON.stringify(value));return true;}catch{return false;}}
- broadcast(value,except){for(const [ws,s] of this.sessions())if(s.joined&&ws!==except)this.send(ws,value);}
- prune(now=Date.now()){
+ broadcast(value,except){const raw=JSON.stringify(value);for(const [ws,s] of this.sessions())if(s.joined&&ws!==except){try{ws.send(raw);}catch{}}}
+ queuePose(s){this.pendingPoses.set(s.id,{id:s.id,pose:s.pose});if(this.poseTimer===null)this.poseTimer=setTimeout(()=>this.flushPoses(),100);}
+ flushPoses(){this.poseTimer=null;const sessions=this.sessions(),alive=new Set(sessions.filter(([,s])=>s.joined).map(([,s])=>s.id));const players=[...this.pendingPoses.values()].filter(p=>alive.has(p.id));this.pendingPoses.clear();if(!players.length)return;const raw=JSON.stringify({type:'poses',players}),legacy=players.map(p=>[p.id,JSON.stringify({type:'pose',...p})]);for(const [ws,s] of sessions){if(!s.joined)continue;try{if(s.batchedPoses)ws.send(raw);else for(const [id,value] of legacy)if(id!==s.id)ws.send(value);}catch{}}}
+
+ prune(now=Date.now(),force=false){
+  if(!force&&now-this.lastPrune<1000)return;this.lastPrune=now;
   for(const [ws,s] of this.sessions()){
    const auto=this.ctx.getWebSocketAutoResponseTimestamp(ws)?.getTime()??0;
    if(!s.joined&&now-s.seen>5000||now-Math.max(s.seen,auto)>40000){if(s.joined)this.broadcast({type:'leave',id:s.id},ws);try{ws.close(1001,'inactive');}catch{}}
   }
  }
  async fetch(){
-  this.prune();if(this.sessions().length>=PLAZA_CAPACITY){const [client,server]=Object.values(new WebSocketPair());server.accept();server.send(JSON.stringify({type:'error',code:'full'}));server.close(1013,'full');return new Response(null,{status:101,webSocket:client});}
+  this.prune(Date.now(),true);if(this.sessions().length>=PLAZA_CAPACITY){const [client,server]=Object.values(new WebSocketPair());server.accept();server.send(JSON.stringify({type:'error',code:'full'}));server.close(1013,'full');return new Response(null,{status:101,webSocket:client});}
   const [client,server]=Object.values(new WebSocketPair()),now=Date.now();
   this.ctx.acceptWebSocket(server);
   server.serializeAttachment({id:crypto.randomUUID(),joined:false,seen:now,pose:{x:0,y:0,z:8,angle:0},seq:-1,moveAt:now,window:now,hits:0,emoteAt:0,profileAt:0});
@@ -49,9 +53,9 @@ export class SharedPlaza extends DurableObject {
   if(m.type==='join'&&!s.joined){
    const profile=parsePlazaProfile(m.profile),pose=parsePlazaPose(m.pose);
    if(!profile||!pose){this.send(ws,{type:'error',code:'profile'});ws.close(1008,'profile');return;}
-   s.joined=true;s.profile=profile;s.pose=pose;s.moveAt=now;s.profileAt=now;
+   s.joined=true;s.profile=profile;s.pose=pose;s.moveAt=now;s.profileAt=now;s.batchedPoses=m.batchedPoses===true;
    ws.serializeAttachment(s);
-   this.send(ws,{type:'welcome',id:s.id,room:PLAZA_ROOM,players:this.sessions().filter(([other,a])=>other!==ws&&a.joined).map(([,a])=>this.public(a))});
+   this.send(ws,{type:'welcome',id:s.id,room:PLAZA_ROOM,players:this.sessions().filter(([other,a])=>other!==ws&&a.joined).map(([,a])=>this.public(a)).slice(0,s.batchedPoses?PLAZA_CAPACITY-1:63)});
    this.broadcast({type:'upsert',player:this.public(s)},ws);return;
   }
   if(!s.joined){ws.close(1008,'join_required');return;}
@@ -63,7 +67,7 @@ export class SharedPlaza extends DurableObject {
    // The fastest existing mount with Wind Step remains within this generous limit.
    if(travel>seconds*72+2){this.send(ws,{type:'correction',pose:s.pose});return;}
    s.pose=pose;s.seq=m.seq;s.moveAt=now;ws.serializeAttachment(s);
-   this.broadcast({type:'pose',id:s.id,pose},ws);return;
+   this.queuePose(s);return;
   }
   if(m.type==='profile'&&now-s.profileAt>=1000){
    const profile=parsePlazaProfile(m.profile);if(!profile){this.send(ws,{type:'error',code:'profile'});return;}
@@ -73,6 +77,6 @@ export class SharedPlaza extends DurableObject {
   if(m.type==='sync'){this.send(ws,{type:'snapshot',players:this.sessions().filter(([other,a])=>other!==ws&&a.joined).map(([,a])=>this.public(a))});}
   ws.serializeAttachment(s);
  }
- webSocketClose(ws,code,reason){const s=ws.deserializeAttachment();if(s?.joined)this.broadcast({type:'leave',id:s.id},ws);try{ws.close(code===1005?1000:code,reason);}catch{}}
+ webSocketClose(ws,code,reason){const s=ws.deserializeAttachment();if(s)this.pendingPoses.delete(s.id);if(s?.joined)this.broadcast({type:'leave',id:s.id},ws);try{ws.close(code===1005?1000:code,reason);}catch{}}
  webSocketError(ws){this.webSocketClose(ws,1011,'connection');}
 }

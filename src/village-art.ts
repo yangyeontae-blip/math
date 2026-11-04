@@ -253,3 +253,15 @@ export function skillEffectModel(id:'shield'|'wind'|'lantern'){
  else{const lamp=new T.Mesh(new T.OctahedronGeometry(.25),material);lamp.position.set(.8,1.9,0);g.add(lamp);const arch=new T.Mesh(new T.TorusGeometry(.34,.025,5,24),material);arch.position.set(.8,1.9,0);g.add(arch);}
  return g;
 }
+
+const mathGatewayGlow=new T.MeshBasicMaterial({color:0xc9f1ad,transparent:true,opacity:.13,depthWrite:false,side:T.DoubleSide,toneMapped:false});
+/** The main learning entrance, with a book crest and a living woodland arch. */
+export function mathForestGateway(){const g=new T.Group();g.name='math-forest-main-gateway';const a=VILLAGE_ART;const base=piece(g,0xddd4a5,new T.CylinderGeometry(2.5,2.7,.18,40),0,.09,0);base.receiveShadow=true;
+ for(const side of [-1,1]){const trunk=post(g,a.wood,side*2.7,1.25,0,.3,2.5);trunk.rotation.z=side*.08;for(let i=0;i<3;i++){const leaf=orb(g,i%2?0x689a71:0x9cc87e,side*(2.5-i*.2),2.5+i*.85,0,1.05,.68);leaf.scale.z=.55;orb(g,0xf1ce79,side*2.4,1.45+i*.85,.26,.16);}}
+ const arch=piece(g,0x9b8058,new T.TorusGeometry(2.7,.25,8,40,Math.PI),0,2.2,0);for(let i=0;i<9;i++){const angle=i*Math.PI/8;orb(g,i%2?0x78a971:0xb4ce89,Math.cos(angle)*2.7,2.2+Math.sin(angle)*2.7,-.06,.55,.65);}
+ const rim=piece(g,0xf0d287,new T.TorusGeometry(2.3,.065,6,48,Math.PI),0,2.2,.16);rim.rotation.z=0;
+ for(const side of [-1,1]){const cover=block(g,0xddbb68,side*.34,7.45,.2,.65,.53,.14);cover.rotation.z=-side*.14;const page=block(g,0xfff2cc,side*.32,7.49,.3,.57,.42,.045);page.rotation.z=-side*.14;for(let i=0;i<3;i++)block(g,0xb7bf91,side*.31,7.38+i*.1,.33,.35,.018,.015);}
+ const star=new T.Shape();for(let i=0;i<10;i++){const angle=Math.PI/2+i*Math.PI/5,r=i%2?.13:.3;i?star.lineTo(Math.cos(angle)*r,Math.sin(angle)*r):star.moveTo(Math.cos(angle)*r,Math.sin(angle)*r);}star.closePath();piece(g,0xffdf88,new T.ShapeGeometry(star),0,8.15,.23);
+ for(const side of [-1,1]){const lantern=piece(g,0xffe6a2,new T.SphereGeometry(.22,12,8),side*1.85,3.3,.25);lantern.scale.y=1.3;post(g,a.wood,side*1.85,3.75,.18,.025,.6);}
+ const glowMaterial=mathGatewayGlow;const veil=new T.Mesh(new T.CircleGeometry(2.15,40),glowMaterial);veil.position.set(0,2.35,-.08);g.add(veil);const halo=piece(g,0xffe6a5,new T.RingGeometry(2.12,2.18,48),0,2.35,.12);for(let i=0;i<8;i++){const angle=i*Math.PI/4,twinkle=piece(g,0xffe7a5,new T.OctahedronGeometry(.1),Math.cos(angle)*1.75,2.35+Math.sin(angle)*1.75,.2);twinkle.scale.y=1.6;}
+ const trail=piece(g,0xa5c99a,new T.CircleGeometry(1.7,40),0,.2,0);trail.rotation.x=-Math.PI/2;trail.scale.y=.6;return g;}
