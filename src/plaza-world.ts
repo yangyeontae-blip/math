@@ -21,7 +21,7 @@ type LabelRect={x:number;top:number;bottom:number;width:number};
 export function placePlazaLabel(x:number,y:number,width:number,height:number,viewportWidth:number,viewportHeight:number,occupied:readonly LabelRect[]){
  const minX=8+width/2,maxX=viewportWidth-8-width/2;if(minX>maxX||height>viewportHeight-33)return null;
  const clamp=(v:number)=>Math.max(minX,Math.min(maxX,v));
- const columns=[...new Set([clamp(x),...occupied.flatMap(r=>[clamp(r.x-(r.width+width)/2-6),clamp(r.x+(r.width+width)/2+6)])])].sort((a,b)=>Math.abs(a-x)-Math.abs(b-x));
+ const columns=[...new Set([clamp(x),...occupied.flatMap(r=>[clamp(r.x+(r.width+width)/2+6),clamp(r.x-(r.width+width)/2-6)])])].sort((a,b)=>Math.abs(a-x)-Math.abs(b-x));
  for(const candidate of columns){let bottom=Math.min(y,viewportHeight-8);
   for(let attempt=0;attempt<=occupied.length;attempt++){const overlap=occupied.filter(r=>Math.abs(r.x-candidate)<(r.width+width)/2+4&&bottom>r.top-4&&bottom-height<r.bottom+4);if(!overlap.length)break;bottom=Math.min(...overlap.map(r=>r.top))-5;}
   if(bottom-height>=25)return {x:candidate,y:bottom};
