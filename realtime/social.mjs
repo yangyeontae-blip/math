@@ -33,7 +33,7 @@ export class PlazaSocial {
    if(!s.chatEnabled){this.room.send(ws,{type:'chat-error',reason:'not_ready'});return true;}const text=normalizeChat(m.text);if(text===null){this.room.send(ws,{type:'chat-error',reason:'content'});return true;}const now=this.now();
    const result=await this.ctx.storage.transaction(async tx=>{const mute=await tx.get('chat:mute:'+s.chatSender);if(mute?.until>now)return {error:'muted',until:mute.until};const last=await tx.get('chat:last:'+s.chatSender);if(last&&now-last.at<CHAT_INTERVAL)return {error:'rate'};if(last?.text===text&&now-last.at<30000)return {error:'repeat'};
     const message={id:crypto.randomUUID(),senderId:s.chatSender,nickname:s.profile.nickname,text,operator:this.role(s)==='operator',sentAt:now};const history=(await tx.get('chat:history')??[]).filter(x=>x.sentAt+CHAT_TTL>now);history.push(message);await tx.put('chat:history',history.slice(-CHAT_LIMIT));await tx.put('chat:last:'+s.chatSender,{at:now,text,until:now+CHAT_TTL});return {message};});
-   if(result.error)this.room.send(ws,{type:'chat-error',reason:result.error,mutedUntil:result.until??0});else{this.room.broadcast({type:'chat-message',message:result.message});await this.schedule(now+CHAT_TTL);}return true;
+   if(result.error)this.room.send(ws,{type:'chat-error',reason:result.error,mutedUntil:result.until??0});else{this.room.broadcast({type:'chat-message',message:result.message,playerId:s.id});await this.schedule(now+CHAT_TTL);}return true;
   }
   if(m.type==='chat-delete'||m.type==='chat-mute'||m.type==='chat-unmute'||m.type==='chat-mutes'){
    if(!await this.operator(ws,s))return true;

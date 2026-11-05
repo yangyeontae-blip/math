@@ -1723,6 +1723,8 @@ export class World {
   clearPlazaPlayers(){this.plazaVisual.clearPeers();}
   plazaEmote(id:string,emote:PlazaEmote){this.plazaVisual.emote(id,emote);}
   selfPlazaEmote(emote:PlazaEmote){this.plazaVisual.selfEmote(emote);}
+  showPlazaSpeech(id:string|null,message:import('./plaza-social').PlazaChatMessage){if(this.isPublicPlaza)this.plazaVisual.speak(id,message);}
+  clearPlazaSpeech(filter:{messageId?:string;senderId?:string}){this.plazaVisual.clearSpeech(filter);}
   setActive(active: boolean) { this.active = active; this.paused = !active; if (!active) this.clearInput(); this.syncAnimation(); }
   setPaused(paused: boolean) { this.paused = paused; if (paused) this.clearInput(); this.syncAnimation(); }
   private syncAnimation() {

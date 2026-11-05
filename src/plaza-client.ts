@@ -1,7 +1,7 @@
 import {parseChatMessage,type PlazaChatMessage,type PlazaChatMute,type PlazaRole} from './plaza-social';
 import {PLAZA_VERSION,PLAZA_ROOM,PLAZA_CAPACITY,PLAZA_AVATAR_CATALOG,parsePlazaPlayer,parsePlazaPose,isPlazaEmote,type PlazaProfile,type PlazaPose,type PlazaPlayer,type PlazaEmote} from './plaza-protocol';
 export type PlazaConnection='offline'|'connecting'|'online'|'retrying'|'nickname'|'full';
-type Hooks={status:(status:PlazaConnection,count:number)=>void;player:(player:PlazaPlayer)=>void;leave:(id:string)=>void;clear:()=>void;emote:(id:string,emote:PlazaEmote)=>void;social?:(ready:boolean,role:PlazaRole,expiresAt:number,verified?:boolean)=>void;chat?:(messages:PlazaChatMessage[],replace:boolean)=>void;removed?:(id:string)=>void;chatStatus?:(until:number)=>void;chatError?:(reason:string)=>void;mutes?:(mutes:PlazaChatMute[])=>void};
+type Hooks={status:(status:PlazaConnection,count:number)=>void;player:(player:PlazaPlayer)=>void;leave:(id:string)=>void;clear:()=>void;emote:(id:string,emote:PlazaEmote)=>void;social?:(ready:boolean,role:PlazaRole,expiresAt:number,verified?:boolean)=>void;chat?:(messages:PlazaChatMessage[],replace:boolean)=>void;speech?:(playerId:string|null,message:PlazaChatMessage)=>void;removed?:(id:string)=>void;chatStatus?:(until:number)=>void;chatError?:(reason:string)=>void;mutes?:(mutes:PlazaChatMute[])=>void};
 export class PlazaClient {
  private identity='';private operatorToken='';public chatReady=false;public role:PlazaRole='player';
  configure(identity:string,operatorToken:string){if(this.operatorToken!==operatorToken){this.disconnect();this.retryAt=0;}this.identity=identity;this.operatorToken=operatorToken;}
@@ -49,7 +49,7 @@ export class PlazaClient {
   if(m.type==='role'){this.role=m.role==='operator'?'operator':'player';this.hooks.social?.(this.chatReady,this.role,Number(m.expiresAt)||0,true);}
   if(m.type==='role-player'&&m.role==='player'){const old=this.peers.get(m.id);if(old){old.role='player';this.hooks.player(old);}}
   if(m.type==='chat-history'&&Array.isArray(m.messages))this.hooks.chat?.(m.messages.slice(-50).map(parseChatMessage).filter((x:PlazaChatMessage|null):x is PlazaChatMessage=>!!x),true);
-  if(m.type==='chat-message'){const message=parseChatMessage(m.message);if(message)this.hooks.chat?.([message],false);}
+  if(m.type==='chat-message'){const message=parseChatMessage(m.message);if(message){this.hooks.chat?.([message],false);if(m.playerId===this.selfId)this.hooks.speech?.(null,message);else if(typeof m.playerId==='string'&&this.peers.has(m.playerId))this.hooks.speech?.(m.playerId,message);}}
   if(m.type==='chat-removed'&&typeof m.messageId==='string')this.hooks.removed?.(m.messageId);
   if(m.type==='chat-status'&&Number.isSafeInteger(m.mutedUntil))this.hooks.chatStatus?.(m.mutedUntil);
   if(m.type==='chat-error'&&typeof m.reason==='string')this.hooks.chatError?.(m.reason);

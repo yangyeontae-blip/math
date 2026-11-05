@@ -1,4 +1,5 @@
 import {animateSkywardTree} from './skyward-art';
+import type {PlazaChatMessage} from './plaza-social';
 import * as T from 'three';
 import {mergeGeometries} from 'three/addons/utils/BufferGeometryUtils.js';
 import {profileTitles,PLAZA_EMOTES,PLAZA_CAPACITY,type PlazaProfile,type PlazaPlayer,type PlazaEmote} from './plaza-protocol';
@@ -19,6 +20,8 @@ export function mergePlazaAvatar(root:T.Group){
  return ()=>owned.forEach(m=>m.dispose());
 }
 
+const SPEECH_MS=7000;
+type Speech={id:string;senderId:string;expires:number;width:number;height:number;viewport:number};
 type LabelRect={x:number;top:number;bottom:number;width:number};
 /** Prefer above the avatar; use a nearby free column when stacked greetings reach the top of a short screen. */
 export function placePlazaLabel(x:number,y:number,width:number,height:number,viewportWidth:number,viewportHeight:number,occupied:readonly LabelRect[]){
@@ -32,7 +35,7 @@ export function placePlazaLabel(x:number,y:number,width:number,height:number,vie
  return null;
 }
 export class PlazaWorld {
- private peers=new Map<string,Actor>();private self:T.Group|null=null;private own:ReturnType<PlazaWorld['label']>;private selfProfile:PlazaProfile|null=null;private selfSignature='';
+ private peers=new Map<string,Actor>();private speeches=new Map<HTMLElement,Speech>();private self:T.Group|null=null;private own:ReturnType<PlazaWorld['label']>;private selfProfile:PlazaProfile|null=null;private selfSignature='';
  private farRoot=new T.Group();private far:{mesh:T.InstancedMesh;offset:T.Vector3;scale:T.Vector3;color:(p:PlazaProfile)=>number}[]=[];private matrix=new T.Matrix4();private quaternion=new T.Quaternion();private projected=new T.Vector3();private targetPosition=new T.Vector3();private partPosition=new T.Vector3();private partColor=new T.Color();private clock=0;
  constructor(private scene:T.Scene,private layer:HTMLElement,private factory:(p:PlazaProfile)=>Model,private colors:(p:PlazaProfile)=>{body:number;hair:number;skin:number}){
   this.own=this.label(true);
@@ -46,27 +49,42 @@ export class PlazaWorld {
   part(new T.TorusGeometry(.075,.018,4,10,Math.PI),new T.Vector3(0,1.3,.47),new T.Vector3(1,1,1),()=>0x694438);
   this.farRoot.name='plaza-distant-avatars';
  }
- private label(self=false){const root=document.createElement('div');root.className='plaza-nameplate'+(self?' is-self':'');root.hidden=true;const name=document.createElement('strong'),title=document.createElement('span'),bubble=document.createElement('b');bubble.className='plaza-emote';bubble.hidden=true;root.append(name,title,bubble);this.layer.append(root);return {root,name,title,bubble};}
+ private label(self=false){const root=document.createElement('div');root.className='plaza-nameplate'+(self?' is-self':'');root.hidden=true;const name=document.createElement('strong'),title=document.createElement('span'),bubble=document.createElement('b');bubble.className='plaza-emote';bubble.hidden=true;const speech=document.createElement('div'),text=document.createElement('span');speech.className='plaza-speech';speech.hidden=true;speech.setAttribute('aria-hidden','true');speech.append(text);root.append(speech,name,title,bubble);this.layer.append(root);return {root,name,title,bubble};}
  private identity(label:ReturnType<PlazaWorld['label']>,p:PlazaProfile,role='player'){const text=profileTitles(p);label.name.textContent=`Lv. ${p.level} ${text.nickname}`;label.title.textContent=(role==='operator'?'운영자 · ':'')+text.title;label.root.classList.toggle('is-legendary',text.legendary);label.root.dataset.nameLength=String(text.nickname.length+String(p.level).length+5);label.root.dataset.titleLength=String(text.title.length+(role==='operator'?6:0));label.root.dataset.plateWidth=String(Math.min(210,Math.max((text.nickname.length+String(p.level).length+7)*14,(text.title.length+2)*11)));}
  setSelf(profile:PlazaProfile|null,player:T.Group,role='player'){this.self=player;this.selfProfile=profile;const signature=JSON.stringify([profile,role]);if(profile&&signature!==this.selfSignature)this.identity(this.own,profile,role);if(!profile)this.own.root.hidden=true;this.selfSignature=signature;}
  upsert(player:PlazaPlayer){let actor=this.peers.get(player.id);const signature=JSON.stringify([player.profile,player.role]);
   if(!actor){const label=this.label();actor={state:player,position:new T.Vector3(player.pose.x,player.pose.y,player.pose.z),angle:player.pose.angle,label:label.root,name:label.name,title:label.title,bubble:label.bubble,emoteUntil:0,phase:0,signature,model:null};this.peers.set(player.id,actor);label.root.dataset.playerId=player.id;this.identity(label,player.profile,player.role);}
   else {actor.state=player;if(signature!==actor.signature){actor.model?.root.removeFromParent();actor.model?.dispose();actor.model=null;actor.signature=signature;this.identity({root:actor.label,name:actor.name,title:actor.title,bubble:actor.bubble},player.profile,player.role);}}
  }
- remove(id:string){const actor=this.peers.get(id);if(!actor)return;actor.label.remove();actor.model?.root.removeFromParent();actor.model?.dispose();this.peers.delete(id);}
- clearPeers(){for(const id of [...this.peers.keys()])this.remove(id);for(const part of this.far)part.mesh.count=0;}
+ remove(id:string){const actor=this.peers.get(id);if(!actor)return;this.removeSpeech(actor.label);actor.label.remove();actor.model?.root.removeFromParent();actor.model?.dispose();this.peers.delete(id);}
+ clearPeers(){this.clearSpeech();for(const id of [...this.peers.keys()])this.remove(id);for(const part of this.far)part.mesh.count=0;}
  detach(){this.clearPeers();this.farRoot.removeFromParent();}
  emote(id:string,emote:PlazaEmote){const actor=this.peers.get(id);if(!actor)return;actor.bubble.textContent=PLAZA_EMOTES[emote];actor.bubble.hidden=false;actor.emoteUntil=this.clock+3;}
  selfEmote(emote:PlazaEmote){this.own.bubble.textContent=PLAZA_EMOTES[emote];this.own.bubble.hidden=false;this.own.bubble.dataset.until=String(this.clock+3);}
+ speak(playerId:string|null,message:PlazaChatMessage){
+  const label=playerId===null?this.own.root:this.peers.get(playerId)?.label;if(!label)return;
+  const speech=label.firstElementChild as HTMLElement;const existing=this.speeches.get(label);if(existing?.id===message.id)return;
+  speech.firstElementChild!.textContent=message.text;speech.hidden=false;label.classList.add('is-speaking');
+  this.speeches.set(label,{id:message.id,senderId:message.senderId,expires:performance.now()+SPEECH_MS,width:speech.offsetWidth,height:speech.offsetHeight,viewport:this.layer.clientWidth});
+ }
+ clearSpeech({messageId,senderId}:{messageId?:string;senderId?:string}={}){
+  for(const [label,speech] of this.speeches)if((!messageId||speech.id===messageId)&&(!senderId||speech.senderId===senderId))this.removeSpeech(label);
+ }
+ private removeSpeech(label:HTMLElement){
+  if(!this.speeches.delete(label))return;const speech=label.firstElementChild as HTMLElement;speech.hidden=true;speech.firstElementChild!.textContent='';label.classList.remove('is-speaking');
+ }
  private place(label:HTMLElement,position:T.Vector3,height:number,camera:T.Camera,width:number,heightPx:number,visible:boolean,occupied:LabelRect[]){
   this.projected.copy(position);this.projected.y+=height;this.projected.project(camera);let hidden=!visible||this.projected.z>1||Math.abs(this.projected.x)>1.05||Math.abs(this.projected.y)>1.05;
-  const x=(this.projected.x*.5+.5)*width;let y=(-this.projected.y*.5+.5)*heightPx;const compact=width<650,plateWidth=Math.min(compact?165:210,Number(label.dataset.plateWidth??160)),titleRows=Math.max(1,Math.ceil(Number(label.dataset.titleLength??0)*(compact?10:11)/(plateWidth-16))),nameRows=Math.max(1,Math.ceil(Number(label.dataset.nameLength??0)*(compact?11:12)/(Math.min(plateWidth,compact?150:190)-16))),plateHeight=(compact?25:29)*nameRows+titleRows*(compact?13:14.3)+13+((label.lastElementChild as HTMLElement)?.hidden===false?46:0);
+  const speech=this.speeches.get(label);
+  // Only read layout after a new message or a viewport resize, never on every frame.
+  if(speech&&!label.hidden&&(speech.viewport!==width||!speech.height)){const bubble=label.firstElementChild as HTMLElement;speech.width=bubble.offsetWidth;speech.height=bubble.offsetHeight;speech.viewport=width;}
+  const x=(this.projected.x*.5+.5)*width,y=(-this.projected.y*.5+.5)*heightPx;const compact=width<650,identityWidth=Math.min(compact?165:210,Number(label.dataset.plateWidth??160)),plateWidth=speech?Math.max(identityWidth,speech.width||(compact?165:210)):identityWidth,titleRows=Math.max(1,Math.ceil(Number(label.dataset.titleLength??0)*(compact?10:11)/(identityWidth-16))),nameRows=Math.max(1,Math.ceil(Number(label.dataset.nameLength??0)*(compact?11:12)/(Math.min(identityWidth,compact?150:190)-16))),plateHeight=(compact?25:29)*nameRows+titleRows*(compact?13:14.3)+13+(speech?(speech.height?speech.height+11:compact?70:76):(label.lastElementChild as HTMLElement)?.hidden===false?46:0);
   const placed=hidden?null:placePlazaLabel(x,y,plateWidth,plateHeight,width,heightPx,occupied);hidden=!placed;
   if(label.hidden!==hidden)label.hidden=hidden;if(placed){const transform='translate(-50%,-100%) translate('+Math.round(placed.x)+'px,'+Math.round(placed.y)+'px)';if(label.style.transform!==transform)label.style.transform=transform;occupied.push({x:placed.x,top:placed.y-plateHeight,bottom:placed.y,width:plateWidth});}
  }
 
  update(dt:number,camera:T.Camera,player:T.Group,showPeers:boolean,active:boolean,low:boolean,reduced:boolean){
-  this.clock+=dt;const width=this.layer.clientWidth,height=this.layer.clientHeight;const occupied:{x:number;top:number;bottom:number;width:number}[]=[];
+  this.clock+=dt;const now=performance.now();for(const [label,speech] of this.speeches)if(speech.expires<=now)this.removeSpeech(label);const width=this.layer.clientWidth,height=this.layer.clientHeight;const occupied:{x:number;top:number;bottom:number;width:number}[]=[];
   if(this.selfProfile)this.place(this.own.root,player.position,this.selfProfile.ride>=0?4.4:3,camera,width,height,active,occupied);
   if(Number(this.own.bubble.dataset.until??0)<this.clock)this.own.bubble.hidden=true;
   if(!showPeers){if(this.peers.size)this.clearPeers();this.farRoot.removeFromParent();return;}

@@ -29,9 +29,11 @@ export function mountPlaza(h:{state:()=>Save|null;world:()=>World|undefined;host
   player:p=>h.world()?.upsertPlazaPlayer(p),leave:id=>h.world()?.removePlazaPlayer(id),clear:()=>h.world()?.clearPlazaPlayers(),
   emote:(id,value)=>h.world()?.plazaEmote(id,value),
   social:(ready,role,until,verified)=>{if(verified&&role==='player')auth.invalidate();ownRole=auth.active?'operator':role;roleUntil=auth.active?auth.expiresAt:until;badge.hidden=ownRole!=='operator';chat?.refresh();},
-  chat:(messages,replace)=>chat?.messages(messages,replace),removed:id=>chat?.removed(id),chatStatus:until=>chat?.status(until),chatError:reason=>chat?.error(reason),mutes:records=>chat?.mutes(records),
+  chat:(messages,replace)=>chat?.messages(messages,replace),
+  speech:(playerId,message)=>{if(chat?.allowsSpeech(message))h.world()?.showPlazaSpeech(playerId,message);},
+  removed:id=>{chat?.removed(id);h.world()?.clearPlazaSpeech({messageId:id});},chatStatus:until=>chat?.status(until),chatError:reason=>chat?.error(reason),mutes:records=>chat?.mutes(records),
  });
- chat=mountPlazaChat(tools,()=>client,focused=>h.world()?.setTextInputFocus(focused));
+ chat=mountPlazaChat(tools,()=>client,focused=>h.world()?.setTextInputFocus(focused),senderId=>h.world()?.clearPlazaSpeech({senderId}));
  auth.validate().then(()=>{ownRole=auth.active?'operator':'player';roleUntil=auth.expiresAt;badge.hidden=ownRole!=='operator';sync();});
  function render(){
   const labels={offline:enabled?'🌿 혼자 모험 중':'🌿 혼자 다니기',connecting:'🌐 광장 연결 중',online:'🌐 함께하는 광장 · '+memberCount+'명',retrying:'🌐 광장 다시 연결 중',nickname:'🌿 별명을 확인해 주세요',full:'🌐 광장이 가득 찼어요'};
