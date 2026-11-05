@@ -141,7 +141,7 @@
     "src/skyward-art.ts": "c5a7cffa2957a823af75c5313eb482156d000f97be4fda7b5cc0b46124daac7c",
     "src/skyward-collection.css": "a071e35c71b65eb86b4f56e3c26a5d4221e7e88e7dcfa363bbb438cba12cec3c",
     "tests/skyward-collection.test.ts": "30f82ab85feec93f315fb15bf3f036e367f1c5ff48af2116aeb90aaaf76d8a58",
-    "e2e/skyward-collection.spec.mjs": "7dd34fe71b0ab624c0d0729bddb752d2c1edc304671c3e445c85fcf4db1d89a3",
+    "e2e/skyward-collection.spec.mjs": "315765210d3492e992bcca54c90ad18b39f0d8c4f8cc3b69bc1b25ff5ea2fb86",
     "public/art/skyward-outfit-29.svg": "96a56054cef0b0b3e013ba53d6d9f47f88dadb564784a4c1ca8d95f2f337498f",
     "public/art/skyward-outfit-30.svg": "85f975b6ec835bf2022221f5caec9fadc0c4c68256e887a598a3a1b36c02deda",
     "public/art/skyward-outfit-31.svg": "316c6ce846cbc6442355371b73caf17560d59bad6d29f3b8d8ab4dd6836bbfff",
@@ -157,5 +157,5 @@
     "public/art/skyward-weapon-37.svg": "0b79582b7349629dfba6c34f03f729c971a4659f043f880fb27a8d098e660de6",
     "public/art/skyward-weapon-38.svg": "46ae0f4ff502186fbd37fed4613fe3d0f3d9cb4d28ffd810389d1374e97aec34"
   },
-  "generation": "53082ebea68df6d64866ad6419dac0d9f94f607952ba1f76bf0b16f893567104"
+  "generation": "d9615d9f4690e3ea3e63ca4f5dcb9ecc1841c39511faf36bd03ad6dff82036cf"
 }
