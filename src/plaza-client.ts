@@ -1,5 +1,5 @@
 import {parseChatMessage,type PlazaChatMessage,type PlazaChatMute,type PlazaRole} from './plaza-social';
-import {PLAZA_VERSION,PLAZA_ROOM,PLAZA_CAPACITY,parsePlazaPlayer,parsePlazaPose,isPlazaEmote,type PlazaProfile,type PlazaPose,type PlazaPlayer,type PlazaEmote} from './plaza-protocol';
+import {PLAZA_VERSION,PLAZA_ROOM,PLAZA_CAPACITY,PLAZA_AVATAR_CATALOG,parsePlazaPlayer,parsePlazaPose,isPlazaEmote,type PlazaProfile,type PlazaPose,type PlazaPlayer,type PlazaEmote} from './plaza-protocol';
 export type PlazaConnection='offline'|'connecting'|'online'|'retrying'|'nickname'|'full';
 type Hooks={status:(status:PlazaConnection,count:number)=>void;player:(player:PlazaPlayer)=>void;leave:(id:string)=>void;clear:()=>void;emote:(id:string,emote:PlazaEmote)=>void;social?:(ready:boolean,role:PlazaRole,expiresAt:number,verified?:boolean)=>void;chat?:(messages:PlazaChatMessage[],replace:boolean)=>void;removed?:(id:string)=>void;chatStatus?:(until:number)=>void;chatError?:(reason:string)=>void;mutes?:(mutes:PlazaChatMute[])=>void};
 export class PlazaClient {
@@ -31,7 +31,7 @@ export class PlazaClient {
   let url:URL;try{url=new URL(this.endpoint);if(!['wss:','ws:'].includes(url.protocol))throw Error();url.pathname='/connect';url.search='?v='+PLAZA_VERSION;}catch{this.hooks.status('offline',0);this.retryAt=now+60000;return;}
   this.openedAt=now;this.hooks.status(this.attempt?'retrying':'connecting',0);
   let socket:WebSocket;try{socket=this.createSocket(url.href);}catch{this.retryAt=now+5000;return;}this.socket=socket;
-  socket.onopen=()=>{if(this.socket!==socket)return;this.lastPong=Date.now();this.lastPing=Date.now();this.profileAt=Date.now();this.lastProfile=JSON.stringify(this.profile);this.lastSent=JSON.stringify(this.pose);this.send({type:'join',profile:this.profile,pose:this.pose,batchedPoses:true,chatIdentity:this.identity,operatorToken:this.operatorToken});};
+  socket.onopen=()=>{if(this.socket!==socket)return;this.lastPong=Date.now();this.lastPing=Date.now();this.profileAt=Date.now();this.lastProfile=JSON.stringify(this.profile);this.lastSent=JSON.stringify(this.pose);this.send({type:'join',profile:this.profile,pose:this.pose,batchedPoses:true,avatarCatalog:PLAZA_AVATAR_CATALOG,chatIdentity:this.identity,operatorToken:this.operatorToken});};
   socket.onmessage=e=>{if(this.socket===socket)this.receive(e.data);};
   socket.onclose=()=>{if(this.socket===socket)this.fail(socket);};
   socket.onerror=()=>{if(this.socket===socket)this.fail(socket);};

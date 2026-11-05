@@ -1,3 +1,4 @@
+import {SKYWARD_WEAPONS,SKYWARD_OUTFITS,SKYWARD_RIDES,SKYWARD_PETS,skywardItem} from './skyward-collection';
 import {emptyAstralStudy,validAstralStudy,type AstralStudy} from './astral-study';
 import {emptyWorldTwo,validWorldTwo,WORLD_TWO_WEAPONS,WORLD_TWO_OUTFITS,worldTwoEquipment,worldTwoEquipmentSource,type WorldTwoProgress} from './world-two';
 import {HUNT_RECOVERY_ITEMS,LEGACY_POTION_COUNT,huntingSupply,supplyFailure,type SupplyUseResult} from './hunt-supplies';
@@ -42,6 +43,7 @@ export const WEAPONS = [
   { name: '불꽃 깃털 활', price: 18500, bonus: 79, multiplier: 10.9, treePower: 15, icon: '🔥', color: 0xf07a3c },
   { name: '은하수 왕관검', price: 22000, bonus: 86, multiplier: 11.6, treePower: 16, icon: '🌌', color: 0x8f7ff0 },
 ...WORLD_TWO_WEAPONS,
+...SKYWARD_WEAPONS,
 ] as const;
 export const OUTFITS = [
   { name: '새싹 탐험복', price: 0, color: 0x4d9c78, accent: 0xffe4a3, desc: '처음 떠나는 모험의 설렘', effect: '추가 효과가 없는 기본 옷이에요.', berryBonus: 0, xpBonus: 0, clearBonus: 0 },
@@ -71,6 +73,7 @@ export const OUTFITS = [
   { name: '달토끼 수호복', price: 6800, color: 0xb5c9e8, accent: 0xffffff, desc: '달빛 귀와 은빛 망토가 달린 토끼 수호복', effect: '길의 베리마다 +5, 몬스터마다 경험치 +12를 받아요.', berryBonus: 5, xpBonus: 12, clearBonus: 0 },
   { name: '오로라 숲여왕 예복', price: 8000, color: 0x5f9e9a, accent: 0xffdf85, desc: '오로라 망토와 금빛 잎사귀 왕관의 특별 예복', effect: '길의 베리마다 +7, 몬스터마다 경험치 +12, 스테이지 통과 베리 +80을 받아요.', berryBonus: 7, xpBonus: 12, clearBonus: 80 },
 ...WORLD_TWO_OUTFITS,
+...SKYWARD_OUTFITS,
 ] as const;
 export const CHARACTERS = [
   { name: '봄이', desc: '동글동글 양 갈래', hair: 0x623d2e, skin: 0xffd8b1, style: 0 },
@@ -110,6 +113,7 @@ export const RIDES = [
   { name: '별토끼 로켓', price: 28000, speed: 3.85, flying: true, icon: '🚀', color: 0xa88de0, desc: '별가루 꼬리를 남기며 구름 위를 달려요' },
   { name: '구름버스 보송이', price: 34000, speed: 4.1, flying: true, icon: '☁️', color: 0xcfeafa, desc: '친구들과 타고 싶은 폭신한 하늘 버스예요' },
   { name: '베리혜성 썰매', price: 50000, speed: 4.7, flying: true, icon: '☄️', color: 0xea7192, desc: '베리빛 꼬리를 그리며 가장 빠르게 날아가요' },
+  ...SKYWARD_RIDES,
 ] as const;
 export function riderHeight(id: number) { const ride = RIDES[id]; return 'riderY' in ride ? ride.riderY : ride.flying ? 1.03 : .78; }
 export const PLAYER_MOVE_SPEED = 8.45;
@@ -140,6 +144,7 @@ export const PETS = [
   { name: '무지개 해파리 젤리', price: 44000, radius: 15.5, flying: true, icon: '🪼', color: 0x8eced9, desc: '빛나는 촉수를 흔들며 장애물 위를 둥실 떠다녀요' },
   { name: '별꼬리 여우 라온', price: 49000, radius: 15.8, flying: true, icon: '🦊', color: 0x7e87d5, desc: '별빛 꼬리로 가장 먼 베리까지 빠르게 찾아가요' },
   { name: '귀염둥이 뽀짝이', price: 150000, radius: 22, flying: false, icon: '🐩', color: 0xc9864b, desc: '살구빛 곱슬털의 전설 친구. 장착하면 사냥 공격력 45%·체력 35%·베리 50%·경험치 40% 증가, 받는 피해 20% 감소로 모험을 지켜요' },
+  ...SKYWARD_PETS,
 ] as const;
 export const PPOJJAK_PET_ID = 20;
 export const SHINBI_STAR_PET_ID = 8;
@@ -660,7 +665,7 @@ export function grantReward(s: Save, monster: number, arena: boolean, now = Date
   return { ...reward, levels, milestones };
 }
 /** Combat power is separate from all learning reward bonuses. */
-export function huntingCompanionStats(s:{pet?:number;outfit?:number}){const armor=s.outfit!==undefined&&worldTwoEquipment('outfit',s.outfit)?1.15:1;return s.pet===PPOJJAK_PET_ID?{maxHpMultiplier:1.35*armor,damageReduction:.2}:{maxHpMultiplier:armor,damageReduction:0};}
+export function huntingCompanionStats(s:{pet?:number;outfit?:number}){const armor=s.outfit===undefined?1:skywardItem('outfit',s.outfit)?1.2:worldTwoEquipment('outfit',s.outfit)?1.15:1;return s.pet===PPOJJAK_PET_ID?{maxHpMultiplier:1.35*armor,damageReduction:.2}:{maxHpMultiplier:armor,damageReduction:0};}
 export function huntingPower(s:Pick<Save,'level'|'weapon'|'weapons'>&{pet?:number}){const w=WEAPONS[s.weapon]??WEAPONS[0],upgrade=Math.max(0,Math.min(3,s.weapons[s.weapon]??0)),level=Math.min(100000,s.level);return (8+level*1.15+Math.sqrt(level)*1.8)*(1+(w.treePower-1)*.22+upgrade*.15)*(s.pet===PPOJJAK_PET_ID?1.45:1);} // 레벨의 힘을 키우되 기존 무기·강화 배율은 유지해요.
 export function huntingRewardFor(s:Save,zone:number,now=Date.now()){
   const z=HUNT_ZONES[zone];if(!z||s.level<z.level||!Number.isFinite(now)||!Number.isFinite(new Date(now).getTime()))return {berries:0,xp:0,eligible:false,multiplier:0};

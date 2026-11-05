@@ -1,3 +1,4 @@
+import {animateSkywardTree} from './skyward-art';
 import * as T from 'three';
 import {mergeGeometries} from 'three/addons/utils/BufferGeometryUtils.js';
 import {profileTitles,PLAZA_EMOTES,PLAZA_CAPACITY,type PlazaProfile,type PlazaPlayer,type PlazaEmote} from './plaza-protocol';
@@ -7,6 +8,7 @@ type Actor={state:PlazaPlayer;position:T.Vector3;angle:number;label:HTMLDivEleme
 export function mergePlazaAvatar(root:T.Group){
  root.updateMatrixWorld(true);const body=root.userData.body as T.Group|undefined;
  const keep=new Set<T.Object3D>([...(root.userData.feet??[]),...(root.userData.arms??[]),...(root.userData.hands??[]),...(root.userData.eyes??[])]);
+ root.traverse(o=>{for(const part of o.userData.skywardMotion??[])keep.add(part.object);});
  const groups=new Map<T.Object3D,{geometry:T.BufferGeometry;mesh:T.Mesh}[]>();
  root.traverse(o=>{if(!(o instanceof T.Mesh)||o instanceof T.InstancedMesh||Array.isArray(o.material)||!o.visible)return;let at:T.Object3D|null=o,anchor:T.Object3D=root;while(at&&at!==root){if(!at.visible||keep.has(at))return;if(at===body)anchor=body;at=at.parent;}
   const material=o.material as T.MeshStandardMaterial;if(!material.color||material.map||material.transparent||material.emissive?.getHex())return;
@@ -80,6 +82,7 @@ export class PlazaWorld {
     const body=actor.model.avatar.userData.body as T.Group|undefined;if(body)body.position.y=(p.ride>=0?Number(body.userData.plazaRideHeight??0):0)+(reduced?0:Math.sin(actor.phase*.2)*.012);
     const feet=(actor.model.avatar.userData.feet??[]) as T.Mesh[];feet.forEach((foot,i)=>foot.position.y=.18+(moving&&!reduced?Math.max(0,Math.sin(actor.phase+i*Math.PI))*.12:0));
     if(actor.model.pet){actor.model.pet.position.set(-1,.1+(moving&&!reduced?Math.abs(Math.sin(actor.phase))*.12:0),1);actor.model.pet.rotation.y=actor.angle;}
+    animateSkywardTree(actor.model.root,this.clock,moving,reduced);
     if(!detail&&actor.position.distanceToSquared(player.position)>625){actor.model.root.removeFromParent();actor.model.dispose();actor.model=null;}
    }
    if(!detail){for(const part of this.far){const offset=this.partPosition.copy(part.offset);if(p.ride>=0)offset.y+=.7;offset.applyAxisAngle(T.Object3D.DEFAULT_UP,actor.angle).add(actor.position);this.quaternion.setFromAxisAngle(T.Object3D.DEFAULT_UP,actor.angle);this.matrix.compose(offset,this.quaternion,part.scale);part.mesh.setMatrixAt(farCount,this.matrix);part.mesh.setColorAt(farCount,this.partColor.setHex(part.color(p)));}farCount++;}

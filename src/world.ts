@@ -1,3 +1,4 @@
+import {animateSkywardTree,createSkywardWeapon,createSkywardOutfit,createSkywardPet,createSkywardRide,type SkywardKit} from './skyward-art';
 import {ASTRAL_FORESTS,type AstralLocation} from './astral-study';
 import {PLANET_THEMES,planetaryTerrain,worldTwoGateway,updatePlanetaryScenery,disposePlanetaryScenery} from './world-two-planet';
 import {PlazaWorld,mergePlazaAvatar} from './plaza-world';
@@ -80,6 +81,8 @@ function ball(p: T.Object3D, color: number, x: number, y: number, z: number, sx 
 function box(p: T.Object3D, color: number, x: number, y: number, z: number, w: number, h: number, d: number) { return mesh(cachedBox(w, h, d), color, x, y, z, p); }
 function cylinder(p: T.Object3D, color: number, x: number, y: number, z: number, top: number, bottom: number, h: number, sides = 16) { return mesh(cachedCylinder(top, bottom, h, sides), color, x, y, z, p); }
 
+const skywardKit:SkywardKit={ball,box,cylinder,mesh};
+
 export function makeCharacter(character: number, outfit: number, weapon: number, outfitLevel = 0, weaponLevel = 0, hairstyle = 0, face = 0) {
   const g = new T.Group(), c = CHARACTERS[character], o = OUTFITS[outfit];
   const body = new T.Group(); g.add(body); g.userData.body = body;
@@ -135,8 +138,10 @@ export function makeCharacter(character: number, outfit: number, weapon: number,
     box(w, 0xf3a944, 0, .47, 0, .62, .1, .16); ball(w, 0x8fdcf1, 0, .48, .12, .105, .105, .04);
     for (let i = 0; i < 5; i++) ball(w, i % 2 ? 0xffffff : 0xffe16d, Math.cos(i * 1.257) * .22, .48 + Math.sin(i * 1.257) * .22, .12, .05);
   }
-  if (weapon >= 27) w.add(worldTwoEquipmentModel('weapon',weapon,WEAPONS[weapon].color));
-  if (outfit >= 26) body.add(worldTwoEquipmentModel('outfit',outfit,o.color,o.accent));
+  if (weapon >= 27 && weapon < 36) w.add(worldTwoEquipmentModel('weapon',weapon,WEAPONS[weapon].color));
+  if(weapon>=36){w.clear();w.add(createSkywardWeapon(weapon,skywardKit));}
+  if (outfit >= 26 && outfit < 29) body.add(worldTwoEquipmentModel('outfit',outfit,o.color,o.accent));
+  if(outfit>=29)body.add(createSkywardOutfit(outfit,skywardKit,o.color,o.accent));
   if (weapon >= 18 && weapon <= 26) { // 새 상점 무기: 각자 색이 다른 반짝이는 모험 지팡이
     cylinder(w, WEAPONS[weapon].color, 0, .86, 0, .07, .09, .95, 8);
     if (weapon === 18) { mesh(new T.OctahedronGeometry(.24), 0xffed91, 0, 1.38, .02, w); box(w, 0xfff7cf, 0, 1.02, .1, .13, .42, .035); }
@@ -246,6 +251,7 @@ function makeYeontae() {
 
 const makeRide = smoothModel(buildRide);
 function buildRide(id: number) {
+  if(id>=19)return createSkywardRide(id,skywardKit);
   const g = new T.Group(), ride = RIDES[id]; g.userData.rideModel = true;
   // 동물 탈것 공통 부품: 눈, 다리, 깃털 날개, 안장. 머리는 목을 세워 앞쪽 위에 두어 탄 사람에게 가려지지 않게 해요.
   const eyes = (y: number, z: number, spread: number, color = 0x2f2a3a) => { for (const side of [-1, 1]) { ball(g, color, side * spread, y, z, .05, .068, .03); ball(g, 0xffffff, side * spread - .015, y + .025, z + .022, .016, .02, .01); } };
@@ -408,6 +414,7 @@ function buildRide(id: number) {
 
 const makePet = smoothModel(buildPet);
 function buildPet(id: number) {
+  if(id>=21)return createSkywardPet(id,skywardKit);
   if(id===PPOJJAK_PET_ID)return createPpojjakiPet();
   const g = new T.Group(), pet = PETS[id];
   const body = new T.Group(); g.add(body);
@@ -1918,6 +1925,9 @@ export class World {
       if (o.userData.petPaw) o.rotation.x = rest.x + (this.petMotion ? Math.sin(this.time * 12 + Number(o.userData.petPaw) * Math.PI / 2) * .3 : 0);
       if (o.userData.petEye) { const scale = o.userData.restScale as T.Vector3; o.scale.y = scale.y * (sleeping || Math.sin(this.time * 1.7) > .995 ? .13 : 1); }
     }
+    const reducedSkyward=matchMedia('(prefers-reduced-motion: reduce)').matches;
+    animateSkywardTree(this.player,this.time,this.walkBlend>.05,reducedSkyward);
+    if(this.petModel&&this.petIndex>=21)animateSkywardTree(this.petModel,this.time,this.petMotion,reducedSkyward);
     const ppoAura=this.player.userData.ppoAura as T.Group|undefined;if(ppoAura)animatePpojjakiAura(ppoAura,this.time,this.lowQuality,matchMedia('(prefers-reduced-motion: reduce)').matches);
     const heroAura = this.player.userData.heroPetAura as T.Group | undefined;
     if (heroAura) {
@@ -1987,7 +1997,7 @@ export class AvatarPreview {
   showPet(id: number) { const model = makePet(id); model.position.set(0, PETS[id].flying ? -.18 : .08, 0); model.scale.setScalar(id === 10 ? 1.48 : id === HERO_BREAD_PET_ID ? 1.6 : id >= 12 ? 1.55 : 1.72); model.userData.previewKind = 'pet'; model.userData.previewPetId=id; this.replaceModel(model, [2.1, 1.35, 4.15], id === 10 ? .68 : .62, true); }
   showRide(id: number, c: number, o: number, w: number, ol = 0, wl = 0, hairstyle = 0, face = 0) { const model = makeCharacter(c, o, w, ol, wl, hairstyle, face), body = model.userData.body as T.Group; body.position.y = riderHeight(id); model.add(makeRide(id)); model.userData.previewKind = 'ride'; this.replaceModel(model, [3.4, 2.35, 7.7], 1.15, true); }
   private draw() { const w = this.portraitMode?144:this.element.clientWidth, h = this.portraitMode?160:this.element.clientHeight; if (!w || !h) return; if (w !== this.drawWidth || h !== this.drawHeight) { this.drawWidth = w; this.drawHeight = h; this.renderer.setSize(w, h,!this.portraitMode); this.camera.aspect = w / h; this.camera.updateProjectionMatrix(); } this.renderer.render(this.scene, this.camera); }
-  private animate = (time: number) => { this.animationFrame = requestAnimationFrame(this.animate); if (time - this.lastFrame < 33 || document.hidden || !this.element.isConnected) return; this.lastFrame = time; if(this.model.userData.previewPetId===PPOJJAK_PET_ID)animatePpojjakiPet(this.model,time*.001,false,false,matchMedia('(prefers-reduced-motion: reduce)').matches); this.model.rotation.y = -.18 + Math.sin(time * .0007) * .16; const body = this.model.userData.body as T.Group | undefined; if (body) { body.userData.baseY ??= body.position.y; body.position.y = (body.userData.baseY as number) + Math.sin(time * .003) * .035; } const sparkles = this.model.userData.sparkles as T.Group | undefined; if (sparkles) sparkles.rotation.y += .025; this.model.traverse(o => { if (o.userData.petCharm) { o.rotation.y += .06; o.userData.baseScale ??= o.scale.clone(); o.scale.copy(o.userData.baseScale as T.Vector3).multiplyScalar(1 + Math.sin(time * .006) * .12); } if (o.userData.petWing) o.rotation.z = Number(o.userData.petWing) * (.4 + Math.sin(time * .011) * .14); if (o.userData.rideWing) o.rotation.z = Number(o.userData.rideWing) * (-.72 + Math.sin(time * .009) * .14); if (o.userData.ridePropeller) o.rotation.z += .18; if (o.userData.rideGlow) o.rotation.z += .025; }); this.draw(); };
+  private animate = (time: number) => { this.animationFrame = requestAnimationFrame(this.animate); if (time - this.lastFrame < 33 || document.hidden || !this.element.isConnected) return; this.lastFrame = time; animateSkywardTree(this.model,time*.001,this.model.userData.previewKind==='ride'||this.model.userData.previewPetId>=21,matchMedia('(prefers-reduced-motion: reduce)').matches); if(this.model.userData.previewPetId===PPOJJAK_PET_ID)animatePpojjakiPet(this.model,time*.001,false,false,matchMedia('(prefers-reduced-motion: reduce)').matches); this.model.rotation.y = -.18 + Math.sin(time * .0007) * .16; const body = this.model.userData.body as T.Group | undefined; if (body) { body.userData.baseY ??= body.position.y; body.position.y = (body.userData.baseY as number) + Math.sin(time * .003) * .035; } const sparkles = this.model.userData.sparkles as T.Group | undefined; if (sparkles) sparkles.rotation.y += .025; this.model.traverse(o => { if (o.userData.petCharm) { o.rotation.y += .06; o.userData.baseScale ??= o.scale.clone(); o.scale.copy(o.userData.baseScale as T.Vector3).multiplyScalar(1 + Math.sin(time * .006) * .12); } if (o.userData.petWing) o.rotation.z = Number(o.userData.petWing) * (.4 + Math.sin(time * .011) * .14); if (o.userData.rideWing) o.rotation.z = Number(o.userData.rideWing) * (-.72 + Math.sin(time * .009) * .14); if (o.userData.ridePropeller) o.rotation.z += .18; if (o.userData.rideGlow) o.rotation.z += .025; }); this.draw(); };
   dispose() { cancelAnimationFrame(this.animationFrame); this.resizeObserver.disconnect(); disposeSalonMaterials(this.model);disposePpojjakiAssets(this.model);this.model.traverse(x => { if (x instanceof T.Mesh && !sharedGeometries.has(x.geometry)&&!x.geometry.userData.sharedSalonAsset&&!x.geometry.userData.ppoDisposed) x.geometry.dispose(); }); this.renderer.dispose(); this.renderer.forceContextLoss(); this.renderer.domElement.remove(); } // 미리보기를 자주 바꿔도 WebGL 창이 쌓여 게임 화면이 꺼지지 않도록 바로 돌려줘요.
 }
 

@@ -2,7 +2,8 @@ import {isBlockedNickname} from './nickname';
 export const PLAZA_VERSION = 1;
 export const PLAZA_ROOM = 'central-plaza-v1';
 export const PLAZA_CAPACITY = 128;
-export const AVATAR_LIMITS = {character:4,outfit:29,weapon:36,hairstyle:10,face:14,pet:21,ride:19} as const;
+export const PLAZA_AVATAR_CATALOG=2;
+export const AVATAR_LIMITS = {character:4,outfit:32,weapon:39,hairstyle:10,face:14,pet:24,ride:24} as const;
 export const JOB_TITLES = {
  novice:['새싹 모험가','새싹 모험가','새싹 모험가','새싹 모험가'],
  knight:['새싹 모험가','기사','수호기사','고대숲 기사'],
@@ -17,6 +18,8 @@ export interface PlazaProfile {
  outfitLevel:number; weaponLevel:number; hairstyle:number; face:number; pet:number; ride:number;
  job:keyof typeof JOB_TITLES; rank:number; achievement:number; gradeTitle:number; multiplicationTitle:boolean;
 }
+/** Older web/app clients keep seeing the same friend, with a similar legacy model. */
+export function compatiblePlazaProfile(p:PlazaProfile,catalog:number|undefined){if(catalog===PLAZA_AVATAR_CATALOG||p.weapon<36&&p.outfit<29&&p.pet<21&&p.ride<19)return p;return {...p,weapon:p.weapon<36?p.weapon:33+p.weapon-36,outfit:p.outfit<29?p.outfit:26+p.outfit-29,pet:p.pet<21?p.pet:([1,0,12][p.pet-21]??-1),ride:p.ride<19?p.ride:([1,3,7,17,6][p.ride-19]??-1)};}
 export interface PlazaPose {x:number;y:number;z:number;angle:number}
 export interface PlazaPlayer {id:string;profile:PlazaProfile;pose:PlazaPose;role?:'player'|'operator'}
 const integer=(v:unknown,lo:number,hi:number):v is number=>Number.isSafeInteger(v)&&Number(v)>=lo&&Number(v)<=hi;
