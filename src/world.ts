@@ -1,3 +1,4 @@
+import {ASTRAL_FORESTS,type AstralLocation} from './astral-study';
 import {PLANET_THEMES,planetaryTerrain,worldTwoGateway,updatePlanetaryScenery,disposePlanetaryScenery} from './world-two-planet';
 import {PlazaWorld,mergePlazaAvatar} from './plaza-world';
 import {type PlazaProfile,type PlazaPlayer,type PlazaEmote} from './plaza-protocol';
@@ -39,7 +40,7 @@ import { STORYBOOK_LIGHTING, storybookMaterial, seasonalParticleAt } from './sto
 import { StorybookScene, leafMaterial } from './storybook-scene';
 
 type Entity = { id: string; name: string; x: number; z: number; mesh: T.Group; label: HTMLDivElement };
-export type GuideKind = 'world2Gate' | 'world2Beacon' | 'huntingGate' | 'huntingExit' | 'academyGate' | 'academyBook' | 'guide' | 'marketExit' | 'noticeBoard' | 'homesteadGate' | 'shopStreet' | 'homeEditor' | 'homeExit' | 'homeVisitor' | 'discovery' | 'forestWork' | 'trailSeed' | 'trailLamp' | 'berry' | 'monster' | 'shop' | 'journey' | 'next' | 'star' | 'expMonster' | 'roomExit' | 'storyClue' | 'storyPuzzle' | 'storyMailbox' | 'village' | 'villageProject0' | 'villageProject1' | 'villageProject2';
+export type GuideKind = 'astralQuestion' | 'astralNext' | 'astralExit' | 'world2Gate' | 'world2Beacon' | 'huntingGate' | 'huntingExit' | 'academyGate' | 'academyBook' | 'guide' | 'marketExit' | 'noticeBoard' | 'homesteadGate' | 'shopStreet' | 'homeEditor' | 'homeExit' | 'homeVisitor' | 'discovery' | 'forestWork' | 'trailSeed' | 'trailLamp' | 'berry' | 'monster' | 'shop' | 'journey' | 'next' | 'star' | 'expMonster' | 'roomExit' | 'storyClue' | 'storyPuzzle' | 'storyMailbox' | 'village' | 'villageProject0' | 'villageProject1' | 'villageProject2';
 export type TrainingOptions = { job?: JobId | null; mode: 'single' | 'multi' | 'attacking'; skills: readonly SkillId[]; trialRank?: 1 | 2 | 3; skill?: SkillId | null };
 export const PLAZA_COMBAT_GATES = { hunting: { x: -18, z: -3 }, market: { x: -18, z: 5.5 } } as const;
 const mat = (color: number, roughness = .86) => new T.MeshStandardMaterial({ color, roughness });
@@ -696,6 +697,7 @@ export class World {
   inMarket=false; private signResources:{texture:T.Texture;material:T.Material;geometry:T.BufferGeometry}[]=[];
   private signFontReady: Promise<unknown> | null = null;
   inAcademy=false; readonly skillRuntime=new SkillRuntime(); private skillModels=new Map<SkillId,T.Group>(); private skillGuide=false; private trial:{id:SkillId;started:number;distance:number;last:T.Vector3}|null=null; onAcademyTrial=(_id:SkillId)=>{};
+  inAstralStudy:AstralLocation|null=null;private astralSave:Save|null=null;
   inHunting=false; inTraining=false; inWorldTwo:WorldTwoLocation|null=null;
   private combatRuntime: HuntingRuntime | null = null; private combatWorld: HuntingWorld | null = null;
   private combatProfile: { job: JobId | null; learned: readonly SkillId[]; loadout: readonly (SkillId | null)[] } = { job: null, learned: [], loadout: [] };
@@ -736,7 +738,7 @@ export class World {
     document.addEventListener('visibilitychange', () => { if (document.hidden) this.clearInput(); this.syncAnimation(); });
     // 한글 입력 상태에서는 W가 'ㅈ'으로 들어와요. 글자(e.key) 대신 자판 위치(e.code)로 읽어 한/영 상태와 상관없이 움직여요.
     const keyOf = (e: KeyboardEvent) => ({ KeyW: 'w', KeyA: 'a', KeyS: 's', KeyD: 'd', KeyE: 'e', KeyF: 'f', ArrowUp: 'arrowup', ArrowDown: 'arrowdown', ArrowLeft: 'arrowleft', ArrowRight: 'arrowright', Space: ' ' } as Record<string, string>)[e.code] ?? e.key.toLowerCase();
-    window.addEventListener('keydown', e => { if (!this.active || this.paused || this.storyActivityFocus || /INPUT|TEXTAREA|SELECT/.test((e.target as HTMLElement).tagName)) return; const key = keyOf(e); if (['arrowup', 'arrowdown', 'arrowleft', 'arrowright', ' '].includes(key)) e.preventDefault(); this.keys.add(key); if (!e.repeat && key === ' ') this.jump(); if (!e.repeat && key === 'e') this.interact(); if (!e.repeat && key === 'f') this.attack(); });
+    window.addEventListener('keydown', e => { if (!this.active || this.paused || this.textInputFocus || this.storyActivityFocus || /INPUT|TEXTAREA|SELECT/.test((e.target as HTMLElement).tagName)) return; const key = keyOf(e); if (['arrowup', 'arrowdown', 'arrowleft', 'arrowright', ' '].includes(key)) e.preventDefault(); this.keys.add(key); if (!e.repeat && key === ' ') this.jump(); if (!e.repeat && key === 'e') this.interact(); if (!e.repeat && key === 'f') this.attack(); });
     window.addEventListener('keyup', e => this.keys.delete(keyOf(e))); window.addEventListener('blur', () => this.clearInput()); document.addEventListener('visibilitychange', () => { if (document.hidden) this.clearInput(); });
     let combatPointer: { x: number; y: number; id: number } | null = null;
     this.renderer.domElement.addEventListener('pointerdown', e => { combatPointer = { x: e.clientX, y: e.clientY, id: e.pointerId }; });
@@ -967,6 +969,7 @@ export class World {
     this.addBerries();
   }
   private clearMap() {
+    if(this.astralSave)this.astralSave.astralStudy.location=null;this.astralSave=null;this.inAstralStudy=null;
     this.plazaVisual.detach();this.planetVisual=null;this.astralGateway=null;
     this.stopRoomActivity();
     this.chargeMotion = null;
@@ -1107,6 +1110,14 @@ export class World {
     this.combatRuntime = new HuntingRuntime({ ...(world2?{encounter:{id:'world2-'+world2.region+(world2.boss?'-boss':''),hp:world2.boss?90000:WORLD_TWO_REGIONS[world2.region].hp,damage:world2.boss?72:WORLD_TWO_REGIONS[world2.region].damage,boss:world2.boss}}:{}),zone, level: s.level, power: huntingPower(s), ...huntingCompanionStats(s), ...this.combatProfile });
     this.combatWorld = new HuntingWorld(false, visualZone, {lowQuality:s.settings.lowQuality,reducedMotion:matchMedia('(prefers-reduced-motion: reduce)').matches}); this.scene.add(this.combatWorld.root); this.mergeStaticScenery();
     this.setAvatar(s.character, s.outfit, s.weapon, s.outfits[s.outfit], s.weapons[s.weapon], -1, s.pet, s.hairstyle, s.face); this.placeAt(HUNT_CAMP.x, HUNT_CAMP.z); this.refreshWorldTwoBeacons(s);this.onStageLoaded(0); return true;
+  }
+  enterAstralStudy(s:Save,location:AstralLocation){
+    const l={...location};this.clearInput();this.clearMap();this.inAstralStudy=l;this.astralSave=s;s.astralStudy.location=l;this.inRoom=false;this.stage=0;this.forest=s.forest;this.platforms=[];s.room.inside=s.homestead.inside=false;
+    this.planetVisual=planetaryTerrain(l.forest);this.scene.add(this.planetVisual);this.scene.background=new T.Color(PLANET_THEMES[l.forest].sky);this.scene.fog=null;
+    const book=new T.Group();cylinder(book,0x859eaa,0,.3,0,1.1,1.3,.6,10);for(const side of [-1,1]){const cover=box(book,0xc3a768,side*.45,1.3,0,.85,.12,1.2);cover.rotation.z=side*-.2;const page=box(book,0xffecc2,side*.42,1.4,0,.75,.08,1.05);page.rotation.z=side*-.2;}ball(book,0xd9f1c0,0,2.05,0,.18,.18,.18);this.addEntity('astralQuestion','별문제 책 · '+(l.stage+1)+'단계 문제 풀기',0,-4,book);this.sign(book,'내 학년 심화 · 5문제',0,3.4,0,5.5,'#335b56',true);
+    const next=this.astralGateway=worldTwoGateway();this.addEntity('astralNext',l.stage===9?'수학숲 완주 · 군도 지도':'다음 단계 · 문제를 풀어 길 열기',0,-17.5,next);this.sign(next,l.stage===9?'별길 완주':'다음 별길',0,4.1,0,5,'#585282',true);
+    const exit=worldTwoGateway();this.addEntity('astralExit','중앙 광장으로 돌아가기',0,15.5,exit);this.sign(exit,'광장으로 돌아가기',0,4.1,0,5,'#335b56',true);this.sign(this.scene,ASTRAL_FORESTS[l.forest].name+' · '+(l.stage+1)+'/10단계',0,5.4,-21,7,'#335b56',true);
+    this.mergeStaticScenery();this.placeAt(0,8);this.onStageLoaded(0);
   }
   enterTraining(s: Save, options: TrainingOptions) {
     if (options.skill === 'shield' || options.skill === 'guardian' || options.job === 'knight' && options.trialRank === 3) options = { ...options, mode: 'attacking' };
@@ -1698,8 +1709,8 @@ export class World {
     }
     mesh.instanceMatrix.needsUpdate = true;
   }
-  get isPublicPlaza(){return this.active&&this.stage===0&&!this.inRoom&&!this.inHomestead&&!this.inMarket&&!this.inAcademy&&!this.inHunting&&!this.inTraining;}
-  setPlazaIdentity(profile:PlazaProfile|null){this.plazaVisual.setSelf(profile,this.player);}
+  get isPublicPlaza(){return this.active&&this.stage===0&&!this.inRoom&&!this.inHomestead&&!this.inMarket&&!this.inAcademy&&!this.inHunting&&!this.inTraining&&!this.inAstralStudy;}
+  setPlazaIdentity(profile:PlazaProfile|null,role='player'){this.plazaVisual.setSelf(profile,this.player,role);}
   upsertPlazaPlayer(player:PlazaPlayer){if(this.isPublicPlaza)this.plazaVisual.upsert(player);}
   removePlazaPlayer(id:string){this.plazaVisual.remove(id);}
   clearPlazaPlayers(){this.plazaVisual.clearPeers();}
@@ -1713,8 +1724,10 @@ export class World {
     else if (!shouldRun && this.animationRunning) { this.animationRunning = false; this.renderer.setAnimationLoop(null); if (!document.hidden) this.renderOnce(); }
   }
   private renderOnce() { if (!document.hidden) { this.scene.fog=null;this.storybook.update(this.time,this.player.position,this.petModel?.position??null,this.shadowFloor);this.renderer.render(this.scene, this.camera); } }
-  restore(s: Save) { this.setAvatar(s.character, s.outfit, s.weapon, s.outfits[s.outfit], s.weapons[s.weapon], s.ride, s.pet, s.hairstyle, s.face); if (s.homestead.inside) this.enterHomestead(s,true); else if (s.room.inside) this.enterRoom(s); else this.loadStage(s); this.quality(s.settings.lowQuality); }
+  restore(s: Save) { this.setAvatar(s.character, s.outfit, s.weapon, s.outfits[s.outfit], s.weapons[s.weapon], s.ride, s.pet, s.hairstyle, s.face); if(s.astralStudy.location)this.enterAstralStudy(s,{...s.astralStudy.location});else if (s.homestead.inside) this.enterHomestead(s,true); else if (s.room.inside) this.enterRoom(s); else this.loadStage(s); this.quality(s.settings.lowQuality); }
   quality(low: boolean) { this.lowQuality = low;this.combatWorld?.setQuality({lowQuality:low,reducedMotion:matchMedia('(prefers-reduced-motion: reduce)').matches});this.storybook.quality(low); const touchDevice = matchMedia('(pointer: coarse)').matches; this.renderer.setPixelRatio(Math.min(devicePixelRatio, low ? (this.container.clientWidth >= 1000 ? .75 : 1) : touchDevice ? 1 : 1.25)); this.renderer.shadowMap.enabled = !low; this.sun.castShadow = !low;this.homeVisitors.forEach((v,i)=>v.entity.mesh.visible=i<(low?2:3)); }
+  textInputFocus=false;
+  setTextInputFocus(focused:boolean){this.textInputFocus=focused;if(focused)this.clearInput();}
   clearInput() { this.keys.clear(); this.stick = { x: 0, z: 0 }; }
   guideTo(kind: GuideKind) {
     const entityMatch = (entity: Entity) => kind === 'homeVisitor' ? entity.id.startsWith('homeVisitor') : kind === 'forestWork' ? entity.id === `forestWork${this.trailNext}` : kind === 'trailSeed' ? entity.id.startsWith('trailSeed') && Math.floor(Number(entity.id.slice(9)) / 2) === this.trailNext : kind === 'trailLamp' ? entity.id === `trailLamp${this.trailNext}` : kind === 'monster' ? entity.id.startsWith('monster') : kind === 'expMonster' ? entity.id.startsWith('expMonster') : kind === 'storyClue' ? entity.id.startsWith('storyClue') : kind === 'shop' ? ['weapon', 'outfit', 'ride', 'pet', 'potion', 'beauty'].includes(entity.id) : entity.id === kind;
@@ -1732,9 +1745,9 @@ export class World {
   }
   private clearGuide() { this.guideTarget = null; this.guideElement.hidden = true; }
   moveStick(x: number, z: number) { this.stick = { x, z }; }
-  jump() { if(this.roomActivity)this.stopRoomActivity();if (this.active && !this.paused && !this.storyActivityFocus && this.grounded) { this.vy = 7.4; this.grounded = false; this.onJump(); } }
-  interact() { if (this.active && !this.paused && !this.storyActivityFocus) {if(this.inHomestead&&atHomeExit(this.player.position.x,this.player.position.z))this.onInteract('homeExit');else if(this.selectedId)this.onInteract(this.selectedId);} }
-  attack() { if (!this.active || this.paused || this.storyActivityFocus) return; if (this.combatRuntime) { this.huntAttack(); return; } this.swingUntil = this.time + .28; this.onAttack(this.selectedId?.startsWith('tree') ? this.selectedId : null); }
+  jump() { if(this.roomActivity)this.stopRoomActivity();if (this.active && !this.paused && !this.textInputFocus && !this.storyActivityFocus && this.grounded) { this.vy = 7.4; this.grounded = false; this.onJump(); } }
+  interact() { if (this.active && !this.paused && !this.textInputFocus && !this.storyActivityFocus) {if(this.inHomestead&&atHomeExit(this.player.position.x,this.player.position.z))this.onInteract('homeExit');else if(this.selectedId)this.onInteract(this.selectedId);} }
+  attack() { if (!this.active || this.paused || this.textInputFocus || this.storyActivityFocus) return; if (this.combatRuntime) { this.huntAttack(); return; } this.swingUntil = this.time + .28; this.onAttack(this.selectedId?.startsWith('tree') ? this.selectedId : null); }
   hitTree(id: string, damage: number) {
     const e = this.entities.find(e => e.id === id && e.mesh.visible); if (!e || !id.startsWith('tree')) return null;
     e.mesh.userData.hp = Math.max(0, Number(e.mesh.userData.hp) - damage); e.mesh.userData.shakeUntil = this.time + .28; this.burst(e.mesh.position, 0xc5e88b, 5);
@@ -1744,7 +1757,7 @@ export class World {
   defeat(id: string) { const e = this.entities.find(e => e.id === id); if (e) { const type = id.startsWith('expMonster') ? Number(e.mesh.userData.monsterType) : stageMonsters(this.stage)[Number(id.slice(7))].type; this.burst(e.mesh.position, MONSTERS[type].color); e.mesh.visible = false; } }
   celebrate() { this.burst(this.player.position, 0xffd371, 10); }
   private burst(pos: T.Vector3, color: number, count = 14) { if (matchMedia('(prefers-reduced-motion: reduce)').matches) return; const available = Math.max(0, 48 - this.particles.length); for (let i = 0; i < Math.min(count, available); i++) { const m = mesh(particleGeometry, color, pos.x, pos.y + .9, pos.z, this.scene); this.particles.push({ mesh: m, v: new T.Vector3((Math.random() - .5) * 3.5, 1.5 + Math.random() * 2, (Math.random() - .5) * 3.5), life: .75 }); } }
-  private water(x: number, z: number) { return !this.inHunting && !this.inTraining && !this.inAcademy && !this.inMarket && !this.inHomestead && !this.inRoom && !(this.stage === 0 && this.restoredBridge && x > 14 && x < 24 && Math.abs(z - 8) < 1) && isVillagePond(this.stage, x, z); }
+  private water(x: number, z: number) { return !this.inAstralStudy && !this.inHunting && !this.inTraining && !this.inAcademy && !this.inMarket && !this.inHomestead && !this.inRoom && !(this.stage === 0 && this.restoredBridge && x > 14 && x < 24 && Math.abs(z - 8) < 1) && isVillagePond(this.stage, x, z); }
   private resize() {
     const w = this.container.clientWidth, h = this.container.clientHeight, span = w < 700 ? 13 : 14.5;
     if (this.storyActivityFocus) {
@@ -1774,6 +1787,7 @@ export class World {
     this.updateWeather(dt);
     if (this.active && !this.paused && !this.storyActivityFocus) {
       const oldX = p.x, oldZ = p.z;
+      if(this.textInputFocus)this.clearInput();
       let dx = Number(this.keys.has('d') || this.keys.has('arrowright')) - Number(this.keys.has('a') || this.keys.has('arrowleft')) + this.stick.x;
       let dz = Number(this.keys.has('s') || this.keys.has('arrowdown')) - Number(this.keys.has('w') || this.keys.has('arrowup')) + this.stick.z;
       if (this.roomActivity&&Math.hypot(dx,dz)>.05)this.stopRoomActivity();
@@ -1795,7 +1809,7 @@ export class World {
       const platform = flying ? undefined : this.platforms.find(t => Math.abs(p.x - t.x) < t.w / 2 + .15 && Math.abs(p.z - t.z) < t.d / 2 + .15); const floor = flying ? 1.65 + Math.sin(this.time * 2.2) * .08 : platform?.h ?? 0;
       this.shadowFloor = flying?0:floor;
       this.vy -= 18 * dt; p.y += this.vy * dt; if (p.y <= floor && this.vy <= 0) { const landed=!this.grounded&&this.vy< -3;p.y = floor; this.vy = 0; this.grounded = true;if(landed&&!reduced)this.burst(p,0xd5c5a1,3); } else this.grounded = false;
-      const bounds = this.inHunting ? { x: 21, z: 21 } : this.inAcademy ? {x:8.5,z:this.inTraining?9.5:6.6} : this.inHomestead ? { x: 13.4, z: 29.4 } : this.inRoom ? { x: 6.8, z: 5.2 } : stageSize(this.stage);
+      const bounds = this.inAstralStudy ? {x:20.5,z:20.5} : this.inHunting ? { x: 21, z: 21 } : this.inAcademy ? {x:8.5,z:this.inTraining?9.5:6.6} : this.inHomestead ? { x: 13.4, z: 29.4 } : this.inRoom ? { x: 6.8, z: 5.2 } : stageSize(this.stage);
       // 가장자리에서는 순간이동 대신 덤불 앞에서 멈춰요. 물에 빠질 때만 안전한 곳으로 돌아가요.
       const edge = this.inHomestead || this.inRoom ? .5 : 1.6; p.x = T.MathUtils.clamp(p.x, -bounds.x + edge, bounds.x - edge); p.z = T.MathUtils.clamp(p.z, -bounds.z + edge, bounds.z - edge);
       if ((this.inHomestead && p.z < -12.9) || Math.abs(p.x) > bounds.x - .5 || Math.abs(p.z) > bounds.z - .5 || (!flying && this.water(p.x, p.z) && p.y <= .2)) { p.copy(this.lastSafe); this.vy = 0; this.onRescue(); }

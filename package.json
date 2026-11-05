@@ -12,7 +12,7 @@
     "build:browser": "node scripts/build-browser.mjs",
     "test:browser": "playwright test",
     "build:plaza": "node scripts/build-plaza.mjs",
-    "test:plaza": "node scripts/build-plaza.mjs && node --test realtime/*.test.mjs"
+    "test:plaza": "node scripts/build-plaza.mjs && node --import tsx --test realtime/*.test.mjs"
   },
   "dependencies": {
     "onnxruntime-web": "1.24.3",

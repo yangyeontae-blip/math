@@ -8,7 +8,7 @@ test('academy entry, learning, casting, practice and reload preserve the origina
  await page.locator('#academy-open').click();await page.locator('[data-career-action="lesson"][data-skill="shield"]').click();await page.locator('#academy-learn').click();await expect(page.locator('#career-hud [data-cast-skill="shield"]')).toBeEnabled();
  await page.locator('#career-hud [data-cast-skill="shield"]').click();
  await expect.poll(()=>page.evaluate(()=>JSON.parse(localStorage.getItem('berry-forest-save-v1')).career.practiced.includes('shield')),{timeout:30000}).toBe(true);
- const before=await page.evaluate(()=>JSON.parse(localStorage.getItem('berry-forest-save-v1')));expect(before.version).toBe(23);expect(before.berries).toBe(0);expect(before.room.inside).toBe(false);
+ const before=await page.evaluate(()=>JSON.parse(localStorage.getItem('berry-forest-save-v1')));expect(before.version).toBe(24);expect(before.berries).toBe(0);expect(before.room.inside).toBe(false);
  await page.reload({waitUntil:'domcontentloaded'});await page.locator('#continue').click();await expect(page.locator('#hud')).toBeVisible();await expect(page.locator('[data-cast-skill="shield"]')).toBeEnabled();
  await page.locator('#academy-open').click();await expect(page.locator('.career-skill-list')).toContainText('수련 완료');
 });

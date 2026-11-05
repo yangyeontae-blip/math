@@ -18,7 +18,7 @@ export interface PlazaProfile {
  job:keyof typeof JOB_TITLES; rank:number; achievement:number; gradeTitle:number; multiplicationTitle:boolean;
 }
 export interface PlazaPose {x:number;y:number;z:number;angle:number}
-export interface PlazaPlayer {id:string;profile:PlazaProfile;pose:PlazaPose}
+export interface PlazaPlayer {id:string;profile:PlazaProfile;pose:PlazaPose;role?:'player'|'operator'}
 const integer=(v:unknown,lo:number,hi:number):v is number=>Number.isSafeInteger(v)&&Number(v)>=lo&&Number(v)<=hi;
 export function parsePlazaProfile(value:unknown):PlazaProfile|null {
  if(!value||typeof value!=='object')return null;
@@ -41,6 +41,6 @@ export function parsePlazaPose(value:unknown):PlazaPose|null {
 }
 export function parsePlazaPlayer(value:unknown):PlazaPlayer|null {
  if(!value||typeof value!=='object')return null;const v=value as PlazaPlayer,profile=parsePlazaProfile(v.profile),pose=parsePlazaPose(v.pose);
- return typeof v.id==='string'&&/^[a-f0-9-]{36}$/.test(v.id)&&profile&&pose?{id:v.id,profile,pose}:null;
+ return typeof v.id==='string'&&/^[a-f0-9-]{36}$/.test(v.id)&&profile&&pose?{id:v.id,profile,pose,...(v.role==='operator'?{role:'operator' as const}:{})}:null;
 }
 export function isPlazaEmote(value:unknown):value is PlazaEmote{return typeof value==='string'&&Object.hasOwn(PLAZA_EMOTES,value);}

@@ -1,3 +1,4 @@
+import {PlazaSocial} from './social.mjs';
 import {DurableObject} from 'cloudflare:workers';
 import {PLAZA_VERSION,PLAZA_ROOM,PLAZA_CAPACITY,parsePlazaProfile,parsePlazaPose,isPlazaEmote} from '../src/plaza-protocol.ts';
 const ORIGINS=new Set(['https://yangyeontae-blip.github.io','https://berry-forest-school.yangyeontae.chatgpt.site','capacitor://localhost','ionic://localhost','https://localhost','http://localhost']);
@@ -7,6 +8,12 @@ export default {
  async fetch(request,env){
   const url=new URL(request.url);
   if(url.pathname==='/health'&&request.method==='GET')return json({ok:true,version:PLAZA_VERSION,room:PLAZA_ROOM,capacity:PLAZA_CAPACITY});
+  if(url.pathname==='/operator/session'){
+   const origin=request.headers.get('origin');if(!allowedPlazaOrigin(origin))return json({error:'origin'},403);
+   const cors={'access-control-allow-origin':origin,'vary':'Origin','access-control-allow-methods':'GET, POST, DELETE, OPTIONS','access-control-allow-headers':'Authorization, Content-Type'};
+   if(request.method==='OPTIONS')return new Response(null,{status:204,headers:cors});
+   const result=await env.PLAZA.get(env.PLAZA.idFromName(PLAZA_ROOM)).fetch(request);const headers=new Headers(result.headers);for(const [key,value] of Object.entries(cors))headers.set(key,value);return new Response(result.body,{status:result.status,headers});
+  }
   if(url.pathname!=='/connect')return json({error:'not_found'},404);
   if(!allowedPlazaOrigin(request.headers.get('origin')))return json({error:'origin'},403);
   if(request.method!=='GET'||request.headers.get('upgrade')?.toLowerCase()!=='websocket')return json({error:'websocket_required'},426);
@@ -17,11 +24,11 @@ export default {
 };
 export class SharedPlaza extends DurableObject {
  constructor(ctx,env){
-  super(ctx,env);this.ctx=ctx;this.pendingPoses=new Map();this.poseTimer=null;this.lastPrune=0;
+  super(ctx,env);this.ctx=ctx;this.pendingPoses=new Map();this.poseTimer=null;this.lastPrune=0;this.social=new PlazaSocial(ctx,env,this);
   ctx.setWebSocketAutoResponse(new WebSocketRequestResponsePair('ping','pong'));
  }
  sessions(){return this.ctx.getWebSockets().map(ws=>[ws,ws.deserializeAttachment()]).filter(([ws,s])=>s&&ws.readyState===WebSocket.OPEN);}
- public(s){return {id:s.id,profile:s.profile,pose:s.pose};}
+ public(s){return {id:s.id,profile:s.profile,pose:s.pose,role:this.social.role(s)};}
  send(ws,value){try{ws.send(JSON.stringify(value));return true;}catch{return false;}}
  broadcast(value,except){const raw=JSON.stringify(value);for(const [ws,s] of this.sessions())if(s.joined&&ws!==except){try{ws.send(raw);}catch{}}}
  queuePose(s){this.pendingPoses.set(s.id,{id:s.id,pose:s.pose});if(this.poseTimer===null)this.poseTimer=setTimeout(()=>this.flushPoses(),100);}
@@ -34,7 +41,8 @@ export class SharedPlaza extends DurableObject {
    if(!s.joined&&now-s.seen>5000||now-Math.max(s.seen,auto)>40000){if(s.joined)this.broadcast({type:'leave',id:s.id},ws);try{ws.close(1001,'inactive');}catch{}}
   }
  }
- async fetch(){
+ async fetch(request){
+  if(new URL(request.url).pathname==='/operator/session')return this.social.http(request);
   this.prune(Date.now(),true);if(this.sessions().length>=PLAZA_CAPACITY){const [client,server]=Object.values(new WebSocketPair());server.accept();server.send(JSON.stringify({type:'error',code:'full'}));server.close(1013,'full');return new Response(null,{status:101,webSocket:client});}
   const [client,server]=Object.values(new WebSocketPair()),now=Date.now();
   this.ctx.acceptWebSocket(server);
@@ -42,7 +50,7 @@ export class SharedPlaza extends DurableObject {
   this.send(server,{type:'hello',version:PLAZA_VERSION});
   return new Response(null,{status:101,webSocket:client});
  }
- webSocketMessage(ws,raw){
+ async webSocketMessage(ws,raw){
   const s=ws.deserializeAttachment();if(!s)return;
   const now=Date.now();this.prune(now);if(ws.readyState!==WebSocket.OPEN)return;
   if(typeof raw!=='string'||raw.length>4096){ws.close(1009,'message_size');return;}
@@ -51,14 +59,16 @@ export class SharedPlaza extends DurableObject {
   let m;try{m=JSON.parse(raw);}catch{ws.close(1008,'invalid_message');return;}
   if(!m||typeof m!=='object'){ws.close(1008,'invalid_message');return;}
   if(m.type==='join'&&!s.joined){
+   if(s.joining)return;s.joining=true;ws.serializeAttachment(s);
    const profile=parsePlazaProfile(m.profile),pose=parsePlazaPose(m.pose);
    if(!profile||!pose){this.send(ws,{type:'error',code:'profile'});ws.close(1008,'profile');return;}
-   s.joined=true;s.profile=profile;s.pose=pose;s.moveAt=now;s.profileAt=now;s.batchedPoses=m.batchedPoses===true;
+   await this.social.prepare(s,m);s.joined=true;s.joining=false;s.profile=profile;s.pose=pose;s.moveAt=now;s.profileAt=now;s.batchedPoses=m.batchedPoses===true;
    ws.serializeAttachment(s);
-   this.send(ws,{type:'welcome',id:s.id,room:PLAZA_ROOM,players:this.sessions().filter(([other,a])=>other!==ws&&a.joined).map(([,a])=>this.public(a)).slice(0,s.batchedPoses?PLAZA_CAPACITY-1:63)});
-   this.broadcast({type:'upsert',player:this.public(s)},ws);return;
+   this.send(ws,{type:'welcome',id:s.id,room:PLAZA_ROOM,role:this.social.role(s),operatorUntil:s.operatorUntil,features:{chat:!!s.chatEnabled,operator:true},players:this.sessions().filter(([other,a])=>other!==ws&&a.joined).map(([,a])=>this.public(a)).slice(0,s.batchedPoses?PLAZA_CAPACITY-1:63)});
+   this.broadcast({type:'upsert',player:this.public(s)},ws);await this.social.welcome(ws,s);return;
   }
   if(!s.joined){ws.close(1008,'join_required');return;}
+  if(typeof m.type==='string'&&m.type.startsWith('chat')&&await this.social.handle(ws,s,m))return;
   if(m.type==='pose'){
    const pose=parsePlazaPose(m.pose);
    if(!pose||!Number.isSafeInteger(m.seq)||m.seq<0||m.seq>1e9){ws.close(1008,'pose');return;}
@@ -78,5 +88,6 @@ export class SharedPlaza extends DurableObject {
   ws.serializeAttachment(s);
  }
  webSocketClose(ws,code,reason){const s=ws.deserializeAttachment();if(s)this.pendingPoses.delete(s.id);if(s?.joined)this.broadcast({type:'leave',id:s.id},ws);try{ws.close(code===1005?1000:code,reason);}catch{}}
+ async alarm(){await this.social.alarm();}
  webSocketError(ws){this.webSocketClose(ws,1011,'connection');}
 }
