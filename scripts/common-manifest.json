@@ -106,7 +106,7 @@
     "src/world-two-ui.ts": "ac5eeb4474e6c7538272edc96d7b785022c5e5629dc3b983fd720818800047b0",
     "src/world-two-models.ts": "1556cdc00a679e8e4565fb1f351db4037f00be9c0084544e1d7a69bea282e5cf",
     "tests/world-two.test.ts": "7c0fcc8028f3a6463e7d53661498ba6a41e55401959d2434ea877ee2ff8880c8",
-    "e2e/world-two.spec.mjs": "b67caf1c35104f5b20ec89890027a366a6efea211ff2698f3718f5127500005b",
+    "e2e/world-two.spec.mjs": "9f79721b69db536d88c420d472260af0b3c2baaf99d51cdda2d8fa4696c7c539",
     "src/plaza-protocol.ts": "0c7eb22a14afaa1db22a6db1b88dff3b4ce91f2ec8bfd53ee52e505286e84eeb",
     "src/plaza-identity.ts": "5c3ad345959140202593bcf6c11c200e7941cb6e656822f28029319b6c848d11",
     "src/plaza-client.ts": "bc1c5e5c5afc56decf6fbe6e01502eeb77cb6b5b894d5bb076bfb15790eef0ab",
@@ -157,5 +157,5 @@
     "public/art/skyward-weapon-37.svg": "0b79582b7349629dfba6c34f03f729c971a4659f043f880fb27a8d098e660de6",
     "public/art/skyward-weapon-38.svg": "46ae0f4ff502186fbd37fed4613fe3d0f3d9cb4d28ffd810389d1374e97aec34"
   },
-  "generation": "ac589adf65cfad64f56e94d17041cbaeb0d929fb34942f596261e33a388547ef"
+  "generation": "870fc0259f8c0bf65da2ed8e75d4db7afcd5e9019665c7aaa8e777d992299042"
 }

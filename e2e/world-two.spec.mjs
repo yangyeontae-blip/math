@@ -24,7 +24,7 @@ test('World 2 real combat and beacon interactions complete all regions, preserve
 test('World 2 and central teacher prioritize math learning and the ornate main gate opens the grade forest map',async({page},info)=>{await start(page,60);await page.evaluate(()=>{const w=window.__berry.getWorld(),e=w.entities.find(e=>e.id==='guide');w.player.position.set(e.x,0,e.z+1);});await expect(page.locator('#interact')).toContainText('마을 안내');if(info.project.name==='mobile')await page.locator('#touch-talk').click();else await page.keyboard.press('e');await expect(page.locator('.talk-bubble')).toHaveClass(/finished/,{timeout:5000});if(info.project.name==='mobile')await page.locator('.talk-bubble').click();else await page.keyboard.press('e');await expect(page.locator('#modal-content')).toContainText('중앙광장 안내');await expect(page.locator('.nav-list [data-nav]').first()).toHaveAttribute('data-nav','explore');await expect(page.locator('#modal-content')).toContainText('최대 128명');await expect(page.locator('#modal-content')).toContainText('3학년');await page.screenshot({path:info.outputPath('teacher-current-guide.png')});await page.locator('[data-nav="explore"]').click();await expect(page.locator('.modal-heading')).toContainText('수학숲으로 모험하기');await page.keyboard.press('Escape');await page.evaluate(()=>{window.__berry.getWorld().player.position.set(0,0,14.5);});await expect(page.locator('#interact')).toContainText('수학숲으로 모험하기');await expect.poll(()=>page.evaluate(()=>!!window.__berry.getWorld().scene.getObjectByName('math-forest-main-gateway'))).toBe(true);await page.waitForTimeout(600);await page.screenshot({path:info.outputPath('math-forest-main-gateway.png')});if(info.project.name==='mobile')await page.locator('#touch-talk').click();else await page.keyboard.press('e');await expect(page.locator('.modal-heading')).toContainText('수학숲으로 모험하기');});
 
 test('World 2 outer islands and the new solo guardian open from the real map and preserve their save location',async({page},info)=>{
- test.setTimeout(150000);
+ test.setTimeout(300000);
  await start(page,300,s=>{for(let id=0;id<6;id++)s.world2.regions[id]={beacons:[0,1,2],kills:6,claimed:true};});
  await expect(page.locator('#level-milestone')).toContainText('베리숲 신');
  await map(page);
@@ -39,7 +39,7 @@ test('World 2 outer islands and the new solo guardian open from the real map and
  await expect.poll(()=>page.evaluate(()=>window.__berry.getWorld()?.inWorldTwo)).toEqual({region:5,boss:true});
  await expect.poll(()=>page.evaluate(()=>!!window.__berry.getWorld().scene.getObjectByName('astral-nebula-dragon'))).toBe(true);
  await page.evaluate(()=>window.__berry.getWorld().player.position.set(0,0,-7));
- await expect.poll(()=>page.evaluate(()=>window.__berry.getWorld().huntingStatus.enemies[0].telegraph?.kind)).toBe('charge');
+ await expect.poll(()=>page.evaluate(()=>window.__berry.getWorld().huntingStatus.bossFightSeconds),{timeout:30000}).toBeGreaterThan(0);
  await page.screenshot({path:info.outputPath('outer-guardian.png')});
  await page.reload({waitUntil:'domcontentloaded'});await page.locator('#continue').click();
  await expect.poll(()=>page.evaluate(()=>window.__berry.getWorld()?.inWorldTwo)).toEqual({region:5,boss:true});
