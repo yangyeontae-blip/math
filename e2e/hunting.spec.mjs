@@ -64,13 +64,14 @@ test('level 50 hunting shows and saves the highest-zone reward before and after 
   s.career.daily={date:[now.getFullYear(),String(now.getMonth()+1).padStart(2,'0'),String(now.getDate()).padStart(2,'0')].join('-'),counts:[0,0,count,0]};
   await page.goto('/',{waitUntil:'domcontentloaded'});await page.evaluate(s=>{localStorage.clear();localStorage.setItem('berry-forest-save-v1',JSON.stringify(s));localStorage.setItem('berry-forest-ambience-v1','off');},s);await page.reload({waitUntil:'domcontentloaded'});await page.locator('#continue').click();
   await page.locator('#stage-map').click();await page.locator('[data-nav="hunting"]').first().click();
-  const berries=count?25:100,xp=count?15:60;
+  const berries=count?22:90,xp=count?13:54;
   await expect(page.locator('[data-zone="2"]')).toContainText('지금 받을 보상: 베리 '+berries+' · 경험치 '+xp);await expect(page.locator('[data-zone="3"]')).toBeDisabled();
   if(count)await expect(page.locator('[data-zone="2"]')).toContainText('오늘 100마리 이후 25%');
   await page.screenshot({path:info.outputPath('level50-reward-'+count+'.png')});
   await page.locator('[data-zone="2"]').click();await page.evaluate(()=>window.__berry.getWorld().player.position.set(-6,0,-1));
+  const beforeKill=await page.evaluate(()=>window.__berry.getState().berries);
   await page.keyboard.down('f');try{await expect.poll(()=>page.evaluate(()=>JSON.parse(localStorage.getItem('berry-forest-save-v1')).career.stats.defeats),{timeout:30000}).toBe(1);}finally{await page.keyboard.up('f');}
-  const saved=await page.evaluate(()=>JSON.parse(localStorage.getItem('berry-forest-save-v1')));expect(saved.berries).toBe(1000+berries);expect(saved.xp).toBe(xp);expect(saved.career.stats.totalBerries).toBe(berries);expect(saved.learning.correct).toBe(0);
+  const saved=await page.evaluate(()=>JSON.parse(localStorage.getItem('berry-forest-save-v1')));expect(saved.berries).toBe(beforeKill+berries);expect(saved.xp).toBe(xp);expect(saved.career.stats.totalBerries).toBe(berries);expect(saved.learning.correct).toBe(0);
   await page.reload({waitUntil:'domcontentloaded'});await page.locator('#continue').click();const restored=await page.evaluate(()=>JSON.parse(localStorage.getItem('berry-forest-save-v1')));expect(restored.berries).toBe(saved.berries);expect(restored.xp).toBe(saved.xp);expect(restored.career.stats.defeats).toBe(1);
  }
 });

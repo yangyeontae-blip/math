@@ -86,7 +86,7 @@
     "src/village-layout.ts": "ccdb173cd4384aac0d833d7442c913ccf81fb0fddc4f747b78ed4f1534033dbb",
     "tests/hunting.test.ts": "b685725defc416a216976194e3c54e95dba0345a6a0c1a2f64bde2934de2bee8",
     "tests/hunting-world.test.ts": "9b9fd34a1c8e730ac2b73165a218dd62b7d816a5c8eb26e0ca10e830baa1339d",
-    "e2e/hunting.spec.mjs": "3dcde98d81c1f8e63555c8c89315ccd72904476380ba501a3b251ea260164b69",
+    "e2e/hunting.spec.mjs": "7b99f11660063714a28a12a548663a56a9aea7f42712ea827988dc4064917e66",
     "src/item-rarity.ts": "8f061ff5da236ee8ab53afd0c62ba58a50ff07ac2fa24ead0b6a4d8ba7d075a7",
     "src/item-rarity.css": "a082b792039009205f444a227c1b824c20a6ea3acd5f4a13d9ac58bf03e599c3",
     "src/legendary-pet.ts": "8f3169d988e96a56e7fa0984fc61d9b9ba6c7b1e25c321a3cb8975d51d08181d",
@@ -157,5 +157,5 @@
     "public/art/skyward-weapon-37.svg": "0b79582b7349629dfba6c34f03f729c971a4659f043f880fb27a8d098e660de6",
     "public/art/skyward-weapon-38.svg": "46ae0f4ff502186fbd37fed4613fe3d0f3d9cb4d28ffd810389d1374e97aec34"
   },
-  "generation": "496864694cf12b1a4bc5239a0e7c052c118741e6bb4b73023540d5e12d7d98c4"
+  "generation": "c7985b9f6dc63189dd185ff86b25b0accf2d80bc11388513aac3972eb0222380"
 }
