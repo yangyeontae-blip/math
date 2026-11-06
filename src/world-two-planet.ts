@@ -6,7 +6,14 @@ export const PLANET_THEMES=[
  {sky:0x122d49,ground:0x477e96,side:0x203e62,path:0xc5f1e5,plant:0x8ae6ee,glow:0xabeffd,planet:0x97c1ee,water:0x54c9dc},
  {sky:0x221d45,ground:0x75689c,side:0x352950,path:0xd7c8f3,plant:0xb1a3ed,glow:0xffdfa1,planet:0xc7a0d6,water:0x9c94d8},
  {sky:0x152c42,ground:0x617e91,side:0x263b5c,path:0xf4e2b5,plant:0x90dccc,glow:0xffdea2,planet:0xa6c6dd,water:0x91c6dc},
+ {sky:0x183a45,ground:0x547d7a,side:0x284954,path:0xdaedd4,plant:0x85e1ae,glow:0xc6ffd6,planet:0x94cfb2,water:0x5adbcf},
+ {sky:0x391f38,ground:0x925b59,side:0x573342,path:0xf6d5ae,plant:0xe4a47f,glow:0xffc16e,planet:0xde8e74,water:0xdb9272},
+ {sky:0x231e53,ground:0x615683,side:0x352a5d,path:0xded9f5,plant:0xa69bee,glow:0xc2c6ff,planet:0x9189d0,water:0x9189dd},
+ {sky:0x1d193d,ground:0x58486d,side:0x302345,path:0xe6d3f2,plant:0xba94dc,glow:0xffb9d2,planet:0x9c74bf,water:0xab75bf},
 ] as const;
+export function planetThemeIndex(region:number,boss=false) {
+ return boss ? (region===5 ? 7 : 3) : region>=3 && region<=5 ? region+1 : Math.max(0,Math.min(2,region));
+}
 type Motion={object:T.Object3D;y:number;phase:number;spin:number};
 function art(name:string){const root=new T.Group();root.name=name;root.userData.planetRuntime=true;root.userData.planetMotion=[] as Motion[];const materials=new Map<string,T.Material>(),geometries=new Map<string,T.BufferGeometry>();
  const material=(color:number,glow=false)=>{const key=color+':'+glow;if(!materials.has(key)){const m=glow?new T.MeshBasicMaterial({color,side:T.DoubleSide}):new T.MeshStandardMaterial({color,roughness:.78,metalness:.12,side:T.DoubleSide});m.userData.planetOwned=true;materials.set(key,m);}return materials.get(key)!;};
@@ -18,16 +25,48 @@ function art(name:string){const root=new T.Group();root.name=name;root.userData.
  const float=(object:T.Object3D,phase:number,spin=.05)=>{object.userData.planetAnimated=true;root.userData.planetMotion.push({object,y:object.position.y,phase,spin});return object;};
  return {root,material,geo,put,orb,crystal,ring,float};}
 function rounded(w:number,h:number,r:number){const s=new T.Shape();s.moveTo(-w+r,-h);s.lineTo(w-r,-h);s.quadraticCurveTo(w,-h,w,-h+r);s.lineTo(w,h-r);s.quadraticCurveTo(w,h,w-r,h);s.lineTo(-w+r,h);s.quadraticCurveTo(-w,h,-w,h-r);s.lineTo(-w,-h+r);s.quadraticCurveTo(-w,-h,-w+r,-h);return s;}
-function mergeStatic(root:T.Group){root.updateMatrixWorld(true);const groups=new Map<T.Material,T.Mesh[]>();root.traverse(o=>{if(!(o instanceof T.Mesh)||o instanceof T.InstancedMesh||Array.isArray(o.material))return;for(let at:T.Object3D|null=o;at&&at!==root;at=at.parent)if(at.userData.planetAnimated)return;const list=groups.get(o.material)??[];list.push(o);groups.set(o.material,list);});for(const [material,meshes] of groups){if(meshes.length<2)continue;const parts=meshes.map(m=>m.geometry.clone().applyMatrix4(m.matrixWorld)),merged=mergeGeometries(parts);parts.forEach(p=>p.dispose());if(!merged)continue;const mesh=new T.Mesh(merged,material);mesh.castShadow=!(material instanceof T.MeshBasicMaterial);mesh.receiveShadow=true;root.add(mesh);meshes.forEach(m=>m.removeFromParent());}}
+function mergeStatic(root:T.Group) {
+ root.updateMatrixWorld(true);
+ const groups=new Map<T.Material,Map<string,T.Mesh[]>>();
+ root.traverse(o=>{
+  if(!(o instanceof T.Mesh)||o instanceof T.InstancedMesh||Array.isArray(o.material))return;
+  for(let at:T.Object3D|null=o;at&&at!==root;at=at.parent)if(at.userData.planetAnimated)return;
+  const geometry=o.geometry;
+  const layout=(geometry.index?'indexed:':'flat:')+Object.keys(geometry.attributes).sort().join(',');
+  const layouts=groups.get(o.material)??new Map<string,T.Mesh[]>();
+  const meshes=layouts.get(layout)??[];
+  meshes.push(o);layouts.set(layout,meshes);groups.set(o.material,layouts);
+ });
+ const detached=new Set<T.BufferGeometry>();
+ for(const [material,layouts] of groups)for(const meshes of layouts.values()){
+  if(meshes.length<2)continue;
+  const parts=meshes.map(m=>m.geometry.clone().applyMatrix4(m.matrixWorld));
+  const merged=mergeGeometries(parts);parts.forEach(p=>p.dispose());if(!merged)continue;
+  const mesh=new T.Mesh(merged,material);mesh.castShadow=!(material instanceof T.MeshBasicMaterial);mesh.receiveShadow=true;root.add(mesh);
+  for(const part of meshes){detached.add(part.geometry);part.removeFromParent();}
+ }
+ root.traverse(o=>{if(o instanceof T.Mesh)detached.delete(o.geometry);});
+ for(const geometry of detached)geometry.dispose();
+}
 /** Shared, bounded plant fields. Broad silhouettes remain readable from the game camera. */
-export function planetaryScenery(region:number,boss=false){const index=boss?3:Math.min(2,region),t=PLANET_THEMES[index],a=art('world2-scenery-'+region+(boss?'-boss':''));a.root.userData.planetTheme=index;
+export function planetaryScenery(region:number,boss=false){const index=planetThemeIndex(region,boss),t=PLANET_THEMES[index],a=art('world2-scenery-'+region+(boss?'-boss':''));a.root.userData.planetTheme=index;
  const wind={value:0};a.root.userData.planetTime=wind;
  const flora=a.material(t.plant) as T.MeshStandardMaterial;flora.onBeforeCompile=shader=>{shader.uniforms.planetTime=wind;shader.vertexShader='uniform float planetTime;\n'+shader.vertexShader;shader.vertexShader=shader.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\n transformed.x += sin(planetTime*.65+position.y*2.)*.045*max(position.y,0.);');};flora.customProgramCacheKey=()=> 'planet-flora-1';
  const plantGeo=region===1?new T.OctahedronGeometry(1):new T.ConeGeometry(.55,2.2,region===2?5:7);const plants=new T.InstancedMesh(plantGeo,flora,96);plants.name='planetary-vegetation';plants.castShadow=true;plants.userData.planetDensity=true;plants.instanceMatrix.setUsage(T.StaticDrawUsage);const dummy=new T.Object3D();for(let i=0;i<96;i++){const side=i%2?1:-1,x=side*(12.8+(i*2.43%7)),z=-24+(i*3.17%27),height=.6+(i*1.61%1.8);dummy.position.set(x,height*.7,z);dummy.rotation.set(0,i*2.399,Math.sin(i*1.7)*.24);dummy.scale.set(region===1?.7:.5,height,region===1?.7:.5);dummy.updateMatrix();plants.setMatrixAt(i,dummy.matrix);}a.root.add(plants);
  for(const side of [-1,1])for(let i=0;i<7;i++){const x=side*(14+i%2*4),z=-23+i*4.3;
   if(index===0){const stalk=a.put(a.geo('stem',()=>new T.CylinderGeometry(.09,.2,2.4,7)),0x6b5999,x,1.2,z);stalk.rotation.z=side*.18;const crown=a.put(a.geo('crown',()=>new T.SphereGeometry(1,12,8)),i%2?0xe8b6de:0xf3d9a8,x,2.4,z);crown.scale.set(1.35,.34,1.1);a.ring(t.glow,x,2.36,z,1.3,.04).rotation.x=Math.PI/2;a.orb(t.glow,x,2.78,z,.16,true);}
   else if(index===1){const pool=a.put(a.geo('pool',()=>new T.CircleGeometry(2.3,32)),t.water,x,.07,z);pool.rotation.x=-Math.PI/2;pool.scale.y=.7;for(let k=0;k<3;k++){const shard=a.crystal(k%2?t.plant:0xb3cbed,x+(k-1)*.7,.95+k*.2,z,.5,1.5+k*.4,.55);shard.rotation.z=(k-1)*.25;}a.float(a.put(a.geo('droplet',()=>new T.SphereGeometry(.2,10,8)),0xb5f5ef,x+.8,2.9,z,true),i,.08);}
-  else{a.put(a.geo('pillar',()=>new T.CylinderGeometry(.4,.62,2.7,6)),index===3?0x608e9c:0x8c78ac,x,1.35,z);a.crystal(t.plant,x,3.1,z,.7,.35,.7);const hoop=a.ring(t.glow,x,3.7,z,.9,.045);hoop.rotation.x=.25;hoop.rotation.y=side*.4;if(index===3)a.crystal(0xc5e4d9,x,4.5,z,.45,1,.45);}
+  else if (index===4) {
+   for (let k=0;k<3;k++) {const branch=a.crystal(k===1?t.glow:t.plant,x+(k-1)*.7,1.6,z,.32,2.2-k*.3,.4);branch.rotation.z=(k-1)*.45;}
+   a.orb(t.glow,x,3.3,z,.18,true);
+  } else if (index===5) {
+   const meteor=a.crystal(t.side,x,1.45,z,1.2,1.9,1.35);meteor.rotation.z=side*.43;
+   a.crystal(t.glow,x-side*.62,1.9,z+.36,.18,1,.25);
+  } else if (index>=6) {
+   a.put(a.geo('outer-spire',()=>new T.CylinderGeometry(.24,.68,4,5)),t.side,x,2,z);
+   a.crystal(t.plant,x,4.35,z,.47,1.35,.47);
+   a.ring(t.glow,x,3.18,z,1,.055).rotation.set(.75,side*.3,0);
+  } else{a.put(a.geo('pillar',()=>new T.CylinderGeometry(.4,.62,2.7,6)),index===3?0x608e9c:0x8c78ac,x,1.35,z);a.crystal(t.plant,x,3.1,z,.7,.35,.7);const hoop=a.ring(t.glow,x,3.7,z,.9,.045);hoop.rotation.x=.25;hoop.rotation.y=side*.4;if(index===3)a.crystal(0xc5e4d9,x,4.5,z,.45,1,.45);}
  }
  // Distant geography and actual celestial bodies, beyond the unchanged walkable rectangle.
  for(let i=0;i<8;i++){const x=-32+i*9,z=-35-(i%3)*4,y=-.5+(i%3)*1.5;const island=a.crystal(t.side,x,y,z,3.5,3.8,2.6);island.rotation.z=Math.sin(i)*.2;a.crystal(t.ground,x,y+3,z,3.9,.45,2.9);}
@@ -38,7 +77,7 @@ export function planetaryScenery(region:number,boss=false){const index=boss?3:Ma
  const positions=new Float32Array(240*3);for(let i=0;i<240;i++){positions[i*3]=-55+(i*19.37%110);positions[i*3+1]=8+(i*7.83%30);positions[i*3+2]=-35-(i*3.41%25);}const starGeo=new T.BufferGeometry();starGeo.setAttribute('position',new T.BufferAttribute(positions,3));const starMat=new T.PointsMaterial({color:0xe1e6ff,size:.12,sizeAttenuation:false,transparent:true,opacity:.7,depthWrite:false});starMat.userData.planetOwned=true;const stars=new T.Points(starGeo,starMat);stars.name='planetary-starfield';stars.userData.planetStars=true;a.root.add(stars);
  if(index>=2){const arch=a.ring(t.glow,0,5,-23,4,.12);a.crystal(t.plant,-4.5,2.3,-23,.55,2.7,.55);a.crystal(t.plant,4.5,2.3,-23,.55,2.7,.55);for(let k=0;k<5;k++)a.crystal(0xe9d7a0,-3+k*1.5,5+Math.sin(k*Math.PI/4)*3.2,-23,.15,.3,.15);arch.rotation.z=.2;}
  mergeStatic(a.root);return a.root;}
-export function planetaryTerrain(region:number,boss=false){const t=PLANET_THEMES[boss?3:Math.min(2,region)],a=art('world2-planetary-landscape');a.root.userData.planetTheme=boss?3:region;
+export function planetaryTerrain(region:number,boss=false){const index=planetThemeIndex(region,boss),t=PLANET_THEMES[index],a=art('world2-planetary-landscape');a.root.userData.planetTheme=index;
  const surface=a.material(t.ground) as T.MeshStandardMaterial;surface.onBeforeCompile=shader=>{shader.vertexShader='varying vec2 planetAt;\n'+shader.vertexShader;shader.vertexShader=shader.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\n planetAt=position.xy;');shader.fragmentShader='varying vec2 planetAt;\n'+shader.fragmentShader;shader.fragmentShader=shader.fragmentShader.replace('#include <color_fragment>','#include <color_fragment>\n float grain=sin(planetAt.x*1.7+sin(planetAt.y*.8))*sin(planetAt.y*1.3);float vein=pow(max(0.,sin(planetAt.x*.45+planetAt.y*.18+grain*.35)),70.);diffuseColor.rgb*=.94+grain*.045;diffuseColor.rgb+=vec3(.02,.07,.09)*vein;');};surface.customProgramCacheKey=()=> 'planetary-basalt-1';
  const geometry=new T.ExtrudeGeometry(rounded(23,26,5),{depth:1.8,bevelEnabled:true,bevelSegments:2,steps:1,bevelSize:.35,bevelThickness:.2,curveSegments:8});geometry.translate(0,0,-2.0);const ground=new T.Mesh(geometry,[surface,a.material(t.side)]);ground.rotation.x=-Math.PI/2;ground.position.z=-3;ground.receiveShadow=true;ground.name='planetary-continent';a.root.add(ground);
  const path=new T.Shape();for(let i=0;i<=24;i++){const z=-23+i*1.3,x=Math.sin(z*.15)*.6-2.2;i?path.lineTo(x,-z):path.moveTo(x,-z);}for(let i=24;i>=0;i--){const z=-23+i*1.3;path.lineTo(Math.sin(z*.15)*.6+2.2,-z);}path.closePath();const lane=a.put(new T.ShapeGeometry(path,6),t.path,0,.035,0);lane.rotation.x=-Math.PI/2;lane.name='planetary-main-trail';

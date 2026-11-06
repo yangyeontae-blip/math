@@ -44,9 +44,10 @@ function heartPath(s:T.Shape){s.moveTo(0,-.9);s.bezierCurveTo(-1.6,.1,-.9,1.5,0,
 function leafPath(s:T.Shape){s.moveTo(-.85,-.8);s.bezierCurveTo(-1.2,.6,.2,1.4,.95,.8);s.bezierCurveTo(.9,-.5,.2,-1.2,-.85,-.8);s.closePath();}
 
 export function salonHairModel(style:number,hairColor:number,accent:number){
- style=normalized(style,10);hairColor=rgb(hairColor);accent=rgb(accent);
+ style=normalized(style,13);hairColor=rgb(hairColor);accent=rgb(accent);
  const b=builder(`salon-hair-${style}`),g=b.root,hair=style===8?tint(hairColor,0xce8766,.12):hairColor,shine=tint(hair,0xe4c59f,.13);
  g.userData.salonStyle=style;
+ if (style === 10) return g; // The character’s own head is the entire shaved style.
  const cap=b.mesh('hair-crown',hair,shared('hair-cap',()=>new T.SphereGeometry(1,20,12,0,Math.PI*2,0,Math.PI*.455)),0,1.51,-.04);cap.scale.set(.555,style===3?.63:.57,.49);
  const lock=(name:string,p:Point[],width=.12,color=hair)=>b.curve(`hair${style}:${name}`,color,p,width,true);
  const fringe=(sweep=0)=>{for(let i=0;i<3;i++){const x=-.3+i*.28;lock(`fringe-${i}`,[[x-sweep,1.99,.22],[x,1.88,.36],[x+sweep,1.67+(i%2)*.06,.41]],.14);}};
@@ -102,11 +103,31 @@ export function salonHairModel(style:number,hairColor:number,accent:number){
   const circlet=band('sun-circlet',0,1.98,-.02,.49,0xe8c66e);circlet.rotation.x=Math.PI/2;
   for(let i=0;i<5;i++){const x=-.37+i*.185,top=2.1+(i===2?.15:i%2?.07:0);b.shape(`sun-ray-${i}`,0xffdf86,s=>{s.moveTo(-1,0);s.lineTo(0,1);s.lineTo(1,0);s.closePath();},x,2.015,.32,.065,top-2.015);}
  }
+ if (style === 11) {
+  fringe(-.08);
+  for (const side of [-1, 1]) {
+   for (let i = 0; i < 5; i++) {
+    b.oval(`galaxy-braid-${side}-${i}`, i % 2 ? shine : hair, side * (.48 + .018 * i), 1.65 - .14 * i, .06 + .03 * i, .12, .145, .11).rotation.z = side * (i % 2 ? .35 : -.25);
+   }
+   b.shape('orbit-pin', 0xcdb5fb, starPath, side * .49, 1.76, .28, .10);
+   bow(side * .56, 1.02, .2);
+  }
+ }
+ if (style === 12) {
+  for (let i = 0; i < 6; i++) {
+   const x = (i - 2.5) * .18;
+   b.oval(`cloud-curl-${i}`, i % 2 ? shine : hair, x, 2.02 + .11 * Math.cos(x * 3), .16, .185, .22, .2);
+  }
+  for (const side of [-1, 1]) {
+   b.oval('cloud-side-curl', hair, side * .45, 1.76, -.02, .16, .23, .23);
+   b.shape('falling-star', 0xffd88f, starPath, side * .41, 1.88, .28, .075);
+  }
+ }
  return g;
 }
 
 export function salonFaceModel(face:number){
- face=normalized(face,14);
+ face=normalized(face,17);
  const b=builder(`salon-face-${face}`),g=b.root,ink=0x343a39,lip=0x975b60;
  g.userData.salonFace=face;
  const line=(name:string,color:number,points:Point[],radius=.012)=>b.curve(`face${face}:${name}`,color,points,radius);
@@ -162,6 +183,27 @@ export function salonFaceModel(face:number){
  if(face===13){
   for(const side of [-1,1]){b.eye(b.oval(`forest-eye-${side}`,0x44745e,side*.19,1.5,.439,.077,.092,.023));b.eye(b.shape('forest-star-pupil',0xffe09a,s=>starPath(s,4),side*.19,1.51,.467,.046,.065));brow(side,.038);const leaf=b.shape('forest-cheek-leaf',0x87b49a,leafPath,side*.34,1.37,.39,.044,.026);leaf.rotation.z=side*.5;}
   line('forest-courage-smile',lip,[[-.09,1.335,.447],[0,1.31,.458],[.11,1.365,.439]],.016);
+ }
+ if (face === 14) {
+  b.eye(line('comet-wink', ink, [[-.29,1.47,.432],[-.19,1.54,.456],[-.10,1.48,.443]], .019));
+  b.eye(b.shape('comet-eye', 0x9671c6, starPath, .19, 1.5, .452, .09));
+  line('comet-tail', 0xd69ed9, [[-.44,1.43,.353],[-.35,1.41,.405],[-.27,1.38,.429]], .017);
+  cheeks(); smile(.103, .048);
+ }
+ if (face === 15) {
+  dotEyes(.042,.063);
+  for (const side of [-1,1]) {
+   line(`gem-frame-${side}`, 0x557d92, [[side*.31,1.5,.46],[side*.2,1.6,.481],[side*.09,1.5,.48],[side*.2,1.4,.478],[side*.31,1.5,.46]], .018);
+  }
+  line('glasses-bridge', 0x557d92, [[-.09,1.5,.481],[0,1.535,.498],[.09,1.5,.481]], .014);
+  smile(.08,.032);
+ }
+ if (face === 16) {
+  dotEyes(.059,.083,0x623c4b); cheeks(0xf098aa,.087);
+  for (const side of [-1,1]) for (let i=0;i<3;i++) {
+   b.oval(`berry-freckle-${side}-${i}`, 0x9f5164, side*(.27+i*.046), 1.385+(i%2)*.035, .43-i*.028, .015, .012, .007);
+  }
+  openMouth(.084,.045); b.oval('jam-tongue', 0xf78aab, 0, 1.31, .467, .052, .018, .009);
  }
  return g;
 }

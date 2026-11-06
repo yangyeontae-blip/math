@@ -1,6 +1,7 @@
 import {SKYWARD_WEAPONS,SKYWARD_OUTFITS,SKYWARD_RIDES,SKYWARD_PETS,skywardItem} from './skyward-collection';
 import {emptyAstralStudy,validAstralStudy,type AstralStudy} from './astral-study';
-import {emptyWorldTwo,validWorldTwo,WORLD_TWO_WEAPONS,WORLD_TWO_OUTFITS,worldTwoEquipment,worldTwoEquipmentSource,type WorldTwoProgress} from './world-two';
+import { isBlockedNickname } from './nickname';
+import {emptyWorldTwo,expandWorldTwoSave,validWorldTwo,WORLD_TWO_WEAPONS,WORLD_TWO_OUTFITS,worldTwoEquipment,worldTwoEquipmentSource,type WorldTwoProgress} from './world-two';
 import {HUNT_RECOVERY_ITEMS,LEGACY_POTION_COUNT,huntingSupply,supplyFailure,type SupplyUseResult} from './hunt-supplies';
 import { emptyHomestead, validHomestead, type Homestead } from './homestead';
 import { emptyExploration, validExploration, syncDiscoveries, type Exploration } from './exploration';
@@ -155,6 +156,9 @@ export const HAIRSTYLES = [
   { name: '별빛 포니테일', price: 360, icon: '⭐' }, { name: '구름 트윈번', price: 500, icon: '☁️' },
   { name: '해바라기 땋은머리', price: 680, icon: '🌻' }, { name: '꿀벌 동글번', price: 820, icon: '🐝' },
   { name: '살구 웨이브', price: 980, icon: '🍑' }, { name: '햇살 왕관머리', price: 1250, icon: '☀️' },
+  { name: '깔끔한 민머리', price: 150, icon: '✨' },
+  { name: '은하 양쪽 땋기', price: 1600, icon: '🌌' },
+  { name: '별비 솜구름', price: 1900, icon: '☁️' },
 ] as const;
 export const FACES = [
   { name: '해맑은 얼굴', price: 0, icon: '😊' }, { name: '초롱초롱 눈', price: 100, icon: '🥺' },
@@ -164,6 +168,9 @@ export const FACES = [
   { name: '용감한 번개눈', price: 1200, icon: '⚡' }, { name: '무지개 웃음', price: 1500, icon: '🌈' },
   { name: '햇살 초승달눈', price: 1750, icon: '☀️' }, { name: '꿀방울 미소', price: 2000, icon: '🍯' },
   { name: '해바라기 반짝눈', price: 2300, icon: '🌻' }, { name: '별숲 용기눈', price: 2600, icon: '🌟' },
+  { name: '혜성 윙크', price: 2800, icon: '😉' },
+  { name: '보석 안경 얼굴', price: 3000, icon: '👓' },
+  { name: '별잼 주근깨', price: 3300, icon: '🍓' },
 ] as const;
 export const POTIONS = [
   { name: '달콤 베리물약', icon: '🧃', price: 140, kind: 'berry', multiplier: 2, durationMinutes: 10, desc: '사용한 뒤 10분 동안 몬스터에게 받는 베리가 2배가 돼요.' },
@@ -651,7 +658,15 @@ export function battleRewardReason(s: Save, question: Question, usedHint: boolea
 export function rewardFor(s: Save, monster: number, arena: boolean, now = Date.now(), eligible = true) {
   const m = MONSTERS[monster], w = WEAPONS[s.weapon];
   const { berryMultiplier, xpMultiplier } = potionEffects(s, now);
-  return { berries: eligible ? (m.berry + w.bonus + (arena ? 0 : 2 + journeyFor(s).stage * 5)) * berryMultiplier : 0, xp: eligible ? (m.xp + OUTFITS[s.outfit].xpBonus) * xpMultiplier : 0, score: eligible && arena ? Math.round(m.score * (w.multiplier + s.weapons[s.weapon] * 0.1)) : 0 };
+  const stage = arena ? 0 : journeyFor(s).stage;
+  const baseBerries = m.berry + (arena ? 0 : 2 + stage * 5);
+  const berries = stage > 0 ? Math.round(baseBerries * 1.1) : baseBerries;
+  const xp = stage > 0 ? Math.round(m.xp * 1.1) : m.xp;
+  return {
+    berries: eligible ? (berries + w.bonus) * berryMultiplier : 0,
+    xp: eligible ? (xp + OUTFITS[s.outfit].xpBonus) * xpMultiplier : 0,
+    score: eligible && arena ? Math.round(m.score * (w.multiplier + s.weapons[s.weapon] * 0.1)) : 0,
+  };
 }
 export function grantReward(s: Save, monster: number, arena: boolean, now = Date.now(), eligible = true) {
   const reward = rewardFor(s, monster, arena, now, eligible); let levels = 0;
@@ -728,6 +743,20 @@ export function buyLook(s: Save, kind: 'hairstyle' | 'face', id: number): string
   if (!Number.isInteger(id) || !items[id]) throw new Error('없는 꾸미기예요.');
   if (!owned[id]) { if (s.berries < items[id].price) throw new Error(`${items[id].price - s.berries}베리가 더 필요해요.`); s.berries -= items[id].price; owned[id] = true; }
   s[kind] = id; return kind === 'hairstyle' ? '새 헤어스타일로 변신했어요!' : '새로운 표정으로 변신했어요!';
+}
+export const NICKNAME_CHANGE_PRICE = 100_000;
+export function quoteNicknameChange(s: Pick<Save, 'nickname' | 'berries'>, proposed: string) {
+  const name = proposed.trim();
+  if (!name || [...name].length > 10 || /[\u0000-\u001f\u007f<>]/.test(name)) throw new Error('닉네임은 1~10자로 적어 주세요.');
+  if (isBlockedNickname(name.normalize('NFKC'))) throw new Error('다른 모험가 이름을 골라 주세요.');
+  if (name === s.nickname) throw new Error('지금 쓰는 닉네임과 같아요.');
+  if (s.berries < NICKNAME_CHANGE_PRICE) throw new Error(`${(NICKNAME_CHANGE_PRICE - s.berries).toLocaleString()}베리가 더 필요해요.`);
+  return name;
+}
+export function changeNickname(s: Save, proposed: string) {
+  const name = quoteNicknameChange(s, proposed);
+  s.nickname = name;
+  s.berries -= NICKNAME_CHANGE_PRICE;
 }
 export function buyPotion(s: Save, id: number) {
   const potion = POTIONS[id]; if (!Number.isInteger(id) || !potion) throw new Error('없는 물약이에요.');
@@ -916,6 +945,7 @@ export function validateSave(value: unknown): Save {
   if (migrated.version === 21) { migrated.version = 22; migrated.career = emptyCareer(); }
   if (migrated.version === 22) { migrated.version = 23; migrated.world2 = emptyWorldTwo(); }
   if(migrated.version===23){migrated.version=24;migrated.astralStudy=emptyAstralStudy();}
+  migrated.world2 = expandWorldTwoSave(migrated.world2);
   const s = migrated as unknown as Save;
   // Older v22 saves retain their six potion quantities; new recovery slots start empty.
   if(s.potions&&Array.isArray(s.potions.stock)&&s.potions.stock.length===LEGACY_POTION_COUNT)s.potions.stock.push(...HUNT_RECOVERY_ITEMS.map(()=>s.teacherMode?9:0));

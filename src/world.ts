@@ -1,10 +1,10 @@
 import {animateSkywardTree,createSkywardWeapon,createSkywardOutfit,createSkywardPet,createSkywardRide,type SkywardKit} from './skyward-art';
 import {ASTRAL_FORESTS,type AstralLocation} from './astral-study';
-import {PLANET_THEMES,planetaryTerrain,worldTwoGateway,updatePlanetaryScenery,disposePlanetaryScenery} from './world-two-planet';
+import {PLANET_THEMES,planetThemeIndex,planetaryTerrain,worldTwoGateway,updatePlanetaryScenery,disposePlanetaryScenery} from './world-two-planet';
 import {PlazaWorld,mergePlazaAvatar} from './plaza-world';
 import {type PlazaProfile,type PlazaPlayer,type PlazaEmote} from './plaza-protocol';
 import {worldTwoEquipmentModel} from './world-two-models';
-import {WORLD_TWO_REGIONS,WORLD_TWO_BEACONS,WORLD_TWO_GATE,WORLD_TWO_BOSS_NAME,canEnterWorldTwo,type WorldTwoLocation} from './world-two';
+import {WORLD_TWO_REGIONS,WORLD_TWO_BEACONS,WORLD_TWO_GATE,worldTwoBoss,canEnterWorldTwo,type WorldTwoLocation} from './world-two';
 import {roomAction,ROOM_BOOK_PAGES,type RoomActionKind} from './room-life';
 import {type SupplyUseResult,huntingSupply} from './hunt-supplies';
 import { HOME_PLAZA_EXIT, homeExitInReach } from './home-exit';
@@ -827,6 +827,17 @@ export class World {
     this.addEntity('potion', shopInteraction(5) + ' · 박준우', MARKET_SHOPS[5].x, MARKET_SHOPS[5].z+MARKET_DOOR_OFFSET, makeCharacter(0, 16, 12));
     this.addEntity('beauty', shopInteraction(4) + ' · 가영이', MARKET_SHOPS[4].x, MARKET_SHOPS[4].z+MARKET_DOOR_OFFSET, makeCharacter(2, 15, 2));
 
+    const merchant = makeCharacter(3, 15, 0, 0, 0, 10, 14);
+    this.addEntity('secretMerchant', '비밀상인 · 닉네임 변경', 6, -7.4, merchant);
+    const stall = new T.Group();
+    stall.position.set(6, 0, -9.8);
+    box(stall, 0x80614d, 0, .45, 0, 2.65, .9, 1.1);
+    box(stall, 0xe2bd8b, 0, .96, 0, 2.8, .12, 1.22);
+    for (const x of [-1.18, 1.18]) cylinder(stall, 0x725447, x, 1.3, -.42, .075, .09, 2.6, 8);
+    box(stall, 0x4f496f, 0, 2.56, -.24, 2.9, .14, 1.45);
+    ball(stall, 0xffd180, .88, 2.21, .52, .17);
+    this.scene.add(stall);
+    this.sign(stall, '비밀상인', 0, 3.15, .52, 3.3, '#55426e', true);
     const exit=this.gate(0x91b9a1);this.addEntity('marketExit','중앙 광장 · 돌아가기',0,11,exit);this.sign(exit,'중앙 광장',0,4.6,0,4.5);
     stoneLane(this.scene,0,8,4,18);
     for(const x of [-23,23])for(const z of [-16,-5,7]){this.tree(x,z,.75,false,0x7fad78);cylinder(this.scene,0x8b6e52,x*.9,.9,z+3,.07,.09,1.8,8);ball(this.scene,0xffe9af,x*.9,1.9,z+3,.2);}
@@ -1099,8 +1110,8 @@ export class World {
     if (!Number.isInteger(zone) || !HUNT_ZONES[zone] || s.level < HUNT_ZONES[zone].level ||world2&&!canEnterWorldTwo(s.world2,s.level,world2.region,world2.boss)) return false;
     this.clearMap(); this.inHunting = true; this.inWorldTwo=world2??null;this.combatSave = s; this.stage = 0; this.platforms = []; s.room.inside = s.homestead.inside = false;
     // 구역마다 다른 하늘·안개·바닥과 장식. 야영지(아래쪽 모래밭)는 밝게 남겨 안전한 곳임을 보여 줘요.
-    const visualZone=world2?(world2.boss?7:4+world2.region):zone;const theme = HUNT_THEMES[visualZone]; this.scene.background = new T.Color(theme.sky); this.scene.fog = new T.Fog(theme.fog, 48, 95);
-    if(world2){this.planetVisual=planetaryTerrain(world2.region,world2.boss);this.scene.add(this.planetVisual);this.scene.background=new T.Color(PLANET_THEMES[world2.boss?3:world2.region].sky);}else{
+    const visualZone=world2?4+planetThemeIndex(world2.region,world2.boss):zone;const theme = HUNT_THEMES[visualZone]; this.scene.background = new T.Color(theme.sky); this.scene.fog = new T.Fog(theme.fog, 48, 95);
+    if(world2){this.planetVisual=planetaryTerrain(world2.region,world2.boss);this.scene.add(this.planetVisual);this.scene.background=new T.Color(PLANET_THEMES[planetThemeIndex(world2.region,world2.boss)].sky);}else{
     box(this.scene, theme.ground, 0, -.5, -3, 43, 1, 49);
     box(this.scene, 0xe3d0a4, 0, .025, 8.5, 35, .05, 9); box(this.scene, theme.path, 0, .03, -8, 4.4, .06, 30);
     for (let i = 0; i < 12; i++) box(this.scene, new T.Color(theme.path).multiplyScalar(1.18).getHex(), (i % 2 ? .9 : -.9), .07, -21.5 + i * 2.4, 1.5, .03, 1.2);
@@ -1113,8 +1124,8 @@ export class World {
     const gate = world2?worldTwoGateway():this.gate(0x8ca980); this.addEntity('huntingExit', '중앙 광장 · 사냥터 나가기', 0, 15.5, gate); this.sign(gate, '마을로 돌아가기', 0, 4.6, 0, 5, '#254b35', true);
     if(world2){this.addEntity('world2Board','군도 지도 · 다음 모험',-7,8,new T.Group());this.sign(this.scene,'군도 지도 · 다음 모험',-7,2.5,8,4.5,'#365842',true);if(!world2.boss)for(let i=0;i<3;i++){const p=WORLD_TWO_BEACONS[i],lantern=new T.Group();cylinder(lantern,0xb8a378,0,.6,0,.28,.4,1.2,8);lantern.userData.worldTwoLight=ball(lantern,0x718c9f,0,1.35,0,.48,.6,.48);const ring=mesh(new T.TorusGeometry(.7,.065,6,24),0xffe5a2,0,.08,0,lantern);ring.rotation.x=-Math.PI/2;this.addEntity('world2Beacon'+i,'꺼진 등불 '+(i+1),p.x,p.z,lantern);}}
     else for (const area of HUNT_ZONES) { const x = -12 + area.id * 8; this.addEntity(`huntingZone${area.id}`, `${area.name} · 레벨 ${area.level}`, x, 5.5, new T.Group()); this.sign(this.scene, `${area.name} Lv.${area.level}`, x, 2.4, 5.5, 4.5, s.level >= area.level ? '#365842' : '#8b7866', true); }
-    this.sign(this.scene, world2?(world2.boss?WORLD_TWO_BOSS_NAME:WORLD_TWO_REGIONS[world2.region].name):HUNT_ZONES[zone].name, 0,world2?5:3.2,world2?-23:-17,6, '#365842', true);
-    this.combatRuntime = new HuntingRuntime({ ...(world2?{encounter:{id:'world2-'+world2.region+(world2.boss?'-boss':''),hp:world2.boss?90000:WORLD_TWO_REGIONS[world2.region].hp,damage:world2.boss?72:WORLD_TWO_REGIONS[world2.region].damage,boss:world2.boss}}:{}),zone, level: s.level, power: huntingPower(s), ...huntingCompanionStats(s), ...this.combatProfile });
+    this.sign(this.scene, world2?(world2.boss?worldTwoBoss(world2.region)!.name:WORLD_TWO_REGIONS[world2.region].name):HUNT_ZONES[zone].name, 0,world2?5:3.2,world2?-23:-17,6, '#365842', true);
+    this.combatRuntime = new HuntingRuntime({ ...(world2?{encounter:{id:'world2-'+world2.region+(world2.boss?'-boss':''),hp:world2.boss?worldTwoBoss(world2.region)!.hp:WORLD_TWO_REGIONS[world2.region].hp,damage:world2.boss?worldTwoBoss(world2.region)!.damage:WORLD_TWO_REGIONS[world2.region].damage,boss:world2.boss}}:{}),zone, level: s.level, power: huntingPower(s), ...huntingCompanionStats(s), ...this.combatProfile });
     this.combatWorld = new HuntingWorld(false, visualZone, {lowQuality:s.settings.lowQuality,reducedMotion:matchMedia('(prefers-reduced-motion: reduce)').matches}); this.scene.add(this.combatWorld.root); this.mergeStaticScenery();
     this.setAvatar(s.character, s.outfit, s.weapon, s.outfits[s.outfit], s.weapons[s.weapon], -1, s.pet, s.hairstyle, s.face); this.placeAt(HUNT_CAMP.x, HUNT_CAMP.z); this.refreshWorldTwoBeacons(s);this.onStageLoaded(0); return true;
   }

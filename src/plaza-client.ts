@@ -1,9 +1,9 @@
 import {parseChatMessage,type PlazaChatMessage,type PlazaChatMute,type PlazaRole} from './plaza-social';
-import {PLAZA_VERSION,PLAZA_ROOM,PLAZA_CAPACITY,PLAZA_AVATAR_CATALOG,parsePlazaPlayer,parsePlazaPose,isPlazaEmote,type PlazaProfile,type PlazaPose,type PlazaPlayer,type PlazaEmote} from './plaza-protocol';
+import {PLAZA_VERSION,PLAZA_ROOM,PLAZA_CAPACITY,PLAZA_AVATAR_CATALOG,compatiblePlazaProfile,parsePlazaPlayer,parsePlazaPose,isPlazaEmote,type PlazaProfile,type PlazaPose,type PlazaPlayer,type PlazaEmote} from './plaza-protocol';
 export type PlazaConnection='offline'|'connecting'|'online'|'retrying'|'nickname'|'full';
 type Hooks={status:(status:PlazaConnection,count:number)=>void;player:(player:PlazaPlayer)=>void;leave:(id:string)=>void;clear:()=>void;emote:(id:string,emote:PlazaEmote)=>void;social?:(ready:boolean,role:PlazaRole,expiresAt:number,verified?:boolean)=>void;chat?:(messages:PlazaChatMessage[],replace:boolean)=>void;speech?:(playerId:string|null,message:PlazaChatMessage)=>void;removed?:(id:string)=>void;chatStatus?:(until:number)=>void;chatError?:(reason:string)=>void;mutes?:(mutes:PlazaChatMute[])=>void};
 export class PlazaClient {
- private identity='';private operatorToken='';public chatReady=false;public role:PlazaRole='player';
+ private serverCatalog=2;private identity='';private operatorToken='';public chatReady=false;public role:PlazaRole='player';
  configure(identity:string,operatorToken:string){if(this.operatorToken!==operatorToken){this.disconnect();this.retryAt=0;}this.identity=identity;this.operatorToken=operatorToken;}
  chat(text:string){if(!this.connected||!this.chatReady)return false;this.send({type:'chat',text});return true;}
  moderate(action:'chat-delete'|'chat-mute'|'chat-unmute'|'chat-mutes',data:Record<string,unknown>={}){if(!this.connected||this.role!=='operator')return false;this.send({type:action,...data});return true;}
@@ -19,8 +19,9 @@ export class PlazaClient {
   if(!this.socket){if(now>=this.retryAt)this.connect(now);return;}
   if(this.socket.readyState!==1){if(now-this.openedAt>12000)this.fail(this.socket);return;}
   if(!this.selfId){if(now-this.openedAt>12000)this.fail(this.socket);return;}
-  const signature=JSON.stringify(profile);
-  if(signature!==this.lastProfile&&now-this.profileAt>=1200){this.send({type:'profile',profile});this.lastProfile=signature;this.profileAt=now;}
+  const wireProfile=compatiblePlazaProfile(profile,this.serverCatalog);
+  const signature=JSON.stringify(wireProfile);
+  if(signature!==this.lastProfile&&now-this.profileAt>=1200){this.send({type:'profile',profile:wireProfile});this.lastProfile=signature;this.profileAt=now;}
   const position=JSON.stringify(pose);
   if(position!==this.lastSent){this.send({type:'pose',seq:++this.seq,pose});this.lastSent=position;}
   if(now-this.lastPing>=10000){this.socket.send('ping');this.lastPing=now;}
@@ -31,7 +32,7 @@ export class PlazaClient {
   let url:URL;try{url=new URL(this.endpoint);if(!['wss:','ws:'].includes(url.protocol))throw Error();url.pathname='/connect';url.search='?v='+PLAZA_VERSION;}catch{this.hooks.status('offline',0);this.retryAt=now+60000;return;}
   this.openedAt=now;this.hooks.status(this.attempt?'retrying':'connecting',0);
   let socket:WebSocket;try{socket=this.createSocket(url.href);}catch{this.retryAt=now+5000;return;}this.socket=socket;
-  socket.onopen=()=>{if(this.socket!==socket)return;this.lastPong=Date.now();this.lastPing=Date.now();this.profileAt=Date.now();this.lastProfile=JSON.stringify(this.profile);this.lastSent=JSON.stringify(this.pose);this.send({type:'join',profile:this.profile,pose:this.pose,batchedPoses:true,avatarCatalog:PLAZA_AVATAR_CATALOG,chatIdentity:this.identity,operatorToken:this.operatorToken});};
+  socket.onopen=()=>{if(this.socket!==socket)return;this.lastPong=Date.now();this.lastPing=Date.now();this.profileAt=Date.now();this.serverCatalog=2;const wireProfile=compatiblePlazaProfile(this.profile!,2);this.lastProfile=JSON.stringify(wireProfile);this.lastSent=JSON.stringify(this.pose);this.send({type:'join',profile:wireProfile,pose:this.pose,batchedPoses:true,avatarCatalog:2,salonCatalog:true,chatIdentity:this.identity,operatorToken:this.operatorToken});};
   socket.onmessage=e=>{if(this.socket===socket)this.receive(e.data);};
   socket.onclose=()=>{if(this.socket===socket)this.fail(socket);};
   socket.onerror=()=>{if(this.socket===socket)this.fail(socket);};
@@ -40,7 +41,7 @@ export class PlazaClient {
   if(raw==='pong'){this.lastPong=Date.now();return;}
   if(typeof raw!=='string'||raw.length>200000)return;let m:any;try{m=JSON.parse(raw);}catch{return;}if(!m||typeof m!=='object')return;
   if(m.type==='welcome'&&m.room===PLAZA_ROOM&&typeof m.id==='string'&&/^[a-f0-9-]{36}$/.test(m.id)&&Array.isArray(m.players)&&m.players.length<=PLAZA_CAPACITY){
-   this.chatReady=m.features?.chat===true;this.role=m.role==='operator'?'operator':'player';this.hooks.social?.(this.chatReady,this.role,Number(m.operatorUntil)||0,true);this.selfId=m.id;this.attempt=0;this.seq=0;this.lastPong=Date.now();this.peers.clear();this.hooks.clear();
+   this.serverCatalog=m.features?.avatarCatalog===PLAZA_AVATAR_CATALOG?PLAZA_AVATAR_CATALOG:2;this.chatReady=m.features?.chat===true;this.role=m.role==='operator'?'operator':'player';this.hooks.social?.(this.chatReady,this.role,Number(m.operatorUntil)||0,true);this.selfId=m.id;this.attempt=0;this.seq=0;this.lastPong=Date.now();this.peers.clear();this.hooks.clear();
    for(const item of m.players){const p=parsePlazaPlayer(item);if(p&&p.id!==this.selfId){this.peers.set(p.id,p);this.hooks.player(p);}}this.report();return;
   }
   if(m.type==='correction'){this.lastSent='';return;}

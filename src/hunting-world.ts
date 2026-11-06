@@ -30,11 +30,15 @@ export const HUNT_THEMES = [
  {title:'수정물결 호수',sky:0x122d49,fog:0x122d49,ground:0x477e96,path:0xc5f1e5,foliage:0x8ae6ee,tint:0x79cbdc,eye:0xe3fbff,glow:0xc2edf1},
  {title:'별빛고리 유적',sky:0x221d45,fog:0x221d45,ground:0x75689c,path:0xd7c8f3,foliage:0xb1a3ed,tint:0xb5a0da,eye:0xffe4a0,glow:0xe9d396},
  {title:'고대 별나무 성소',sky:0x152c42,fog:0x152c42,ground:0x617e91,path:0xf4e2b5,foliage:0x90dccc,tint:0x89c6d0,eye:0xffe6a0,glow:0xf6d88a},
+ {title:'오로라 산호숲',sky:0x183a45,fog:0x183a45,ground:0x547d7a,path:0xdaedd4,foliage:0x85e1ae,tint:0x6cbfb1,eye:0xd4ffe0,glow:0xa4f5d7},
+ {title:'황혼 운석 협곡',sky:0x391f38,fog:0x391f38,ground:0x925b59,path:0xf6d5ae,foliage:0xe4a47f,tint:0xab6958,eye:0xffdb8d,glow:0xffbd6e},
+ {title:'은하 폭풍 성채',sky:0x231e53,fog:0x231e53,ground:0x615683,path:0xded9f5,foliage:0xa69bee,tint:0x827abd,eye:0xf0dcff,glow:0xc2c6ff},
+ {title:'성운룡의 둥지',sky:0x1d193d,fog:0x1d193d,ground:0x58486d,path:0xe6d3f2,foliage:0xba94dc,tint:0x9468b1,eye:0xffdea4,glow:0xffb9d2},
 ] as const;
 
 /** 구역마다 다른 장식(놀이 공간 바깥에만 둬요). 보상·충돌·저장과 상관없는 그림이에요. */
 export function huntingScenery(zone: number): T.Group {
-  if(zone>=4)return worldTwoScenery(Math.min(2,zone-4),zone===7);
+  if(zone>=4)return worldTwoScenery(zone===11?5:zone>=8?zone-5:zone===7?2:zone-4,zone===7||zone===11);
   const g = new T.Group(), theme = HUNT_THEMES[zone] ?? HUNT_THEMES[0], cache = new Map<string, T.Material>();
   const mat = (c: number, glow = false) => { const key = `${c}:${glow}`; if (!cache.has(key)) cache.set(key, glow ? new T.MeshBasicMaterial({ color: c }) : new T.MeshStandardMaterial({ color: c, roughness: .9, flatShading: true })); return cache.get(key)!; };
   const put = (geo: T.BufferGeometry, c: number, x: number, y: number, z: number, glow = false) => { const m = new T.Mesh(geo, mat(c, glow)); m.position.set(x, y, z); m.castShadow = !glow; m.receiveShadow = true; g.add(m); return m; };
@@ -126,6 +130,23 @@ export class HuntingWorld {
       this.piece(body, this.cube, 0xbc9970, 0, .9, 0, 1.6, .15, .16);
       this.piece(body, this.sphere, color, 0, .9, .12, .43, .5, .22);
       this.piece(body, this.sphere, 0xf7e7b8, 0, .95, .34, .25, .25, .025);
+    } else if (this.zone===11) {
+      body.name='astral-nebula-dragon';
+      const crystal=this.geometry(new T.OctahedronGeometry(1));
+      this.piece(body,this.sphere,0x7554aa,0,1.6,-.3,1.35,1.7,1.55);
+      this.piece(body,this.sphere,0xb386d4,0,2.6,.55,.82,1.1,.76);
+      this.piece(body,this.sphere,0xc69adf,0,3.26,1.05,.84,.68,.85);
+      this.piece(body,this.sphere,0x8d5db3,0,2.99,1.66,.67,.32,.55);
+      this.piece(body,crystal,0xf1b9d9,0,1.9,.95,.36,.63,.34);
+      for (const side of [-1,1]) {
+        const wing=this.piece(body,crystal,0x9f7fd1,side*1.94,2.27,-.65,1.85,.88,.24);
+        wing.rotation.z=side*.44;
+        const horn=this.piece(body,this.cone,0xf2c989,side*.51,3.82,.91,.15,.67,.15);
+        horn.rotation.z=-side*.34;
+        this.piece(body,this.sphere,0xffdd9e,side*.43,3.39,1.73,.16,.1,.08);
+        this.piece(body,this.sphere,0x7653a2,side*.86,.6,.26,.39,.55,.64);
+      }
+      for(let i=0;i<5;i++)this.piece(body,this.sphere,0x754f9a,0,1-i*.1,-1.25-i*.43,.55-i*.085,.45-i*.065,.56);
     } else if(this.zone===7){
       body.name='ancient-star-tree';this.piece(body,this.cube,0x52768a,0,1.65,0,1.7,2.6,1.3);this.piece(body,this.sphere,0x9cd7cf,0,3.45,0,2.1,1.1,1.5);
       for(const side of [-1,1]){const arm=this.piece(body,this.cube,0x6f91a0,side*1.4,1.8,0,.7,1.65,.65);arm.rotation.z=-side*.35;this.piece(body,this.sphere,0xb6e2d8,side*1.45,2.8,0,.9,.5,.65);this.piece(body,this.cube,0x4b6b83,side*.65,.35,.15,.8,.6,1.1);this.piece(body,this.sphere,0xffe6a0,side*.4,2.25,.7,.16,.12,.08);}
@@ -135,7 +156,7 @@ export class HuntingWorld {
       const theme=HUNT_THEMES[this.zone],crystal=this.geometry(new T.OctahedronGeometry(1));body.name='planetary-spirit-'+this.zone;body.scale.setScalar(1.2);
       if(this.zone===4){this.piece(body,this.sphere,0xb7a1cf,0,.75,0,.65,.65,.55);for(const side of [-1,1]){const petal=this.piece(body,this.sphere,theme.foliage,side*.55,.95,-.08,.35,.16,.5);petal.rotation.z=side*.5;this.piece(body,this.sphere,theme.glow,side*.3,1.42,0,.13,.25,.13);}}
       else if(this.zone===5){this.piece(body,crystal,0x8bcddc,0,.85,0,.65,.9,.55);for(const side of [-1,1])this.piece(body,crystal,0xc7eced,side*.6,.7,0,.2,.45,.25);}
-      else{this.piece(body,this.cube,0x9d8bc4,0,.85,0,1.05,1.25,.8);for(const side of [-1,1])this.piece(body,crystal,theme.glow,side*.65,1.1,0,.16,.3,.2);}
+      else{this.piece(body,this.cube,this.zone>=8?theme.tint:0x9d8bc4,0,.85,0,1.05,1.25,.8);for(const side of [-1,1])this.piece(body,crystal,theme.glow,side*.65,1.1,0,.16,.3,.2);}
       for(const side of [-1,1]){const eye=new T.Mesh(this.sphere,this.glow(theme.eye));eye.position.set(side*.2,.95,.53);eye.scale.set(.085,.1,.035);body.add(eye);this.piece(body,this.sphere,theme.tint,side*.32,.15,.12,.22,.13,.28);}const orbit=new T.Mesh(this.ring,this.glow(theme.glow));orbit.position.y=.18;orbit.rotation.x=-Math.PI/2;orbit.scale.setScalar(.9);body.add(orbit);
     } else {
       // 구역이 높을수록 크고 어두우며, 볼터치 대신 빛나는 눈·찡그린 눈썹·이빨을 달아요.

@@ -2,7 +2,7 @@ import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {newSave,CHARACTERS,OUTFITS,WEAPONS,PETS,RIDES,HAIRSTYLES,FACES,PPOJJAK_PET_ID} from '../src/rules';
 import {EXPEDITION_TITLES} from '../src/expedition';
-import {AVATAR_LIMITS,ADVENTURE_TITLES,parsePlazaProfile,parsePlazaPose,profileTitles} from '../src/plaza-protocol';
+import {AVATAR_LIMITS,ADVENTURE_TITLES,parsePlazaProfile,parsePlazaPose,profileTitles,forestLevelTitle,compatiblePlazaProfile} from '../src/plaza-protocol';
 import {plazaProfile} from '../src/plaza-identity';
 import {PlazaClient} from '../src/plaza-client';
 import * as T from 'three';
@@ -23,3 +23,15 @@ test('overhead labels stay within the viewport and crowded labels cannot overlap
 
 test('the plaza supports 128 profiles and applies a bounded batch without accepting unknown actors',()=>{assert.equal(PLAZA_CAPACITY,128);const sockets:FakeSocket[]=[],seen:any[]=[];const c=new PlazaClient('wss://plaza.example',{status:()=>{},player:p=>seen.push(p),leave:()=>{},clear:()=>{},emote:()=>{}},()=>{const s=new FakeSocket();sockets.push(s);return s as unknown as WebSocket;});const p=make(),pose={x:0,y:0,z:8,angle:0},id='00000000-0000-4000-8000-000000000001',other='00000000-0000-4000-8000-000000000002';c.sync(true,p,pose);const socket=sockets[0];socket.open();assert.equal(JSON.parse(socket.sent[0]).batchedPoses,true);socket.message({type:'welcome',room:'central-plaza-v1',id,players:[{id:other,profile:p,pose}]});socket.message({type:'poses',players:[{id:other,pose:{...pose,x:2}},{id:'unknown',pose}]});assert.equal(c.players.length,1);assert.equal(c.players[0].pose.x,2);c.stop();});
 test('remote avatar compaction keeps the body under its animation transform and preserves two-sided faces',()=>{const root=new T.Group(),body=new T.Group();root.add(body);root.userData.body=body;const head=new T.Mesh(new T.SphereGeometry(.5,8,6),new T.MeshStandardMaterial({color:0xecc39e,side:T.DoubleSide}));head.position.y=1.5;body.add(head);const foot=new T.Mesh(new T.BoxGeometry(.3,.2,.4),new T.MeshStandardMaterial());foot.position.y=.18;body.add(foot);root.userData.feet=[foot];const dispose=mergePlazaAvatar(root),merged=body.getObjectByName('plaza-preserved-body') as T.Mesh;assert.ok(merged);assert.equal(foot.visible,true);assert.equal((merged.material as T.Material).side,T.DoubleSide);body.position.y=1.1;root.updateMatrixWorld(true);merged.geometry.computeBoundingBox();const bounds=merged.geometry.boundingBox!.clone().applyMatrix4(merged.matrixWorld);assert.ok(Math.abs(bounds.min.y-2.1)<.001);dispose();});
+
+test('level titles unlock at the exact threshold and preserve the active job title',()=>{
+ for(const [level,title] of [[49,''],[50,'베리숲 지킴이'],[99,'베리숲 지킴이'],[100,'베리숲의 전설'],[299,'베리숲의 전설'],[300,'베리숲 신']] as const){
+  assert.equal(forestLevelTitle(level),title);
+  assert.equal(profileTitles({...make(),level}).title,'새싹 모험가'+(title?' · '+title:''));
+ }
+});
+test('new salon styles remain visible on the current plaza and safe on older clients',()=>{
+ const p={...make(),hairstyle:12,face:16,weapon:38};
+ assert.deepEqual(parsePlazaProfile(p),p);assert.deepEqual(compatiblePlazaProfile(p,3),p);
+ const older=compatiblePlazaProfile(p,2);assert.deepEqual([older.hairstyle,older.face,older.weapon],[0,0,38]);
+});

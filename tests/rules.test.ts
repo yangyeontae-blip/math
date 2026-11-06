@@ -1,7 +1,7 @@
 import { PPOJJAK_PET_ID } from '../src/rules';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { questionPool, newSave, validateSave, buy, upgrade, buyRide, dismount, buyPet, buyLook, buyPotion, usePotion, potionEffects, applyTeacherCode, enableTeacherMode, grantReward, rewardFor, Encounter, WEAPONS, OUTFITS, PETS, POTIONS, RIDES, HAIRSTYLES, FACES, MONSTERS, CHARACTERS, STAGE_DIVISION_DIFFICULTY, SHINBI_STAR_PET_ID, HERO_BREAD_PET_ID, collectBerry, finishHunt, fellTree, treeDamage, canEnter, monsterBattleRounds, recordWrongAnswer, recordCorrectAnswer, PLAYER_MOVE_SPEED, berryWithinReach, petChaseSpeed, riderHeight } from '../src/rules.ts';
+import { questionPool, newSave, validateSave, buy, upgrade, buyRide, dismount, buyPet, buyLook, buyPotion, usePotion, potionEffects, applyTeacherCode, enableTeacherMode, grantReward, rewardFor, Encounter, WEAPONS, OUTFITS, PETS, POTIONS, RIDES, HAIRSTYLES, FACES, MONSTERS, CHARACTERS, STAGE_DIVISION_DIFFICULTY, SHINBI_STAR_PET_ID, HERO_BREAD_PET_ID, collectBerry, journeyFor, finishHunt, fellTree, treeDamage, canEnter, monsterBattleRounds, recordWrongAnswer, recordCorrectAnswer, PLAYER_MOVE_SPEED, berryWithinReach, petChaseSpeed, riderHeight } from '../src/rules.ts';
 import { stageBerries, stageMonsters, stageTrees, clearBonus, berryValue, isVillagePond } from '../src/stages.ts';
 import { rematchHunt } from '../src/rules.ts';
 
@@ -237,4 +237,25 @@ test('the original teacher code still opens teacher mode and wrong codes change 
   const s = newSave('선생님', 0); const before = structuredClone(s);
   assert.throws(() => applyTeacherCode(s, 'Teacher'), /암호코드/); assert.deepEqual(s, before);
   applyTeacherCode(s, 'teacher'); assert.equal(s.teacherMode, true); assert.match(TEACHER_CODE_HASH, /^[0-9a-f]{64}$/);
+});
+
+
+test('a nickname change charges exactly 100,000 berries and preserves the save identity',async()=>{
+ const {changeNickname,newSave,validateSave}=await import('../src/rules');
+ const s=newSave('이전이름',0,3);s.berries=99_999;
+ assert.throws(()=>changeNickname(s,'새이름'),/1베리/);assert.equal(s.nickname,'이전이름');assert.equal(s.berries,99_999);
+ s.berries=100_000;
+ for(const name of ['이전이름','<script>','열한글자를넘기는닉네임입니다','   '])assert.throws(()=>changeNickname(s,name));
+ const expected=structuredClone(s);changeNickname(s,' 새이름 ');
+ assert.deepEqual(s,{...expected,nickname:'새이름',berries:0});assert.equal(validateSave(s).nickname,'새이름');
+});
+
+test('math forest bonuses grow without modifying the village tutorial or arena',()=>{
+ const save=newSave('수학친구',0,3);const monster=MONSTERS[0],stage=3;
+ assert.equal(rewardFor(save,0,false).berries,monster.berry+2);
+ journeyFor(save).stage=stage;
+ assert.deepEqual(rewardFor(save,0,false),{berries:Math.round((monster.berry+2+stage*5)*1.1),xp:Math.round(monster.xp*1.1),score:0});
+ assert.deepEqual(rewardFor(save,0,true),{berries:monster.berry,xp:monster.xp,score:monster.score});
+ assert.deepEqual(rewardFor(save,0,false,Date.now(),false),{berries:0,xp:0,score:0});
+ assert.equal(clearBonus(stage),308);
 });

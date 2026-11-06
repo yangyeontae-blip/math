@@ -29,3 +29,8 @@
 @media(max-width:680px){.salon-modal{padding:16px}.salon-banner{padding:13px;align-items:flex-start;flex-direction:column}.salon-banner strong{font-size:1.15rem}.salon-layout{display:flex;flex-direction:column;gap:18px}.salon-mirror{position:static;order:-1;width:100%;display:grid;grid-template-columns:120px minmax(0,1fr);gap:8px 14px;text-align:left;padding:12px}.salon-stage{height:162px;grid-row:1/5;border-width:4px}.salon-mirror h3{margin:0;font-size:1.05rem}.salon-description{font-size:.8rem;margin:0;min-height:0}.salon-mirror .wide{margin:0;font-size:.8rem}.salon-mirror .salon-note{margin:0;font-size:.72rem}.salon-catalog{width:100%}.salon-cards{gap:8px}.salon-portrait{height:104px}.salon-card strong{font-size:.75rem}.salon-card small{font-size:.68rem}.salon-equipped{font-size:.6rem;top:4px;left:4px}}
 
 @media(max-width:680px){.salon-banner small:first-child{display:none}.salon-banner small{font-size:.75rem;line-height:1.6}.salon-banner{gap:6px;padding:10px 12px}.salon-banner strong{font-size:1rem}.salon-balance{font-size:.8rem;padding:6px 10px}.salon-modal .modal-heading h2{font-size:1.35rem}}
+
+.level-milestone:not([hidden]){display:block;color:#674564;font-size:.7rem;font-weight:900;line-height:1.2;margin:2px 0;white-space:nowrap}
+.secret-merchant-modal{width:min(460px,calc(100% - 24px))}
+#nickname-change-form{display:grid;gap:8px;text-align:left}
+#new-nickname{width:100%;min-height:44px;padding:8px 12px;color:#244d3e}

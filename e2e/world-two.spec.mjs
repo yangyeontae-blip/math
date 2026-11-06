@@ -1,9 +1,9 @@
 import {test,expect} from '@playwright/test';
 import {newSave} from '../src/rules.ts';
 import {selectJob,recordCareerTrial,advanceJob} from '../src/academy.ts';
-async function start(page,level){const s=newSave('별모험가',0,3);s.level=level;s.weapon=26;s.weapons[26]=3;s.pet=20;s.pets[20]=true;s.settings.lowQuality=true;s.settings.music=s.settings.sound=false;s.tutorial={collected:true,battle:true,shop:true};s.potions.stock[6]=s.potions.stock[8]=3;if(level>=60){selectJob(s.career,'ranger',level);for(const rank of [1,2,3]){recordCareerTrial(s.career,'ranger',rank);advanceJob(s.career,'ranger',level);}}await page.goto('/',{waitUntil:'domcontentloaded'});await page.evaluate(s=>{localStorage.clear();localStorage.setItem('berry-forest-save-v1',JSON.stringify(s));localStorage.setItem('berry-forest-ambience-v1','off');},s);await page.reload({waitUntil:'domcontentloaded'});await page.locator('#continue').click();await expect(page.locator('#hud')).toBeVisible();}
+async function start(page,level,prepare=()=>{}){const s=newSave('별모험가',0,3);s.level=level;s.weapon=26;s.weapons[26]=3;s.pet=20;s.pets[20]=true;s.settings.lowQuality=true;s.settings.music=s.settings.sound=false;s.tutorial={collected:true,battle:true,shop:true};s.potions.stock[6]=s.potions.stock[8]=3;if(level>=60){selectJob(s.career,'ranger',level);for(const rank of [1,2,3]){recordCareerTrial(s.career,'ranger',rank);advanceJob(s.career,'ranger',level);}}prepare(s);await page.goto('/',{waitUntil:'domcontentloaded'});await page.evaluate(s=>{localStorage.clear();localStorage.setItem('berry-forest-save-v1',JSON.stringify(s));localStorage.setItem('berry-forest-ambience-v1','off');},s);await page.reload({waitUntil:'domcontentloaded'});await page.locator('#continue').click();await expect(page.locator('#hud')).toBeVisible();}
 async function map(page){await page.locator('#stage-map').click();await page.locator('.nav-links [data-nav="world2"]').click();await expect(page.locator('.world-two-sheet')).toBeVisible();}
-test('World 2 map gates the three regions, previews twelve earned rewards and carries the requested operator notice',async({page},info)=>{await start(page,59);await page.evaluate(()=>window.__berry.getWorld().player.position.set(16,0,-4));await page.waitForTimeout(1000);await page.screenshot({path:info.outputPath('plaza-world2-approach.png')});await map(page);await expect(page.locator('[data-career-action="enter-world2"][data-region="0"]')).toBeDisabled();await expect(page.locator('[data-career-action="enter-world2-boss"]')).toBeDisabled();await page.locator('.world-two-collection summary').click();await expect(page.locator('[data-career-action="world2-equipment"]')).toHaveCount(12);await page.screenshot({path:info.outputPath('world2-map-locked.png')});await page.locator('[data-career-action="world2-equipment"][data-kind="weapon"][data-item="27"]').click();await expect(page.locator('#buy-item')).toBeDisabled();await expect(page.locator('#buy-item')).toContainText('햇살바람 초원');await page.locator('#modal-back').click();await expect(page.locator('.world-two-sheet')).toBeVisible();await page.locator('.world-two-sheet [data-career-action="close"]').click();await page.locator('#stage-map').click();await page.locator('[data-nav="notice"]').click();await page.locator('[data-notice="world-two-plan-2026-11-03"]').click();await expect(page.locator('.notice-body')).toContainText('세계 2의 지역 3곳 + 새 장비 12종 + 혼자 도전 가능한 보스 1종');await expect(page.locator('.notice-body')).toContainText('이후에 서버를 만들어 친구들과 만날 수 있도록');await page.screenshot({path:info.outputPath('world2-operator-notice.png')});});
+test('World 2 map gates the three regions, previews twelve earned rewards and carries the requested operator notice',async({page},info)=>{await start(page,59);await page.evaluate(()=>window.__berry.getWorld().player.position.set(16,0,-4));await page.waitForTimeout(1000);await page.screenshot({path:info.outputPath('plaza-world2-approach.png')});await map(page);await expect(page.locator('[data-career-action="enter-world2"][data-region="0"]')).toBeDisabled();await expect(page.locator('[data-career-action="enter-world2-boss"][data-region="2"]')).toBeDisabled();await page.locator('.world-two-collection summary').click();await expect(page.locator('[data-career-action="world2-equipment"]')).toHaveCount(12);await page.screenshot({path:info.outputPath('world2-map-locked.png')});await page.locator('[data-career-action="world2-equipment"][data-kind="weapon"][data-item="27"]').click();await expect(page.locator('#buy-item')).toBeDisabled();await expect(page.locator('#buy-item')).toContainText('햇살바람 초원');await page.locator('#modal-back').click();await expect(page.locator('.world-two-sheet')).toBeVisible();await page.locator('.world-two-sheet [data-career-action="close"]').click();await page.locator('#stage-map').click();await page.locator('[data-nav="notice"]').click();await page.locator('[data-notice="world-two-plan-2026-11-03"]').click();await expect(page.locator('.notice-body')).toContainText('세계 2의 지역 3곳 + 새 장비 12종 + 혼자 도전 가능한 보스 1종');await expect(page.locator('.notice-body')).toContainText('이후에 서버를 만들어 친구들과 만날 수 있도록');await page.screenshot({path:info.outputPath('world2-operator-notice.png')});});
 test('World 2 real combat and beacon interactions complete all regions, preserve saves and award one solo boss victory',async({page},info)=>{test.setTimeout(240000);await start(page,1000);await map(page);
  for(let region=0;region<3;region++){
   if(region)await page.getByRole('button',{name:'군도 지도 · 진행',exact:true}).click();
@@ -15,10 +15,70 @@ test('World 2 real combat and beacon interactions complete all regions, preserve
  }
  const beforeBoss=await page.evaluate(()=>structuredClone(window.__berry.getState()));for(let id=27;id<36;id++)expect(beforeBoss.weapons[id]).toBe(0);expect(beforeBoss.learning.correct).toBe(0);expect(beforeBoss.career.stats.defeats).toBe(0);
  await page.reload({waitUntil:'domcontentloaded'});await page.locator('#continue').click();await expect.poll(()=>page.evaluate(()=>window.__berry.getWorld()?.inWorldTwo?.region),{timeout:30000}).toBe(2);expect(await page.evaluate(()=>window.__berry.getState().world2.regions)).toEqual(beforeBoss.world2.regions);
- await page.getByRole('button',{name:'군도 지도 · 진행',exact:true}).click();await expect(page.locator('[data-career-action="enter-world2-boss"]')).toBeEnabled();await page.locator('[data-career-action="enter-world2-boss"]').click();await expect.poll(()=>page.evaluate(()=>window.__berry.getWorld()?.inWorldTwo?.boss),{timeout:30000}).toBe(true);await page.evaluate(()=>window.__berry.getWorld().player.position.set(0,0,-7));await expect.poll(()=>page.evaluate(()=>!!window.__berry.getWorld().huntingStatus.enemies[0].telegraph),{timeout:15000}).toBe(true);await page.screenshot({path:info.outputPath('world2-boss-warning.png')});
+ await page.getByRole('button',{name:'군도 지도 · 진행',exact:true}).click();await expect(page.locator('[data-career-action="enter-world2-boss"][data-region="2"]')).toBeEnabled();await page.locator('[data-career-action="enter-world2-boss"][data-region="2"]').click();await expect.poll(()=>page.evaluate(()=>window.__berry.getWorld()?.inWorldTwo?.boss),{timeout:30000}).toBe(true);await page.evaluate(()=>window.__berry.getWorld().player.position.set(0,0,-7));await expect.poll(()=>page.evaluate(()=>!!window.__berry.getWorld().huntingStatus.enemies[0].telegraph),{timeout:15000}).toBe(true);await page.screenshot({path:info.outputPath('world2-boss-warning.png')});
  await page.keyboard.down('f');try{await expect.poll(()=>page.evaluate(()=>window.__berry.getState().world2.bossWins),{timeout:45000}).toBe(1);}finally{await page.keyboard.up('f');}
  const victory=await page.evaluate(()=>JSON.parse(localStorage.getItem('berry-forest-save-v1')));expect(victory.world2.bossClaimed).toBe(true);for(let id=26;id<29;id++)expect(victory.outfits[id]).toBe(0);expect(victory.version).toBe(24);await page.screenshot({path:info.outputPath('world2-boss-victory.png')});await page.waitForTimeout(300);expect(await page.evaluate(()=>window.__berry.getState().world2.bossWins)).toBe(1);await page.locator('[data-career-action="exit-combat"]').click();await expect(page.locator('.location-pill')).toContainText('중앙 광장');const home=await page.evaluate(()=>JSON.parse(localStorage.getItem('berry-forest-save-v1')));expect(home.world2.location).toBeNull();expect(home.world2.bossWins).toBe(1);
 });
 
 
 test('World 2 and central teacher prioritize math learning and the ornate main gate opens the grade forest map',async({page},info)=>{await start(page,60);await page.evaluate(()=>{const w=window.__berry.getWorld(),e=w.entities.find(e=>e.id==='guide');w.player.position.set(e.x,0,e.z+1);});await expect(page.locator('#interact')).toContainText('마을 안내');if(info.project.name==='mobile')await page.locator('#touch-talk').click();else await page.keyboard.press('e');await expect(page.locator('.talk-bubble')).toHaveClass(/finished/,{timeout:5000});if(info.project.name==='mobile')await page.locator('.talk-bubble').click();else await page.keyboard.press('e');await expect(page.locator('#modal-content')).toContainText('중앙광장 안내');await expect(page.locator('.nav-list [data-nav]').first()).toHaveAttribute('data-nav','explore');await expect(page.locator('#modal-content')).toContainText('최대 128명');await expect(page.locator('#modal-content')).toContainText('3학년');await page.screenshot({path:info.outputPath('teacher-current-guide.png')});await page.locator('[data-nav="explore"]').click();await expect(page.locator('.modal-heading')).toContainText('수학숲으로 모험하기');await page.keyboard.press('Escape');await page.evaluate(()=>{window.__berry.getWorld().player.position.set(0,0,14.5);});await expect(page.locator('#interact')).toContainText('수학숲으로 모험하기');await expect.poll(()=>page.evaluate(()=>!!window.__berry.getWorld().scene.getObjectByName('math-forest-main-gateway'))).toBe(true);await page.waitForTimeout(600);await page.screenshot({path:info.outputPath('math-forest-main-gateway.png')});if(info.project.name==='mobile')await page.locator('#touch-talk').click();else await page.keyboard.press('e');await expect(page.locator('.modal-heading')).toContainText('수학숲으로 모험하기');});
+
+test('World 2 outer islands and the new solo guardian open from the real map and preserve their save location',async({page},info)=>{
+ test.setTimeout(150000);
+ await start(page,300,s=>{for(let id=0;id<6;id++)s.world2.regions[id]={beacons:[0,1,2],kills:6,claimed:true};});
+ await expect(page.locator('#level-milestone')).toContainText('베리숲 신');
+ await map(page);
+ for(const region of [3,4,5]){
+  if(region>3)await page.getByRole('button',{name:'군도 지도 · 진행',exact:true}).click();
+  await page.locator('[data-career-action="enter-world2"][data-region="'+region+'"]').click();
+  await expect.poll(()=>page.evaluate(()=>window.__berry.getWorld()?.inWorldTwo?.region)).toBe(region);
+  await page.screenshot({path:info.outputPath('outer-island-'+region+'.png')});
+ }
+ await page.getByRole('button',{name:'군도 지도 · 진행',exact:true}).click();
+ await page.locator('[data-career-action="enter-world2-boss"][data-region="5"]').click();
+ await expect.poll(()=>page.evaluate(()=>window.__berry.getWorld()?.inWorldTwo)).toEqual({region:5,boss:true});
+ await expect.poll(()=>page.evaluate(()=>!!window.__berry.getWorld().scene.getObjectByName('astral-nebula-dragon'))).toBe(true);
+ await page.evaluate(()=>window.__berry.getWorld().player.position.set(0,0,-7));
+ await expect.poll(()=>page.evaluate(()=>window.__berry.getWorld().huntingStatus.enemies[0].telegraph?.kind)).toBe('charge');
+ await page.screenshot({path:info.outputPath('outer-guardian.png')});
+ await page.reload({waitUntil:'domcontentloaded'});await page.locator('#continue').click();
+ await expect.poll(()=>page.evaluate(()=>window.__berry.getWorld()?.inWorldTwo)).toEqual({region:5,boss:true});
+});
+test('World 2 release: secret merchant and salon work through their world interactions on desktop and mobile',async({page},info)=>{
+ test.setTimeout(300000);
+ await start(page,50,s=>{s.berries=101_000;});
+ await expect(page.locator('#level-milestone')).toContainText('베리숲 지킴이');
+ async function interact(id,label){
+  await page.evaluate(id=>{const w=window.__berry.getWorld(),e=w.entities.find(e=>e.id===id);w.player.position.set(e.x,0,e.z+.4);},id);
+  await expect(page.locator('#interact')).toContainText(label);
+  if(info.project.name==='mobile')await page.locator('#touch-talk').click();else await page.keyboard.press('e');
+ }
+ await interact('shopStreet','상점');
+ await expect.poll(()=>page.evaluate(()=>window.__berry.getWorld().inMarket)).toBe(true);
+ await interact('beauty','살롱');
+ if(await page.locator('.talk-bubble').isVisible()){
+  await expect(page.locator('.talk-bubble')).toHaveClass(/finished/,{timeout:10000});
+  if(info.project.name==='mobile')await page.locator('.talk-bubble').click();else await page.keyboard.press('e');
+ }
+ await expect(page.locator('.salon-card')).toHaveCount(13);
+ await page.locator('[data-look="10"]').click();
+ await expect(page.locator('.salon-mirror h3')).toContainText('깔끔한 민머리');
+ await page.locator('#buy-look').click();
+ await page.locator('[data-beauty-tab="face"]').click();
+ await expect(page.locator('.salon-card')).toHaveCount(17);
+ await page.screenshot({path:info.outputPath('salon-new-styles.png')});
+ await page.evaluate(()=>window.__berry.closeModal());
+ await interact('secretMerchant','비밀상인');
+ await page.locator('#new-nickname').fill('새별모험가');
+ await page.getByRole('button',{name:'변경 내용 확인하기'}).click();
+ await page.evaluate(()=>{window.testWrite=Storage.prototype.setItem;Storage.prototype.setItem=()=>{throw new DOMException('full','QuotaExceededError');};});
+ await page.locator('#rename-confirm').click();
+ await expect(page.locator('#nickname-change-error')).toContainText('저장하지 못했어요');
+ expect(await page.evaluate(()=>[window.__berry.getState().nickname,window.__berry.getState().berries])).toEqual(['별모험가',100850]);
+ await page.evaluate(()=>{Storage.prototype.setItem=window.testWrite;});
+ await page.getByRole('button',{name:'변경 내용 확인하기'}).click();
+ await page.locator('#rename-confirm').click();
+ await expect(page.locator('#nickname')).toContainText('새별모험가');
+ const saved=await page.evaluate(()=>JSON.parse(localStorage.getItem('berry-forest-save-v1')));
+ expect([saved.nickname,saved.berries,saved.hairstyle]).toEqual(['새별모험가',850,10]);
+});

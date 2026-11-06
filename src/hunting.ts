@@ -6,10 +6,10 @@ export const HUNT_CAMP_RADIUS=3;
 /** 기본 공격의 광역 범위와 주변 몬스터가 받는 피해 비율. */
 export const HUNT_SPLASH_RADIUS=3.2,HUNT_SPLASH_SHARE=.6;
 export const HUNT_ZONES=[
- {id:0,name:'새싹 사냥터',level:1,hp:48,damage:7,berries:20,xp:12},
- {id:1,name:'햇살 사냥터',level:10,hp:70,damage:10,berries:50,xp:30},
- {id:2,name:'달빛 사냥터',level:30,hp:125,damage:15,berries:100,xp:60},
- {id:3,name:'별빛 사냥터',level:60,hp:200,damage:21,berries:200,xp:120},
+ {id:0,name:'새싹 사냥터',level:1,hp:48,damage:7,berries:18,xp:11},
+ {id:1,name:'햇살 사냥터',level:10,hp:70,damage:10,berries:45,xp:27},
+ {id:2,name:'달빛 사냥터',level:30,hp:125,damage:15,berries:90,xp:54},
+ {id:3,name:'별빛 사냥터',level:60,hp:200,damage:21,berries:180,xp:108},
 ] as const;
 export const HUNTING_ZONES=HUNT_ZONES;
 export type HuntPoint={x:number;z:number};
@@ -35,7 +35,7 @@ export class HuntingRuntime{
  private time=0;private hp:number;private maxHp:number;private invincibleUntil=0;private nextAttack=0;private cooldowns:Partial<Record<SkillId,number>>={};private buffs:Partial<Record<SkillId,number>>={};private enemies:EnemyRuntime[]=[];private effects:Area[]=[];private serial=0;private readonly session:string;private windStart:HuntPoint|null=null;
  constructor(private readonly options:HuntingOptions){
   if(!Number.isInteger(options.zone)||options.zone<0||options.zone>3||!Number.isFinite(options.level)||options.level<1||!Number.isFinite(options.power)||options.power<=0||!validCompanionOptions(options)||!options.practice&&options.level<HUNT_ZONES[options.zone].level)throw Error('아직 갈 수 없는 사냥터예요.');
-  if(options.encounter&&(!/^world2-[0-2](-boss)?$/.test(options.encounter.id)||!Number.isFinite(options.encounter.hp)||options.encounter.hp<=0||options.encounter.hp>1e8||!Number.isFinite(options.encounter.damage)||options.encounter.damage<=0||typeof options.encounter.boss!=='boolean'||options.practice))throw Error('잘못된 모험 설정이에요.');
+  if(options.encounter&&(!/^world2-(?:[0-5]|[25]-boss)$/.test(options.encounter.id)||!Number.isFinite(options.encounter.hp)||options.encounter.hp<=0||options.encounter.hp>1e8||!Number.isFinite(options.encounter.damage)||options.encounter.damage<=0||typeof options.encounter.boss!=='boolean'||options.practice))throw Error('잘못된 모험 설정이에요.');
   this.maxHp=this.profileMaxHp(options);this.hp=this.maxHp;
   this.session=`hunt-${globalThis.crypto?.randomUUID?.()??++runtimeSerial}`;
   this.reset();
@@ -120,7 +120,7 @@ export class HuntingRuntime{
       if(this.hp===0){this.meal=null;this.hp=this.maxHp;this.invincibleUntil=this.time+3;this.effects=[];events.push({type:'retreat',...HUNT_CAMP});for(const enemy of this.enemies){enemy.telegraph=undefined;enemy.ready=this.time+3;enemy.x=enemy.spawn.x;enemy.z=enemy.spawn.z;if(this.options.encounter?.boss){enemy.hp=enemy.maxHp;enemy.pattern=0;this.bossStarted=null;}enemy.state=enemy.hp>0?'idle':'defeated';}return;}}
      if(e.type==='charge'||e.telegraph.kind==='charge'){e.x=e.telegraph.x;e.z=e.telegraph.z;}e.telegraph=undefined;e.state='recovery';e.ready=this.time+1.5;}continue;}
    if(e.ready>this.time)continue;e.state='idle';const d=distance(e,player),range=e.type==='ranged'?10:e.type==='charge'?6:2;
-   if(this.options.encounter?.boss&&d<14){const phase=e.hp<=e.maxHp*.5?2:1,kind=(['slam','ring','charge'] as const)[e.pattern++%3];e.telegraph={x:kind==='ring'?e.x:player.x,z:kind==='ring'?e.z:player.z,radius:kind==='ring'?8:kind==='charge'?2.4:3,remaining:kind==='ring'?1.8:phase===2?1:1.4,innerRadius:kind==='ring'?2.8:0,kind};e.state='telegraph';continue;}
+   if(this.options.encounter?.boss&&d<14){const phase=e.hp<=e.maxHp*.5?2:1,outer=this.options.encounter.id==='world2-5-boss';const attacks=outer?(phase===2?['ring','charge','slam','charge'] as const:['charge','ring','slam'] as const):['slam','ring','charge'] as const;const kind=attacks[e.pattern++%attacks.length];e.telegraph={x:kind==='ring'?e.x:player.x,z:kind==='ring'?e.z:player.z,radius:kind==='ring'?(outer?10:8):kind==='charge'?(outer?3.1:2.4):(outer?4:3),remaining:kind==='ring'?1.8:phase===2?1:1.4,innerRadius:kind==='ring'?(outer?3.5:2.8):0,kind};e.state='telegraph';continue;}
    if(d<=range){const duration=e.type==='melee'?.9:1.2;e.telegraph={x:player.x,z:player.z,radius:e.type==='melee'?1.8:e.type==='charge'?2:1.5,remaining:duration};e.state='telegraph';}
    else if(d<14&&!this.options.practice){const move=Math.min((e.type==='charge'?1.8:1.4)*dt,d-range);e.x+=(player.x-e.x)/d*move;e.z+=(player.z-e.z)/d*move;}
   }

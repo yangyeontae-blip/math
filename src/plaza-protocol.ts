@@ -2,8 +2,8 @@ import {isBlockedNickname} from './nickname';
 export const PLAZA_VERSION = 1;
 export const PLAZA_ROOM = 'central-plaza-v1';
 export const PLAZA_CAPACITY = 128;
-export const PLAZA_AVATAR_CATALOG=2;
-export const AVATAR_LIMITS = {character:4,outfit:32,weapon:39,hairstyle:10,face:14,pet:24,ride:24} as const;
+export const PLAZA_AVATAR_CATALOG=3;
+export const AVATAR_LIMITS = {character:4,outfit:32,weapon:39,hairstyle:13,face:17,pet:24,ride:24} as const;
 export const JOB_TITLES = {
  novice:['새싹 모험가','새싹 모험가','새싹 모험가','새싹 모험가'],
  knight:['새싹 모험가','기사','수호기사','고대숲 기사'],
@@ -19,7 +19,21 @@ export interface PlazaProfile {
  job:keyof typeof JOB_TITLES; rank:number; achievement:number; gradeTitle:number; multiplicationTitle:boolean;
 }
 /** Older web/app clients keep seeing the same friend, with a similar legacy model. */
-export function compatiblePlazaProfile(p:PlazaProfile,catalog:number|undefined){if(catalog===PLAZA_AVATAR_CATALOG||p.weapon<36&&p.outfit<29&&p.pet<21&&p.ride<19)return p;return {...p,weapon:p.weapon<36?p.weapon:33+p.weapon-36,outfit:p.outfit<29?p.outfit:26+p.outfit-29,pet:p.pet<21?p.pet:([1,0,12][p.pet-21]??-1),ride:p.ride<19?p.ride:([1,3,7,17,6][p.ride-19]??-1)};}
+export function compatiblePlazaProfile(p:PlazaProfile,catalog:number|undefined) {
+ if (catalog === PLAZA_AVATAR_CATALOG) return p;
+ const classicLook = p.hairstyle < 10 && p.face < 14;
+ const classicGear = p.weapon < 36 && p.outfit < 29 && p.pet < 21 && p.ride < 19;
+ if (classicLook && (catalog === 2 || classicGear)) return p;
+ const look = { ...p, hairstyle: p.hairstyle < 10 ? p.hairstyle : 0, face: p.face < 14 ? p.face : 0 };
+ if (catalog === 2 || classicGear) return look;
+ return { ...look, weapon:p.weapon<36?p.weapon:33+p.weapon-36, outfit:p.outfit<29?p.outfit:26+p.outfit-29, pet:p.pet<21?p.pet:([1,0,12][p.pet-21]??-1), ride:p.ride<19?p.ride:([1,3,7,17,6][p.ride-19]??-1) };
+}
+export function forestLevelTitle(level:number) {
+ if (level >= 300) return '베리숲 신';
+ if (level >= 100) return '베리숲의 전설';
+ if (level >= 50) return '베리숲 지킴이';
+ return '';
+}
 export interface PlazaPose {x:number;y:number;z:number;angle:number}
 export interface PlazaPlayer {id:string;profile:PlazaProfile;pose:PlazaPose;role?:'player'|'operator'}
 const integer=(v:unknown,lo:number,hi:number):v is number=>Number.isSafeInteger(v)&&Number(v)>=lo&&Number(v)<=hi;
@@ -35,7 +49,7 @@ export function parsePlazaProfile(value:unknown):PlazaProfile|null {
 export function profileTitles(p:PlazaProfile) {
  const job=JOB_TITLES[p.job][p.rank];
  const special=p.pet===20?'뽀짝이의 수호자':p.gradeTitle?p.gradeTitle+'학년 수학 탐험가':p.achievement?ADVENTURE_TITLES[p.achievement]:p.multiplicationTitle?'곱셈숲 탐험가':'';
- return {nickname:p.nickname,title:job+(special?' · '+special:''),legendary:p.pet===20};
+ return {nickname:p.nickname,title:[job,special,forestLevelTitle(p.level)].filter(Boolean).join(' · '),legendary:p.pet===20};
 }
 export function parsePlazaPose(value:unknown):PlazaPose|null {
  if(!value||typeof value!=='object')return null;const p=value as PlazaPose;

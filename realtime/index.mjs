@@ -30,7 +30,7 @@ export class SharedPlaza extends DurableObject {
  sessions(){return this.ctx.getWebSockets().map(ws=>[ws,ws.deserializeAttachment()]).filter(([ws,s])=>s&&ws.readyState===WebSocket.OPEN);}
  public(s,catalog=PLAZA_AVATAR_CATALOG){return {id:s.id,profile:compatiblePlazaProfile(s.profile,catalog),pose:s.pose,role:this.social.role(s)};}
  send(ws,value){try{ws.send(JSON.stringify(value));return true;}catch{return false;}}
- broadcast(value,except){const raw=JSON.stringify(value);let legacy;for(const [ws,s] of this.sessions())if(s.joined&&ws!==except){try{if(value.type==='upsert'&&s.avatarCatalog!==PLAZA_AVATAR_CATALOG){legacy??=JSON.stringify({...value,player:{...value.player,profile:compatiblePlazaProfile(value.player.profile,1)}});ws.send(legacy);}else ws.send(raw);}catch{}}}
+ broadcast(value,except){const raw=JSON.stringify(value);const legacy=new Map();for(const [ws,s] of this.sessions())if(s.joined&&ws!==except){try{const catalog=s.avatarCatalog??1;if(value.type==='upsert'&&catalog!==PLAZA_AVATAR_CATALOG){if(!legacy.has(catalog))legacy.set(catalog,JSON.stringify({...value,player:{...value.player,profile:compatiblePlazaProfile(value.player.profile,catalog)}}));ws.send(legacy.get(catalog));}else ws.send(raw);}catch{}}}
  queuePose(s){this.pendingPoses.set(s.id,{id:s.id,pose:s.pose});if(this.poseTimer===null)this.poseTimer=setTimeout(()=>this.flushPoses(),100);}
  flushPoses(){this.poseTimer=null;const sessions=this.sessions(),alive=new Set(sessions.filter(([,s])=>s.joined).map(([,s])=>s.id));const players=[...this.pendingPoses.values()].filter(p=>alive.has(p.id));this.pendingPoses.clear();if(!players.length)return;const raw=JSON.stringify({type:'poses',players}),legacy=players.map(p=>[p.id,JSON.stringify({type:'pose',...p})]);for(const [ws,s] of sessions){if(!s.joined)continue;try{if(s.batchedPoses)ws.send(raw);else for(const [id,value] of legacy)if(id!==s.id)ws.send(value);}catch{}}}
 
@@ -62,9 +62,9 @@ export class SharedPlaza extends DurableObject {
    if(s.joining)return;s.joining=true;ws.serializeAttachment(s);
    const profile=parsePlazaProfile(m.profile),pose=parsePlazaPose(m.pose);
    if(!profile||!pose){this.send(ws,{type:'error',code:'profile'});ws.close(1008,'profile');return;}
-   await this.social.prepare(s,m);s.joined=true;s.joining=false;s.profile=profile;s.pose=pose;s.moveAt=now;s.profileAt=now;s.batchedPoses=m.batchedPoses===true;s.avatarCatalog=m.avatarCatalog===PLAZA_AVATAR_CATALOG?PLAZA_AVATAR_CATALOG:1;
+   await this.social.prepare(s,m);s.joined=true;s.joining=false;s.profile=profile;s.pose=pose;s.moveAt=now;s.profileAt=now;s.batchedPoses=m.batchedPoses===true;s.avatarCatalog=m.salonCatalog===true||m.avatarCatalog===PLAZA_AVATAR_CATALOG?PLAZA_AVATAR_CATALOG:m.avatarCatalog===2?2:1;
    ws.serializeAttachment(s);
-   this.send(ws,{type:'welcome',id:s.id,room:PLAZA_ROOM,role:this.social.role(s),operatorUntil:s.operatorUntil,features:{chat:!!s.chatEnabled,operator:true},players:this.sessions().filter(([other,a])=>other!==ws&&a.joined).map(([,a])=>this.public(a,s.avatarCatalog??1)).slice(0,s.batchedPoses?PLAZA_CAPACITY-1:63)});
+   this.send(ws,{type:'welcome',id:s.id,room:PLAZA_ROOM,role:this.social.role(s),operatorUntil:s.operatorUntil,features:{chat:!!s.chatEnabled,operator:true,avatarCatalog:PLAZA_AVATAR_CATALOG},players:this.sessions().filter(([other,a])=>other!==ws&&a.joined).map(([,a])=>this.public(a,s.avatarCatalog??1)).slice(0,s.batchedPoses?PLAZA_CAPACITY-1:63)});
    this.broadcast({type:'upsert',player:this.public(s)},ws);await this.social.welcome(ws,s);return;
   }
   if(!s.joined){ws.close(1008,'join_required');return;}
