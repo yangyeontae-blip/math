@@ -9,14 +9,29 @@ test('hunting grants one saved reward, pauses, reloads at camp and returns to th
  await page.reload({waitUntil:'domcontentloaded'});await page.locator('#continue').click();await expect(page.locator('.location-pill')).toContainText('가시덩굴');const back=await page.evaluate(()=>({s:window.__berry.getState(),h:window.__berry.getWorld().huntingStatus}));expect(back.s.career.stats.defeats).toBe(1);expect(back.h.playerHp).toBe(back.h.maxHp);expect(back.h.safe).toBe(true);
  await page.locator('[data-career-action="exit-combat"]').click();await expect(page.locator('.location-pill')).toContainText('중앙 광장');expect(await page.evaluate(()=>window.__berry.getState().career.location)).toBeNull();
 });
+async function openSchoolMenu(page){
+ if(!await page.evaluate(()=>window.__berry.getWorld().inAcademy)){
+  await page.locator('#stage-map').click();
+  await page.locator('[data-nav="academy"]').first().click();
+  await expect(page.locator('.location-pill')).toContainText('모험학교');
+ }
+ await page.evaluate(()=>{
+  const world=window.__berry.getWorld(),teacher=world.entities.find(entity=>entity.id==='academyTeacher');
+  world.player.position.set(teacher.x,0,teacher.z+.6);
+ });
+ await expect(page.locator('#interact')).toContainText('스킬 배우기');
+ if(await page.locator('#touch-talk').isVisible())await page.locator('#touch-talk').click();
+ else await page.keyboard.press('e');
+ await expect(page.locator('.career-howto')).toBeVisible();
+}
 test('three knight advancements require real practice and preserve a second job loadout',async({page})=>{
- await start(page,60);await page.locator('#academy-open').click();await page.locator('#academy-walk').click();await page.locator('#academy-open').click();await page.locator('[data-career-action="choose-job"][data-job="knight"]').click();
+ await start(page,60);await openSchoolMenu(page);await page.locator('[data-career-action="choose-job"][data-job="knight"]').click();
  for(const rank of [1,2,3]){
   await page.locator('[data-career-action="next-career-step"]').click();await expect(page.locator('#career-hud')).toBeVisible();
   if(rank===1){await page.locator('#career-hud [data-cast-skill="crescent"]').click();await page.locator('#career-hud [data-cast-skill="charge"]').click();}
   else if(rank===2)await page.locator('#career-hud [data-cast-skill="roots"]').click();
   else {await page.locator('#career-hud [data-cast-skill="guardian"]').click();await page.keyboard.down('f');}
-  await expect.poll(()=>page.evaluate(()=>window.__berry.getState().career.trials.knight),{timeout:30000}).toBe(rank);await page.keyboard.up('f');await page.locator('[data-career-action="exit-combat"]').click();await page.locator('#academy-open').click();await page.locator('[data-career-action="next-career-step"]').click();
+  await expect.poll(()=>page.evaluate(()=>window.__berry.getState().career.trials.knight),{timeout:30000}).toBe(rank);await page.keyboard.up('f');await page.locator('[data-career-action="exit-combat"]').click();await openSchoolMenu(page);await page.locator('[data-career-action="next-career-step"]').click();
   expect(await page.evaluate(()=>window.__berry.getState().career.ranks.knight)).toBe(rank);await expect(page.locator('#career-title')).toHaveText(['','기사 · 1차','수호기사 · 2차','고대숲 기사 · 3차'][rank]);
  }
  const first=await page.evaluate(()=>structuredClone(window.__berry.getState().career));await page.locator('[data-career-action="choose-job"][data-job="mage"]').click();await page.locator('[data-career-action="choose-job"][data-job="knight"]').click();const restored=await page.evaluate(()=>window.__berry.getState().career);expect(restored.loadouts.knight).toEqual(first.loadouts.knight);expect(restored.ranks.knight).toBe(3);expect(restored.stats.defeats).toBe(0);expect(await page.evaluate(()=>window.__berry.getState().berries)).toBe(0);

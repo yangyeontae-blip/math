@@ -63,12 +63,14 @@ test('World 2 release: secret merchant and salon work through their world intera
   if(info.project.name==='mobile')await page.locator('.talk-bubble').click();else await page.keyboard.press('e');
  }
  await expect(page.locator('.salon-card')).toHaveCount(13);
- await page.locator('[data-look="10"]').click();
+ const mirror = await page.locator('.salon-stage canvas').elementHandle();
+ await page.locator('[data-look="10"]').click({timeout:45000});
+ expect(await mirror.evaluate(canvas=>canvas===document.querySelector('.salon-stage canvas'))).toBe(true);
  await expect(page.locator('.salon-mirror h3')).toContainText('깔끔한 민머리');
  const beforeSalon=await page.evaluate(()=>window.__berry.getState().berries);
  await page.locator('#buy-look').click();
  expect(await page.evaluate(()=>window.__berry.getState().berries)).toBe(beforeSalon-150);
- await page.locator('[data-beauty-tab="face"]').click();
+ await page.locator('[data-beauty-tab="face"]').click({timeout:45000});
  await expect(page.locator('.salon-card')).toHaveCount(17);
  await page.screenshot({path:info.outputPath('salon-new-styles.png')});
  await page.evaluate(()=>window.__berry.closeModal());

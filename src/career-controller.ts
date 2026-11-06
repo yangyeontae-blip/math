@@ -118,7 +118,21 @@ export function mountCareer(h:Hooks){
   else if(action==='reset-training'&&trainingSetup){held=false;completed=false;h.world().enterTraining(s,{...trainingSetup,skills:[...trainingSetup.skills]});h.refresh();render();}
   else if(action==='retry-save'){h.persist();if(h.stored()){saveBlocked=false;h.world().setPaused(false);h.toast('저장했어요. 사냥을 계속해요.');render();}}
  }
- bar.addEventListener('click',e=>{const b=(e.target as HTMLElement).closest<HTMLElement>('[data-cast-skill]');if(b&&isSkill(b.dataset.castSkill))cast(b.dataset.castSkill);else if((e.target as HTMLElement).closest('#academy-open'))showSchool();});
+ let skillBarCollapsed=false;
+ function updateSkillBarToggle(){
+  const toggle=bar.querySelector<HTMLButtonElement>('#skill-bar-toggle')!;
+  bar.querySelector<HTMLElement>('#exploration-skill-slots')!.hidden=skillBarCollapsed;
+  toggle.setAttribute('aria-expanded',String(!skillBarCollapsed));
+  toggle.querySelector('span')!.textContent=skillBarCollapsed?'▴':'▾';
+  toggle.querySelector('small')!.textContent=skillBarCollapsed?'스킬 펼치기':'스킬 접기';
+  bar.classList.toggle('is-collapsed',skillBarCollapsed);
+ }
+ bar.addEventListener('click',e=>{
+  const target=e.target as HTMLElement;
+  if(target.closest('#skill-bar-toggle')){skillBarCollapsed=!skillBarCollapsed;updateSkillBarToggle();return;}
+  const skill=target.closest<HTMLElement>('[data-cast-skill]')?.dataset.castSkill;
+  if(isSkill(skill))cast(skill);
+ });
  hud.addEventListener('click',e=>{const b=(e.target as HTMLElement).closest<HTMLElement>('[data-career-action]');if(b?.dataset.careerAction==='cast-skill'){const slot=Number(b.dataset.slot),s=h.state();const id=h.world().trainingStatus?trainingSlots()[slot]:s?.career.loadouts[s.career.job??'novice'][slot];if(id)cast(id);}else onAction(e);});
  hud.addEventListener('pointerdown',e=>{if((e.target as HTMLElement).closest('[data-career-action="attack"]')&&attackPointer===null){e.preventDefault();attackPointer=e.pointerId;held=true;hud.setPointerCapture(e.pointerId);h.world().huntAttack();}});
  const releaseAttack=(e:Event)=>{if((e as PointerEvent).pointerId===attackPointer){held=false;attackPointer=null;}};
@@ -140,7 +154,7 @@ export function mountCareer(h:Hooks){
    updateHud({supplies,hp:snap.playerHp,maxHp:snap.maxHp,target:target?{name:world2?(world2.boss?worldTwoBoss(world2.region)!.name:WORLD_TWO_REGIONS[world2.region].enemyNames[target.type]):({melee:'덩굴 통통이',charge:'가시 돌진이',ranged:'씨앗 마법이'}[target.type]),hp:target.hp,maxHp:target.maxHp}:null,skills:slots.map(id=>id?{...skillVM(id),unlocked:true,remaining:w.skillState(id).cooldown,active:w.skillState(id).active}:null),status:text+(snap.supplies.mealRemaining>0?' · 음식 회복 '+Math.ceil(snap.supplies.mealRemaining)+'초':''),training:!!training},slots.join('|')+'|'+target?.id+'|'+!!training+'|'+saveBlocked+'|'+supplies?.map(item=>item.id).join('|'),`<div class="career-combat-menu"><button data-career-action="exit-combat">${training?'수련 마치기':'광장으로 돌아가기'}</button>${!training?'<button data-career-action="show-supplies">음식·물약 가방</button>':''}${world2?'<button data-career-action="open-world2">군도 지도 · 진행</button>':''}${training?'<button data-career-action="reset-training">처음부터 연습</button>':''}${saveBlocked?'<button data-career-action="retry-save">다시 저장</button>':''}</div>`);
    if(training?.complete&&!completed){completed=true;if(trial)recordCareerTrial(s.career,trial.job,trial.rank);if(practiceSkill&&s.career.learned.includes(practiceSkill)&&!s.career.practiced.includes(practiceSkill))s.career.practiced.push(practiceSkill);mirror();h.persist();h.toast(trial?'전직 수련을 마쳤어요! 학교에서 전직하세요.':'✦ 수련 완료! 모험 기록에 남겼어요.');}
   }else{
-   const slots=s.career.loadouts[s.career.job??'novice'];const key=slots.join('|')+s.career.learned.join('|');if(skillKey!==key){skillKey=key;bar.innerHTML=slots.map((id,i)=>`<button ${id?`data-cast-skill="${id}"`:''} ${!id?'disabled':''}><kbd>${i+1}</kbd>${id?renderSkillIcon(id,ACADEMY_SKILLS.findIndex(a=>a.id===id)):'<span>＋</span>'}<small>${id?skillInfo(id).name:'빈 칸'}</small><span class="academy-cooldown"></span></button>`).join('')+'<button id="academy-open" class="academy-menu-button" aria-label="모험학교와 스킬 안내">🏛<small>학교</small></button>';}
+   const slots=s.career.loadouts[s.career.job??'novice'];const key=slots.join('|')+s.career.learned.join('|');if(skillKey!==key){skillKey=key;bar.innerHTML='<div id="exploration-skill-slots" class="academy-slots">'+slots.map((id,i)=>`<button ${id?`data-cast-skill="${id}"`:''} ${!id?'disabled':''}><kbd>${i+1}</kbd>${id?renderSkillIcon(id,ACADEMY_SKILLS.findIndex(a=>a.id===id)):'<span>＋</span>'}<small>${id?skillInfo(id).name:'빈 칸'}</small><span class="academy-cooldown"></span></button>`).join('')+'</div><button type="button" id="skill-bar-toggle" class="academy-toggle-button" aria-controls="exploration-skill-slots"><span aria-hidden="true"></span><small></small></button>';updateSkillBarToggle();}
    for(const b of bar.querySelectorAll<HTMLButtonElement>('[data-cast-skill]')){const id=b.dataset.castSkill as SkillId,st=w.skillState(id);b.disabled=st.cooldown>0||w.paused;b.classList.toggle('is-active',st.active);b.querySelector('.academy-cooldown')!.textContent=st.active?'사용 중':st.cooldown?st.cooldown+'초':'준비됨';}
   }status.textContent='';
  }

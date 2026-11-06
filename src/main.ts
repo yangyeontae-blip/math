@@ -71,7 +71,7 @@ import './adventure.css';
 import './navigation.css';
 import { toolSpec, toolHtml, adjustTool } from './learning-tools';
 
-const CLIENT_BUILD = '2026-11-06.outer-isles.2';
+const CLIENT_BUILD = '2026-11-06.outer-isles.3';
 document.documentElement.dataset.clientBuild = CLIENT_BUILD;
 
 const $ = <T extends HTMLElement = HTMLElement>(selector: string) => document.querySelector<T>(selector)!;
@@ -1727,10 +1727,9 @@ function openPotionShop(group:'recovery'|'boost'='boost') {
 
 function openBeauty(kind: 'hairstyle' | 'face' = 'hairstyle', selectedId?: number) {
   if (!state) return;
-  rememberMenu('beauty', () => openBeauty(kind, selectedId));
-
-  if (!state) return;
-  const s = state, items = kind === 'hairstyle' ? HAIRSTYLES : FACES, owned = kind === 'hairstyle' ? s.hairstyles : s.faces, id = selectedId ?? s[kind];
+  const s = state, items = kind === 'hairstyle' ? HAIRSTYLES : FACES, owned = kind === 'hairstyle' ? s.hairstyles : s.faces;
+  let id = selectedId ?? s[kind];
+  rememberMenu('beauty', () => openBeauty(kind, id));
   const descriptions = kind === 'hairstyle' ? ['내 캐릭터의 편안한 기본 스타일', '리본으로 묶은 사랑스러운 양갈래', '얼굴을 감싸는 산뜻한 단발', '폭신하게 볼륨을 살린 웨이브', '별빛을 닮은 경쾌한 포니테일', '구름처럼 둥근 두 개의 번', '꽃을 곁들인 발랄한 땋은머리', '동글동글 포근한 꿀벌 번', '살구빛 분위기의 부드러운 웨이브', '햇살 장식으로 완성한 특별한 머리', '머리카락 없이 둥근 머리가 드러나는 깔끔한 스타일', '두 가닥을 땋아 별 장식을 달았어요', '솜구름처럼 풍성하게 올리고 금빛 별핀을 꽂았어요'] : ['따뜻하게 웃는 해맑은 표정', '맑은 빛을 담은 커다란 눈', '자신감이 느껴지는 또렷한 눈썹', '장난기 가득한 고양이 미소', '반짝이는 별을 담은 눈', '나른하고 편안한 달빛 표정', '귀여운 앞니가 보이는 미소', '설렘을 담은 하트 모양 눈', '번개처럼 힘찬 모험가의 눈', '무지개를 닮은 환한 미소', '햇살처럼 포근한 초승달 눈', '꿀방울처럼 달콤한 반짝임', '해바라기처럼 밝게 빛나는 눈', '별숲을 지키는 용기 있는 눈', '혜성 꼬리를 닮은 반짝이는 한쪽 눈', '수정처럼 각진 안경과 차분한 미소', '딸기빛 주근깨와 장난스러운 미소'];
   openModal(title('가영이의 스타일 살롱', '오늘은 어떤 모습으로 떠날까요?') + `<div class="salon-banner"><div><small>✦ BERRY FOREST STYLE SALON ✦</small><strong>내 취향을 골라, 나다운 반짝임</strong><small>모든 스타일을 직접 골라요 · 보유한 모습은 무료로 다시 착용</small></div><b class="salon-balance">🍓 ${s.berries.toLocaleString()}베리</b></div><div class="salon-tabs" role="group" aria-label="꾸미기 종류"><button data-beauty-tab="hairstyle" class="${kind === 'hairstyle' ? 'active' : ''}" aria-pressed="${kind === 'hairstyle'}">💇 헤어 컬렉션</button><button data-beauty-tab="face" class="${kind === 'face' ? 'active' : ''}" aria-pressed="${kind === 'face'}">✨ 얼굴 컬렉션</button></div><div class="salon-layout"><section class="salon-catalog"><h3 class="salon-ribbon">${kind === 'hairstyle' ? 'HAIR · 헤어' : 'FACE · 얼굴'} COLLECTION</h3><div class="salon-cards">${items.map((item, i) => `<button class="salon-card" data-look="${i}" aria-pressed="${id === i}">${s[kind] === i ? '<span class="salon-equipped">✓ 착용 중</span>' : ''}<span class="salon-portrait"><img data-salon-image="${i}" alt="${item.name} 미리 보기"></span><strong>${item.name}</strong><small>${owned[i] ? s[kind] === i ? '지금 나의 스타일' : '보유 · 무료 착용' : `🍓 ${item.price.toLocaleString()}베리`}</small></button>`).join('')}</div></section><aside class="salon-mirror" aria-label="선택한 스타일 미리 보기"><div id="shop-avatar" class="salon-stage"></div><h3 tabindex="-1">${items[id].name}</h3><p class="salon-description">${descriptions[id]}</p><button id="buy-look" class="primary wide" ${s[kind] === id ? 'disabled' : ''}>${s[kind] === id ? '✓ 지금 나의 스타일' : owned[id] ? '이 스타일로 바꾸기' : `🍓 ${items[id].price.toLocaleString()}베리로 구매·착용`}</button><p class="salon-note">미리 보기만으로 베리는 사용되지 않아요.<br>능력은 그대로, 개성은 마음껏!</p><p class="error" id="beauty-error" role="alert"></p></aside></div>`, 'shop-modal salon-modal');
   preview = new AvatarPreviewRuntime($('#shop-avatar'));
@@ -1754,7 +1753,28 @@ function openBeauty(kind: 'hairstyle' | 'face' = 'hairstyle', selectedId?: numbe
   requestAnimationFrame(renderPortrait);
   preview.showSalon(s.character, s.outfit, kind === 'hairstyle' ? id : s.hairstyle, kind === 'face' ? id : s.face);
   document.querySelectorAll<HTMLButtonElement>('[data-beauty-tab]').forEach(button => button.onclick = () => openBeauty(button.dataset.beautyTab as 'hairstyle' | 'face'));
-  document.querySelectorAll<HTMLButtonElement>('[data-look]').forEach(button => button.onclick = () => { const top = $('#modal').scrollTop; openBeauty(kind, Number(button.dataset.look)); if (matchMedia('(max-width: 680px)').matches) { const mirror = document.querySelector<HTMLElement>('.salon-mirror')!; $('#modal').scrollTop = mirror.offsetTop - 12; mirror.querySelector<HTMLElement>('h3')?.focus({ preventScroll: true }); } else { $('#modal').scrollTop = top; document.querySelector<HTMLButtonElement>(`[data-look="${button.dataset.look}"]`)?.focus({ preventScroll: true }); } });
+  const cards = [...document.querySelectorAll<HTMLButtonElement>('[data-look]')];
+  const heading = document.querySelector<HTMLElement>('.salon-mirror h3')!;
+  const buyButton = $('#buy-look') as HTMLButtonElement;
+  for (const card of cards) card.onclick = () => {
+    const selected = Number(card.dataset.look);
+    if (id !== selected) {
+      id = selected;
+      for (const choice of cards) choice.setAttribute('aria-pressed', String(choice === card));
+      heading.replaceChildren(...[...card.querySelector('strong')!.childNodes].map(node => node.cloneNode(true)));
+      $('.salon-description').textContent = descriptions[id];
+      $('#beauty-error').textContent = '';
+      buyButton.disabled = s[kind] === id;
+      buyButton.textContent = buyButton.disabled ? '✓ 지금 나의 스타일' : owned[id] ? '이 스타일로 바꾸기' : '🍓 '+items[id].price.toLocaleString()+'베리로 구매·착용';
+      requestAnimationFrame(() => {
+        if (preview === mirror && id === selected) mirror.showSalon(s.character, s.outfit, kind === 'hairstyle' ? id : s.hairstyle, kind === 'face' ? id : s.face);
+      });
+    }
+    if (matchMedia('(max-width: 680px)').matches) {
+      $('#modal').scrollTop = heading.closest<HTMLElement>('.salon-mirror')!.offsetTop - 12;
+      heading.focus({preventScroll:true});
+    }
+  };
   $('#buy-look').onclick = () => { try { const msg = buyLook(s, kind, id); audio.play('buy'); syncAvatar(); refresh(); persist(); const buy=$('#buy-look') as HTMLButtonElement;buy.disabled=true;buy.textContent='✓ 지금 나의 스타일';const balance=document.querySelector('.salon-balance');if(balance)balance.textContent='🍓 '+s.berries.toLocaleString()+'베리';document.querySelectorAll<HTMLButtonElement>('[data-look]').forEach(card=>{const look=Number(card.dataset.look);card.querySelector('.salon-equipped')?.remove();if(s[kind]===look){const label=document.createElement('span');label.className='salon-equipped';label.textContent='✓ 착용 중';card.prepend(label);}const small=card.querySelector('small');if(small)small.textContent=owned[look]?(s[kind]===look?'지금 나의 스타일':'보유 · 무료 착용'):'🍓 '+items[look].price.toLocaleString()+'베리';}); toast(msg); } catch (e) { $('#beauty-error').textContent = (e as Error).message; } };
 }
 
