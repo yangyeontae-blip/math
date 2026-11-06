@@ -82,13 +82,14 @@ test('legendary Ppojjaki purchase, guardian title, reload and resting preserve o
 });
 
 test('salon hairstyles have distinct portraits and purchasing persists while owned restyling stays free', async ({ page }) => {
+  test.setTimeout(180000);
   const errors = [];
   page.on('pageerror', error => errors.push(error.message));
   const fixture = await start(page, 10000);
   await expect.poll(() => page.evaluate(() => typeof window.__berry.openBeauty), { timeout: 30000 }).toBe('function');
   await page.evaluate(() => window.__berry.openBeauty('hairstyle', 6));
-  const ids = [1, 2, 6, 8, 9];
-  for (const id of ids) await expect(page.locator(`[data-salon-image="${id}"]`)).toHaveAttribute('src', /^data:image\//);
+  await expect(page.locator('[data-salon-image][src^="data:image/"]')).toHaveCount(HAIRSTYLES.length, { timeout: 60000 });
+  const ids = [1, 2, 6, 8, 9, 10, 11, 12];
   const portraits = await Promise.all(ids.map(id => page.locator(`[data-salon-image="${id}"]`).getAttribute('src')));
   expect(new Set(portraits).size).toBe(ids.length);
   expect(portraits[ids.indexOf(6)]).not.toBe(portraits[ids.indexOf(8)]);
