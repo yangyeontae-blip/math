@@ -39,6 +39,8 @@ test('World 2 outer islands and the new solo guardian open from the real map and
  await expect.poll(()=>page.evaluate(()=>window.__berry.getWorld()?.inWorldTwo)).toEqual({region:5,boss:true});
  await expect.poll(()=>page.evaluate(()=>!!window.__berry.getWorld().scene.getObjectByName('astral-nebula-dragon'))).toBe(true);
  await page.evaluate(()=>window.__berry.getWorld().player.position.set(0,0,-7));
+ const attack=page.locator('[data-career-action="attack"]');
+ if(info.project.name==='mobile')await attack.tap();else await attack.click();
  await expect.poll(()=>page.evaluate(()=>window.__berry.getWorld().huntingStatus.bossFightSeconds),{timeout:30000}).toBeGreaterThan(0);
  await page.screenshot({path:info.outputPath('outer-guardian.png')});
  await page.reload({waitUntil:'domcontentloaded'});await page.locator('#continue').click();
