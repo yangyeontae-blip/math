@@ -173,7 +173,7 @@
     "src/forest-party-controller.ts": "c459d57c35fbf3fa80074faf3b2a59869a4e4ddca216b2e26881d09f71dbbb6e",
     "src/forest-party.css": "c8e6dafdaaa2737772694b843bfb9e9532a55f7ec8f3938a84efe1c3bdb543be",
     "tests/forest-party.test.ts": "7ba4b0075564ff725e865fc9ba8c10e87dbd9363cedce4b1bd618b8b17fea8ae",
-    "e2e/forest-party.spec.mjs": "9d143a4fd334fb073db54b4a59a74e37994a74f9690d7d8fbd7e561915ee5576",
+    "e2e/forest-party.spec.mjs": "1a5c12644239bc80aa0472217bdba45871ef2001d10ee40cd802e881a0411902",
     "src/forest-room.ts": "cf039d8ec262ef5a25c56f1dab49272803af9fc70b3b8d1e0505971b295d8e66",
     "src/hall.ts": "4a70faf8b1d2c019999e26df4b77a223b37460a32732c88c61319ee5c2a90930",
     "src/hall.css": "ea71f1e15901d465cacdff02993a857056bd1b5f5065ff19809df5f15c2fee2b",
@@ -184,5 +184,5 @@
     "realtime/party.mjs": "db95013ebd51258c03563cee055ea2e984fca96f89e6bba3b464349e0bc79fd9",
     "realtime/party.test.mjs": "2dc35a0838a32c80ce3dacced9cc6e8e583013122422fada670b2156a7b95109"
   },
-  "generation": "00f74582795dba5d67982b856749664dc443fef5b27ba88619875477e921bf8b"
+  "generation": "84cef79e310b03d219f33f18f27ddf68e54134ad3263d82e1c6c679261aefa92"
 }
