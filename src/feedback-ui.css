@@ -22,3 +22,5 @@
 .title-wardrobe{position:relative}.title-wardrobe>.close{position:absolute;right:0;top:0;min-width:48px;min-height:48px}.title-wardrobe>h2{padding-right:48px}
 
 .title-star .title-sparks>i:nth-child(even){color:#d3a349}.title-pet>b{filter:sepia(1)}.title-pet .title-sparks>i:nth-child(odd){font-size:0;width:6px;height:8px;border-radius:90% 0 90% 30%;background:#e7b293}
+
+@media(max-width:700px),(pointer:coarse){#hud .plaza-chat-form button,#hud .plaza-chat-form input,#hud #plaza-return,#modal .primary,#modal .secondary,#modal .close{min-height:48px;min-width:48px}}
