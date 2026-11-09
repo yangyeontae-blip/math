@@ -9,7 +9,7 @@ export class SafeSaveStore<T> {
   private parse(raw: string | null): T | null { return raw ? this.validate(JSON.parse(raw)) : null; }
   checkpoint(): T | null { try { return this.parse(this.storage().getItem(`${this.key}-checkpoint`)); } catch { return null; } }
   load(): T | null {
-    try { const raw = this.storage().getItem(this.key); const value = this.parse(raw); this.lastRaw = raw; return value; }
+    try { const raw = this.storage().getItem(this.key); const value = this.parse(raw); if(value){this.lastRaw=raw;this.status='saved';return value;} const backup=this.checkpoint();this.lastRaw=null;this.status=backup?'recovered':this.storage().getItem(this.key+'-checkpoint')?'error':'saved';return backup; }
     catch { const backup = this.checkpoint(); this.status = backup ? 'recovered' : 'error'; return backup; }
   }
   write(value: T, now = Date.now()): boolean {

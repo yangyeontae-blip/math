@@ -1,3 +1,4 @@
+import {titleDefinition,type TitleId} from './titles';
 import {isBlockedNickname} from './nickname';
 export const PLAZA_VERSION = 1;
 export const PLAZA_ROOM = 'central-plaza-v1';
@@ -16,7 +17,7 @@ export type PlazaEmote = keyof typeof PLAZA_EMOTES;
 export interface PlazaProfile {
  nickname:string; level:number; character:number; outfit:number; weapon:number;
  outfitLevel:number; weaponLevel:number; hairstyle:number; face:number; pet:number; ride:number;
- job:keyof typeof JOB_TITLES; rank:number; achievement:number; gradeTitle:number; multiplicationTitle:boolean;
+ job:keyof typeof JOB_TITLES; rank:number; achievement:number; gradeTitle:number; multiplicationTitle:boolean; selectedTitleId?:TitleId|null;
 }
 /** Older web/app clients keep seeing the same friend, with a similar legacy model. */
 export function compatiblePlazaProfile(p:PlazaProfile,catalog:number|undefined) {
@@ -44,12 +45,13 @@ export function parsePlazaProfile(value:unknown):PlazaProfile|null {
  if(typeof p.job!=='string'||!Object.hasOwn(JOB_TITLES,p.job)||!integer(p.rank,0,3)||!integer(p.achievement,0,ADVENTURE_TITLES.length-1)||!integer(p.gradeTitle,0,6)||typeof p.multiplicationTitle!=='boolean'||!integer(p.outfitLevel,0,3)||!integer(p.weaponLevel,0,3))return null;
  const result={nickname:p.nickname,level:p.level,job:p.job,rank:p.rank,achievement:p.achievement,gradeTitle:p.gradeTitle,multiplicationTitle:p.multiplicationTitle,outfitLevel:p.outfitLevel,weaponLevel:p.weaponLevel} as PlazaProfile;
  for(const [key,count] of Object.entries(AVATAR_LIMITS)){const id=p[key],min=key==='pet'||key==='ride'?-1:0;if(!integer(id,min,count-1))return null;(result as unknown as Record<string,unknown>)[key]=id;}
+ if(p.selectedTitleId!==undefined){const t=titleDefinition(p.selectedTitleId);if(p.selectedTitleId!==null&&!t)return null;if(t?.level&&Number(p.level)<t.level||t?.id==='ppojjaki'&&p.pet!==20||t?.grade&&p.gradeTitle!==t.grade||t?.id==='multiplication'&&!p.multiplicationTitle)return null;result.selectedTitleId=p.selectedTitleId as TitleId|null;}
  return result;
 }
 export function profileTitles(p:PlazaProfile) {
- const job=JOB_TITLES[p.job][p.rank];
- const special=p.pet===20?'뽀짝이의 수호자':p.gradeTitle?p.gradeTitle+'학년 수학 탐험가':p.achievement?ADVENTURE_TITLES[p.achievement]:p.multiplicationTitle?'곱셈숲 탐험가':'';
- return {nickname:p.nickname,title:[job,special,forestLevelTitle(p.level)].filter(Boolean).join(' · '),legendary:p.pet===20};
+ const legacy=p.pet===20?'ppojjaki':p.achievement?'expedition-'+p.achievement:p.level>=300?'level-300':p.level>=100?'level-100':p.level>=50?'level-50':p.gradeTitle?'grade-'+p.gradeTitle:p.multiplicationTitle?'multiplication':null;
+ const definition=titleDefinition(p.selectedTitleId===undefined?legacy:p.selectedTitleId);
+ return {nickname:p.nickname,title:definition?.name??'',legendary:definition?.id==='ppojjaki',definition:definition??null};
 }
 export function parsePlazaPose(value:unknown):PlazaPose|null {
  if(!value||typeof value!=='object')return null;const p=value as PlazaPose;

@@ -1,19 +1,8 @@
 import { pickQuestion, type Question, type Save } from './rules';
 import { stageMonsters, stageSize } from './stages';
 
-export const EXPEDITION_TITLES = [
-  { name: '모험가', need: 0 },
-  { name: '첫 발자국', need: 1 },
-  { name: '숲길 길잡이', need: 3 },
-  { name: '반짝임 수집가', need: 5 },
-  { name: '별사탕 해결사', need: 7 },
-  { name: '별빛 탐험가', need: 10 },
-  { name: '달빛 개척자', need: 15 },
-  { name: '해바라기 수호대', need: 20 },
-  { name: '베리숲 수호자', need: 30 },
-  { name: '두 숲의 전설', need: 50 },
-  { name: '영원한 별빛 영웅', need: 100 },
-] as const;
+export {EXPEDITION_TITLES} from './titles';
+import {EXPEDITION_TITLES} from './titles';
 
 // Every marker sits on one of the broad, unobstructed paths on all hunt maps.
 export const EXPEDITION_STAR_SPOTS = [

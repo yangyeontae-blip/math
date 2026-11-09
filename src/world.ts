@@ -1,3 +1,4 @@
+import {safeLanding} from './safe-landing';
 import {animateSkywardTree,createSkywardWeapon,createSkywardOutfit,createSkywardPet,createSkywardRide,type SkywardKit} from './skyward-art';
 import {ASTRAL_FORESTS,type AstralLocation} from './astral-study';
 import {PLANET_THEMES,planetThemeIndex,planetaryTerrain,worldTwoGateway,updatePlanetaryScenery,disposePlanetaryScenery} from './world-two-planet';
@@ -1077,7 +1078,7 @@ export class World {
     this.coins.forEach(c => c.mesh.visible = !expedition && !map.berries.includes(c.id));
     this.entities.forEach(e => { if (e.id.startsWith('monster')) e.mesh.visible = !expedition && (map.cleared || !map.monsters.includes(Number(e.id.slice(7)))); if (e.id.startsWith('tree')) e.mesh.visible = !expedition && !map.trees.includes(Number(e.id.slice(4))); });
     if (expedition) this.addExpeditionObjects(s);
-    const spawn = this.stage === 0 ? { x: 0, z: 8 } : { x: 0, z: stageSize(this.stage).z - 9 }; const p = fresh ? spawn : s.position; this.player.position.set(p.x, 0, p.z); this.placePetNearPlayer(); this.lastSafe.copy(this.player.position); this.follow.copy(this.player.position);
+    const spawn = this.stage === 0 ? { x: 0, z: 8 } : { x: 0, z: stageSize(this.stage).z - 9 }; const p = fresh ? spawn : s.position; this.player.position.set(p.x, 0, p.z); this.landSafely();
     this.onStageLoaded(this.stage);
   }
   enterAcademy(s:Save){
@@ -1619,10 +1620,10 @@ export class World {
   setAvatar(character: number, outfit: number, weapon: number, outfitLevel = 0, weaponLevel = 0, ride = -1, pet = -1, hairstyle = 0, face = 0) {
     this.stopRoomActivity();
     if (this.inHunting || this.inTraining) ride = -1;
-    const position = this.player.position.clone(), rotation = this.player.rotation.y;
+    const wasFlying=this.rideIndex>=0&&!!RIDES[this.rideIndex]?.flying; const position = this.player.position.clone(), rotation = this.player.rotation.y;
     this.scene.remove(this.player); this.disposeModel(this.player); this.player = makeCharacter(character, outfit, weapon, outfitLevel, weaponLevel, hairstyle, face); this.player.position.copy(position); this.player.rotation.y = rotation; this.player.scale.setScalar(matchMedia('(max-width: 600px)').matches ? 1.08 : 1); this.scene.add(this.player); this.addXray();
     if (this.petModel) { this.scene.remove(this.petModel); this.disposeModel(this.petModel); }
-    this.rideIndex = ride; this.petIndex = pet; this.petModel = null; this.petTargetId = null; this.rideAnimated = []; this.petAnimated = []; this.petIdle = 0; this.petReaction = null; this.petCharm = null;
+    this.rideIndex = ride; if(wasFlying&&!(ride>=0&&RIDES[ride]?.flying))this.landSafely(); this.petIndex = pet; this.petModel = null; this.petTargetId = null; this.rideAnimated = []; this.petAnimated = []; this.petIdle = 0; this.petReaction = null; this.petCharm = null;
     if (ride >= 0 && RIDES[ride]) { const body = this.player.userData.body as T.Group; body.position.y = riderHeight(ride); const rideModel = makeRide(ride); rideModel.traverse(o => { if (o.userData.rideWing || o.userData.ridePropeller || o.userData.rideGlow) this.rideAnimated.push(o); }); this.player.add(rideModel); }
     if(pet===PPOJJAK_PET_ID){const aura=createPpojjakiAura();aura.position.y=ride>=0?riderHeight(ride):0;this.player.add(aura);this.player.userData.ppoAura=aura;}
     if (pet === HERO_BREAD_PET_ID) { const aura = makeHeroPetAura(ride); this.player.add(aura); this.player.userData.heroPetAura = aura; }
@@ -1778,13 +1779,20 @@ export class World {
   celebrate() { this.burst(this.player.position, 0xffd371, 10); }
   private burst(pos: T.Vector3, color: number, count = 14) { if (matchMedia('(prefers-reduced-motion: reduce)').matches) return; const available = Math.max(0, 48 - this.particles.length); for (let i = 0; i < Math.min(count, available); i++) { const m = mesh(particleGeometry, color, pos.x, pos.y + .9, pos.z, this.scene); this.particles.push({ mesh: m, v: new T.Vector3((Math.random() - .5) * 3.5, 1.5 + Math.random() * 2, (Math.random() - .5) * 3.5), life: .75 }); } }
   private water(x: number, z: number) { return !this.inAstralStudy && !this.inHunting && !this.inTraining && !this.inAcademy && !this.inMarket && !this.inHomestead && !this.inRoom && !(this.stage === 0 && this.restoredBridge && x > 14 && x < 24 && Math.abs(z - 8) < 1) && isVillagePond(this.stage, x, z); }
+  private viewScale=1;
+  setViewScale(scale:number){if(![.82,1,1.25].includes(scale)||this.viewScale===scale)return;this.viewScale=scale;this.resize();this.renderOnce();}
+  private groundValid(x:number,z:number){
+    const bounds=this.inAstralStudy?{x:20.5,z:20.5}:this.inHunting?{x:21,z:21}:this.inAcademy?{x:8.5,z:this.inTraining?9.5:6.6}:this.inHomestead?{x:13.4,z:29.4}:this.inRoom?{x:6.8,z:5.2}:stageSize(this.stage);
+    return Number.isFinite(x)&&Number.isFinite(z)&&Math.abs(x)<bounds.x-1.6&&Math.abs(z)<bounds.z-1.6&&(!this.inHomestead||z>=-12.8)&&!this.water(x,z)&&!this.colliders.some(c=>(!c.id||this.entities.find(e=>e.id===c.id)?.mesh.visible)&&Math.hypot(x-c.x,z-c.z)<c.r+.4)&&!this.platforms.some(t=>Math.abs(x-t.x)<t.w/2+.3&&Math.abs(z-t.z)<t.d/2+.3);
+  }
+  private landSafely(){const p=safeLanding(this.player.position,this.lastSafe,(x,z)=>this.groundValid(x,z));this.player.position.set(p.x,0,p.z);this.lastSafe.copy(this.player.position);this.follow.copy(this.player.position);this.vy=0;this.grounded=true;this.placePetNearPlayer();}
   private resize() {
-    const w = this.container.clientWidth, h = this.container.clientHeight, span = w < 700 ? 13 : 14.5;
+    const w = this.container.clientWidth, h = this.container.clientHeight, span = (w < 700 ? 13 : 14.5)*this.viewScale;
     if (this.storyActivityFocus) {
       const landscape = w / h > 1.6 && h < 600, width = landscape ? 19 : 11.8, height = width * h / w;
       this.camera.left = landscape ? -6 : -width / 2; this.camera.right = landscape ? 13 : width / 2;
       this.camera.top = height * (landscape ? .5 : .34); this.camera.bottom = -height * (landscape ? .5 : .66);
-    } else { const half = Math.max(span * w / h, 8.5), tall = half * h / w; this.camera.left = -half; this.camera.right = half; this.camera.top = Math.max(span, tall); this.camera.bottom = -Math.max(span, tall); } // 세로 휴대폰에서도 좌우가 최소 17칸은 보여요.
+    } else { const half = Math.max(span * w / h, 8.5*this.viewScale), tall = half * h / w; this.camera.left = -half; this.camera.right = half; this.camera.top = Math.max(span, tall); this.camera.bottom = -Math.max(span, tall); } // 세로 휴대폰에서도 좌우가 최소 17칸은 보여요.
     this.camera.updateProjectionMatrix(); this.renderer.setSize(w, h);
   }
   /** 베리·꽃·눈알처럼 작은 조각은 그림자가 거의 보이지 않아요. 그림자 그리기에서 빼서 태블릿의 그리기 횟수를 크게 줄여요. */
@@ -1832,8 +1840,8 @@ export class World {
       const bounds = this.inAstralStudy ? {x:20.5,z:20.5} : this.inHunting ? { x: 21, z: 21 } : this.inAcademy ? {x:8.5,z:this.inTraining?9.5:6.6} : this.inHomestead ? { x: 13.4, z: 29.4 } : this.inRoom ? { x: 6.8, z: 5.2 } : stageSize(this.stage);
       // 가장자리에서는 순간이동 대신 덤불 앞에서 멈춰요. 물에 빠질 때만 안전한 곳으로 돌아가요.
       const edge = this.inHomestead || this.inRoom ? .5 : 1.6; p.x = T.MathUtils.clamp(p.x, -bounds.x + edge, bounds.x - edge); p.z = T.MathUtils.clamp(p.z, -bounds.z + edge, bounds.z - edge);
-      if ((this.inHomestead && p.z < -12.9) || Math.abs(p.x) > bounds.x - .5 || Math.abs(p.z) > bounds.z - .5 || (!flying && this.water(p.x, p.z) && p.y <= .2)) { p.copy(this.lastSafe); this.vy = 0; this.onRescue(); }
-      else if (this.grounded && (flying || !this.water(p.x, p.z)) && Math.abs(p.x) < bounds.x - 2 && Math.abs(p.z) < bounds.z - 2) this.lastSafe.copy(p);
+      if ((this.inHomestead && p.z < -12.9) || Math.abs(p.x) > bounds.x - .5 || Math.abs(p.z) > bounds.z - .5 || (!flying && this.water(p.x, p.z) && p.y <= .2)) { this.landSafely(); this.onRescue(); }
+      else if (this.grounded && !flying && p.distanceToSquared(this.lastSafe)>.01 && this.groundValid(p.x,p.z)) this.lastSafe.copy(p);
       if (this.petModel) { const walked = Math.hypot(p.x - oldX, p.z - oldZ); if (walked < 4) this.petWalk += walked; if (this.petWalk >= 1) { this.onPetWalk(this.petWalk); this.petWalk = 0; } }
       // 베리는 바닥의 수평 거리로 판정해 발판·점프·탈것 높이에서도 눈에 닿으면 수집됩니다.
       for (const c of this.coins) if (c.mesh.visible && berryWithinReach(p.x, p.z, c.mesh.position.x, c.mesh.position.z)) { c.mesh.visible = false; this.burst(c.mesh.position, 0xff9fb4, 6); this.onCollect(c.id); }

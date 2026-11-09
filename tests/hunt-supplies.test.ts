@@ -9,7 +9,7 @@ function injured(){const runtime=new HuntingRuntime({zone:0,level:60,power:1});f
 
 test('legacy six-potion v22 saves retain every item and progress, extending only the four empty recovery slots',()=>{
  const s=newSave('모험가',0);s.berries=1234;s.potions.stock=[3,2,1,4,5,6];s.potions.berryUntil=123456;s.potions.berryMultiplier=2;const before=structuredClone(s);
- const restored=validateSave(JSON.parse(JSON.stringify(s)));assert.equal(restored.version,24);assert.deepEqual(restored.potions.stock,[3,2,1,4,5,6,0,0,0,0]);assert.equal(restored.potions.berryUntil,before.potions.berryUntil);assert.deepEqual(restored.learning,before.learning);assert.deepEqual(restored.room,before.room);assert.equal(restored.berries,1234);
+ const restored=validateSave(JSON.parse(JSON.stringify(s)));assert.equal(restored.version,25);assert.deepEqual(restored.potions.stock,[3,2,1,4,5,6,0,0,0,0]);assert.equal(restored.potions.berryUntil,before.potions.berryUntil);assert.deepEqual(restored.learning,before.learning);assert.deepEqual(restored.room,before.room);assert.equal(restored.berries,1234);
  for(const stock of [[1,2,3,4,5,6,7],[-1,0,0,0,0,0],Array(11).fill(0)]){const invalid=structuredClone(before);invalid.potions.stock=stock;assert.throws(()=>validateSave(invalid));}
  assert.equal(LEGACY_POTION_COUNT,6);assert.equal(POTIONS.length,10);assert.equal(POTIONS[0].kind,'berry');assert.equal(POTIONS[5].kind,'xp');assert.equal(HUNT_RECOVERY_ITEMS.length,4);
 });

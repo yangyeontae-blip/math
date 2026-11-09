@@ -55,3 +55,6 @@ test('corrupt current save offers the valid checkpoint and storage failure stays
  await page.evaluate(()=>{window.__berry.getState().berries++;Storage.prototype.setItem=function(){throw new DOMException('full','QuotaExceededError');};window.__berry.persist();});
  await expect(page.locator('#save-status')).toContainText('저장 실패');
 });
+
+// Existing flows exercise the expanded HUD; feedback-upgrade separately tests the mobile first-run default.
+test.beforeEach(async({page})=>{await page.addInitScript(()=>{if(localStorage.getItem('berry-display-v1')===null)localStorage.setItem('berry-display-v1',JSON.stringify({clean:false,view:'normal'}));});});

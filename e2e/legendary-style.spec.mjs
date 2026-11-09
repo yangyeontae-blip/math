@@ -1,6 +1,8 @@
 import { test, expect } from '@playwright/test';
 import { newSave, HAIRSTYLES } from '../src/rules.ts';
 
+// Purchase, title selection and reload compile several 3D previews on software WebGL.
+test.describe.configure({timeout:180000});
 const SAVE = 'berry-forest-save-v1';
 async function saved(page) {
   return page.evaluate(key => JSON.parse(localStorage.getItem(key)), SAVE);
@@ -26,7 +28,7 @@ async function start(page, berries) {
 async function resume(page) {
   await page.reload({ waitUntil: 'domcontentloaded' });
   await page.locator('#continue').click();
-  await expect(page.locator('#hud')).toBeVisible({ timeout: 20000 });
+  await expect(page.locator('#hud')).toBeVisible({ timeout: 20000 });if(await page.getByRole('button',{name:'화면 펼치기',exact:true}).isVisible())await page.getByRole('button',{name:'화면 펼치기',exact:true}).click();
   await expect.poll(() => page.evaluate(() => !!window.__berry), { timeout: 30000 }).toBe(true);
 }
 function expectNoLearningCredit(state, fixture) {
@@ -58,8 +60,8 @@ test('legendary Ppojjaki purchase, guardian title, reload and resting preserve o
     return {present:!!aura, attached:aura?.parent===world.player, avatarVisible:world.player.visible, auraVisible:aura?.visible, parts:aura?.children.length??0};
   });
   expect(auraState).toEqual({present:true,attached:true,avatarVisible:true,auraVisible:true,parts:4});
-  await expect(page.locator('#guardian-title')).toBeVisible();
-  await expect(page.locator('#guardian-title')).toHaveText(/뽀짝이의\s*수호자/);
+  await page.evaluate(()=>window.__berry.openInventory('title'));await page.locator('[data-title-choice=ppojjaki]').click();await page.keyboard.press('Escape');await expect(page.locator('#level-milestone')).toBeVisible();
+  await expect(page.locator('#level-milestone')).toHaveText(/뽀짝이의\s*수호자/);
   await page.screenshot({path:test.info().outputPath('ppo-aura.png')});expectNoLearningCredit(state, fixture);
 
   await resume(page);
@@ -67,13 +69,13 @@ test('legendary Ppojjaki purchase, guardian title, reload and resting preserve o
   expect(state.pet).toBe(20);
   expect(state.pets['20']).toBe(true);
   expect(state.berries).toBe(0);
-  await expect(page.locator('#guardian-title')).toBeVisible();
+  await expect(page.locator('#level-milestone')).toBeVisible();
   await page.evaluate(() => window.__berry.openInventory('pet', 20));
   await expect(page.locator('#collection-rest')).toBeEnabled();
   await page.locator('#collection-rest').click();
   await expect.poll(async () => (await saved(page)).pet, { timeout: 30000 }).toBe(-1);
   await page.evaluate(() => window.__berry.closeModal());
-  await expect(page.locator('#guardian-title')).toBeHidden();
+  await expect(page.locator('#level-milestone')).toBeHidden();
   state = await saved(page);
   expect(state.pets['20']).toBe(true);
   expect(state.berries).toBe(0);
@@ -119,3 +121,6 @@ test('salon hairstyles have distinct portraits and purchasing persists while own
   expectNoLearningCredit(state, fixture);
   expect(errors).toEqual([]);
 });
+
+// Existing flows exercise the expanded HUD; feedback-upgrade separately tests the mobile first-run default.
+test.beforeEach(async({page})=>{await page.addInitScript(()=>{if(localStorage.getItem('berry-display-v1')===null)localStorage.setItem('berry-display-v1',JSON.stringify({clean:false,view:'normal'}));});});

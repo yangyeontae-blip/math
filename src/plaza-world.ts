@@ -1,10 +1,11 @@
+import {renderTitle} from './titles';
 import {animateSkywardTree} from './skyward-art';
 import type {PlazaChatMessage} from './plaza-social';
 import * as T from 'three';
 import {mergeGeometries} from 'three/addons/utils/BufferGeometryUtils.js';
 import {profileTitles,PLAZA_EMOTES,PLAZA_CAPACITY,type PlazaProfile,type PlazaPlayer,type PlazaEmote} from './plaza-protocol';
 type Model={root:T.Group;avatar:T.Group;pet:T.Group|null;dispose:()=>void};
-type Actor={state:PlazaPlayer;position:T.Vector3;angle:number;label:HTMLDivElement;name:HTMLElement;title:HTMLElement;bubble:HTMLElement;emoteUntil:number;phase:number;signature:string;model:Model|null};
+type Actor={state:PlazaPlayer;position:T.Vector3;angle:number;label:HTMLDivElement;name:HTMLElement;title:HTMLElement;bubble:HTMLElement;emoteUntil:number;phase:number;signature:string;appearance:string;model:Model|null};
 /** Merge opaque static pieces, keeping legs/arms and shader/instanced hair available for animation. */
 export function mergePlazaAvatar(root:T.Group){
  root.updateMatrixWorld(true);const body=root.userData.body as T.Group|undefined;
@@ -50,11 +51,11 @@ export class PlazaWorld {
   this.farRoot.name='plaza-distant-avatars';
  }
  private label(self=false){const root=document.createElement('div');root.className='plaza-nameplate'+(self?' is-self':'');root.hidden=true;const name=document.createElement('strong'),title=document.createElement('span'),bubble=document.createElement('b');bubble.className='plaza-emote';bubble.hidden=true;const speech=document.createElement('div'),text=document.createElement('span');speech.className='plaza-speech';speech.hidden=true;speech.setAttribute('aria-hidden','true');speech.append(text);root.append(speech,name,title,bubble);this.layer.append(root);return {root,name,title,bubble};}
- private identity(label:ReturnType<PlazaWorld['label']>,p:PlazaProfile,role='player'){const text=profileTitles(p);label.name.textContent=`Lv. ${p.level} ${text.nickname}`;label.title.textContent=(role==='operator'?'운영자 · ':'')+text.title;label.root.classList.toggle('is-legendary',text.legendary);label.root.dataset.nameLength=String(text.nickname.length+String(p.level).length+5);label.root.dataset.titleLength=String(text.title.length+(role==='operator'?6:0));label.root.dataset.plateWidth=String(Math.min(210,Math.max((text.nickname.length+String(p.level).length+7)*14,(text.title.length+2)*11)));}
+ private identity(label:ReturnType<PlazaWorld['label']>,p:PlazaProfile,role='player'){const text=profileTitles(p);label.name.textContent='Lv. '+p.level+' '+text.nickname;if(role==='operator'){const badge=document.createElement('small');badge.className='operator-mark';badge.textContent='운영자';label.name.append(badge);}label.title.innerHTML=text.definition?renderTitle(text.definition):'';label.root.classList.toggle('is-legendary',text.legendary);label.root.dataset.nameLength=String(text.nickname.length+String(p.level).length+5+(role==='operator'?4:0));label.root.dataset.titleLength=String(text.title.length);label.root.dataset.plateWidth=String(Math.min(210,Math.max((text.nickname.length+String(p.level).length+7)*14,(text.title.length+2)*11)));}
  setSelf(profile:PlazaProfile|null,player:T.Group,role='player'){this.self=player;this.selfProfile=profile;const signature=JSON.stringify([profile,role]);if(profile&&signature!==this.selfSignature)this.identity(this.own,profile,role);if(!profile)this.own.root.hidden=true;this.selfSignature=signature;}
- upsert(player:PlazaPlayer){let actor=this.peers.get(player.id);const signature=JSON.stringify([player.profile,player.role]);
-  if(!actor){const label=this.label();actor={state:player,position:new T.Vector3(player.pose.x,player.pose.y,player.pose.z),angle:player.pose.angle,label:label.root,name:label.name,title:label.title,bubble:label.bubble,emoteUntil:0,phase:0,signature,model:null};this.peers.set(player.id,actor);label.root.dataset.playerId=player.id;this.identity(label,player.profile,player.role);}
-  else {actor.state=player;if(signature!==actor.signature){actor.model?.root.removeFromParent();actor.model?.dispose();actor.model=null;actor.signature=signature;this.identity({root:actor.label,name:actor.name,title:actor.title,bubble:actor.bubble},player.profile,player.role);}}
+ upsert(player:PlazaPlayer){let actor=this.peers.get(player.id);const signature=JSON.stringify([player.profile,player.role]);const p=player.profile,appearance=JSON.stringify([p.character,p.outfit,p.weapon,p.outfitLevel,p.weaponLevel,p.hairstyle,p.face,p.pet,p.ride]);
+  if(!actor){const label=this.label();actor={state:player,position:new T.Vector3(player.pose.x,player.pose.y,player.pose.z),angle:player.pose.angle,label:label.root,name:label.name,title:label.title,bubble:label.bubble,emoteUntil:0,phase:0,signature,appearance,model:null};this.peers.set(player.id,actor);label.root.dataset.playerId=player.id;this.identity(label,player.profile,player.role);}
+  else {actor.state=player;if(signature!==actor.signature){if(appearance!==actor.appearance){actor.model?.root.removeFromParent();actor.model?.dispose();actor.model=null;actor.appearance=appearance;}actor.signature=signature;this.identity({root:actor.label,name:actor.name,title:actor.title,bubble:actor.bubble},player.profile,player.role);}}
  }
  remove(id:string){const actor=this.peers.get(id);if(!actor)return;this.removeSpeech(actor.label);actor.label.remove();actor.model?.root.removeFromParent();actor.model?.dispose();this.peers.delete(id);}
  clearPeers(){this.clearSpeech();for(const id of [...this.peers.keys()])this.remove(id);for(const part of this.far)part.mesh.count=0;}
@@ -85,11 +86,12 @@ export class PlazaWorld {
 
  update(dt:number,camera:T.Camera,player:T.Group,showPeers:boolean,active:boolean,low:boolean,reduced:boolean){
   this.clock+=dt;const now=performance.now();for(const [label,speech] of this.speeches)if(speech.expires<=now)this.removeSpeech(label);const width=this.layer.clientWidth,height=this.layer.clientHeight;const occupied:{x:number;top:number;bottom:number;width:number}[]=[];
+  const ownEffect=active&&!low&&!reduced;if(this.own.root.classList.contains('has-title-effects')!==ownEffect)this.own.root.classList.toggle('has-title-effects',ownEffect);
   if(this.selfProfile)this.place(this.own.root,player.position,this.selfProfile.ride>=0?4.4:3,camera,width,height,active,occupied);
   if(Number(this.own.bubble.dataset.until??0)<this.clock)this.own.bubble.hidden=true;
   if(!showPeers){if(this.peers.size)this.clearPeers();this.farRoot.removeFromParent();return;}
   if(this.farRoot.parent!==this.scene)this.scene.add(this.farRoot);
-  const sorted=[...this.peers.values()].sort((a,b)=>a.position.distanceToSquared(player.position)-b.position.distanceToSquared(player.position));let farCount=0,nearCount=0;
+  const sorted=[...this.peers.values()].sort((a,b)=>a.position.distanceToSquared(player.position)-b.position.distanceToSquared(player.position));let farCount=0,nearCount=0,effectCount=0;
   for(const actor of sorted){
    const target=actor.state.pose,p=actor.state.profile,beforeX=actor.position.x,beforeZ=actor.position.z;
    actor.position.lerp(this.targetPosition.set(target.x,target.y,target.z),1-Math.exp(-dt*14));actor.angle+=Math.atan2(Math.sin(target.angle-actor.angle),Math.cos(target.angle-actor.angle))*(1-Math.exp(-dt*14));
@@ -105,6 +107,7 @@ export class PlazaWorld {
    }
    if(!detail){for(const part of this.far){const offset=this.partPosition.copy(part.offset);if(p.ride>=0)offset.y+=.7;offset.applyAxisAngle(T.Object3D.DEFAULT_UP,actor.angle).add(actor.position);this.quaternion.setFromAxisAngle(T.Object3D.DEFAULT_UP,actor.angle);this.matrix.compose(offset,this.quaternion,part.scale);part.mesh.setMatrixAt(farCount,this.matrix);part.mesh.setColorAt(farCount,this.partColor.setHex(part.color(p)));}farCount++;}
    actor.bubble.hidden=this.clock>actor.emoteUntil;
+   const effect=active&&!low&&!reduced&&effectCount<3&&actor.position.distanceToSquared(player.position)<225&&!!profileTitles(p).definition;if(effect)effectCount++;if(actor.label.classList.contains('has-title-effects')!==effect)actor.label.classList.toggle('has-title-effects',effect);
    this.place(actor.label,actor.position,p.ride>=0?4.4:3,camera,width,height,active,occupied);
   }
   const cached=sorted.filter(a=>a.model&&!a.model.root.visible).reverse();let total=sorted.filter(a=>a.model).length;for(const a of cached){if(total<=(low?8:14))break;a.model!.root.removeFromParent();a.model!.dispose();a.model=null;total--;}
