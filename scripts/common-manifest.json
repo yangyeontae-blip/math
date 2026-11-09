@@ -159,10 +159,10 @@
     "src/titles.ts": "26484a2f6d53082bbf3dc32c8245c28576716f6e4c332582ad392b0410c1f483",
     "src/title-view.ts": "57cf1883d4486f43a49d94959ba293bec33d048c9cef569f433ffea0ae3c8118",
     "src/safe-landing.ts": "c3bb10a850a4946528cf1dfc9086a40af18c84e6743175526dd990a13cf83991",
-    "src/display-controls.ts": "c50e71783430397693763b09667c1b659b9f693cd9414ae6c97a20b06f5654c7",
+    "src/display-controls.ts": "862f98fac157b0d3a3f3e40cc0c2d14eb6d7f4c963946551a76589b3388a890d",
     "src/feedback-ui.css": "bee42fd57eb3e6928c2c8593232630cabbff0ebfe195300f4305514e863e8e28",
     "tests/feedback-upgrade.test.ts": "28775145f6eb3772c7203acbd0f940b34168a894a0ea71b42cd0eeb6589b9298",
-    "e2e/feedback-upgrade.spec.mjs": "5942d4e8d61e051709a0d27b26b7d9336f351009cd3d7c6a99f24bb862d4d23f"
+    "e2e/feedback-upgrade.spec.mjs": "a7cb88802f178b3e382e40bfcae4b3dbbcc84653e083715069615cfcc6cd8539"
   },
-  "generation": "1aa99e90e73af57bc02464e8717e4cd3c5bcf605806a3e4b81ba42226d7f430b"
+  "generation": "e3bd529ca808657653406e4c0eb9478576e12b78dfc75316ef780d1052d1875f"
 }
