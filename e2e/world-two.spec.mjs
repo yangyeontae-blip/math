@@ -25,7 +25,7 @@ test('World 2 and central teacher prioritize math learning and the ornate main g
 
 test('World 2 outer islands and the new solo guardian open from the real map and preserve their save location',async({page},info)=>{
  test.setTimeout(300000);
- await start(page,300,s=>{for(let id=0;id<6;id++)s.world2.regions[id]={beacons:[0,1,2],kills:6,claimed:true};});
+ await start(page,300,s=>{s.selectedTitleId='level-300';for(let id=0;id<6;id++)s.world2.regions[id]={beacons:[0,1,2],kills:6,claimed:true};});
  await expect(page.locator('#level-milestone')).toContainText('베리숲 신');
  await map(page);
  for(const region of [3,4,5]){

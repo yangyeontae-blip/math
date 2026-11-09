@@ -18,3 +18,5 @@
 #hud .plaza-tools{top:148px}#hud .plaza-status{min-height:48px}#hud.is-clean-screen .plaza-tools{top:150px}
 @media(max-width:700px){#hud .plaza-tools{top:171px}#hud.is-clean-screen .plaza-tools{top:133px}}
 @media(max-height:500px){#hud .plaza-tools{top:148px}#hud.is-clean-screen .plaza-tools{top:132px}}
+
+.title-wardrobe{position:relative}.title-wardrobe>.close{position:absolute;right:0;top:0;min-width:48px;min-height:48px}.title-wardrobe>h2{padding-right:48px}

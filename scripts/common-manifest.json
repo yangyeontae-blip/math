@@ -106,7 +106,7 @@
     "src/world-two-ui.ts": "ac5eeb4474e6c7538272edc96d7b785022c5e5629dc3b983fd720818800047b0",
     "src/world-two-models.ts": "1556cdc00a679e8e4565fb1f351db4037f00be9c0084544e1d7a69bea282e5cf",
     "tests/world-two.test.ts": "fcf110f37de7a85039b6083d0786c9bd6354cbf6bf43c6f1bde7a774925ab132",
-    "e2e/world-two.spec.mjs": "03e4c7d826f0d4d42b72d6a50d09fd01060ae4ba5014aafa62c86d5eb6b64668",
+    "e2e/world-two.spec.mjs": "2ceb166f03c583a5726b21d4ea0559e1d3af5b7582e2242cbc109f97690b9ed3",
     "src/plaza-protocol.ts": "03d278f2c7bf1a650f14dc94677539618c04badcd3cd808f29df3964cf00379e",
     "src/plaza-identity.ts": "3d2f8364be6649c6ae6ea65ad20fd59f30d3464f9832bdf9f3f91e9d6294e6f3",
     "src/plaza-client.ts": "f502ee271b364407987ad1e46c4302c20a834d7199b2fef77859aa01d4b55a8b",
@@ -160,9 +160,9 @@
     "src/title-view.ts": "bd26b7e3a7c9d445a2b2fa22b8d3f63a4486aa08c3e74ef8af086440f54b23c9",
     "src/safe-landing.ts": "c3bb10a850a4946528cf1dfc9086a40af18c84e6743175526dd990a13cf83991",
     "src/display-controls.ts": "c50e71783430397693763b09667c1b659b9f693cd9414ae6c97a20b06f5654c7",
-    "src/feedback-ui.css": "f850bd5ea6200589fb44f82e2466f0d8bd64b0f3a0128a605a5eae1c90f712cf",
+    "src/feedback-ui.css": "bbef6ae14bf9fee131a06ce0ff0f8ec6019da6976ec829ccc10f27cad5aac903",
     "tests/feedback-upgrade.test.ts": "2c185d89b6d21fa02278d843b94831ef00224cfd1bf351e7586d4c15e4a6027a",
     "e2e/feedback-upgrade.spec.mjs": "d236363c5a2573c5b4593df23b24b0f79d3ad4452144045bfcd7d43778fadb58"
   },
-  "generation": "615cc2e689f714ae26779238360dc14b1d658b43fbfd4e9bb7dcfa7388d3ff6f"
+  "generation": "2d98b979b773021f94a79bbcfd3afeb2edd63495345b289904b920bcfece715d"
 }
