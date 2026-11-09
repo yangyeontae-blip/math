@@ -160,9 +160,9 @@
     "src/title-view.ts": "57cf1883d4486f43a49d94959ba293bec33d048c9cef569f433ffea0ae3c8118",
     "src/safe-landing.ts": "c3bb10a850a4946528cf1dfc9086a40af18c84e6743175526dd990a13cf83991",
     "src/display-controls.ts": "c50e71783430397693763b09667c1b659b9f693cd9414ae6c97a20b06f5654c7",
-    "src/feedback-ui.css": "bbef6ae14bf9fee131a06ce0ff0f8ec6019da6976ec829ccc10f27cad5aac903",
+    "src/feedback-ui.css": "a1453c01a1525187315cb309c815c608234e44d990308bc46a04706c8c3c0a77",
     "tests/feedback-upgrade.test.ts": "2c185d89b6d21fa02278d843b94831ef00224cfd1bf351e7586d4c15e4a6027a",
     "e2e/feedback-upgrade.spec.mjs": "5942d4e8d61e051709a0d27b26b7d9336f351009cd3d7c6a99f24bb862d4d23f"
   },
-  "generation": "f1c213809198e1023bb80bbf8955816f601885a69b19ad7905b4874434392f18"
+  "generation": "7cadd8329784675eaa7200ebfeb98166bcc4c615149dd8618edc5ff181c8e02d"
 }
