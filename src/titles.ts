@@ -47,7 +47,7 @@ export function activeTitle(s:Save){const t=titleDefinition(s.selectedTitleId);r
 export function selectTitle(s:Save,id:TitleId|null){
  const t=titleDefinition(id);
  if(id!==null&&(!t||!titleAvailable(s,t)))throw Error('아직 사용할 수 없는 칭호예요.');
- s.selectedTitleId=id;
+ s.selectedTitleId=id;if(t?.id.startsWith('expedition-'))s.expedition.selectedTitle=Number(t.id.slice(11));
 }
 export function renderTitle(t:TitleDefinition|null){
  return t?'<span class="chosen-title title-'+t.style+'" data-title-id="'+t.id+'"><b aria-hidden="true">'+t.icon+'</b><span>'+t.name+'</span><i class="title-sparks" aria-hidden="true">'+Array.from({length:6},(_,i)=>'<i style="--spark:'+i+'">✦</i>').join('')+'</i></span>':'<span class="title-empty">칭호 없음</span>';
