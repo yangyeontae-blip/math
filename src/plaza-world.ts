@@ -60,8 +60,8 @@ export class PlazaWorld {
  remove(id:string){const actor=this.peers.get(id);if(!actor)return;this.removeSpeech(actor.label);actor.label.remove();actor.model?.root.removeFromParent();actor.model?.dispose();this.peers.delete(id);}
  clearPeers(){this.clearSpeech();for(const id of [...this.peers.keys()])this.remove(id);for(const part of this.far)part.mesh.count=0;}
  detach(){this.clearPeers();this.farRoot.removeFromParent();}
- emote(id:string,emote:PlazaEmote){const actor=this.peers.get(id);if(!actor)return;actor.bubble.textContent=PLAZA_EMOTES[emote];actor.bubble.hidden=false;actor.emoteUntil=this.clock+3;}
- selfEmote(emote:PlazaEmote){this.own.bubble.textContent=PLAZA_EMOTES[emote];this.own.bubble.hidden=false;this.own.bubble.dataset.until=String(this.clock+3);}
+ emote(id:string,emote:PlazaEmote){const actor=this.peers.get(id);if(!actor)return;actor.bubble.textContent=PLAZA_EMOTES[emote];actor.bubble.hidden=true;actor.emoteUntil=this.clock+3;}
+ selfEmote(emote:PlazaEmote){this.own.bubble.textContent=PLAZA_EMOTES[emote];this.own.bubble.hidden=true;this.own.bubble.dataset.until=String(this.clock+3);}
  speak(playerId:string|null,message:PlazaChatMessage){
   const label=playerId===null?this.own.root:this.peers.get(playerId)?.label;if(!label)return;
   const speech=label.firstElementChild as HTMLElement;const existing=this.speeches.get(label);if(existing?.id===message.id)return;
@@ -87,8 +87,8 @@ export class PlazaWorld {
  update(dt:number,camera:T.Camera,player:T.Group,showPeers:boolean,active:boolean,low:boolean,reduced:boolean){
   this.clock+=dt;const now=performance.now();for(const [label,speech] of this.speeches)if(speech.expires<=now)this.removeSpeech(label);const width=this.layer.clientWidth,height=this.layer.clientHeight;const occupied:{x:number;top:number;bottom:number;width:number}[]=[];
   const ownEffect=active&&!low&&!reduced;if(this.own.root.classList.contains('has-title-effects')!==ownEffect)this.own.root.classList.toggle('has-title-effects',ownEffect);
+  this.own.bubble.hidden=Number(this.own.bubble.dataset.until??0)<=this.clock;
   if(this.selfProfile)this.place(this.own.root,player.position,this.selfProfile.ride>=0?4.4:3,camera,width,height,active,occupied);
-  if(Number(this.own.bubble.dataset.until??0)<this.clock)this.own.bubble.hidden=true;
   if(!showPeers){if(this.peers.size)this.clearPeers();this.farRoot.removeFromParent();return;}
   if(this.farRoot.parent!==this.scene)this.scene.add(this.farRoot);
   const sorted=[...this.peers.values()].sort((a,b)=>a.position.distanceToSquared(player.position)-b.position.distanceToSquared(player.position));let farCount=0,nearCount=0,effectCount=0;
