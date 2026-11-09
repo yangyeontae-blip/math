@@ -1,3 +1,9 @@
+import {mountHall} from './hall-controller';
+import {mountForestParty} from './forest-party-controller';
+import {operatorCheckpoint} from './operator-checkpoint';
+import {operatorAccess} from './operator-access';
+import {grantMathQuestionXp} from './rules';
+import {renderCharacterStats} from './character-stats';
 import {mountDisplayControls,storageLocation} from './display-controls';
 import {activeTitle as selectedNameplate,renderTitle,selectTitle} from './titles';
 import {titleBag} from './title-view';
@@ -73,7 +79,7 @@ import './adventure.css';
 import './navigation.css';
 import { toolSpec, toolHtml, adjustTool } from './learning-tools';
 
-const CLIENT_BUILD = '2026-11-09.feedback-titles.1';
+const CLIENT_BUILD = '2026-11-09.growth-party.1';
 document.documentElement.dataset.clientBuild = CLIENT_BUILD;
 
 const $ = <T extends HTMLElement = HTMLElement>(selector: string) => document.querySelector<T>(selector)!;
@@ -159,7 +165,7 @@ const navButton = (id: string, text: string, detail = '') => `<button data-nav="
 function openNavigation() {
   if (!state) return;
   rememberMenu('map', openNavigation);
-  navPage('베리숲 모험 지도','<div class="destination-grid">'+HUB_DESTINATIONS.map(d=>`<button class="destination-card" data-nav="${d.id}"><span class="destination-icon" aria-hidden="true">${d.icon}</span><strong>${d.title}</strong><small>${d.detail}</small></button>`).join('')+'</div><details class="map-overview"><summary>섬 전체 지도 보기</summary>'+worldMap(state,world.inMarket,world.inHunting)+'</details>'+'<div class="nav-links">'+navButton('today','오늘의 모험')+navButton('world2','🌌 세계 2 · 별너머 군도')+navButton('hunting','⚔ 가시덩굴 숲 · 사냥')+navButton('academy','🏛 모험학교 · 스킬 배우기')+navButton('notice','운영자 소식')+navButton('book','모험 수첩')+navButton('guide','조작 안내')+'</div>',{world2:()=>career.showWorldTwo(),hunting:()=>career.showHunting(),today:openTodayAdventure,back:closeModal,explore:openAdventureMap,home:openHomeHub,shops:openShopStreet,school:()=>switchStage(0),addition:()=>openStageMap('addition'),subtraction:()=>openStageMap('subtraction'),multiplication:()=>openStageMap('multiplication'),division:()=>openStageMap('division'),academy:enterAcademy,notice:openNoticeBoard,book:openAdventureBook,guide:openGuide});
+  navPage('베리숲 모험 지도','<div class="destination-grid">'+HUB_DESTINATIONS.map(d=>`<button class="destination-card" data-nav="${d.id}"><span class="destination-icon" aria-hidden="true">${d.icon}</span><strong>${d.title}</strong><small>${d.detail}</small></button>`).join('')+'</div><details class="map-overview"><summary>섬 전체 지도 보기</summary>'+worldMap(state,world.inMarket,world.inHunting)+'</details>'+'<div class="nav-links">'+navButton('today','오늘의 모험')+navButton('world2','🌌 세계 2 · 별너머 군도')+navButton('hunting','⚔ 가시덩굴 숲 · 사냥')+navButton('hall','🏆 명예의 전당','레벨 랭킹과 베리 부자를 함께 봐요')+navButton('academy','🏛 모험학교 · 스킬 배우기')+navButton('notice','운영자 소식')+navButton('book','모험 수첩')+navButton('guide','조작 안내')+'</div>',{world2:()=>career.showWorldTwo(),hunting:()=>career.showHunting(),today:openTodayAdventure,back:closeModal,explore:openAdventureMap,home:openHomeHub,shops:openShopStreet,school:()=>switchStage(0),addition:()=>openStageMap('addition'),subtraction:()=>openStageMap('subtraction'),multiplication:()=>openStageMap('multiplication'),division:()=>openStageMap('division'),academy:enterAcademy,notice:openNoticeBoard,book:openAdventureBook,guide:openGuide});
 }
 function openAdventureMap() {
   if (!state) return;
@@ -198,7 +204,7 @@ function enterShopStreet() {
 }
 function openPlazaWelcome() {
   if(!state)return;
-  navPage('연태쌤의 중앙광장 안내','<div class="nav-intro"><h3>우리의 메인 모험은 수학숲이에요!</h3><p>아래쪽 책과 별이 빛나는 숲 아치로 가 보세요. '+state.grade+'학년 수학을 풀고 숲을 탐험하며 베리와 추억을 모아요.</p></div><div class="nav-list">'+navButton('explore','🌳 ↓ 수학숲으로 모험하기','내 학년에 맞는 숲·단원·열린 단계 고르기')+navButton('academy','🏛 모험학교 · 직업과 스킬','10·30·60레벨 전직 실습, 수련 마당과 모험 기록')+navButton('hunt','⚔ 왼쪽 위 · 가시덩굴 숲','무기와 스킬로 사냥하고 음식·물약으로 회복해요')+navButton('world2','🪐 오른쪽 위 · 별너머 군도','60레벨부터 세 지역을 탐험하고 수호자에게 도전해요')+navButton('friends','👋 친구들과 만나는 중앙광장','학년과 관계없이 같은 광장 · 최대 128명')+navButton('shops','🛍 왼쪽 아래 · 상점거리','의상·미용·펫·탈것·무기·물약과 음식')+navButton('home','🏡 오른쪽 · 나의 집','내가 꾸민 집과 정원, 마을 친구들의 방문')+navButton('notice','📮 운영자 소식')+'</div><p>학습 문제와 진도는 각자 선택한 학년대로 유지돼요. 틀려도 손해는 없어요! 가까이 가서 PC E 또는 휴대폰 대화 버튼을 누르세요. 수학 시합은 분수 오른쪽 신비에게 부탁해요.</p>',{explore:openAdventureMap,academy:enterAcademy,hunt:()=>career.showHunting(),world2:()=>career.showWorldTwo(),friends:()=>{closeModal();$('#plaza-status').click();},shops:enterShopStreet,home:()=>{if(enterHomeGarden())closeModal();},notice:openNoticeBoard});
+  navPage('연태쌤의 중앙광장 안내','<div class="nav-intro"><h3>우리의 메인 모험은 수학숲이에요!</h3><p>아래쪽 책과 별이 빛나는 숲 아치로 가 보세요. '+state.grade+'학년 수학을 풀고 숲을 탐험하며 베리와 추억을 모아요.</p></div><div class="nav-list">'+navButton('explore','🌳 ↓ 수학숲으로 모험하기','내 학년에 맞는 숲·단원·열린 단계 고르기')+navButton('academy','🏛 모험학교 · 직업과 스킬','10·30·60레벨 전직 실습, 수련 마당과 모험 기록')+navButton('hunt','⚔ 왼쪽 위 · 가시덩굴 숲','무기와 스킬로 사냥하고 음식·물약으로 회복해요')+navButton('world2','🪐 오른쪽 위 · 별너머 군도','60~500레벨 지역을 탐험하고 두 수호자에게 도전해요')+navButton('friends','👋 친구들과 만나는 중앙광장','학년과 관계없이 같은 광장 · 최대 128명')+navButton('shops','🛍 왼쪽 아래 · 상점거리','의상·미용·펫·탈것·무기·물약과 음식')+navButton('home','🏡 오른쪽 · 나의 집','내가 꾸민 집과 정원, 마을 친구들의 방문')+navButton('hall','🏆 명예의 전당','레벨 랭킹과 베리 부자를 함께 봐요')+navButton('notice','📮 운영자 소식')+'</div><p>학습 문제와 진도는 각자 선택한 학년대로 유지돼요. 틀려도 손해는 없어요! 가까이 가서 PC E 또는 휴대폰 대화 버튼을 누르세요. 수학 시합은 분수 오른쪽 신비에게 부탁해요.</p>',{explore:openAdventureMap,hall:()=>hall.show(),academy:enterAcademy,hunt:()=>career.showHunting(),world2:()=>career.showWorldTwo(),friends:()=>{closeModal();$('#plaza-status').click();},shops:enterShopStreet,home:()=>{if(enterHomeGarden())closeModal();},notice:openNoticeBoard});
 }
 function openShopStreet() {
   rememberMenu('shops', openShopStreet);
@@ -304,7 +310,9 @@ const petCareButton = document.createElement('button'); petCareButton.id = 'pet-
 const storyPanel = document.createElement('section'); storyPanel.id = 'story-activity'; storyPanel.hidden = true;
 storyPanel.setAttribute('aria-label', '숲속 수학 놀이'); root.append(storyPanel);
 let world: World, AvatarPreviewRuntime: typeof AvatarPreview;
+const hall=mountHall({state:()=>state,active:()=>!!world?.active,operator:()=>plaza.operatorActive(),token:()=>plaza.operatorToken(),open:openModal,close:closeModal});
 const display=mountDisplayControls($('#hud'),()=>world);
+const party=mountForestParty({state:()=>state,world:()=>world,host:$('#hud'),open:openModal,close:closeModal,persist,stored:()=>saveStore.status!=='error',refresh,toast,enter:c=>{battle=null;switchStage(c.stage,c.forest);},operatorToken:()=>plaza.operatorToken(),publicPeers:()=>plaza.players()});
 const audio = new Sound(), STORAGE = 'berry-forest-save-v1', RANKING_STORAGE = 'berry-forest-local-expedition-ranking-v1';
 let ambienceTimer: ReturnType<typeof setTimeout> | undefined;
 const refreshAmbience = (change = false) => {
@@ -423,7 +431,7 @@ function persist() {
   if (!state) return;
   if (world.inHomestead) { const p = world.player.position; state.homestead.position = savedGardenPosition(p.x, p.z); }
   if (!world.inRoom && !world.inHomestead && !world.inMarket && !world.inAcademy && !world.inHunting && !world.inAstralStudy && !world.trainingStatus) { const p = world.player.position; state.position = { x: p.x, z: p.z }; }
-  const written = saveStore.write(state);
+  const written = saveStore.write(operatorCheckpoint(state));
   if (written) {
     saved = structuredClone(state);
     if (!state.teacherMode) { try { const raw = JSON.stringify(updateLocalRanks(parseLocalRanks(localStorage.getItem(RANKING_STORAGE)), state.nickname, state.expedition.completed)); if (localStorage.getItem(RANKING_STORAGE) !== raw) localStorage.setItem(RANKING_STORAGE, raw); } catch { /* Rank storage cannot invalidate the game save. */ } }
@@ -706,7 +714,7 @@ function renderVillageProject(message = '', hint = false) {
 function openGuide() {
   if (!state) return;
   rememberMenu('help', openGuide);
-  navPage('도움말', '<div class="nav-intro"><h3>수학숲에서 시작하는 모험</h3><p>아래쪽 메인 입구에서 내 학년의 수학숲을 탐험해요. 광장에서는 학년과 관계없이 친구들을 만나요. 모험학교에서 직업과 스킬을 배우고, 상점과 나의 집도 둘러보세요.</p></div><div class="nav-section"><h3>어디에 있나요?</h3><p>이야기 의뢰 → <b>수학숲으로 모험하기</b><br>방·정원·주민 → <b>나의 집</b><br>오늘의 미션 → <b>오늘의 모험</b><br>발견·친구·학습 기록 → <b>모험 수첩</b><br>운영자 소식 → <b>광장 입구 공지판</b></p><p>PC: 방향키 또는 WASD로 이동, E로 대화, Space로 점프해요.<br>휴대폰: 왼쪽 조이스틱으로 이동하고 가까이 가서 대화 버튼을 눌러요.</p></div><div class="nav-section"><h3>세 걸음이면 시작해요</h3><p>① 조이스틱·방향키로 이동 → ② 가까이서 E·대화 → ③ 지도에서 목적지를 골라요.<br>직업은 레벨 10에 선택하고 30·60에 전직해요. 학교에서 무료 실습을 마치면 돼요.<br>친구와 대화하려면 중앙 광장의 💬 광장 대화를 눌러요.<br>화면 접기는 큰 정보를 숨기고, 시야의 넓게는 게임 속 풍경을 더 보여줘요.</p></div><button class="secondary wide" data-nav="school">모험학교로 · 전직과 수련</button><button class="secondary wide" data-nav="chat">중앙 광장에서 대화 열기</button><button class="primary wide" data-nav="map">지도 펼치기</button>',{map:openNavigation,school:enterAcademy,chat:()=>{closeModal();switchStage(0);plaza.sync();document.querySelector<HTMLButtonElement>('#plaza-chat-toggle')?.click();}});
+  navPage('도움말', '<div class="nav-intro"><h3>수학숲에서 시작하는 모험</h3><p>아래쪽 메인 입구에서 내 학년의 수학숲을 탐험해요. 광장에서는 학년과 관계없이, 수학숲에서는 같은 학년·숲·단계의 친구들을 만나요. 모험학교에서 직업과 스킬을 배우고, 상점과 나의 집도 둘러보세요.</p></div><div class="nav-section"><h3>어디에 있나요?</h3><p>이야기 의뢰 → <b>수학숲으로 모험하기</b><br>방·정원·주민 → <b>나의 집</b><br>오늘의 미션 → <b>오늘의 모험</b><br>발견·친구·학습 기록 → <b>모험 수첩</b><br>운영자 소식 → <b>광장 입구 공지판</b></p><p>PC: 방향키 또는 WASD로 이동, E로 대화, Space로 점프해요.<br>휴대폰: 왼쪽 조이스틱으로 이동하고 가까이 가서 대화 버튼을 눌러요.</p></div><div class="nav-section"><h3>세 걸음이면 시작해요</h3><p>① 조이스틱·방향키로 이동 → ② 가까이서 E·대화 → ③ 지도에서 목적지를 골라요.<br>직업은 레벨 10에 선택하고 30·60에 전직해요. 학교에서 무료 실습을 마치면 돼요.<br>친구와 대화하려면 중앙 광장의 💬 광장 대화를 눌러요.<br>화면 접기는 큰 정보를 숨기고, 시야의 넓게는 게임 속 풍경을 더 보여줘요.</p></div><button class="secondary wide" data-nav="school">모험학교로 · 전직과 수련</button><button class="secondary wide" data-nav="chat">중앙 광장에서 대화 열기</button><button class="secondary wide" data-nav="hall">🏆 명예의 전당 · 레벨·베리 부자</button><button class="primary wide" data-nav="map">지도 펼치기</button>',{map:openNavigation,hall:()=>hall.show(),school:enterAcademy,chat:()=>{closeModal();switchStage(0);plaza.sync();document.querySelector<HTMLButtonElement>('#plaza-chat-toggle')?.click();}});
 }
 async function loadWorld() {
   if (world!) return;
@@ -899,7 +907,7 @@ function openStageMap(forest?: ForestKind) {
     const sets = curriculumRegionSets(s.grade);
     const visibleRegions = mapSemester === 1 ? sets.first : sets.second;
     const nextRegion = visibleRegions.find(region => !curriculumUnitComplete(s, region.id)) ?? visibleRegions[0];
-    const graduateReady = curriculumGraduationAvailable(s) || s.teacherMode;
+    const graduateReady = curriculumGraduationAvailable(s) || s.teacherMode || operatorAccess();
     openModal(title('연태쌤의 수학 모험 지도', `${s.grade}학년 수학 · 1학기와 2학기`) + `<p class="shop-explainer">지역마다 10단계예요. 베리와 레벨은 어느 지역에서나 함께 써요.</p><button id="map-continue" class="primary wide map-continue">▶ 이어서 모험하기 · ${nextRegion.name}</button><div class="semester-tabs" role="group" aria-label="학기 선택"><button data-semester="1" class="${mapSemester === 1 ? 'active' : ''}" aria-pressed="${mapSemester === 1}">🌱 1학기</button><button data-semester="2" class="${mapSemester === 2 ? 'active' : ''}" aria-pressed="${mapSemester === 2}">🍁 2학기</button></div><h3 class="semester-heading">${mapSemester === 1 ? '🌱' : '🍁'} ${s.grade}학년 ${mapSemester}학기 모험</h3><div class="curriculum-overview">${visibleRegions.map(card).join('')}</div>${graduateReady ? `<button id="graduation-start" class="primary wide graduation-entry">🎓 ${s.curriculum.graduationClaimed ? `${s.grade}학년 졸업 모험 다시 하기` : `${s.grade}학년 졸업 모험 시작하기`}</button>` : `<p class="graduation-lock">🔒 모든 수학 지역을 통과하면 ${s.grade}학년 졸업 모험이 열려요.</p>`}${s.grade >= 3 && expeditionUnlocked(s) ? '<button id="map-expedition" class="secondary wide">✦ 나눗셈 숲 별빛 원정과 칭호</button>' : ''}`);
     const openRegion = (id: CurriculumUnitId) => { if (isForest(id)) openStageMap(id as ForestKind); else void openCurriculumUnit(id as NewCurriculumUnitId); };
     $('#map-continue').onclick = () => openRegion(nextRegion.id);
@@ -1021,7 +1029,7 @@ async function startCurriculumMission(unit: NewCurriculumUnitId, mission: number
 }
 
 async function startGraduationAdventure() {
-  if (!state || (!state.teacherMode && !curriculumGraduationAvailable(state))) return;
+  if (!state || (!state.teacherMode && !operatorAccess() && !curriculumGraduationAvailable(state))) return;
   const module = await loadCurriculum();
   const firstUnit = curriculumRegions()[0].id;
   const question = NEW_CURRICULUM_UNITS.includes(firstUnit as NewCurriculumUnitId) && state.grade !== 3
@@ -1184,7 +1192,8 @@ async function submitCurriculumAnswer(value: string) {
   const input = document.querySelector<HTMLInputElement>('#curriculum-answer'); if (input) input.disabled = true;
   const numberEntry = document.querySelector<HTMLElement>('.curriculum-number');
   if (numberEntry) numberEntry.hidden = true;
-  $('#curriculum-hint-button').hidden = true; $('#curriculum-message').textContent = '정답이에요! 정말 잘 풀었어요.';
+  const mathReward=!run.missedCurrent&&run.hintLevel===0?grantMathQuestionXp(state):{xp:0,levels:0};refresh();
+  $('#curriculum-hint-button').hidden = true; $('#curriculum-message').textContent = '정답이에요! 정말 잘 풀었어요.'+(mathReward.xp?' 경험치 +'+mathReward.xp.toLocaleString():'');
   const result = $('#curriculum-result'); result.hidden = false;
   result.innerHTML = `<div class="curriculum-explanation"><strong>🌟 이렇게 생각해요</strong><p>${mathTextHtml(q.explanation)}</p></div><button id="curriculum-next" class="primary wide">${run.story ? '이야기 의뢰로 돌아가기 ✉️' : run.index + 1 < run.total ? '다음 문제 →' : run.review ? '복습 마치기' : run.graduation ? '졸업 모험 마치기 🎓' : '임무 완료하기 ✨'}</button>`;
   const recoveryFinished = run.review && run.index + 1 === run.total;
@@ -1222,7 +1231,7 @@ async function finishCurriculumQuestion() {
     if (run.shadow) $('#review-return').textContent = '마을로 돌아가기'; return;
   }
   if (run.graduation) {
-    const reward = claimCurriculumGraduation(state); persist(); refresh(); world.celebrate(); audio.play('level');
+    const reward = curriculumGraduationAvailable(state)?claimCurriculumGraduation(state):0; persist(); refresh(); world.celebrate(); audio.play('level');
     openModal(title('연태쌤의 졸업 편지', `${state.grade}학년 수학 탐험가!`) + `<div class="arena-intro graduation-success"><div class="arena-symbol">🎓</div><p>1학기와 2학기의 계산, 도형, 측정, 분수, 자료 단원을 모두 연결했어요.</p><p><b>「${state.grade}학년 수학 탐험가」 칭호</b>와 수료장을 받았어요.${reward ? `<br>완주 선물 🍓 ${reward.toLocaleString()}베리도 받았어요!` : '<br>완주 선물은 처음 한 번만 받아요.'}</p><button class="primary wide" data-close>마을로 돌아가기</button></div>`); return;
   }
   const stars = run.wrong === 0 && run.hints === 0 ? 3 : run.wrong <= 1 && run.hints <= 2 ? 2 : 1;
@@ -1285,6 +1294,7 @@ function openNextGate() {
   switchStage(stage + 1, state.forest);
 }
 function startBattle(monster: number, arena: boolean, id: string) {
+  if(!arena&&id.startsWith('monster')&&party.interceptBattle())return;
   if (!state || (!arena && !operationsForGrade(state.grade).includes(state.forest))) return;
   const { operation, practice } = battleMode(state, arena), journey = journeyFor(state, operation);
   const cleared = journey.maps.slice(1).filter(map => map.cleared).length, difficultyStage = arena ? Math.min(10, cleared + 1) : journey.stage;
@@ -1448,6 +1458,7 @@ function submitAnswer() {
   if (outcome === 'ignored') return;
   if (outcome === 'wrong') { if (!b.missedCurrent) { b.missedCurrent = true; recordAdaptive(false); recordWrongAnswer(state, b.encounter.question); recordCurriculumAttempt(state, b.encounter.question.operation ?? 'division', false); sessionWrong++; } combo = 0; audio.play('wrong'); persist(); $('#answer-message').textContent = '괜찮아요! 묶음을 살펴보고 다시 풀어 볼까요?'; input.value = ''; if (remainderInput) remainderInput.value = ''; showHint(false); return; }
   recordLearningResolution(b.encounter.question.operation ?? 'division', !!b.missedCurrent, !!b.hintUsed);
+  if(b.kind!=='normal'&&!b.missedCurrent&&!b.hintUsed){const growth=grantMathQuestionXp(state);toast('경험치 +'+growth.xp.toLocaleString());}
   sessionCorrect++; combo = b.missedCurrent ? 0 : combo + 1; hitMonster(combo); recordCorrectAnswer(state, b.encounter.monster, !b.missedCurrent && !b.hintUsed); if (!b.missedCurrent) { recordCurriculumAttempt(state, b.encounter.question.operation ?? 'division', true); if (!b.hintUsed) { addBossDamage(localStorage); recordAdaptive(true); } } state.discoveries.outfits.includes(state.outfit) || state.discoveries.outfits.push(state.outfit); if (state.pet >= 0 && !state.discoveries.pets.includes(state.pet)) state.discoveries.pets.push(state.pet);
   if (!b.encounter.arena && !['multiplicationGate', 'expGate'].includes(b.kind) && b.round < (b.goalRounds ?? 1)) {
     audio.play('correct'); world.celebrate(); persist();
@@ -1533,13 +1544,14 @@ function openShop(kind: 'weapon' | 'outfit', selectedId?: number) {
 }
 function shopAction(action: () => string, kind: 'weapon' | 'outfit', id: number) { try { const msg = action(); if (kind === 'outfit' && !state!.discoveries.outfits.includes(id)) state!.discoveries.outfits.push(id); audio.play('buy'); syncAvatar(); refresh(); persist(); openShop(kind, id); toast(msg); } catch (e) { $('#shop-error').textContent = (e as Error).message; } }
 
-function openInventory(tab: 'weapon' | 'outfit' | 'ride' | 'pet' | 'title' = 'weapon', selectedId?: number, mode: 'bag' | 'shop' = 'bag') {
+function openInventory(tab: 'weapon' | 'outfit' | 'ride' | 'pet' | 'title' | 'status' = 'weapon', selectedId?: number, mode: 'bag' | 'shop' = 'bag') {
   if (!state) return;
+  if(tab==='status'){openModal(renderCharacterStats(state,world.huntingStatus),'inventory-modal');document.querySelector<HTMLButtonElement>('[data-inventory-back]')!.onclick=()=>openInventory();return;}
   if(tab==='title'){titleBag(state,html=>openModal(html,'inventory-modal'),()=>{refresh();persist();plaza.sync();},()=>openInventory());return;}
   if (mode === 'shop' && tab !== 'ride') return;
   rememberMenu(mode === 'shop' ? 'ride-shop' : 'inventory', () => openInventory(tab, selectedId, mode));
   const s = state;
-  const tabs = mode === 'shop' ? skywardShopBanner('ride')+'<p>탈것을 골라 미리 타 보세요. 구매한 탈것은 가방에도 보관돼요.</p>' : `<div class="inventory-tabs"><button data-inventory-tab="weapon" class="${tab === 'weapon' ? 'active' : ''}">⚔ 무기</button><button data-inventory-tab="outfit" class="${tab === 'outfit' ? 'active' : ''}">👗 옷</button><button data-inventory-tab="ride" class="${tab === 'ride' ? 'active' : ''}" aria-label="탈것">🪽 탈것</button><button data-inventory-tab="pet" class="${tab === 'pet' ? 'active' : ''}">🐾 펫</button><button data-career-action="show-supplies">🍪 보급품</button><button data-inventory-tab="title">✦ 칭호</button></div>`;
+  const tabs = mode === 'shop' ? skywardShopBanner('ride')+'<p>탈것을 골라 미리 타 보세요. 구매한 탈것은 가방에도 보관돼요.</p>' : `<div class="inventory-tabs"><button data-inventory-tab="weapon" class="${tab === 'weapon' ? 'active' : ''}">⚔ 무기</button><button data-inventory-tab="outfit" class="${tab === 'outfit' ? 'active' : ''}">👗 옷</button><button data-inventory-tab="ride" class="${tab === 'ride' ? 'active' : ''}" aria-label="탈것">🪽 탈것</button><button data-inventory-tab="pet" class="${tab === 'pet' ? 'active' : ''}">🐾 펫</button><button data-career-action="show-supplies">🍪 보급품</button><button data-inventory-tab="title">✦ 칭호</button><button data-inventory-tab="status">📊 상태</button></div>`;
   const summary = `<p class="inventory-summary"><span>무기 ${Object.keys(s.weapons).length} · 옷 ${Object.keys(s.outfits).length} · 탈것 ${Object.keys(s.rides).length} · 펫 ${Object.keys(s.pets).length}</span><b>🍓 ${s.berries.toLocaleString()}베리</b></p>`;
   if (tab === 'weapon') {
     const ownedIds = Object.keys(s.weapons).map(Number).sort((a, b) => a === s.weapon ? -1 : b === s.weapon ? 1 : a - b);
@@ -1588,7 +1600,7 @@ function openInventory(tab: 'weapon' | 'outfit' | 'ride' | 'pet' | 'title' = 'we
       const shop = document.querySelector<HTMLButtonElement>('#collection-shop'); if (shop) shop.onclick = openRideShop;
     }
   }
-  document.querySelectorAll<HTMLButtonElement>('[data-inventory-tab]').forEach(button => button.onclick = () => openInventory(button.dataset.inventoryTab as 'weapon' | 'outfit' | 'ride' | 'pet' | 'title'));
+  document.querySelectorAll<HTMLButtonElement>('[data-inventory-tab]').forEach(button => button.onclick = () => openInventory(button.dataset.inventoryTab as 'weapon' | 'outfit' | 'ride' | 'pet' | 'title' | 'status'));
 }
 function openRideShop() { openInventory('ride', undefined, 'shop'); }
 
@@ -1824,7 +1836,7 @@ function openSecretMerchant(proposed = "", error = "") {
 }
 
 function exportSave() {
-  if (state) persist(); const s = state ?? saved; if (!s) return; const url = URL.createObjectURL(new Blob([JSON.stringify(s, null, 2)], { type: 'application/json' })); const a = document.createElement('a'); a.href = url; a.download = '베리숲-모험저장.json'; a.click(); setTimeout(() => URL.revokeObjectURL(url), 1000); markBackup(localStorage); toast('모험 저장 파일을 내려받았어요.');
+  if (state) persist(); const s = state ?? saved; if (!s) return; const url = URL.createObjectURL(new Blob([JSON.stringify(operatorCheckpoint(s), null, 2)], { type: 'application/json' })); const a = document.createElement('a'); a.href = url; a.download = '베리숲-모험저장.json'; a.click(); setTimeout(() => URL.revokeObjectURL(url), 1000); markBackup(localStorage); toast('모험 저장 파일을 내려받았어요.');
 }
 function confirmAction(heading: string, description: string, action: () => void, backup = false) {
   openModal(title('모험 기록', heading) + `<p>${description}</p>${backup ? '<button class="secondary wide" id="backup">현재 모험 내려받기</button>' : ''}<div class="confirm-row"><button class="secondary" data-close>취소</button><button class="primary" id="confirm-action">확인</button></div>`);
@@ -1842,10 +1854,11 @@ function openSettings() {
     ${operationsForGrade(state.grade).includes('multiplication') ? `<label><span>곱셈 문제 범위<small>구구단만을 고르면 어느 단계에서도 한 자리 수끼리 곱해요</small></span><select id="multiplication-range"><option value="stage" ${state.settings.multiplicationRange === 'stage' ? 'selected' : ''}>단계에 맞추기</option><option value="tables" ${state.settings.multiplicationRange === 'tables' ? 'selected' : ''}>구구단만</option></select></label>` : ''}
     <label><span>한 번의 수업 시간<small>시간이 끝나면 진행 중인 문제 뒤에 요약해요</small></span><select id="session-limit">${[0, 10, 15, 20, 30, 45, 60].map(n => `<option value="${n}" ${state!.settings.sessionMinutes === n ? 'selected' : ''}>${n ? `${n}분` : '시간 제한 없음'}</option>`).join('')}</select></label>
     <button id="notebook" class="secondary">📖 학습 요약과 틀린 문제 복습</button></div>` : '';
-  openModal(title('설정', '소리·화면·저장·교사용') + `<div class="settings-list"><label><span>배경음악<small>잔잔한 숲속 멜로디</small></span><input id="music-toggle" type="checkbox" ${state.settings.music ? 'checked' : ''}></label><label><span>효과음<small>베리와 정답 알림</small></span><input id="sound-toggle" type="checkbox" ${state.settings.sound ? 'checked' : ''}></label><label><span>계절과 날씨 이벤트<small>실제 시각과 관계없이 낙엽·눈·보슬비가 숲 안에 나타나요. 화면은 어두워지지 않아요</small></span><input id="ambience-toggle" type="checkbox" ${ambienceEnabled() ? 'checked' : ''}></label><label><span>가벼운 화면<small>그림자를 줄여 휴대폰과 태블릿에서 부드럽게</small></span><input id="quality-toggle" type="checkbox" ${state.settings.lowQuality ? 'checked' : ''}></label>${speechSupported() ? `<label><span>문제 읽어주기<small>새 문제가 나오면 소리 내어 읽어 줘요</small></span><input id="speech-toggle" type="checkbox" ${autoReadEnabled() ? 'checked' : ''}></label>` : ''}</div><div class="teacher-code ${state.teacherMode ? 'enabled' : ''}"><div><strong>🧑‍🏫 교사용 코드</strong><small>${state.teacherMode ? '선생님 모드 활성화됨 · 아래에서 수업 단원과 범위를 정할 수 있어요' : '수업 시연용 코드를 입력하세요'}</small></div><div class="teacher-input"><input id="teacher-code" type="password" autocomplete="off" placeholder="교사용 코드"><button id="teacher-unlock" class="secondary">입력</button></div><p class="error" id="teacher-error" role="alert"></p></div>${teacherOptions}<p class="note">저장 위치: <b>${escape(storageLocation())}</b><br>자동 저장은 이 접속 주소와 브라우저에만 남아요. 본판·보조 주소에서 기록이 비어 보이면 원래 주소에서 파일을 내보내 여기에서 불러와 주세요. 선생님 설정도 이 기기에서만 적용됩니다. ${storageError ? '<br>자동 저장을 사용할 수 없어요. 꼭 저장 파일을 내려받아 주세요.' : ''}</p><div class="settings-buttons"><button id="export" class="secondary">저장 파일 내려받기</button><button id="restore-checkpoint" class="secondary">직전 정상 기록 복구</button><button id="import" class="secondary">저장 파일 불러오기</button><button id="help" class="secondary">조작 방법 보기</button><button id="copyright-notice" class="secondary">© 저작권·이용 안내</button><button id="return-title" class="secondary">처음 화면으로</button></div>`);
+  openModal(title('설정', '소리·화면·저장·교사용') + `<div class="settings-list"><label><span>배경음악<small>잔잔한 숲속 멜로디</small></span><input id="music-toggle" type="checkbox" ${state.settings.music ? 'checked' : ''}></label><label><span>효과음<small>베리와 정답 알림</small></span><input id="sound-toggle" type="checkbox" ${state.settings.sound ? 'checked' : ''}></label><label><span>계절과 날씨 이벤트<small>실제 시각과 관계없이 낙엽·눈·보슬비가 숲 안에 나타나요. 화면은 어두워지지 않아요</small></span><input id="ambience-toggle" type="checkbox" ${ambienceEnabled() ? 'checked' : ''}></label><label><span>지금 할 일 표시<small>끄면 왼쪽 목표 안내판을 완전히 숨겨요. 이 기기에 기억돼요</small></span><input id="quest-visible-toggle" type="checkbox" ${display.questVisible ? 'checked' : ''}></label><label><span>가벼운 화면<small>그림자를 줄여 휴대폰과 태블릿에서 부드럽게</small></span><input id="quality-toggle" type="checkbox" ${state.settings.lowQuality ? 'checked' : ''}></label>${speechSupported() ? `<label><span>문제 읽어주기<small>새 문제가 나오면 소리 내어 읽어 줘요</small></span><input id="speech-toggle" type="checkbox" ${autoReadEnabled() ? 'checked' : ''}></label>` : ''}</div><div class="teacher-code ${state.teacherMode ? 'enabled' : ''}"><div><strong>🧑‍🏫 교사용 코드</strong><small>${state.teacherMode ? '선생님 모드 활성화됨 · 아래에서 수업 단원과 범위를 정할 수 있어요' : '수업 시연용 코드를 입력하세요'}</small></div><div class="teacher-input"><input id="teacher-code" type="password" autocomplete="off" placeholder="교사용 코드"><button id="teacher-unlock" class="secondary">입력</button></div><p class="error" id="teacher-error" role="alert"></p></div>${teacherOptions}<p class="note">저장 위치: <b>${escape(storageLocation())}</b><br>자동 저장은 이 접속 주소와 브라우저에만 남아요. 본판·보조 주소에서 기록이 비어 보이면 원래 주소에서 파일을 내보내 여기에서 불러와 주세요. 선생님 설정도 이 기기에서만 적용됩니다. ${storageError ? '<br>자동 저장을 사용할 수 없어요. 꼭 저장 파일을 내려받아 주세요.' : ''}</p><div class="settings-buttons"><button id="export" class="secondary">저장 파일 내려받기</button><button id="restore-checkpoint" class="secondary">직전 정상 기록 복구</button><button id="import" class="secondary">저장 파일 불러오기</button><button id="help" class="secondary">조작 방법 보기</button><button id="copyright-notice" class="secondary">© 저작권·이용 안내</button><button id="return-title" class="secondary">처음 화면으로</button></div>`);
   for (const [id, key] of [['music', 'music'], ['sound', 'sound'], ['quality', 'lowQuality']] as const) $<HTMLInputElement>(`#${id}-toggle`).onchange = e => { state!.settings[key] = (e.target as HTMLInputElement).checked; refresh(); if (key === 'lowQuality') { world.quality(state!.settings.lowQuality); world.setWeather(null); refreshAmbience(); } persist(); };
   $<HTMLInputElement>('#ambience-toggle').onchange = e => { setAmbience((e.target as HTMLInputElement).checked); refreshAmbience(); };
   const speechToggle = document.querySelector<HTMLInputElement>('#speech-toggle'); if (speechToggle) speechToggle.onchange = () => { setAutoRead(speechToggle.checked); if (!speechToggle.checked) stopSpeech(); };
+  $<HTMLInputElement>('#quest-visible-toggle').onchange=e=>display.setQuestVisible((e.target as HTMLInputElement).checked);
   voiceControls($('.settings-list'),true);
   const range = document.querySelector<HTMLSelectElement>('#question-range'); if (range) range.onchange = () => { state!.settings.maxDividend = Number(range.value) as 0 | 90 | 180; persist(); };
   const multiplicationRange = document.querySelector<HTMLSelectElement>('#multiplication-range'); if (multiplicationRange) multiplicationRange.onchange = () => { state!.settings.multiplicationRange = multiplicationRange.value as 'stage' | 'tables'; persist(); };
@@ -1859,8 +1872,8 @@ function openSettings() {
     confirmAction('직전 정상 기록으로 돌아갈까요?', `${escape(checkpoint.nickname)} · 레벨 ${checkpoint.level}. 최근 진행 일부가 되돌아갈 수 있어요. 현재 모험을 먼저 내려받을 수 있어요.`, () => begin(checkpoint, false, true), true);
   };
   $('#export').onclick = exportSave; $('#import').onclick = () => $<HTMLInputElement>('#import-file').click(); $('#help').onclick = openGuide; $('#copyright-notice').onclick = openCopyrightNotice;
-  if(plaza.operatorActive()){const logout=document.createElement('button');logout.className='secondary wide';logout.textContent='운영자 로그아웃';logout.onclick=async()=>{try{await plaza.logout();openSettings();toast('운영자 인증을 해제했어요.');}catch{toast('서버에 연결하지 못했어요. 다시 시도해 주세요.');}};$('#modal-content').append(logout);}
-  const unlock = async () => { const input=$<HTMLInputElement>('#teacher-code'),code=input.value.trim();input.value='';try { const msg=applyTeacherCode(state!,code);audio.play('level');syncAvatar();refresh();persist();openSettings();toast(msg); }catch{const button=$<HTMLButtonElement>('#teacher-unlock');button.disabled=true;try{await plaza.authenticate(code);openSettings();toast('운영자 인증이 완료되었어요. 현재 브라우저에서 7일간 유지돼요.');}catch(e){$('#teacher-error').textContent=(e as Error).message;}finally{button.disabled=false;}} }; $('#teacher-unlock').onclick = unlock; $<HTMLInputElement>('#teacher-code').onkeydown = e => { if (e.key === 'Enter') unlock(); };
+  if(plaza.operatorActive()){const logout=document.createElement('button');logout.className='secondary wide';logout.textContent='운영자 로그아웃';logout.onclick=async()=>{try{await plaza.logout();refresh();persist();openSettings();toast('운영자 인증을 해제했어요.');}catch{toast('서버에 연결하지 못했어요. 다시 시도해 주세요.');}};$('#modal-content').append(logout);}
+  const unlock = async () => { const input=$<HTMLInputElement>('#teacher-code'),code=input.value.trim();input.value='';try { const msg=applyTeacherCode(state!,code);audio.play('level');syncAvatar();refresh();persist();openSettings();toast(msg); }catch{const button=$<HTMLButtonElement>('#teacher-unlock');button.disabled=true;try{await plaza.authenticate(code);refresh();persist();openSettings();toast('운영자 인증이 완료되었어요. 현재 브라우저에서 7일간 유지돼요.');}catch(e){$('#teacher-error').textContent=(e as Error).message;}finally{button.disabled=false;}} }; $('#teacher-unlock').onclick = unlock; $<HTMLInputElement>('#teacher-code').onkeydown = e => { if (e.key === 'Enter') unlock(); };
   $('#return-title').onclick = () => { persist(); closeModal(); state = null; audio.music = false; showStart(); };
 }
 function openDaily() {

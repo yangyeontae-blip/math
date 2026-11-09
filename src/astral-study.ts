@@ -12,7 +12,7 @@ export interface AstralRun extends AstralLocation {id:string;grade:SchoolGrade;s
 export interface AstralStudy {byGrade:Partial<Record<SchoolGrade,AstralGradeProgress>>;location:AstralLocation|null;active:AstralRun|null;totalBerries:number;totalXp:number}
 export const emptyAstralStudy=():AstralStudy=>({byGrade:{},location:null,active:null,totalBerries:0,totalXp:0});
 export function astralGrade(p:AstralStudy,grade:SchoolGrade):AstralGradeProgress{return p.byGrade[grade]??={cleared:[0,0,0],correct:0,wrong:0};}
-export function canEnterAstral(p:AstralStudy,grade:SchoolGrade,level:number,forest:number,stage=0){const data=p.byGrade[grade],region=ASTRAL_FORESTS[forest];return Number.isInteger(forest)&&!!region&&Number.isInteger(stage)&&stage>=0&&stage<10&&level>=region.level&&(forest===0||data?.cleared[forest-1]===10)&&stage<=(data?.cleared[forest]??0);}
+export function canEnterAstral(p:AstralStudy,grade:SchoolGrade,level:number,forest:number,stage=0,operator=false){const data=p.byGrade[grade],region=ASTRAL_FORESTS[forest];return Number.isInteger(forest)&&!!region&&Number.isInteger(stage)&&stage>=0&&stage<10&&(operator||level>=region.level&&(forest===0||data?.cleared[forest-1]===10)&&stage<=(data?.cleared[forest]??0));}
 export function validAstralStudy(value:unknown,grade:SchoolGrade,level:number):value is AstralStudy{
  try{const p=value as AstralStudy,n=(v:unknown,max=1e9):v is number=>Number.isSafeInteger(v)&&Number(v)>=0&&Number(v)<=max;
  if(!p||!p.byGrade||typeof p.byGrade!=='object'||Array.isArray(p.byGrade)||Object.keys(p.byGrade).length>6||!n(p.totalBerries)||!n(p.totalXp))return false;

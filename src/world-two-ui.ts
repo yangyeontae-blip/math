@@ -1,3 +1,4 @@
+import {operatorAccess} from './operator-access';
 import type { Save } from './rules';
 import { WEAPONS, OUTFITS } from './rules';
 import { WORLD_TWO_NAME, WORLD_TWO_REGIONS, WORLD_TWO_BOSSES, WORLD_TWO_CORE_REGIONS, canEnterWorldTwo, worldTwoEquipmentSource } from './world-two';
@@ -6,7 +7,7 @@ import { worldTwoRewardFor } from './world-two-rules';
 function regionCards(s:Save,from:number,to:number) {
   return WORLD_TWO_REGIONS.slice(from,to).map(region=>{
     const {id,level,icon,name,description,killGoal,bonus}=region;
-    const progress=s.world2.regions[id],open=canEnterWorldTwo(s.world2,s.level,id),reward=worldTwoRewardFor(s,id);
+    const progress=s.world2.regions[id],open=canEnterWorldTwo(s.world2,s.level,id,false,operatorAccess()),reward=worldTwoRewardFor(s,id);
     return `<article class="world-two-region theme-${id}">
       <span class="world-two-icon">${icon}</span><small>지역 ${id+1} · Lv.${level}</small>
       <h3>${name}</h3><p>${description}</p>
@@ -25,7 +26,7 @@ function bossCard(s:Save,region:2|5) {
     <h3>${boss.name}</h3><p>${pattern} 공격 표시를 보고 피하고, 고리 공격 때는 안쪽으로 들어가요.</p>
     <p>${wins?'승리 '+wins+'회'+(best===null?'':' · 최고 기록 '+Math.ceil(best)+'초'):WORLD_TWO_REGIONS[region].name+' 완수 후 도전할 수 있어요.'}</p>
     <p class="career-note">첫 승리 보너스: ${outer?'':'전설 의상 3종 · '}${boss.firstBerries.toLocaleString()}베리 · 경험치 ${boss.firstXp.toLocaleString()}. 반복 보상은 하루 첫 3회 정상, 이후 25%.</p>
-    <button class="career-primary" data-career-action="enter-world2-boss" data-region="${region}" ${canEnterWorldTwo(p,s.level,region,true)?'':'disabled'}>${outer?'성운룡에게 도전':'수호자에게 도전'}</button>
+    <button class="career-primary" data-career-action="enter-world2-boss" data-region="${region}" ${canEnterWorldTwo(p,s.level,region,true,operatorAccess())?'':'disabled'}>${outer?'성운룡에게 도전':'수호자에게 도전'}</button>
   </article>`;
 }
 export function renderWorldTwo(s:Save) {

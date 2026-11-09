@@ -1,3 +1,4 @@
+import {operatorAccess} from './operator-access';
 import {SKYWARD_WEAPONS,SKYWARD_OUTFITS,SKYWARD_RIDES,SKYWARD_PETS,skywardItem} from './skyward-collection';
 import {emptyAstralStudy,validAstralStudy,type AstralStudy} from './astral-study';
 import { isBlockedNickname } from './nickname';
@@ -214,7 +215,7 @@ import { emptyAdventure, defaultDesign, validAdventure, type AdventureProgress }
 export const ROOM_GRID_COLUMNS = 5;
 export const ROOM_GRID_ROWS = 4;
 export interface Save {
-  version: 25; selectedTitleId:TitleId|null; astralStudy:AstralStudy; world2: WorldTwoProgress; career: CareerProgress; grade: SchoolGrade; nickname: string; character: number; berries: number; level: number; xp: number;
+  version: 26; profileId:string; partyClaims:{id:string;expiresAt:number}[]; selectedTitleId:TitleId|null; astralStudy:AstralStudy; world2: WorldTwoProgress; career: CareerProgress; grade: SchoolGrade; nickname: string; character: number; berries: number; level: number; xp: number;
   weapon: number; outfit: number; weapons: Record<string, number>; outfits: Record<string, number>;
   ride: number; rides: Record<string, boolean>; pet: number; pets: Record<string, boolean>;
   hairstyle: number; hairstyles: Record<string, boolean>; face: number; faces: Record<string, boolean>; teacherMode: boolean;
@@ -269,7 +270,7 @@ export const STAGE_DIVISION_DIFFICULTY = [
 export function newSave(nickname: string, character: number, grade: SchoolGrade = 3): Save {
   if (!nickname.trim() || [...nickname.trim()].length > 10 || !Number.isInteger(character) || character < 0 || character > 3 || !Number.isInteger(grade) || grade < 1 || grade > 6) throw new Error('이름은 1~10자, 학년과 캐릭터를 골라 주세요.');
   const hairstyle = CHARACTERS[character].style;
-  return { version: 25, selectedTitleId:null, astralStudy:emptyAstralStudy(), world2: emptyWorldTwo(), career: emptyCareer(), grade, nickname: nickname.trim(), character, berries: 0, level: 1, xp: 0, weapon: 0, outfit: 0, weapons: { 0: 0 }, outfits: { 0: 0 }, ride: -1, rides: {}, pet: -1, pets: {}, hairstyle, hairstyles: { 0: true, [hairstyle]: true }, face: 0, faces: { 0: true }, teacherMode: false, best: 0, position: { x: 0, z: 8 }, tutorial: { collected: false, battle: false, shop: false }, settings: { music: true, sound: true, lowQuality: false, maxDividend: 0, multiplicationRange: 'stage', sessionMinutes: 0, focusUnit: 'all', spiralReview: true, practice: { operation: 'auto', tier: 1, skipPicker: false } }, learning: { elapsedSeconds: 0, correct: 0, wrong: 0, wrongQuestions: [] }, discoveries: { monsters: [], pets: [], outfits: [0] }, room: { furniture: [], inside: false, positions: {} }, forest: grade <= 2 ? 'addition' : 'division', journey: emptyJourney(), multiplicationJourney: emptyJourney(), multiplicationFinal: null, multiplicationCompleted: false, multiplicationRewardClaimed: false, additionJourney: emptyJourney(), subtractionJourney: emptyJourney(), additionCompleted: false, subtractionCompleted: false, curriculum: emptyCurriculumProgress(), potions: { stock: POTIONS.map(() => 0), berryMultiplier: 1, berryUntil: 0, xpMultiplier: 1, xpUntil: 0 }, garden: { rescued: 0, flowers: [-1, -1, -1] }, expedition: emptyExpedition(), story: emptyStory(), homestead: emptyHomestead(), exploration: emptyExploration(), forestTrail: emptyForestTrail(), forestActivities: emptyForestActivities(), petFriends: {}, adventure: emptyAdventure(grade) };
+  return { version: 26, profileId:crypto.randomUUID(), partyClaims:[], selectedTitleId:null, astralStudy:emptyAstralStudy(), world2: emptyWorldTwo(), career: emptyCareer(), grade, nickname: nickname.trim(), character, berries: 0, level: 1, xp: 0, weapon: 0, outfit: 0, weapons: { 0: 0 }, outfits: { 0: 0 }, ride: -1, rides: {}, pet: -1, pets: {}, hairstyle, hairstyles: { 0: true, [hairstyle]: true }, face: 0, faces: { 0: true }, teacherMode: false, best: 0, position: { x: 0, z: 8 }, tutorial: { collected: false, battle: false, shop: false }, settings: { music: true, sound: true, lowQuality: false, maxDividend: 0, multiplicationRange: 'stage', sessionMinutes: 0, focusUnit: 'all', spiralReview: true, practice: { operation: 'auto', tier: 1, skipPicker: false } }, learning: { elapsedSeconds: 0, correct: 0, wrong: 0, wrongQuestions: [] }, discoveries: { monsters: [], pets: [], outfits: [0] }, room: { furniture: [], inside: false, positions: {} }, forest: grade <= 2 ? 'addition' : 'division', journey: emptyJourney(), multiplicationJourney: emptyJourney(), multiplicationFinal: null, multiplicationCompleted: false, multiplicationRewardClaimed: false, additionJourney: emptyJourney(), subtractionJourney: emptyJourney(), additionCompleted: false, subtractionCompleted: false, curriculum: emptyCurriculumProgress(), potions: { stock: POTIONS.map(() => 0), berryMultiplier: 1, berryUntil: 0, xpMultiplier: 1, xpUntil: 0 }, garden: { rescued: 0, flowers: [-1, -1, -1] }, expedition: emptyExpedition(), story: emptyStory(), homestead: emptyHomestead(), exploration: emptyExploration(), forestTrail: emptyForestTrail(), forestActivities: emptyForestActivities(), petFriends: {}, adventure: emptyAdventure(grade) };
 }
 
 export function defaultRoomFurniturePosition(index: number): RoomFurniturePosition {
@@ -334,7 +335,7 @@ export function curriculumUnitComplete(s: Save, unit: CurriculumUnitId) {
 }
 export function canStartCurriculumMission(s: Save, unit: NewCurriculumUnitId, mission: number) {
   const progress = s.curriculum.units[unit];
-  return Number.isInteger(mission) && mission >= 0 && mission < 10 && (s.teacherMode || mission === 0 || progress.completedMissions.includes(mission - 1));
+  return Number.isInteger(mission) && mission >= 0 && mission < 10 && (s.teacherMode || operatorAccess() || mission === 0 || progress.completedMissions.includes(mission - 1));
 }
 export function recordCurriculumAttempt(s: Save, unit: CurriculumUnitId, correct: boolean, mission = 0, skill = '', usedHint = false) {
   const progress = s.curriculum.units[unit];
@@ -375,7 +376,7 @@ export function journeyFor(s: Save, forest: ForestKind = s.forest): Journey {
     default: return s.journey;
   }
 }
-export function canEnter(s: Save, stage: number, forest: ForestKind = s.forest) { const journey = journeyFor(s, forest); return operationsForGrade(s.grade).includes(forest) && Number.isInteger(stage) && stage >= 0 && stage <= 10 && (s.teacherMode || stage <= 1 || journey.maps[stage - 1].cleared); }
+export function canEnter(s: Save, stage: number, forest: ForestKind = s.forest) { const journey = journeyFor(s, forest); return operationsForGrade(s.grade).includes(forest) && Number.isInteger(stage) && stage >= 0 && stage <= 10 && (s.teacherMode || operatorAccess() || stage <= 1 || journey.maps[stage - 1].cleared); }
 export function collectBerry(s: Save, id: number) {
   const journey = journeyFor(s), stage = journey.stage, map = journey.maps[stage];
   if (!Number.isInteger(id) || !stageBerries(stage)[id] || map.berries.includes(id)) return 0;
@@ -656,6 +657,9 @@ export function battleRewardReason(s: Save, question: Question, usedHint: boolea
     && (practiceTier !== undefined && practiceTier < 2 || question.dividend < 100 && question.divisor < 100 && question.answer < 100)) return 'easy';
   return null;
 }
+/** A correct math answer keeps at least 10% of the next-level XP at high levels. */
+export function mathQuestionXp(level:number,base:number,questions=1){return Math.max(base,Math.ceil(Math.max(1,Math.min(100000,level))*4)*questions);}
+export function grantMathQuestionXp(s:Save,base=12,now=Date.now()){const xp=mathQuestionXp(s.level,base)*potionEffects(s,now).xpMultiplier;s.xp+=xp;let levels=0;while(s.level<100000&&s.xp>=s.level*40){s.xp-=s.level*40;s.level++;levels++;s.berries=Math.min(1e9,s.berries+20+({30:30000,50:50000,100:100000}[s.level]??0));}if(s.level===100000)s.xp=Math.min(s.xp,s.level*40-1);return {xp,levels};}
 export function rewardFor(s: Save, monster: number, arena: boolean, now = Date.now(), eligible = true) {
   const m = MONSTERS[monster], w = WEAPONS[s.weapon];
   const { berryMultiplier, xpMultiplier } = potionEffects(s, now);
@@ -665,7 +669,7 @@ export function rewardFor(s: Save, monster: number, arena: boolean, now = Date.n
   const xp = stage > 0 ? Math.round(m.xp * 1.1) : m.xp;
   return {
     berries: eligible ? (berries + w.bonus) * berryMultiplier : 0,
-    xp: eligible ? (xp + OUTFITS[s.outfit].xpBonus) * xpMultiplier : 0,
+    xp: eligible ? (mathQuestionXp(s.level,xp,arena?1:stage===10&&monster===stageMonsters(10).at(-1)!.type?5:monsterBattleRounds(monster,false)) + OUTFITS[s.outfit].xpBonus) * xpMultiplier : 0,
     score: eligible && arena ? Math.round(m.score * (w.multiplier + s.weapons[s.weapon] * 0.1)) : 0,
   };
 }
@@ -673,11 +677,12 @@ export function grantReward(s: Save, monster: number, arena: boolean, now = Date
   const reward = rewardFor(s, monster, arena, now, eligible); let levels = 0;
   const milestones: { level: number; berries: number }[] = [];
   s.berries += reward.berries; s.xp += reward.xp; s.tutorial.battle = true; if (eligible) recordDaily(s, 'monster');
-  while (s.xp >= s.level * 40) {
+  while (s.level < 100000 && s.xp >= s.level * 40) {
     s.xp -= s.level * 40; s.level++; s.berries += 20; levels++;
     const gift = s.level === 30 ? 30_000 : s.level === 50 ? 50_000 : s.level === 100 ? 100_000 : 0;
     if (gift) { s.berries += gift; milestones.push({ level: s.level, berries: gift }); }
   }
+  if(s.level===100000)s.xp=Math.min(s.xp,s.level*40-1);
   return { ...reward, levels, milestones };
 }
 /** Combat power is separate from all learning reward bonuses. */
@@ -947,7 +952,9 @@ export function validateSave(value: unknown): Save {
   if (migrated.version === 22) { migrated.version = 23; migrated.world2 = emptyWorldTwo(); }
   if(migrated.version===23){migrated.version=24;migrated.astralStudy=emptyAstralStudy();}
   if(migrated.version===24){migrated.version=25;migrated.selectedTitleId=migratedTitle(migrated as unknown as Save);}
+  if(migrated.version===25){migrated.version=26;migrated.partyClaims=[];}
   migrated.world2 = expandWorldTwoSave(migrated.world2);
+  if(migrated.version===26&&migrated.profileId===undefined){const hash=sha256Hex('berry-profile-v26:'+JSON.stringify(value));migrated.profileId=hash.slice(0,8)+'-'+hash.slice(8,12)+'-'+hash.slice(12,16)+'-'+hash.slice(16,20)+'-'+hash.slice(20,32);}
   const s = migrated as unknown as Save;
   // Older v22 saves retain their six potion quantities; new recovery slots start empty.
   if(s.potions&&Array.isArray(s.potions.stock)&&s.potions.stock.length===LEGACY_POTION_COUNT)s.potions.stock.push(...HUNT_RECOVERY_ITEMS.map(()=>s.teacherMode?9:0));
@@ -968,7 +975,7 @@ export function validateSave(value: unknown): Save {
   }
   const integer = (v: unknown, min: number, max: number): v is number => typeof v === 'number' && Number.isSafeInteger(v) && v >= min && v <= max;
   if (!s.garden || !integer(s.garden.rescued, 0, 3) || !Array.isArray(s.garden.flowers) || s.garden.flowers.length !== 3 || s.garden.flowers.some(f => !integer(f, -1, 2)) || s.garden.flowers.filter(f => f >= 0).length > s.garden.rescued) return fail();
-  if (s.version !== 25 || (s.selectedTitleId!==null&&!titleDefinition(s.selectedTitleId)) || !validAstralStudy(s.astralStudy,s.grade,s.level) || s.astralStudy.location!==null&&(s.world2.location!==null||s.career?.location!==null||s.room?.inside||s.homestead?.inside) || !validWorldTwo(s.world2) || s.world2.location!==null&&(s.career?.location!==null||s.room?.inside||s.homestead?.inside) || !validCareer(s.career) || !integer(s.grade, 1, 6) || !OPERATIONS.includes(s.forest) || typeof s.teacherMode !== 'boolean' || typeof s.nickname !== 'string' || !s.nickname.trim() || [...s.nickname].length > 10 || !integer(s.character, 0, 3) || !integer(s.berries, 0, 1e9) || !integer(s.level, 1, 100000) || !integer(s.xp, 0, s.level * 40 - 1) || !integer(s.best, 0, 1e9)) return fail();
+  if (s.version !== 26 || typeof s.profileId!=='string'||!/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/.test(s.profileId) || !Array.isArray(s.partyClaims)||s.partyClaims.length>4096||s.partyClaims.some(r=>!r||typeof r.id!=='string'||!/^[a-f0-9-]{36}:\d$/.test(r.id)||!Number.isSafeInteger(r.expiresAt)||r.expiresAt<0)||new Set(s.partyClaims.map(r=>r.id)).size!==s.partyClaims.length || (s.selectedTitleId!==null&&!titleDefinition(s.selectedTitleId)) || !validAstralStudy(s.astralStudy,s.grade,s.level) || s.astralStudy.location!==null&&(s.world2.location!==null||s.career?.location!==null||s.room?.inside||s.homestead?.inside) || !validWorldTwo(s.world2) || s.world2.location!==null&&(s.career?.location!==null||s.room?.inside||s.homestead?.inside) || !validCareer(s.career) || !integer(s.grade, 1, 6) || !OPERATIONS.includes(s.forest) || typeof s.teacherMode !== 'boolean' || typeof s.nickname !== 'string' || !s.nickname.trim() || [...s.nickname].length > 10 || !integer(s.character, 0, 3) || !integer(s.berries, 0, 1e9) || !integer(s.level, 1, 100000) || !integer(s.xp, 0, s.level * 40 - 1) || !integer(s.best, 0, 1e9)) return fail();
   if (!validHomestead(s.homestead) || !validExploration(s.exploration) || s.homestead.inside && s.room?.inside || !validForestActivities(s.forestActivities, s.grade) || !validForestTrail(s.forestTrail) || !validAdventure(s.adventure) || !s.pets || !validPetFriends(s.petFriends, s.pets)) return fail();
   const story = s.story;
   if (!story || !Array.isArray(story.completed) || story.completed.some(id => !integer(id, 0, 2)) || new Set(story.completed).size !== story.completed.length) return fail();

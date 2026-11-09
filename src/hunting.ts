@@ -1,3 +1,4 @@
+import {operatorAccess} from './operator-access';
 import {huntingSupply,type SupplyUseResult} from './hunt-supplies';
 import {skillInfo,isSkill,type SkillId,type JobId} from './academy';
 
@@ -29,18 +30,19 @@ const finitePoint=(p:HuntPoint)=>Number.isFinite(p.x)&&Number.isFinite(p.z);
 const validCompanionOptions=(p:Pick<HuntingOptions,'maxHpMultiplier'|'damageReduction'>)=>(p.maxHpMultiplier===undefined||Number.isFinite(p.maxHpMultiplier)&&p.maxHpMultiplier>0&&p.maxHpMultiplier<=10)&&(p.damageReduction===undefined||Number.isFinite(p.damageReduction)&&p.damageReduction>=0&&p.damageReduction<=1);
 const direction=(p?:HuntPoint)=>{const len=p?Math.hypot(p.x,p.z):0;return len&&Number.isFinite(len)?{x:p!.x/len,z:p!.z/len}:{x:0,z:-1};};
 /** A separate simulation: no DOM, learning, storage, wall clock, or online writes. */
+export function huntingMaxHp(level:number,multiplier=1){return Math.floor((100+Math.min(500,Math.floor(level*2)))*multiplier);}
 export class HuntingRuntime{
  private bossStarted:number|null=null;
  private supplyReady={food:0,health:0};private meal:{remaining:number;rate:number}|null=null;
  private time=0;private hp:number;private maxHp:number;private invincibleUntil=0;private nextAttack=0;private cooldowns:Partial<Record<SkillId,number>>={};private buffs:Partial<Record<SkillId,number>>={};private enemies:EnemyRuntime[]=[];private effects:Area[]=[];private serial=0;private readonly session:string;private windStart:HuntPoint|null=null;
  constructor(private readonly options:HuntingOptions){
-  if(!Number.isInteger(options.zone)||options.zone<0||options.zone>3||!Number.isFinite(options.level)||options.level<1||!Number.isFinite(options.power)||options.power<=0||!validCompanionOptions(options)||!options.practice&&options.level<HUNT_ZONES[options.zone].level)throw Error('아직 갈 수 없는 사냥터예요.');
-  if(options.encounter&&(!/^world2-(?:[0-5]|[25]-boss)$/.test(options.encounter.id)||!Number.isFinite(options.encounter.hp)||options.encounter.hp<=0||options.encounter.hp>1e8||!Number.isFinite(options.encounter.damage)||options.encounter.damage<=0||typeof options.encounter.boss!=='boolean'||options.practice))throw Error('잘못된 모험 설정이에요.');
+  if(!Number.isInteger(options.zone)||options.zone<0||options.zone>3||!Number.isFinite(options.level)||options.level<1||!Number.isFinite(options.power)||options.power<=0||!validCompanionOptions(options)||!options.practice&&!operatorAccess()&&options.level<HUNT_ZONES[options.zone].level)throw Error('아직 갈 수 없는 사냥터예요.');
+  if(options.encounter&&(!/^world2-(?:[0-9]|[25]-boss)$/.test(options.encounter.id)||!Number.isFinite(options.encounter.hp)||options.encounter.hp<=0||options.encounter.hp>1e8||!Number.isFinite(options.encounter.damage)||options.encounter.damage<=0||typeof options.encounter.boss!=='boolean'||options.practice))throw Error('잘못된 모험 설정이에요.');
   this.maxHp=this.profileMaxHp(options);this.hp=this.maxHp;
   this.session=`hunt-${globalThis.crypto?.randomUUID?.()??++runtimeSerial}`;
   this.reset();
  }
- private profileMaxHp(profile:HuntingOptions){return Math.floor((100+Math.min(500,Math.floor(profile.level*2)))*(profile.practice?1:profile.maxHpMultiplier??1));}
+ private profileMaxHp(profile:HuntingOptions){return huntingMaxHp(profile.level,profile.practice?1:profile.maxHpMultiplier??1);}
  updateProfile(profile:Pick<HuntingOptions,'level'|'power'>&Partial<Pick<HuntingOptions,'job'|'learned'|'loadout'|'maxHpMultiplier'|'damageReduction'>>){if(!Number.isFinite(profile.level)||profile.level<1||!Number.isFinite(profile.power)||profile.power<=0||!validCompanionOptions(profile))return false;const maxHp=this.profileMaxHp({...this.options,...profile});this.hp=Math.min(maxHp,this.hp+Math.max(0,maxHp-this.maxHp));this.maxHp=maxHp;Object.assign(this.options,profile);return true;}
  reset(){this.bossStarted=null;this.supplyReady={food:0,health:0};this.meal=null;this.time=0;this.hp=this.maxHp;this.invincibleUntil=0;this.nextAttack=0;this.cooldowns={};this.buffs={};this.effects=[];this.windStart=null;const positions=this.options.encounter?.boss?[[0,-8]]:[[-6,-3],[0,-6],[6,-3],[-8,-10],[0,-13],[8,-10]];
   const count=this.options.practice?(this.options.practiceMode==='multi'?3:this.options.practiceMode==='attacking'?2:1):this.options.encounter?.boss?1:6;

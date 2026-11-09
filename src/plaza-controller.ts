@@ -1,3 +1,5 @@
+import {journeyFor} from './rules';
+import {bindOperatorAccess} from './operator-access';
 import {mountPlazaChat} from './plaza-chat-view';
 import {PlazaOperator,plazaDeviceIdentity} from './plaza-operator';
 import type {Save} from './rules';
@@ -19,14 +21,14 @@ export function mountPlaza(h:{state:()=>Save|null;world:()=>World|undefined;host
  const close=document.createElement('button');close.textContent='닫기';close.className='plaza-close';
  panel.append(heading,note,count,emotes,roster,toggle,close);tools.append(status,panel);h.host.append(tools);
  let enabled=true;try{enabled=localStorage.getItem('berry-plaza-enabled-v1')!=='off';}catch{}
- let connection:PlazaConnection='offline',memberCount=0,emoteAt=0,lastRoster='';const buttons:HTMLButtonElement[]=[];
+ let connection:PlazaConnection='offline',memberCount=0,emoteAt=0,lastRoster='',forestScene=false;const buttons:HTMLButtonElement[]=[];
  const endpoint=(import.meta.env.VITE_PLAZA_URL as string|undefined)||PLAZA_ENDPOINT;
- const auth=new PlazaOperator(endpoint),identity=plazaDeviceIdentity();let ownRole:'operator'|'player'='player',roleUntil=0;
+ const auth=new PlazaOperator(endpoint),identity=plazaDeviceIdentity();bindOperatorAccess(()=>auth.active);let ownRole:'operator'|'player'='player',roleUntil=0;
  const badge=document.createElement('span');badge.id='operator-title';badge.className='operator-title';badge.textContent='운영자';badge.hidden=true;h.host.querySelector('.career-badges')?.append(badge);
  let chat:ReturnType<typeof mountPlazaChat>|undefined;
  const client=new PlazaClient(endpoint,{
   status:(value,total)=>{connection=value;memberCount=total;render();},
-  player:p=>h.world()?.upsertPlazaPlayer(p),leave:id=>h.world()?.removePlazaPlayer(id),clear:()=>h.world()?.clearPlazaPlayers(),
+  player:p=>h.world()?.upsertPlazaPlayer(p),leave:id=>h.world()?.removePlazaPlayer(id),clear:()=>{if(!h.world()?.partyScene)h.world()?.clearPlazaPlayers();},
   emote:(id,value)=>h.world()?.plazaEmote(id,value),
   social:(ready,role,until,verified)=>{if(verified&&role==='player')auth.invalidate();ownRole=auth.active?'operator':role;roleUntil=auth.active?auth.expiresAt:until;badge.hidden=ownRole!=='operator';chat?.refresh();},
   chat:(messages,replace)=>chat?.messages(messages,replace),
@@ -36,7 +38,7 @@ export function mountPlaza(h:{state:()=>Save|null;world:()=>World|undefined;host
  chat=mountPlazaChat(tools,()=>client,focused=>h.world()?.setTextInputFocus(focused),senderId=>h.world()?.clearPlazaSpeech({senderId}));
  auth.validate().then(()=>{ownRole=auth.active?'operator':'player';roleUntil=auth.expiresAt;badge.hidden=ownRole!=='operator';sync();});
  function render(){
-  const labels={offline:enabled?'🌿 혼자 모험 중':'🌿 혼자 다니기',connecting:'🌐 광장 연결 중',online:'🌐 함께하는 광장 · '+memberCount+'명',retrying:'🌐 광장 다시 연결 중',nickname:'🌿 별명을 확인해 주세요',full:'🌐 광장이 가득 찼어요'};
+  const labels={offline:enabled?'🌿 혼자 모험 중':'🌿 혼자 다니기',connecting:'🌐 광장 연결 중',online:'🌐 '+(forestScene?'함께하는 수학숲':'함께하는 광장')+' · '+memberCount+'명',retrying:'🌐 광장 다시 연결 중',nickname:'🌿 별명을 확인해 주세요',full:'🌐 광장이 가득 찼어요'};
   status.textContent=labels[connection];status.dataset.connection=connection;
   count.textContent=connection==='full'?'같은 광장에 잠시 후 다시 연결할게요. 혼자 모험은 계속할 수 있어요.':connection==='online'?memberCount+'명이 같은 광장에 있어요.':connection==='nickname'?'친구에게 보여 줄 별명을 다른 이름으로 바꾸면 다시 연결돼요.':connection==='retrying'?'연결되면 친구들이 다시 보여요. 모험은 계속할 수 있어요.':!endpoint?'광장 서버를 연결하는 중이에요.':'광장에 들어오면 친구들이 보여요.';
   toggle.textContent=enabled?'혼자 다니기':'친구들과 만나기';buttons.forEach(b=>b.disabled=connection!=='online');
@@ -53,14 +55,14 @@ export function mountPlaza(h:{state:()=>Save|null;world:()=>World|undefined;host
  function sync(){
   const world=h.world(),s=h.state();if(!world||!s){tools.hidden=true;chat?.hide();client.stop();return;}
   const profile=plazaProfile(s);if(roleUntil&&roleUntil<=Date.now()){ownRole='player';badge.hidden=true;}world.setPlazaIdentity(profile,ownRole);client.configure(identity,auth.token);
-  const here=world.isPublicPlaza;tools.hidden=!here;if(!here){chat?.hide();panel.hidden=true;status.setAttribute('aria-expanded','false');}
+  const scene=world.isPublicForest?{grade:s.grade,forest:s.forest,stage:journeyFor(s).stage}:null;const here=world.isPublicPlaza||!!scene;if(forestScene!==!!scene){forestScene=!!scene;render();}world.forestPresenceOnline=!!scene&&connection==='online';heading.textContent=scene?'함께하는 수학숲':'함께하는 중앙광장';note.textContent=scene?'같은 학년·같은 숲·같은 단계의 친구들을 만나요. 진행 공유는 파티에서 시작해요.':'광장에서는 레벨·별명·칭호·외형이 친구들에게 보여요.';tools.hidden=!here;if(!here){chat?.hide();panel.hidden=true;status.setAttribute('aria-expanded','false');}
   const p=world.player.position;
-  client.sync(here&&enabled&&!document.hidden,profile,{x:p.x,y:p.y,z:p.z,angle:world.player.rotation.y});
+  client.sync(here&&enabled&&!document.hidden,profile,{x:p.x,y:p.y,z:p.z,angle:world.player.rotation.y},Date.now(),scene);
  }
  const timer=setInterval(sync,200);
  const visibility=()=>sync();const stop=()=>client.stop();
  document.addEventListener('visibilitychange',visibility);window.addEventListener('pagehide',stop);
  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!panel.hidden)close.click();});
  render();
- return {sync,authenticate:async(code:string)=>{await auth.authenticate(code);ownRole='operator';roleUntil=auth.expiresAt;badge.hidden=false;client.configure(identity,auth.token);sync();},operatorActive:()=>auth.active,logout:async()=>{await auth.logout();client.configure(identity,'');ownRole='player';badge.hidden=true;sync();},stop:()=>{clearInterval(timer);chat?.stop();badge.remove();client.stop();document.removeEventListener('visibilitychange',visibility);window.removeEventListener('pagehide',stop);tools.remove();}};
+ return {sync,players:()=>client.players,authenticate:async(code:string)=>{await auth.authenticate(code);ownRole='operator';roleUntil=auth.expiresAt;badge.hidden=false;client.configure(identity,auth.token);sync();},operatorActive:()=>auth.active,operatorToken:()=>auth.token,logout:async()=>{await auth.logout();client.configure(identity,'');ownRole='player';badge.hidden=true;sync();},stop:()=>{clearInterval(timer);chat?.stop();badge.remove();client.stop();document.removeEventListener('visibilitychange',visibility);window.removeEventListener('pagehide',stop);tools.remove();}};
 }

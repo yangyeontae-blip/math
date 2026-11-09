@@ -1,3 +1,4 @@
+import {PLAZA_ROOM} from '../src/plaza-protocol.ts';
 import {CHAT_TTL,CHAT_LIMIT,CHAT_INTERVAL,OPERATOR_SESSION_TTL,normalizeChat,validChatIdentity} from '../src/plaza-social.ts';
 const hex=bytes=>Array.from(new Uint8Array(bytes),x=>x.toString(16).padStart(2,'0')).join('');
 const sha=async text=>hex(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(text)));
@@ -23,9 +24,10 @@ export class PlazaSocial {
   if(result.error){if(result.retryAt)await this.schedule(result.retryAt);return json({error:result.error,...(result.retryAt?{retryAt:result.retryAt}:{})},result.status);}await this.schedule(expiresAt);return json({ok:true,role:'operator',token:raw,expiresAt});
  }
  demote(key){for(const [ws,s] of this.room.sessions()){if(s.authSession!==key)continue;s.operatorUntil=0;s.authSession=null;ws.serializeAttachment(s);this.room.send(ws,{type:'role',role:'player',expiresAt:0});this.room.broadcast({type:'role-player',id:s.id,role:'player'});}}
- async prepare(s,m){s.chatEnabled=validChatIdentity(m.chatIdentity);s.chatSender=await sha('plaza-chat:'+(s.chatEnabled?m.chatIdentity:s.id));const session=await this.session(m.operatorToken);s.authSession=session?.key??null;s.operatorUntil=session?.expiresAt??0;return s;}
+ async sharedSession(key){if(!/^auth:session:[a-f0-9]{64}$/.test(key??''))return null;const r=await this.env.PLAZA.get(this.env.PLAZA.idFromName(PLAZA_ROOM)).fetch('https://plaza.internal/operator/verify-key',{headers:{'x-auth-session':key}});return r.ok?{key,...await r.json()}:null;}
+ async prepare(s,m){s.chatEnabled=validChatIdentity(m.chatIdentity);s.chatSender=await sha('plaza-chat:'+(s.chatEnabled?m.chatIdentity:s.id));const session=s.forestRoom&&typeof m.operatorToken==='string'&&/^[a-f0-9]{64}$/.test(m.operatorToken)?await this.sharedSession('auth:session:'+await sha(m.operatorToken)):await this.session(m.operatorToken);s.authSession=session?.key??null;s.operatorUntil=session?.expiresAt??0;return s;}
  role(s){return s.operatorUntil>this.now()?'operator':'player';}
- async operator(ws,s){const auth=s.authSession&&await this.ctx.storage.get(s.authSession);if(!auth||auth.expiresAt<=this.now()){if(s.authSession)this.demote(s.authSession);this.room.send(ws,{type:'chat-error',reason:'permission'});return false;}return true;}
+ async operator(ws,s){const auth=s.authSession&&(s.forestRoom?await this.sharedSession(s.authSession):await this.ctx.storage.get(s.authSession));if(!auth||auth.expiresAt<=this.now()){if(s.authSession)this.demote(s.authSession);this.room.send(ws,{type:'chat-error',reason:'permission'});return false;}return true;}
  async welcome(ws,s){if(!s.chatEnabled)return;this.room.send(ws,{type:'chat-history',messages:await this.history()});const muted=await this.ctx.storage.get('chat:mute:'+s.chatSender);this.room.send(ws,{type:'chat-status',mutedUntil:muted?.until>this.now()?muted.until:0});if(this.role(s)==='operator')await this.sendMutes(ws);}
  async sendMutes(ws){const records=await this.ctx.storage.list({prefix:'chat:mute:'});this.room.send(ws,{type:'chat-mutes',mutes:[...records.entries()].filter(([,m])=>m.until>this.now()).map(([key,m])=>({senderId:key.slice(10),nickname:m.nickname,until:m.until}))});}
  async handle(ws,s,m){

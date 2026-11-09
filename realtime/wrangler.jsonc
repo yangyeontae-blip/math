@@ -8,6 +8,10 @@
       {
         "name": "PLAZA",
         "class_name": "SharedPlaza"
+      },
+      {
+        "name": "PARTIES",
+        "class_name": "ForestParty"
       }
     ]
   },
@@ -16,6 +20,12 @@
       "tag": "v1",
       "new_sqlite_classes": [
         "SharedPlaza"
+      ]
+    },
+    {
+      "tag": "v2-forest-party",
+      "new_sqlite_classes": [
+        "ForestParty"
       ]
     }
   ]

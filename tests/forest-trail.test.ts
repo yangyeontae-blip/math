@@ -8,7 +8,7 @@ test('version 18 migrates to 21 preserving currency, equipment, learning, villag
   const s = start(3); s.berries = 543; s.learning.correct = 12; s.adventure.completed = [0];
   const old = { ...structuredClone(s), version: 18 } as Record<string, unknown>; delete old.forestTrail;
   const restored = validateSave(old);
-  assert.equal(restored.version,25); assert.deepEqual(restored.forestTrail, emptyForestTrail());
+  assert.equal(restored.version,26); assert.deepEqual(restored.forestTrail, emptyForestTrail());
   for (const key of ['berries', 'weapons', 'learning', 'adventure', 'additionJourney'] as const) assert.deepEqual(restored[key], s[key]);
 });
 test('trail belongs only to addition stage 1, and cannot change another forest or expedition', () => {

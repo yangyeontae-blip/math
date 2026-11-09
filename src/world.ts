@@ -1,3 +1,4 @@
+import {operatorAccess} from './operator-access';
 import {safeLanding} from './safe-landing';
 import {animateSkywardTree,createSkywardWeapon,createSkywardOutfit,createSkywardPet,createSkywardRide,type SkywardKit} from './skyward-art';
 import {ASTRAL_FORESTS,type AstralLocation} from './astral-study';
@@ -1108,7 +1109,7 @@ export class World {
   enterWorldTwo(s:Save,region:number,boss=false){return this.enterHunting(s,0,{region,boss});}
   refreshWorldTwoBeacons(s:Save){if(!this.inWorldTwo||this.inWorldTwo.boss)return;const next=WORLD_TWO_BEACONS.findIndex((_,i)=>!s.world2.regions[this.inWorldTwo!.region].beacons.includes(i));const target=this.entities.find(e=>e.id==='world2Beacon'+next);if(target){this.guideTarget={object:target.mesh,name:'다음 별등불',arrivalDistance:2};this.guideElement.querySelector('b')!.textContent='다음 별등불';this.guideElement.hidden=false;}else{this.guideTarget=null;this.guideElement.hidden=true;}for(let i=0;i<3;i++){const e=this.entities.find(e=>e.id==='world2Beacon'+i);if(e){const lit=s.world2.regions[this.inWorldTwo.region].beacons.includes(i);e.mesh.scale.setScalar(lit?1.16:1);const light=e.mesh.userData.worldTwoLight as T.Mesh|undefined;if(light){const material=light.material as T.MeshStandardMaterial;material.color.setHex(lit?0xffdc84:0x718c9f);material.emissive.setHex(lit?0x6d4d12:0);material.emissiveIntensity=.45;}e.name=(lit?'✓ 켜진 등불 ':'꺼진 등불 ')+(i+1);e.label.textContent=e.name;if(this.selectedId===e.id)this.onNear(e.name,e.id);}}}
   enterHunting(s: Save, zone = 0,world2?:WorldTwoLocation) {
-    if (!Number.isInteger(zone) || !HUNT_ZONES[zone] || s.level < HUNT_ZONES[zone].level ||world2&&!canEnterWorldTwo(s.world2,s.level,world2.region,world2.boss)) return false;
+    if (!Number.isInteger(zone) || !HUNT_ZONES[zone] || !operatorAccess() && s.level < HUNT_ZONES[zone].level ||world2&&!canEnterWorldTwo(s.world2,s.level,world2.region,world2.boss,operatorAccess())) return false;
     this.clearMap(); this.inHunting = true; this.inWorldTwo=world2??null;this.combatSave = s; this.stage = 0; this.platforms = []; s.room.inside = s.homestead.inside = false;
     // 구역마다 다른 하늘·안개·바닥과 장식. 야영지(아래쪽 모래밭)는 밝게 남겨 안전한 곳임을 보여 줘요.
     const visualZone=world2?4+planetThemeIndex(world2.region,world2.boss):zone;const theme = HUNT_THEMES[visualZone]; this.scene.background = new T.Color(theme.sky); this.scene.fog = new T.Fog(theme.fog, 48, 95);
@@ -1728,14 +1729,17 @@ export class World {
     }
     mesh.instanceMatrix.needsUpdate = true;
   }
+  forestPresenceOnline=false;
+  get isPublicForest(){return this.active&&this.stage>0&&!this.inRoom&&!this.inHomestead&&!this.inMarket&&!this.inAcademy&&!this.inHunting&&!this.inTraining&&!this.inAstralStudy;}
+  partyScene=false;
   get isPublicPlaza(){return this.active&&this.stage===0&&!this.inRoom&&!this.inHomestead&&!this.inMarket&&!this.inAcademy&&!this.inHunting&&!this.inTraining&&!this.inAstralStudy;}
   setPlazaIdentity(profile:PlazaProfile|null,role='player'){this.plazaVisual.setSelf(profile,this.player,role);}
-  upsertPlazaPlayer(player:PlazaPlayer){if(this.isPublicPlaza)this.plazaVisual.upsert(player);}
+  upsertPlazaPlayer(player:PlazaPlayer){if(this.isPublicPlaza||this.isPublicForest||this.partyScene)this.plazaVisual.upsert(player);}
   removePlazaPlayer(id:string){this.plazaVisual.remove(id);}
   clearPlazaPlayers(){this.plazaVisual.clearPeers();}
   plazaEmote(id:string,emote:PlazaEmote){this.plazaVisual.emote(id,emote);}
   selfPlazaEmote(emote:PlazaEmote){this.plazaVisual.selfEmote(emote);}
-  showPlazaSpeech(id:string|null,message:import('./plaza-social').PlazaChatMessage){if(this.isPublicPlaza)this.plazaVisual.speak(id,message);}
+  showPlazaSpeech(id:string|null,message:import('./plaza-social').PlazaChatMessage){if(this.isPublicPlaza||this.isPublicForest||this.partyScene)this.plazaVisual.speak(id,message);}
   clearPlazaSpeech(filter:{messageId?:string;senderId?:string}){this.plazaVisual.clearSpeech(filter);}
   setActive(active: boolean) { this.active = active; this.paused = !active; if (!active) this.clearInput(); this.syncAnimation(); }
   setPaused(paused: boolean) { this.paused = paused; if (paused) this.clearInput(); this.syncAnimation(); }
@@ -1961,7 +1965,7 @@ export class World {
     if (this.player.userData.sparkles) this.player.userData.sparkles.rotation.y += dt;
     for (let i = this.particles.length - 1; i >= 0; i--) { const q = this.particles[i]; q.life -= dt; q.v.y -= dt * 5; q.mesh.position.addScaledVector(q.v, dt); q.mesh.scale.setScalar(Math.max(0, q.life)); if (q.life <= 0) { this.scene.remove(q.mesh); this.particles.splice(i, 1); } }
     const target = this.storyActivityFocus ?? (this.active ? p : this.cameraTarget.set(0, 0, -1)); this.follow.lerp(target, 1 - Math.exp(-dt * (this.storyActivityFocus ? 8 : 6))); if (this.active && !this.storyActivityFocus && (this.occlusionTick++ & 7) === 0) this.updateOcclusion();
-    this.camera.position.copy(this.follow).add(this.storyActivityFocus ? this.cameraTarget.set(0, 13, 16) : this.inRoom || this.inAcademy ? ROOM_CAMERA_OFFSET : CAMERA_OFFSET); this.camera.lookAt(this.follow); this.updateGuide();this.plazaVisual.update(dt,this.camera,this.player,this.isPublicPlaza,this.active&&!this.storyActivityFocus,this.lowQuality,matchMedia('(prefers-reduced-motion: reduce)').matches);this.scene.fog=null;this.storybook.update(this.time,p,this.petModel?.position??null,this.shadowFloor);updatePlanetaryScenery(this.planetVisual,this.time,this.lowQuality,matchMedia('(prefers-reduced-motion: reduce)').matches);updatePlanetaryScenery(this.astralGateway,this.time,this.lowQuality,matchMedia('(prefers-reduced-motion: reduce)').matches); this.renderer.render(this.scene, this.camera);
+    this.camera.position.copy(this.follow).add(this.storyActivityFocus ? this.cameraTarget.set(0, 13, 16) : this.inRoom || this.inAcademy ? ROOM_CAMERA_OFFSET : CAMERA_OFFSET); this.camera.lookAt(this.follow); this.updateGuide();this.plazaVisual.update(dt,this.camera,this.player,this.isPublicPlaza||this.isPublicForest||this.partyScene,this.active&&!this.storyActivityFocus,this.lowQuality,matchMedia('(prefers-reduced-motion: reduce)').matches);this.scene.fog=null;this.storybook.update(this.time,p,this.petModel?.position??null,this.shadowFloor);updatePlanetaryScenery(this.planetVisual,this.time,this.lowQuality,matchMedia('(prefers-reduced-motion: reduce)').matches);updatePlanetaryScenery(this.astralGateway,this.time,this.lowQuality,matchMedia('(prefers-reduced-motion: reduce)').matches); this.renderer.render(this.scene, this.camera);
   }
   private updateGuide() {
     const target = this.guideTarget;

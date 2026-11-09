@@ -1,3 +1,4 @@
+import {operatorAccess} from './operator-access';
 import type {Save} from './rules';
 import {potionEffects,PPOJJAK_PET_ID} from './rules';
 import {todayKey} from './daily';
@@ -8,10 +9,10 @@ function award(s:Save,berries:number,xp:number){s.berries=Math.min(1e9,s.berries
 export function claimWorldTwoRegion(s:Save,id:number){const r=s.world2.regions[id];if(!r||r.claimed||!worldTwoRegionReady(s.world2,id))return [] as number[];r.claimed=true;const granted=[] as number[];for(let i=0;id<WORLD_TWO_CORE_REGIONS&&i<3;i++){const weapon=27+id*3+i;if(s.weapons[weapon]===undefined){s.weapons[weapon]=0;granted.push(weapon);}}award(s,WORLD_TWO_REGIONS[id].bonus,1000+id*500);return granted;}
 export function activateWorldTwoBeacon(s:Save,id:number,player:{x:number;z:number}){const l=s.world2.location,p=WORLD_TWO_BEACONS[id];if(!l||l.boss||!Number.isInteger(id)||!p||!canEnterWorldTwo(s.world2,s.level,l.region)||!Number.isFinite(player.x)||!Number.isFinite(player.z)||Math.hypot(player.x-p.x,player.z-p.z)>3)return {activated:false,completed:false};const r=s.world2.regions[l.region];if(r.beacons.includes(id))return {activated:false,completed:false};r.beacons.push(id);r.beacons.sort();const before=r.claimed;claimWorldTwoRegion(s,l.region);return {activated:true,completed:!before&&r.claimed};}
 function dailySlot(region:number,boss:boolean) {
-  return boss ? worldTwoBoss(region)!.dailySlot : region < WORLD_TWO_CORE_REGIONS ? region : region+1;
+  return boss ? worldTwoBoss(region)!.dailySlot : region < WORLD_TWO_CORE_REGIONS ? region : region<6 ? region+1 : region+2;
 }
 export function worldTwoRewardFor(s:Save,region:number,boss=false,now=Date.now()) {
-  if (!canEnterWorldTwo(s.world2,s.level,region,boss) || !Number.isFinite(new Date(now).getTime())) return {berries:0,xp:0,multiplier:0};
+  if (!canEnterWorldTwo(s.world2,s.level,region,boss,operatorAccess()) || !Number.isFinite(new Date(now).getTime())) return {berries:0,xp:0,multiplier:0};
   const base = boss ? worldTwoBoss(region)! : WORLD_TWO_REGIONS[region];
   const count = s.world2.daily.date===todayKey(new Date(now)) ? s.world2.daily.counts[dailySlot(region,boss)] : 0;
   const multiplier = count>=(boss?3:100) ? .25 : 1;
@@ -31,6 +32,8 @@ export function grantWorldTwoReward(s:Save,event:HuntDefeatEvent,seconds:number,
   if (s.world2.daily.date!==date) s.world2.daily=emptyWorldTwoDaily(date);
   s.world2.daily.counts[slot]=Math.min(1e9,s.world2.daily.counts[slot]+1);
   let levels=award(s,reward.berries,reward.xp),completed=false,first=false;
+  const unlocked=canEnterWorldTwo(s.world2,s.level,location.region,location.boss);
+  if(!unlocked)return {...reward,levels,completed:false,boss:location.boss,first:false};
   if (location.boss) {
     const encounter=worldTwoBoss(location.region)!;
     if (location.region===2) {

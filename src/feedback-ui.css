@@ -24,3 +24,9 @@
 .title-star .title-sparks>i:nth-child(even){color:#d3a349}.title-pet>b{filter:sepia(1)}.title-pet .title-sparks>i:nth-child(odd){font-size:0;width:6px;height:8px;border-radius:90% 0 90% 30%;background:#e7b293}
 
 @media(max-width:700px),(pointer:coarse){#hud .plaza-chat-form button,#hud .plaza-chat-form input,#hud #plaza-return,#modal .primary,#modal .secondary,#modal .close{min-height:48px;min-width:48px}}
+
+/* This independent preference also applies after expanding the full HUD. */
+#hud.is-quest-hidden .quest-card{display:none!important}
+.chosen-title[data-title-id="level-500"]{--title:#339b99;background:linear-gradient(120deg,#e1fff1,#e8eeff);border-color:#76cfc4}
+.chosen-title[data-title-id="level-1000"]{--title:#a77625;background:linear-gradient(120deg,#fff1b6,#fff8e6,#f1dfad);border-color:#d3b15c}
+.character-stat-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:18px 0}.character-stat-grid>div{padding:16px;border:1px solid #d4dcc2;border-radius:16px;background:#f9fbf0}.character-stat-grid dt{font-size:12px;color:#607052}.character-stat-grid dd{margin:8px 0 0;font-size:22px;font-weight:800;color:#365842}.character-stats .note{line-height:1.7}

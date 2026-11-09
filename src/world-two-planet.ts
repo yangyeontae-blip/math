@@ -12,7 +12,7 @@ export const PLANET_THEMES=[
  {sky:0x1d193d,ground:0x58486d,side:0x302345,path:0xe6d3f2,plant:0xba94dc,glow:0xffb9d2,planet:0x9c74bf,water:0xab75bf},
 ] as const;
 export function planetThemeIndex(region:number,boss=false) {
- return boss ? (region===5 ? 7 : 3) : region>=3 && region<=5 ? region+1 : Math.max(0,Math.min(2,region));
+ return region>=6 ? [4,2,1,0][Math.min(3,region-6)] : boss ? (region===5 ? 7 : 3) : region>=3 && region<=5 ? region+1 : Math.max(0,Math.min(2,region));
 }
 type Motion={object:T.Object3D;y:number;phase:number;spin:number};
 function art(name:string){const root=new T.Group();root.name=name;root.userData.planetRuntime=true;root.userData.planetMotion=[] as Motion[];const materials=new Map<string,T.Material>(),geometries=new Map<string,T.BufferGeometry>();
