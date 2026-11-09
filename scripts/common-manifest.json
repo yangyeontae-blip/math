@@ -157,12 +157,12 @@
     "public/art/skyward-weapon-37.svg": "0b79582b7349629dfba6c34f03f729c971a4659f043f880fb27a8d098e660de6",
     "public/art/skyward-weapon-38.svg": "46ae0f4ff502186fbd37fed4613fe3d0f3d9cb4d28ffd810389d1374e97aec34",
     "src/titles.ts": "d2f8316c0f3a49bd6b2ebb2e483fa465278a53fa723de4efffd67b7db5d2f027",
-    "src/title-view.ts": "bd26b7e3a7c9d445a2b2fa22b8d3f63a4486aa08c3e74ef8af086440f54b23c9",
+    "src/title-view.ts": "57cf1883d4486f43a49d94959ba293bec33d048c9cef569f433ffea0ae3c8118",
     "src/safe-landing.ts": "c3bb10a850a4946528cf1dfc9086a40af18c84e6743175526dd990a13cf83991",
     "src/display-controls.ts": "c50e71783430397693763b09667c1b659b9f693cd9414ae6c97a20b06f5654c7",
     "src/feedback-ui.css": "bbef6ae14bf9fee131a06ce0ff0f8ec6019da6976ec829ccc10f27cad5aac903",
     "tests/feedback-upgrade.test.ts": "2c185d89b6d21fa02278d843b94831ef00224cfd1bf351e7586d4c15e4a6027a",
-    "e2e/feedback-upgrade.spec.mjs": "d236363c5a2573c5b4593df23b24b0f79d3ad4452144045bfcd7d43778fadb58"
+    "e2e/feedback-upgrade.spec.mjs": "5942d4e8d61e051709a0d27b26b7d9336f351009cd3d7c6a99f24bb862d4d23f"
   },
-  "generation": "9a8d1d5a404608e24a1e818de9a9fee4ac104f0eba74fac1168a54630f97ccd6"
+  "generation": "f1c213809198e1023bb80bbf8955816f601885a69b19ad7905b4874434392f18"
 }
