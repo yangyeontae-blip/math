@@ -1,4 +1,5 @@
 import {HallOfFame} from './hall.mjs';
+import {hallResponseLimit} from '../src/hall.ts';
 import {parseForestRoom,forestRoomKey,presenceIdFromHash} from '../src/forest-room.ts';
 export {ForestParty} from './party.mjs';
 import {PlazaSocial} from './social.mjs';
@@ -48,7 +49,7 @@ export class SharedPlaza extends DurableObject {
   }
  }
  async fetch(request){
-  if(new URL(request.url).pathname==='/hall'){const hall=new HallOfFame(this.ctx.storage);if(request.method==='GET'){const u=new URL(request.url),by=u.searchParams.get('by')==='berries'?'berries':'level',me=u.searchParams.get('me')??'';return json(await hall.board(by,/^[a-f0-9]{64}$/.test(me)?me:''));}if(request.method!=='POST')return json({error:'method'},405);if(Number(request.headers.get('content-length'))>2048)return json({error:'size'},413);let report;try{const raw=await request.text();if(raw.length>2048)return json({error:'size'},413);report=JSON.parse(raw);}catch{return json({error:'body'},400);}const token=request.headers.get('authorization')?.replace(/^Bearer /,''),operator=!!await this.social.session(token),result=await hall.report(report,operator);return json(result,result.ok?200:result.error==='full'?429:400);}
+  if(new URL(request.url).pathname==='/hall'){const hall=new HallOfFame(this.ctx.storage);if(request.method==='GET'){const u=new URL(request.url),by=u.searchParams.get('by')==='berries'?'berries':'level',me=u.searchParams.get('me')??'';const limit=hallResponseLimit(u.searchParams.get('limit'));if(limit===null)return json({error:'limit'},400);const board=await hall.board(by,/^[a-f0-9]{64}$/.test(me)?me:'');return json({...board,entries:board.entries.slice(0,limit)});}if(request.method!=='POST')return json({error:'method'},405);if(Number(request.headers.get('content-length'))>2048)return json({error:'size'},413);let report;try{const raw=await request.text();if(raw.length>2048)return json({error:'size'},413);report=JSON.parse(raw);}catch{return json({error:'body'},400);}const token=request.headers.get('authorization')?.replace(/^Bearer /,''),operator=!!await this.social.session(token),result=await hall.report(report,operator);return json(result,result.ok?200:result.error==='full'?429:400);}
   if(new URL(request.url).pathname==='/operator/verify-key'){const key=request.headers.get('x-auth-session');if(!/^auth:session:[a-f0-9]{64}$/.test(key??''))return json({error:'authentication'},401);const session=await this.ctx.storage.get(key);return session?.expiresAt>Date.now()?json({ok:true,expiresAt:session.expiresAt}):json({error:'authentication'},401);}
   if(new URL(request.url).pathname==='/operator/session')return this.social.http(request);
   this.prune(Date.now(),true);if(this.sessions().length>=PLAZA_CAPACITY){const [client,server]=Object.values(new WebSocketPair());server.accept();server.send(JSON.stringify({type:'error',code:'full'}));server.close(1013,'full');return new Response(null,{status:101,webSocket:client});}

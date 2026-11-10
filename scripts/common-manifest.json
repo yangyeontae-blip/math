@@ -118,7 +118,7 @@
     "e2e/plaza.spec.mjs": "4f77e9bc0ecbb676b66bebac10ec4d69107bdd8e6bae9ffa2175bc26f599882c",
     "e2e/plaza-server.mjs": "cd016309ab2ef4b00c50c706f47a120efd73e6ad09e25646404a2aeb90f5d16b",
     "scripts/build-plaza.mjs": "cd9262c9c77bdb2ed4bb6589c14f3d211405f5b8f9a37b815832200d7c15538d",
-    "realtime/index.mjs": "fcb2e6479341ea0c493d818bcb558175a8fa4945a40d1408a8cef58b1cec8da2",
+    "realtime/index.mjs": "376911168768779f360902acbc33fe6878bdaf93ed8025870ecd89634ac281b1",
     "realtime/wrangler.jsonc": "f5a20cb84d35d340acf6afb3302bd49985272666cbc171408495f562d33f0cae",
     "realtime/plaza.test.mjs": "ae6d1f71abeab85d0349bfdf22b1425b87d84b2f12e324c6d6bd5935e852f38b",
     "src/world-two-planet.ts": "dd064382b64d90fabaa1a5d1fbed1600423fd58d017578748117bbe9df98cf11",
@@ -175,14 +175,14 @@
     "tests/forest-party.test.ts": "7ba4b0075564ff725e865fc9ba8c10e87dbd9363cedce4b1bd618b8b17fea8ae",
     "e2e/forest-party.spec.mjs": "1a5c12644239bc80aa0472217bdba45871ef2001d10ee40cd802e881a0411902",
     "src/forest-room.ts": "cf039d8ec262ef5a25c56f1dab49272803af9fc70b3b8d1e0505971b295d8e66",
-    "src/hall.ts": "14efa69a852066f995572d4b7577bcdef15ad247dd5cd5a3e634dd68e86bd0de",
+    "src/hall.ts": "3c191d7f1235aeb222d49d9fac3dd5c3a13e6f556dc89b771e031931e440dd0f",
     "src/hall.css": "ea71f1e15901d465cacdff02993a857056bd1b5f5065ff19809df5f15c2fee2b",
-    "src/hall-controller.ts": "6e0222a2deab9cf7bfa829bd3db5802a32738c08480d93e65f6bc92c2ab9197c",
-    "tests/hall.test.mjs": "e9ff2ac645295388ada67d8285ef742acfcf235944ca6603236f02c2164f71fa",
-    "e2e/hall.spec.mjs": "75f29aed140235a33c154cca537ea7d75e2eadbac53754bf6e4964e96687eb3b",
+    "src/hall-controller.ts": "bee73efd69d1693cdfb81c8ea305832d10f77a91ba8e68e163477ee1efb7449a",
+    "tests/hall.test.mjs": "744fe39cd4419a2c507d9cbc691b82e36d19062038c9fe2dede693b78c3d2b4c",
+    "e2e/hall.spec.mjs": "60f750ef21f472eb03cfa35e76c7aff48d168f6346113dc7a7dee29eca8bc875",
     "realtime/hall.mjs": "795c4724ba51fe72b3d2276e50cace464c16b548926c07d532a1edc794c3faad",
     "realtime/party.mjs": "db95013ebd51258c03563cee055ea2e984fca96f89e6bba3b464349e0bc79fd9",
-    "realtime/party.test.mjs": "03eb903d37572b0a237e79b123005808be9e98c695973cdbece761aece5ce119"
+    "realtime/party.test.mjs": "9c19d0d1fe1d9a9d331e1f467b282e47c58427555f0847b9994fa3b8e21d85b1"
   },
-  "generation": "60c567ea893bbe431565a009ad6805f7d272468f1f248b776572684c57b89b2d"
+  "generation": "daa1fa1f4dea79c5c7056eefb633f3ec6f12f556bea70f34d0f425c2d1dc7b9b"
 }

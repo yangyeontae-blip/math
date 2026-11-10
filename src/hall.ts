@@ -6,6 +6,8 @@ export type HallBoard={metric:HallMetric;entries:HallEntry[];mine:HallEntry|null
 export const hallId=(id:string)=>sha256Hex('berry-hall:'+id);
 /** 명예의 전당에 보여 주는 최대 인원. 서버가 옛 버전이면 50명만 와도 그대로 보여요. */
 export const HALL_BOARD_SIZE=200;
+/** Old clients reject lists above fifty; enlarged boards are explicitly requested. */
+export function hallResponseLimit(raw:string|null):number|null{if(raw===null)return 50;if(!/^[1-9][0-9]*$/.test(raw))return null;const n=Number(raw);return Number.isSafeInteger(n)&&n<=HALL_BOARD_SIZE?n:null;}
 /** 내 기록이 목록에 없을 때 아이가 이유를 알 수 있게 알려 줘요. */
 export type HallReportProblem=''|'network'|'invalid'|'full';
 export function hallMissingReason(nickname:string,excluded:boolean,problem:HallReportProblem=''):string{
