@@ -10,7 +10,7 @@ test('World 2 real combat and beacon interactions complete all regions, preserve
   await page.locator('[data-career-action="enter-world2"][data-region="'+region+'"]').click({timeout:45000});await expect.poll(()=>page.evaluate(()=>window.__berry.getWorld()?.inWorldTwo?.region),{timeout:30000}).toBe(region);
   await page.screenshot({path:info.outputPath('world2-region-'+region+'.png')});
   for(let enemy=0;enemy<6;enemy++){await page.evaluate(id=>{const w=window.__berry.getWorld(),e=w.huntingStatus.enemies.find(e=>e.id===String(id));w.player.position.set(e.x,0,e.z+1);},enemy);await page.keyboard.down('f');try{await expect.poll(()=>page.evaluate(()=>window.__berry.getState().world2.regions[window.__berry.getWorld().inWorldTwo.region].kills),{timeout:30000}).toBeGreaterThanOrEqual(enemy+1);}finally{await page.keyboard.up('f');}}
-  for(let beacon=0;beacon<3;beacon++){await page.evaluate(id=>{const p=[[-9,-14],[9,-14],[0,-17]][id];window.__berry.getWorld().player.position.set(p[0],0,p[1]);},beacon);await expect(page.locator('#interact')).toContainText('등불 '+(beacon+1),{timeout:15000});if(info.project.name==='mobile')await page.locator('#touch-talk').click();else await page.keyboard.press('e');await expect.poll(()=>page.evaluate(()=>window.__berry.getState().world2.regions[window.__berry.getWorld().inWorldTwo.region].beacons.length)).toBe(beacon+1);}
+  for(let beacon=0;beacon<3;beacon++){await page.evaluate(id=>{const p=[[-9,-14],[9,-14],[0,-17]][id];window.__berry.getWorld().player.position.set(p[0],0,p[1]);},beacon);await expect(page.locator('#interact')).toContainText('등불 '+(beacon+1),{timeout:15000});if(info.project.use.isMobile)await page.locator('#touch-talk').click();else await page.keyboard.press('e');await expect.poll(()=>page.evaluate(()=>window.__berry.getState().world2.regions[window.__berry.getWorld().inWorldTwo.region].beacons.length)).toBe(beacon+1);}
   await expect.poll(()=>page.evaluate(()=>window.__berry.getState().world2.regions[window.__berry.getWorld().inWorldTwo.region].claimed)).toBe(true);
  }
  const beforeBoss=await page.evaluate(()=>structuredClone(window.__berry.getState()));for(let id=27;id<36;id++)expect(beforeBoss.weapons[id]).toBe(0);expect(beforeBoss.learning.correct).toBe(0);expect(beforeBoss.career.stats.defeats).toBe(0);
@@ -21,7 +21,7 @@ test('World 2 real combat and beacon interactions complete all regions, preserve
 });
 
 
-test('World 2 and central teacher prioritize math learning and the ornate main gate opens the grade forest map',async({page},info)=>{await start(page,60);await page.evaluate(()=>{const w=window.__berry.getWorld(),e=w.entities.find(e=>e.id==='guide');w.player.position.set(e.x,0,e.z+1);});await expect(page.locator('#interact')).toContainText('마을 안내');if(info.project.name==='mobile')await page.locator('#touch-talk').click();else await page.keyboard.press('e');await expect(page.locator('.talk-bubble')).toHaveClass(/finished/,{timeout:5000});if(info.project.name==='mobile')await page.locator('.talk-bubble').click();else await page.keyboard.press('e');await expect(page.locator('#modal-content')).toContainText('중앙광장 안내');await expect(page.locator('.nav-list [data-nav]').first()).toHaveAttribute('data-nav','explore');await expect(page.locator('#modal-content')).toContainText('최대 128명');await expect(page.locator('#modal-content')).toContainText('3학년');await page.screenshot({path:info.outputPath('teacher-current-guide.png')});await page.locator('[data-nav="explore"]').click();await expect(page.locator('.modal-heading')).toContainText('수학숲으로 모험하기');await page.keyboard.press('Escape');await page.evaluate(()=>{window.__berry.getWorld().player.position.set(0,0,14.5);});await expect(page.locator('#interact')).toContainText('수학숲으로 모험하기');await expect.poll(()=>page.evaluate(()=>!!window.__berry.getWorld().scene.getObjectByName('math-forest-main-gateway'))).toBe(true);await page.waitForTimeout(600);await page.screenshot({path:info.outputPath('math-forest-main-gateway.png')});if(info.project.name==='mobile')await page.locator('#touch-talk').click();else await page.keyboard.press('e');await expect(page.locator('.modal-heading')).toContainText('수학숲으로 모험하기');});
+test('World 2 and central teacher prioritize math learning and the ornate main gate opens the grade forest map',async({page},info)=>{await start(page,60);await page.evaluate(()=>{const w=window.__berry.getWorld(),e=w.entities.find(e=>e.id==='guide');w.player.position.set(e.x,0,e.z+1);});await expect(page.locator('#interact')).toContainText('마을 안내');if(info.project.use.isMobile)await page.locator('#touch-talk').click();else await page.keyboard.press('e');await expect(page.locator('.talk-bubble')).toHaveClass(/finished/,{timeout:5000});if(info.project.use.isMobile)await page.locator('.talk-bubble').click();else await page.keyboard.press('e');await expect(page.locator('#modal-content')).toContainText('중앙광장 안내');await expect(page.locator('.nav-list [data-nav]').first()).toHaveAttribute('data-nav','explore');await expect(page.locator('#modal-content')).toContainText('최대 128명');await expect(page.locator('#modal-content')).toContainText('3학년');await page.screenshot({path:info.outputPath('teacher-current-guide.png')});await page.locator('[data-nav="explore"]').click();await expect(page.locator('.modal-heading')).toContainText('수학숲으로 모험하기');await page.keyboard.press('Escape');await page.evaluate(()=>{window.__berry.getWorld().player.position.set(0,0,14.5);});await expect(page.locator('#interact')).toContainText('수학숲으로 모험하기');await expect.poll(()=>page.evaluate(()=>!!window.__berry.getWorld().scene.getObjectByName('math-forest-main-gateway'))).toBe(true);await page.waitForTimeout(600);await page.screenshot({path:info.outputPath('math-forest-main-gateway.png')});if(info.project.use.isMobile)await page.locator('#touch-talk').click();else await page.keyboard.press('e');await expect(page.locator('.modal-heading')).toContainText('수학숲으로 모험하기');});
 
 test('World 2 outer islands and the new solo guardian open from the real map and preserve their save location',async({page},info)=>{
  test.setTimeout(300000);
@@ -40,7 +40,7 @@ test('World 2 outer islands and the new solo guardian open from the real map and
  await expect.poll(()=>page.evaluate(()=>!!window.__berry.getWorld().scene.getObjectByName('astral-nebula-dragon'))).toBe(true);
  await page.evaluate(()=>window.__berry.getWorld().player.position.set(0,0,-7));
  const attack=page.locator('[data-career-action="attack"]');
- if(info.project.name==='mobile')await attack.tap();else await attack.click();
+ if(info.project.use.isMobile)await attack.tap();else await attack.click();
  await expect.poll(()=>page.evaluate(()=>window.__berry.getWorld().huntingStatus.bossFightSeconds),{timeout:30000}).toBeGreaterThan(0);
  await page.screenshot({path:info.outputPath('outer-guardian.png')});
  await page.reload({waitUntil:'domcontentloaded'});await page.locator('#continue').click();
@@ -53,14 +53,14 @@ test('World 2 release: secret merchant and salon work through their world intera
  async function interact(id,label){
   await page.evaluate(id=>{const w=window.__berry.getWorld(),e=w.entities.find(e=>e.id===id);w.player.position.set(e.x,0,e.z+.4);},id);
   await expect(page.locator('#interact')).toContainText(label);
-  if(info.project.name==='mobile')await page.locator('#touch-talk').click();else await page.keyboard.press('e');
+  if(info.project.use.isMobile)await page.locator('#touch-talk').click();else await page.keyboard.press('e');
  }
  await interact('shopStreet','상점');
  await expect.poll(()=>page.evaluate(()=>window.__berry.getWorld().inMarket)).toBe(true);
  await interact('beauty','살롱');
  if(await page.locator('.talk-bubble').isVisible()){
   await expect(page.locator('.talk-bubble')).toHaveClass(/finished/,{timeout:10000});
-  if(info.project.name==='mobile')await page.locator('.talk-bubble').click();else await page.keyboard.press('e');
+  if(info.project.use.isMobile)await page.locator('.talk-bubble').click();else await page.keyboard.press('e');
  }
  await expect(page.locator('.salon-card')).toHaveCount(13);
  const mirror = await page.locator('.salon-stage canvas').elementHandle();
