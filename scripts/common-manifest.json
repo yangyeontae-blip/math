@@ -175,14 +175,14 @@
     "tests/forest-party.test.ts": "7ba4b0075564ff725e865fc9ba8c10e87dbd9363cedce4b1bd618b8b17fea8ae",
     "e2e/forest-party.spec.mjs": "1a5c12644239bc80aa0472217bdba45871ef2001d10ee40cd802e881a0411902",
     "src/forest-room.ts": "cf039d8ec262ef5a25c56f1dab49272803af9fc70b3b8d1e0505971b295d8e66",
-    "src/hall.ts": "37b707ffe62239dfb361c171137916121afa081e25b2a0c7dbb7ae8c378bb5ae",
+    "src/hall.ts": "14efa69a852066f995572d4b7577bcdef15ad247dd5cd5a3e634dd68e86bd0de",
     "src/hall.css": "ea71f1e15901d465cacdff02993a857056bd1b5f5065ff19809df5f15c2fee2b",
-    "src/hall-controller.ts": "7d7693d316989c934397fc600461fac5f61bdf9dfe9c1feeffd31ca6a9fa219f",
+    "src/hall-controller.ts": "6e0222a2deab9cf7bfa829bd3db5802a32738c08480d93e65f6bc92c2ab9197c",
     "tests/hall.test.mjs": "e9ff2ac645295388ada67d8285ef742acfcf235944ca6603236f02c2164f71fa",
     "e2e/hall.spec.mjs": "75f29aed140235a33c154cca537ea7d75e2eadbac53754bf6e4964e96687eb3b",
     "realtime/hall.mjs": "795c4724ba51fe72b3d2276e50cace464c16b548926c07d532a1edc794c3faad",
     "realtime/party.mjs": "db95013ebd51258c03563cee055ea2e984fca96f89e6bba3b464349e0bc79fd9",
     "realtime/party.test.mjs": "03eb903d37572b0a237e79b123005808be9e98c695973cdbece761aece5ce119"
   },
-  "generation": "2c58e52a640d3adb1b7c2fc7a295b2a96be2b9d99a269554c9ce3f9a1494cc9a"
+  "generation": "85ccf88e9a204ec92b04dd5d49b429251aec6f8338f4414a1b2444b735ada671"
 }

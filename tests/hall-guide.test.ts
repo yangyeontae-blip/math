@@ -28,3 +28,10 @@ test('안내문에 명예의 전당·파티 업데이트와 뽀짝이 위치를 
   assert.ok(n.pinned);
   for (const word of ['명예의 전당', '뽀짝이', '운영자 소식', '파티']) assert.ok(n.body.includes(word), word);
 });
+
+test('내 기록이 없을 때 원인별로 다른 이유를 보여 준다', () => {
+  assert.match(hallMissingReason('하랑', false, 'network'), /연결하지 못해/);
+  assert.match(hallMissingReason('하랑', false, 'invalid'), /닉네임/);
+  assert.match(hallMissingReason('하랑', false, 'full'), /가득/);
+  assert.match(hallMissingReason('하랑', true, 'network'), /선생님 모드/);
+});
