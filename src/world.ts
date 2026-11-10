@@ -721,6 +721,7 @@ export class World {
   onHuntEvent = (_event: HuntEvent) => {};
   inHomestead=false; private homeRoot:T.Group|null=null; private homeSave:Save|null=null; private homeTargets:ReturnType<typeof visitorTargets>=[]; private discoveryRoot:T.Group|null=null;
   private homeVisitors:{entity:Entity;cell:number;path:number[];pause:number;turn:number;kind:number}[]=[];
+  hallGuideDog: T.Group | null = null;
   active = false; paused = true; inRoom = false; onCollect = (_id: number) => {}; onStar = (_id: number) => {}; onInteract = (_id: string) => {}; onAttack = (_id: string | null) => {}; onNear = (_name: string | null, _id: string | null) => {}; onJump = () => {}; onRescue = () => {}; onStageLoaded = (_stage: number) => {};
   private roomActivity:{id:number;kind:RoomActionKind;stand:T.Vector3;book:T.Group|null;page:number}|null=null;
   private roomActivityPanel!:HTMLDivElement;
@@ -816,8 +817,9 @@ export class World {
     // its face intersects the wood as it turns toward the angled camera.
     this.sign(board,'운영자 소식',0,2.75,.25,3.8,'#173f30',true);
     this.addEntity('noticeBoard','운영자 소식 · 공지 읽기',VILLAGE_SPOTS.notice.x,VILLAGE_SPOTS.notice.z,board);
-    const hallGuide=makeCharacter(2,11,0,0,0,5,4);
-    this.sign(hallGuide,'명예의 전당',0,3.15,0,3.4,'#8a6418',true);
+    // 명예의 전당 안내는 전설 펫과 같은 살구빛 곱슬털 강아지 뽀짝이가 맡아요. 광장에서 잘 보이게 조금 크게 세워요.
+    const hallGuide=new T.Group(),hallDog=createPpojjakiPet();hallDog.scale.setScalar(1.7);hallGuide.add(hallDog);this.hallGuideDog=hallDog;
+    this.sign(hallGuide,'명예의 전당',0,2.3,0,3.4,'#8a6418',true);
     this.addEntity('hallGuide','뽀짝이 · 명예의 전당 보기',HALL_GUIDE_SPOT.x,HALL_GUIDE_SPOT.z,hallGuide);
     this.addBerries();
   }
@@ -1815,6 +1817,7 @@ export class World {
   private frame() {
     if (document.hidden || this.paused || !this.active) return;
     const frame = this.clock.getDelta(), dt = Math.min(frame, .04); this.time += dt;
+    if (this.hallGuideDog?.parent) animatePpojjakiPet(this.hallGuideDog, this.time, false, this.lowQuality, matchMedia('(prefers-reduced-motion: reduce)').matches);
     if(this.inHomestead)this.animateHomeVisitors(dt);
     this.updateSkills(dt);
     if (this.shadowSweep++ % 45 === 0) this.trimSmallShadows(); // 새로 생긴 펫·탈것·몬스터도 곧 정리돼요.

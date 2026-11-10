@@ -19,7 +19,7 @@ test('뽀짝이는 운영자 소식 공지판 바로 옆, 장식이 놓이지 �
 });
 
 test('뽀짝이는 명예의 전당을 안내하는 대사를 한다', () => {
-  for (let i = 0; i < 20; i++) assert.ok(GREETINGS.hallGuide.includes(pickLine('hallGuide', () => i / 20)!));
+  for (let i = 0; i < 20; i++) assert.ok(GREETINGS.hallGuide.includes(pickLine('hallGuide', () => i / 20, { night: true, rain: true })!));
   assert.ok(GREETINGS.hallGuide.some(line => line.includes('뽀짝')));
 });
 

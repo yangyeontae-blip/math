@@ -7,7 +7,7 @@ export const VILLAGE_SPOTS = {
 } as const;
 
 /** 명예의 전당 안내 NPC 뽀짝이는 운영자 소식 공지판 바로 옆(공지판의 빈 구역 안)에 서요. */
-export const HALL_GUIDE_SPOT = { x: -5.8, z: 9.6 } as const;
+export const HALL_GUIDE_SPOT = { x: -13.2, z: 8.4 } as const;
 
 export function villageWelcomeClear(x: number, z: number): boolean {
   return Math.hypot(x - VILLAGE_SPOTS.notice.x, z - VILLAGE_SPOTS.notice.z) < 4.5

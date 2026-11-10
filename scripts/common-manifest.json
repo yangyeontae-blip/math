@@ -54,7 +54,7 @@
     "src/learning-tools.ts": "d8a2ad493162cb20f402aa23f05557c4d5cdd360e0f30027677615177fe817bd",
     "src/math-format.ts": "1cd347b406f4641a9fb7c9745e008878ca89c837ac5d779777f074818c609b7d",
     "src/notices.css": "122a0cab83d4c2e11e42d5b01f7f37e9217b4737b5379043ff8f9effd30511dc",
-    "src/notices.ts": "b9a19d3cf0a136e4ab6e03d807f0a4ce99d3a7120ee104dad0071a2ec54e56bf",
+    "src/notices.ts": "db08004e51c6b9baa3f11e5c8fd72630938bde52244ab126f68da626405dd478",
     "src/pet-care.ts": "96f52db45ffc9af53676598b2772555f9b48a5c9675495cca499320070a35492",
     "src/ranking.ts": "9696fb7434f1c8a89ec564e82d25caafa0cb46a414fae71722e9a7b79f8f2f15",
     "src/report.ts": "035c92725084064a41b4f5ab0c7ccaa7745266275acf0131f581e2ad6213a468",
@@ -83,7 +83,7 @@
     "src/career-controller.ts": "7ed0d0ae16db793b887034b01d13188b0e35a628300668eafbf8fb225a99a6f9",
     "src/career-ui.ts": "587b5e9da749307bcab735e224b135a05dac6ef0e500a047e7696fc692f1d849",
     "src/career.css": "3f90e849cd1345c18d67145467e5e879194b1569d839609a55e4cfbf9bc5c3f0",
-    "src/village-layout.ts": "cabc24b77d8e1f827f6f11be69afaf7b0f99686679f5fc968d784e266d3f287d",
+    "src/village-layout.ts": "34f8c177633a9255e686bd0d82b5d0556428eb9df85b24b47c040c72311011d3",
     "tests/hunting.test.ts": "70d759f38c7d698320f357e73bff4e9e4e07e5e85d12f869026d18b84768013d",
     "tests/hunting-world.test.ts": "9b9fd34a1c8e730ac2b73165a218dd62b7d816a5c8eb26e0ca10e830baa1339d",
     "e2e/hunting.spec.mjs": "0f2a88915538a42a73dea23b47f2493c97f8621e544ebf5b8f4d25b51a70f78b",
@@ -184,5 +184,5 @@
     "realtime/party.mjs": "db95013ebd51258c03563cee055ea2e984fca96f89e6bba3b464349e0bc79fd9",
     "realtime/party.test.mjs": "03eb903d37572b0a237e79b123005808be9e98c695973cdbece761aece5ce119"
   },
-  "generation": "85ccf88e9a204ec92b04dd5d49b429251aec6f8338f4414a1b2444b735ada671"
+  "generation": "60c567ea893bbe431565a009ad6805f7d272468f1f248b776572684c57b89b2d"
 }
