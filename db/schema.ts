@@ -28,3 +28,16 @@ export const feedbackLimits = sqliteTable('feedback_limits', {
   bucket: integer('bucket').notNull(),
   hits: integer('hits').notNull().default(1),
 });
+
+// Optional accounts. No email, real name, school or plaintext credentials.
+export const adventureAccounts = sqliteTable('adventure_accounts', {
+ username: text('username').primaryKey(), passwordHash: text('password_hash').notNull(), salt: text('salt').notNull(),
+ recoveryHash: text('recovery_hash').notNull(), snapshot: text('snapshot'), previousSnapshot: text('previous_snapshot'),
+ revision: integer('revision').notNull().default(0), updatedAt: integer('updated_at').notNull(),
+});
+export const adventureSessions = sqliteTable('adventure_sessions', {
+ tokenHash: text('token_hash').primaryKey(), username: text('username').notNull(), expiresAt: integer('expires_at').notNull(), credentialVersion: text('credential_version').notNull().default(''),
+}, table => [index('idx_adventure_session_expiry').on(table.expiresAt),index('idx_adventure_session_user').on(table.username)]);
+export const accountLimits = sqliteTable('account_limits', {
+ key: text('key').primaryKey(), bucket: integer('bucket').notNull(), hits: integer('hits').notNull().default(1),
+}, table => [index('idx_account_limit_bucket').on(table.bucket)]);

@@ -1,3 +1,4 @@
+import {createRequire} from 'node:module';
 import { cp, mkdir, readFile, readdir, rm, writeFile } from 'node:fs/promises';
 import { extname, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -45,7 +46,9 @@ const feedback = (await readFile(join(root, 'worker', 'feedback.js'), 'utf8')).r
 const template = (await readFile(workerSource, 'utf8')).replace("import { handleFeedback } from './feedback.js';", feedback);
 const marker = '/*__EMBEDDED_ASSETS__*/{}';
 await mkdir(join(dist, 'server'), { recursive: true });
-await writeFile(join(dist, 'server', 'index.js'), embedWorkerAssets(template, marker, manifest), 'utf8');
+const {build} = createRequire(import.meta.resolve('vite'))('esbuild');
+const bundled = await build({stdin:{contents:embedWorkerAssets(template, marker, manifest),resolveDir:join(root,'worker'),sourcefile:'index.js'},bundle:true,format:'esm',platform:'browser',target:'es2022',write:false});
+await writeFile(join(dist, 'server', 'index.js'), bundled.outputFiles[0].text, 'utf8');
 await mkdir(join(dist, '.openai'), { recursive: true });
 await cp(join(root, '.openai', 'hosting.json'), join(dist, '.openai', 'hosting.json'));
 await rm(join(dist, '.openai', 'drizzle'), { recursive: true, force: true });

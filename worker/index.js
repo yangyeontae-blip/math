@@ -1,3 +1,4 @@
+import { handleAccounts } from './accounts.js';
 import { handleFeedback } from './feedback.js';
 const embeddedAssets = /*__EMBEDDED_ASSETS__*/{};
 
@@ -182,6 +183,7 @@ export { normalizeNickname, validPlayerId, isBlockedNickname, allowedCompleted, 
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
+    if (url.pathname.startsWith('/api/account/')) return handleAccounts(request, env);
     if (url.pathname === '/api/feedback') return handleFeedback(request, env);
     if (url.pathname === '/promo.mp4') {
       return Response.redirect('https://yangyeontae-blip.github.io/math/promo.mp4', 302);

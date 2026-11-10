@@ -1,0 +1,1 @@
+ALTER TABLE `adventure_sessions` ADD `credential_version` text DEFAULT '' NOT NULL;
