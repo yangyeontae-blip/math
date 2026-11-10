@@ -54,7 +54,7 @@
     "src/learning-tools.ts": "d8a2ad493162cb20f402aa23f05557c4d5cdd360e0f30027677615177fe817bd",
     "src/math-format.ts": "1cd347b406f4641a9fb7c9745e008878ca89c837ac5d779777f074818c609b7d",
     "src/notices.css": "122a0cab83d4c2e11e42d5b01f7f37e9217b4737b5379043ff8f9effd30511dc",
-    "src/notices.ts": "9631237f750f1138fc0ba723c98dd80a0865bb29a20696092dadf866b42d356e",
+    "src/notices.ts": "b9a19d3cf0a136e4ab6e03d807f0a4ce99d3a7120ee104dad0071a2ec54e56bf",
     "src/pet-care.ts": "96f52db45ffc9af53676598b2772555f9b48a5c9675495cca499320070a35492",
     "src/ranking.ts": "9696fb7434f1c8a89ec564e82d25caafa0cb46a414fae71722e9a7b79f8f2f15",
     "src/report.ts": "035c92725084064a41b4f5ab0c7ccaa7745266275acf0131f581e2ad6213a468",
@@ -83,7 +83,7 @@
     "src/career-controller.ts": "7ed0d0ae16db793b887034b01d13188b0e35a628300668eafbf8fb225a99a6f9",
     "src/career-ui.ts": "587b5e9da749307bcab735e224b135a05dac6ef0e500a047e7696fc692f1d849",
     "src/career.css": "3f90e849cd1345c18d67145467e5e879194b1569d839609a55e4cfbf9bc5c3f0",
-    "src/village-layout.ts": "ccdb173cd4384aac0d833d7442c913ccf81fb0fddc4f747b78ed4f1534033dbb",
+    "src/village-layout.ts": "cabc24b77d8e1f827f6f11be69afaf7b0f99686679f5fc968d784e266d3f287d",
     "tests/hunting.test.ts": "70d759f38c7d698320f357e73bff4e9e4e07e5e85d12f869026d18b84768013d",
     "tests/hunting-world.test.ts": "9b9fd34a1c8e730ac2b73165a218dd62b7d816a5c8eb26e0ca10e830baa1339d",
     "e2e/hunting.spec.mjs": "0f2a88915538a42a73dea23b47f2493c97f8621e544ebf5b8f4d25b51a70f78b",
@@ -136,7 +136,7 @@
     "e2e/plaza-social.spec.mjs": "2ea2a6943c427fe66269ebcaccc158c230c19e218b659d0579865a03eb3e17e2",
     "realtime/social.mjs": "d63acdc7d23dd9f86c08fe8165ab79addef68ccc24cc0eb75deb59c46ad01469",
     "realtime/social.test.mjs": "c154680df761879c44daa88596f40911c338b1e3bf78d352913948ff6dc9d5fe",
-    "tests/notices.test.ts": "f981759a9bc23f0dcbdaa7be3aed4d512b9c5dc84a24b3e53e45ce6f00969b56",
+    "tests/notices.test.ts": "b25b045ca2afc50c8ddd2235d49e04e61a1b7214f8d59288a7c6d8cef3e570e6",
     "src/skyward-collection.ts": "47c5c0da3bd61446538d02ae6bbacd795f78a3b76d96bd8d3a6b26b83d560a4d",
     "src/skyward-art.ts": "c5a7cffa2957a823af75c5313eb482156d000f97be4fda7b5cc0b46124daac7c",
     "src/skyward-collection.css": "a071e35c71b65eb86b4f56e3c26a5d4221e7e88e7dcfa363bbb438cba12cec3c",
@@ -175,14 +175,14 @@
     "tests/forest-party.test.ts": "7ba4b0075564ff725e865fc9ba8c10e87dbd9363cedce4b1bd618b8b17fea8ae",
     "e2e/forest-party.spec.mjs": "1a5c12644239bc80aa0472217bdba45871ef2001d10ee40cd802e881a0411902",
     "src/forest-room.ts": "cf039d8ec262ef5a25c56f1dab49272803af9fc70b3b8d1e0505971b295d8e66",
-    "src/hall.ts": "4a70faf8b1d2c019999e26df4b77a223b37460a32732c88c61319ee5c2a90930",
+    "src/hall.ts": "37b707ffe62239dfb361c171137916121afa081e25b2a0c7dbb7ae8c378bb5ae",
     "src/hall.css": "ea71f1e15901d465cacdff02993a857056bd1b5f5065ff19809df5f15c2fee2b",
-    "src/hall-controller.ts": "f3215b10058169fc30d72b35ddd5a22b9f478b1dd079c5ec654c108566ad1607",
+    "src/hall-controller.ts": "7d7693d316989c934397fc600461fac5f61bdf9dfe9c1feeffd31ca6a9fa219f",
     "tests/hall.test.mjs": "e9ff2ac645295388ada67d8285ef742acfcf235944ca6603236f02c2164f71fa",
     "e2e/hall.spec.mjs": "75f29aed140235a33c154cca537ea7d75e2eadbac53754bf6e4964e96687eb3b",
-    "realtime/hall.mjs": "f91193af4c01aa15b2d75f8d2b7f4d4ec982a6e7eae32d11a0ced6edbdfeec90",
+    "realtime/hall.mjs": "795c4724ba51fe72b3d2276e50cace464c16b548926c07d532a1edc794c3faad",
     "realtime/party.mjs": "db95013ebd51258c03563cee055ea2e984fca96f89e6bba3b464349e0bc79fd9",
-    "realtime/party.test.mjs": "2dc35a0838a32c80ce3dacced9cc6e8e583013122422fada670b2156a7b95109"
+    "realtime/party.test.mjs": "03eb903d37572b0a237e79b123005808be9e98c695973cdbece761aece5ce119"
   },
-  "generation": "84cef79e310b03d219f33f18f27ddf68e54134ad3263d82e1c6c679261aefa92"
+  "generation": "2c58e52a640d3adb1b7c2fc7a295b2a96be2b9d99a269554c9ce3f9a1494cc9a"
 }

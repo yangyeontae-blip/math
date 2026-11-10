@@ -20,7 +20,7 @@ import { HUNT_ZONES, HUNT_CAMP } from './hunting';
 import { mathForestGateway, academyBuilding, academyInterior, skillEffectModel, VILLAGE_ART, PLAZA_BERRY_TREES, berryTreeModel, plazaGarden, fountainModel, cottageModel, marketGarden, homesteadGarden, stoneLane, districtBorder, flowerBed } from './village-art';
 import { shopSignText, shopInteraction } from './shop-signs';
 import { showEntityLabel } from './navigation';
-import { MARKET_SCALE, MARKET_RADIUS, MARKET_DOOR_OFFSET, MARKET_SHOPS, VILLAGE_SPOTS, villageWelcomeClear, villageTreeSpot, villageMonsterSpot } from './village-layout';
+import { MARKET_SCALE, MARKET_RADIUS, MARKET_DOOR_OFFSET, MARKET_SHOPS, VILLAGE_SPOTS, HALL_GUIDE_SPOT, villageWelcomeClear, villageTreeSpot, villageMonsterSpot } from './village-layout';
 import { homeScenery } from './homestead-models';
 import { HOME_ITEMS, objectCells, visitorTargets, homeRoute, homeReachable, type HomeObject } from './homestead';
 import { HOME_EXIT, HOME_PROJECT_SPOTS, HOME_VISITORS, atHomeExit } from './home-experience';
@@ -816,6 +816,9 @@ export class World {
     // its face intersects the wood as it turns toward the angled camera.
     this.sign(board,'운영자 소식',0,2.75,.25,3.8,'#173f30',true);
     this.addEntity('noticeBoard','운영자 소식 · 공지 읽기',VILLAGE_SPOTS.notice.x,VILLAGE_SPOTS.notice.z,board);
+    const hallGuide=makeCharacter(2,11,0,0,0,5,4);
+    this.sign(hallGuide,'명예의 전당',0,3.15,0,3.4,'#8a6418',true);
+    this.addEntity('hallGuide','뽀짝이 · 명예의 전당 보기',HALL_GUIDE_SPOT.x,HALL_GUIDE_SPOT.z,hallGuide);
     this.addBerries();
   }
   enterMarket(s:Save) {
