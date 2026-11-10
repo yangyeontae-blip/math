@@ -1,11 +1,9 @@
-Codex 작업 중 — 이어받지 마세요
-
 ## 선택형 계정 보관 — 2026-11-10
 ① 목표: 무료판 기존 이어하기 보존, 선택형 아이디·비밀번호·복구코드로 기기 간 게임 기록 보관.
 ② 완료: 선택형 UI, 복구코드 1회 표시·교체, 서버 PBKDF2+서버 pepper, 해시 세션·8시간 만료, 메모리 로그인, 동의 뒤 기록 선택, 기기 사본 3개·온라인 직전 사본, revision 충돌 차단·재연결 보관. 계정 간 상세 학습 이력은 기기에 분리. 저장 v26·교사/복구 코드·보호 테스트 무변경. 서버는 기존 Sites D1 사용, 로그인하지 않으면 계정 API를 호출하지 않음.
-③ 남은 순서: 마지막 안내 문구 빌드 확인 → math 커밋·푸시 → Sites 0003·0004 추가 마이그레이션 포함 배포 → Pages 결과 확인.
+③ 남은 순서: GitHub Actions 42819411822의 Pages 최종 결과 확인 → 성공 시 공개 주소의 새 자산 확인. 코드 커밋 c96d983은 푸시 완료. 보조 주소 Sites v103(소스 23d77183784fc545d39b5e4877b3b59e450d4ba6)은 배포 성공. 배포 ID appgdep_6af313e7684881919fd2e86a9ae03d9e, 환경 revision 3. 운영 D1 계정 테이블 및 로그인 401 정상 응답 확인. 이전 성공 실행은 광장 약 2.5분·세계2 약 6분·나머지 약 17분 소요. 자동 검사 대기 중이며 Pages 완료로 보고하지 않음.
 ④ 주의: math·보조 주소만 적용. 수익화 앱에는 로그인 미적용. 상세 리포트는 업로드하지 않지만 Save 내부 학습 진도는 게임 기록에 포함. ACCOUNT_PEPPER는 Sites 비밀값(환경 revision 3)에만 보관하며 기존 계정 생성 후 무작정 교체 금지. 실제 iOS/Android 미검증. 저장 소실 제보 원인 수정이나 사냥 파티 확장은 이번 범위 아님.
-⑤ 마지막 검사: math tsc PASS / 전체 446 tests PASS / build+Worker syntax PASS / 182 common PASS / 계정 SQL·클라이언트 6 PASS / PC·모바일 계정 UI 4 PASS / 실제 workerd+D1+WebCrypto 가입·로그인·조회 PASS. 실제 배포 빌드의 선택형 안내 화면 직접 확인.
+⑤ 마지막 검사: math tsc PASS / 전체 446 tests PASS / build+Worker syntax PASS / 182 common PASS / 계정 SQL·클라이언트 6 PASS / PC·모바일 계정 UI 6 PASS(실제 플레이 자동 보관·보관함 재개방·충돌 후 기기 무손실 포함) / 실제 workerd+D1+WebCrypto 가입·로그인·조회 PASS. 실제 배포 빌드의 선택형 안내 화면 직접 확인.
 
 ## 공용 중앙광장 현재 구조 — 2026-11-04
 - 사용자 Cloudflare의 berry-forest-plaza Worker와 SharedPlaza Durable Object가 central-plaza-v1 한 공간을 제공한다. 최대64명이며 초과 시 같은 광장에 재접속한다.
