@@ -68,7 +68,7 @@ export class ForestParty extends DurableObject {
    let acceptedInvite=null;
    if(m.invitation){const invite=activePartyInvitation(this.data.invitations??[],m.invitation,identity,now);if(!invite){this.error(ws,'초대 시간이 지났어요. 친구에게 다시 초대해 달라고 해 주세요.');return;}acceptedInvite=invite;}
    const live=new Set(this.sockets().map(([,x])=>x.memberId));this.data.members=this.data.members.filter(x=>live.has(x.id)||now-(x.offlineAt??now)<5*60000);let member=typeof m.token==='string'?this.data.members.find(x=>x.token===m.token):acceptedInvite?.memberId?this.member(acceptedInvite.memberId):null;
-   if(!member){if(m.token){this.error(ws,'재접속 시간이 지났어요. 파티 코드를 다시 입력해 주세요.');return;}if(this.data.members.length>=PARTY_SIZE){this.error(ws,'파티는 최대 네 명이에요.');return;}member={id:crypto.randomUUID(),token:crypto.randomUUID().replaceAll('-','')+crypto.randomUUID().replaceAll('-',''),profile,grade:m.grade,openStages:m.openStages,pose:{x:0,y:0,z:26,angle:0},here:false,role,offlineAt:null};this.data.members.push(member);}
+   if(!member){if(m.token){this.error(ws,'재접속 시간이 지났어요. 친구에게 다시 초대받거나 코드를 입력해 주세요.');return;}if(this.data.members.length>=PARTY_SIZE){this.error(ws,'친구 모험은 최대 네 명이에요.');return;}member={id:crypto.randomUUID(),token:crypto.randomUUID().replaceAll('-','')+crypto.randomUUID().replaceAll('-',''),profile,grade:m.grade,openStages:m.openStages,pose:{x:0,y:0,z:26,angle:0},here:false,role,offlineAt:null};this.data.members.push(member);}
    for(const [old,b] of this.sockets())if(old!==ws&&b.memberId===member.id)try{old.close(1000,'reconnected');}catch{}
    Object.assign(member,{profile,grade:m.grade,openStages:m.openStages,role,operatorUntil,offlineAt:null,presenceId:typeof m.chatIdentity==='string'&&/^[a-f0-9-]{36}$/.test(m.chatIdentity)?presenceIdFromHash(sha256Hex('plaza-chat:'+m.chatIdentity)):member.id});a.memberId=member.id;ws.serializeAttachment(a);if(!this.member(this.data.leader)||!this.onlineMembers().some(m=>m.id===this.data.leader))this.data.leader=member.id;
    member.lobbyV1=m.lobbyV1===true;member.preferredForest=m.preferredForest;
@@ -77,7 +77,7 @@ export class ForestParty extends DurableObject {
    await this.persist();this.send(ws,{type:'joined',token:member.token,features:{lobbyV1:true}});this.broadcast();return;
   }
   const member=this.member(a.memberId);if(!member)return;if(member.role==='operator'&&member.operatorUntil<=now){member.role='player';if(!parsePlazaProfile(member.profile))member.profile.selectedTitleId=null;}
-  if(m.type==='profile'){if(now-(a.profileAt??0)<1000)return;a.profileAt=now;ws.serializeAttachment(a);const operatorUntil=await this.operator(m.operatorToken),role=operatorUntil>now?'operator':'player',profile=parsePlazaProfile(m.profile,role==='operator');if(!profile)return;if(Number.isInteger(m.grade)&&m.grade>=1&&m.grade<=6&&m.openStages&&['addition','subtraction','multiplication','division'].every(k=>Number.isInteger(m.openStages[k])&&m.openStages[k]>=0&&m.openStages[k]<=10)){if(this.data.run&&!this.data.run.done&&m.grade!==this.data.run.config.grade){this.error(ws,'학년이 다른 기록을 불러올 때는 파티를 나간 뒤 다시 참가해 주세요.');return;}member.grade=m.grade;member.openStages=m.openStages;}Object.assign(member,{profile,role,operatorUntil});this.refreshLobby(this.member(this.data.leader)?.preferredForest);await this.persist();this.broadcast();return;}
+  if(m.type==='profile'){if(now-(a.profileAt??0)<1000)return;a.profileAt=now;ws.serializeAttachment(a);const operatorUntil=await this.operator(m.operatorToken),role=operatorUntil>now?'operator':'player',profile=parsePlazaProfile(m.profile,role==='operator');if(!profile)return;if(Number.isInteger(m.grade)&&m.grade>=1&&m.grade<=6&&m.openStages&&['addition','subtraction','multiplication','division'].every(k=>Number.isInteger(m.openStages[k])&&m.openStages[k]>=0&&m.openStages[k]<=10)){if(this.data.run&&!this.data.run.done&&m.grade!==this.data.run.config.grade){this.error(ws,'학년이 다른 기록을 불러올 때는 친구 모험에서 나간 뒤 다시 참가해 주세요.');return;}member.grade=m.grade;member.openStages=m.openStages;}Object.assign(member,{profile,role,operatorUntil});this.refreshLobby(this.member(this.data.leader)?.preferredForest);await this.persist();this.broadcast();return;}
   if(m.type==='pose'){const p=m.pose;if(!p||![p.x,p.y,p.z,p.angle].every(Number.isFinite))return;member.pose={x:Math.max(-50,Math.min(50,p.x)),y:Math.max(0,Math.min(10,p.y)),z:Math.max(-50,Math.min(50,p.z)),angle:Math.atan2(Math.sin(p.angle),Math.cos(p.angle))};member.here=m.here===true;for(const [other,b] of this.sockets())if(b.memberId&&other!==ws)this.send(other,{type:'pose',id:member.id,pose:member.pose,here:member.here});return;}
   if(m.type==='sync'){this.send(ws,this.snapshot(member.id));return;}
   if(m.type==='destination'){
@@ -94,10 +94,10 @@ export class ForestParty extends DurableObject {
     if(!this.data.lobby?.destination||members.some(p=>p.lobbyV1&&p.readyRevision!==this.data.lobby.revision)){this.error(ws,'친구들의 준비를 기다려 주세요.');return;}
     m.config={...this.data.lobby.destination,level:member.profile.level};
    }
-   if(member.id!==this.data.leader){this.error(ws,'파티장이 모험을 시작해요.');return;}if(!validPartyLesson(m.config)||m.config.grade!==member.grade){this.error(ws,'수학숲 설정을 확인해 주세요.');return;}
+   if(member.id!==this.data.leader){this.error(ws,'모험을 만든 친구가 함께 출발을 눌러요.');return;}if(!validPartyLesson(m.config)||m.config.grade!==member.grade){this.error(ws,'수학숲 설정을 확인해 주세요.');return;}
    if((member.lobbyV1?this.onlineMembers():this.data.members).some(x=>x.grade!==m.config.grade||x.openStages[m.config.forest]<m.config.stage)){this.error(ws,'모든 친구가 같은 학년이며 이 단계를 열어야 함께 시작할 수 있어요.');return;}
    this.data.rewards=this.data.rewards.filter(x=>x.expiresAt>now);if(this.data.rewards.length){this.error(ws,'친구의 직전 보상 저장을 기다려 주세요.');return;}
-   if(this.data.run&&!this.data.run.done){this.error(ws,'진행 중인 파티 모험을 먼저 마쳐요.');return;}
+   if(this.data.run&&!this.data.run.done){this.error(ws,'지금 진행 중인 친구 모험을 먼저 마쳐요.');return;}
    this.data.run=createPartyRun({...m.config,level:member.profile.level});await this.persist();this.broadcast();return;
   }
   if(m.type==='answer'){

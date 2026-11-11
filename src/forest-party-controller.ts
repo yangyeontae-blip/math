@@ -117,6 +117,7 @@ export function mountForestParty(h:Hooks){
  function invitePeer(peer:PlazaPlayer){
   if(peer.party?.grade!==h.state()?.grade){h.toast('같은 학년 친구와 함께 모험할 수 있어요.');return;}
   show();
+  if(state?.members.some(m=>m.presenceId===(peer.party?.presenceId??peer.id))){h.toast('이미 함께하는 친구예요.');return;}
   if(state?.run&&!state.run.done){notice='지금 모험을 마친 뒤 친구를 초대해 주세요.';render();return;}
   if(client.credentials)sendInvite(peer);
   else {pendingPeer=peer;create();}
@@ -146,7 +147,7 @@ export function mountForestParty(h:Hooks){
  }
  function friendsHtml(){
   const grade=h.state()?.grade,memberIds=new Set(state?.members.map(m=>m.presenceId));
-  const peers=h.publicPeers().filter(p=>!memberIds.has(p.id)).sort((a,b)=>Number(b.party?.grade===grade)-Number(a.party?.grade===grade));
+  const peers=h.publicPeers().filter(p=>!memberIds.has(p.party?.presenceId??p.id)).sort((a,b)=>Number(b.party?.grade===grade)-Number(a.party?.grade===grade));
   if(!peers.length)return '<p class="note">광장이나 같은 수학숲에서 만난 친구가 여기에 보여요. 다른 곳의 친구는 코드로 찾을 수 있어요.</p>';
   return '<ul class="party-nearby">'+peers.map(p=>{
    const eligible=p.party?.invites&&p.party.grade===grade;

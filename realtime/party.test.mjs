@@ -29,7 +29,7 @@ test('modern friends recommend a shared destination and require readiness again 
  b.send({type:'ready',revision:changed.lobby.revision-1});
  b.send({type:'sync'});assert.ok(!(await b.next('party')).lobby.ready.includes(changed.self));
  b.send({type:'ready',revision:changed.lobby.revision});
- await a.next('party',s=>s.lobby.ready.length===2);
+ await a.next('party',s=>s.lobby.revision===changed.lobby.revision&&s.lobby.destination.stage===1&&s.lobby.ready.length===2);
  a.send({type:'start'});assert.equal((await b.next('party',s=>!!s.run)).run.config.stage,1);
  a.socket.close();b.socket.close();
 });

@@ -40,7 +40,7 @@ export function forestLevelTitle(level:number) {
  return '';
 }
 export interface PlazaPose {x:number;y:number;z:number;angle:number}
-export interface PlazaPlayer {id:string;profile:PlazaProfile;pose:PlazaPose;role?:'player'|'operator';party?:{grade:number;invites:boolean}}
+export interface PlazaPlayer {id:string;profile:PlazaProfile;pose:PlazaPose;role?:'player'|'operator';party?:{grade:number;invites:boolean;presenceId?:string}}
 const integer=(v:unknown,lo:number,hi:number):v is number=>Number.isSafeInteger(v)&&Number(v)>=lo&&Number(v)<=hi;
 export function parsePlazaProfile(value:unknown,operator=false):PlazaProfile|null {
  if(!value||typeof value!=='object')return null;
@@ -64,7 +64,7 @@ export function parsePlazaPose(value:unknown,forest=false):PlazaPose|null {
 }
 export function parsePlazaPlayer(value:unknown,forest=false):PlazaPlayer|null {
  if(!value||typeof value!=='object')return null;const v=value as PlazaPlayer,profile=parsePlazaProfile(v.profile,v.role==='operator'),pose=parsePlazaPose(v.pose,forest);
- const party=v.party&&integer(v.party.grade,1,6)&&v.party.invites===true?{grade:v.party.grade,invites:true}:undefined;
+ const party=v.party&&integer(v.party.grade,1,6)&&v.party.invites===true?{grade:v.party.grade,invites:true,...(typeof v.party.presenceId==='string'&&/^[a-f0-9-]{36}$/.test(v.party.presenceId)?{presenceId:v.party.presenceId}:{})}:undefined;
  return typeof v.id==='string'&&/^[a-f0-9-]{36}$/.test(v.id)&&profile&&pose?{id:v.id,profile,pose,...(party?{party}:{}),...(v.role==='operator'?{role:'operator' as const}:{})}:null;
 }
 export function isPlazaEmote(value:unknown):value is PlazaEmote{return typeof value==='string'&&Object.hasOwn(PLAZA_EMOTES,value);}
