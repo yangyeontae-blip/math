@@ -1,3 +1,5 @@
+import type {PartyInvitation} from './party-lobby';
+import type {PlazaPlayer} from './plaza-protocol';
 import {journeyFor} from './rules';
 import {bindOperatorAccess} from './operator-access';
 import {mountPlazaChat} from './plaza-chat-view';
@@ -8,7 +10,7 @@ import {PlazaClient,type PlazaConnection} from './plaza-client';
 import {plazaProfile} from './plaza-identity';
 import {PLAZA_ENDPOINT} from './plaza-endpoint';
 import {PLAZA_EMOTES,profileTitles,type PlazaEmote} from './plaza-protocol';
-export function mountPlaza(h:{state:()=>Save|null;world:()=>World|undefined;host:HTMLElement}){
+export function mountPlaza(h:{state:()=>Save|null;world:()=>World|undefined;host:HTMLElement;invite?:(peer:PlazaPlayer)=>void;invitation?:(invite:PartyInvitation)=>void;inviteStatus?:(message:string)=>void}){
  const tools=document.createElement('section');tools.className='plaza-tools';tools.hidden=true;tools.setAttribute('aria-label','친구들과 함께하는 광장');
  const status=document.createElement('button');status.id='plaza-status';status.className='plaza-status';status.textContent='🌐 광장 연결 중';status.setAttribute('aria-expanded','false');
  const panel=document.createElement('div');panel.className='plaza-panel';panel.hidden=true;
@@ -27,6 +29,7 @@ export function mountPlaza(h:{state:()=>Save|null;world:()=>World|undefined;host
  const badge=document.createElement('span');badge.id='operator-title';badge.className='operator-title';badge.textContent='운영자';badge.hidden=true;h.host.querySelector('.career-badges')?.append(badge);
  let chat:ReturnType<typeof mountPlazaChat>|undefined;
  const client=new PlazaClient(endpoint,{
+  invitation:invite=>h.invitation?.(invite),inviteStatus:message=>h.inviteStatus?.(message),
   status:(value,total)=>{connection=value;memberCount=total;render();},
   player:p=>h.world()?.upsertPlazaPlayer(p),leave:id=>h.world()?.removePlazaPlayer(id),clear:()=>{if(!h.world()?.partyScene)h.world()?.clearPlazaPlayers();},
   emote:(id,value)=>h.world()?.plazaEmote(id,value),
@@ -43,10 +46,11 @@ export function mountPlaza(h:{state:()=>Save|null;world:()=>World|undefined;host
   count.textContent=connection==='full'?'같은 광장에 잠시 후 다시 연결할게요. 혼자 모험은 계속할 수 있어요.':connection==='online'?memberCount+'명이 같은 광장에 있어요.':connection==='nickname'?'친구에게 보여 줄 별명을 다른 이름으로 바꾸면 다시 연결돼요.':connection==='retrying'?'연결되면 친구들이 다시 보여요. 모험은 계속할 수 있어요.':!endpoint?'광장 서버를 연결하는 중이에요.':'광장에 들어오면 친구들이 보여요.';
   toggle.textContent=enabled?'혼자 다니기':'친구들과 만나기';buttons.forEach(b=>b.disabled=connection!=='online');
   if(panel.hidden)return;
-  const me=h.state(),others=client.players,signature=JSON.stringify([me?.nickname,me?.level,others.map(p=>[p.id,p.profile])]);
+  const me=h.state(),others=client.players,signature=JSON.stringify([me?.nickname,me?.level,me?.grade,others.map(p=>[p.id,p.profile,p.party])]);
   if(signature===lastRoster)return;lastRoster=signature;roster.replaceChildren();
   if(me){const li=document.createElement('li');li.textContent='Lv. '+me.level+' '+me.nickname+' · 나';roster.append(li);}
-  for(const p of others){const li=document.createElement('li'),name=document.createElement('strong'),title=document.createElement('span');name.textContent=`Lv. ${p.profile.level} ${p.profile.nickname}`;title.textContent=profileTitles(p.profile).title;li.append(name,title);roster.append(li);}
+  for(const p of others.sort((a,b)=>Number(b.party?.grade===me?.grade)-Number(a.party?.grade===me?.grade))){const li=document.createElement('li'),name=document.createElement('button'),title=document.createElement('span');name.textContent=`Lv. ${p.profile.level} ${p.profile.nickname}`;name.className='plaza-friend-name';name.disabled=!p.party?.invites||p.party.grade!==me?.grade;name.onclick=()=>{panel.hidden=true;h.invite?.(p);};title.textContent=profileTitles(p.profile).title;li.append(name,title);
+   if(p.party){const invite=document.createElement('button');invite.className='plaza-friend-invite';invite.textContent=p.party.grade===me?.grade?'함께 모험 초대':p.party.grade+'학년 · 같은 학년만 가능';invite.disabled=p.party.grade!==me?.grade;invite.onclick=()=>{panel.hidden=true;h.invite?.(p);};li.append(invite);}roster.append(li);}
  }
  status.onclick=()=>{chat?.hide();panel.hidden=!panel.hidden;status.setAttribute('aria-expanded',String(!panel.hidden));lastRoster='';render();};
  close.onclick=()=>{panel.hidden=true;status.setAttribute('aria-expanded','false');};
@@ -54,8 +58,8 @@ export function mountPlaza(h:{state:()=>Save|null;world:()=>World|undefined;host
  for(const [key,label] of Object.entries(PLAZA_EMOTES)){const button=document.createElement('button');button.textContent=label;button.dataset.plazaEmote=key;button.onclick=()=>{if(Date.now()-emoteAt<3000)return;if(client.emote(key as PlazaEmote)){h.world()?.selfPlazaEmote(key as PlazaEmote);emoteAt=Date.now();}};buttons.push(button);emotes.append(button);}
  function sync(){
   const world=h.world(),s=h.state();if(!world||!s){tools.hidden=true;chat?.hide();client.stop();return;}
-  const profile=plazaProfile(s);if(roleUntil&&roleUntil<=Date.now()){ownRole='player';badge.hidden=true;}world.setPlazaIdentity(profile,ownRole);client.configure(identity,auth.token);
-  const scene=world.isPublicForest?{grade:s.grade,forest:s.forest,stage:journeyFor(s).stage}:null;const here=world.isPublicPlaza||!!scene;if(forestScene!==!!scene){forestScene=!!scene;render();}world.forestPresenceOnline=!!scene&&connection==='online';heading.textContent=scene?'함께하는 수학숲':'함께하는 중앙광장';note.textContent=scene?'같은 학년·같은 숲·같은 단계의 친구들을 만나요. 진행 공유는 파티에서 시작해요.':'광장에서는 레벨·별명·칭호·외형이 친구들에게 보여요.';tools.hidden=!here;if(!here){chat?.hide();panel.hidden=true;status.setAttribute('aria-expanded','false');}
+  const profile=plazaProfile(s);if(roleUntil&&roleUntil<=Date.now()){ownRole='player';badge.hidden=true;}world.setPlazaIdentity(profile,ownRole);client.configure(identity,auth.token);client.setGrade(s.grade);
+  const scene=world.isPublicForest?{grade:s.grade,forest:s.forest,stage:journeyFor(s).stage}:null;const here=world.isPublicPlaza||!!scene;if(forestScene!==!!scene){forestScene=!!scene;render();}world.forestPresenceOnline=!!scene&&connection==='online';heading.textContent=scene?'함께하는 수학숲':'함께하는 중앙광장';note.textContent=scene?'같은 학년·같은 숲·같은 단계의 친구들을 만나요. 진행 공유는 친구와 모험에서 시작해요.':'광장에서는 레벨·별명·칭호·외형이 친구들에게 보여요.';tools.hidden=!here;if(!here){chat?.hide();panel.hidden=true;status.setAttribute('aria-expanded','false');}
   const p=world.player.position;
   client.sync(here&&enabled&&!document.hidden,profile,{x:p.x,y:p.y,z:p.z,angle:world.player.rotation.y},Date.now(),scene);
  }
@@ -64,5 +68,5 @@ export function mountPlaza(h:{state:()=>Save|null;world:()=>World|undefined;host
  document.addEventListener('visibilitychange',visibility);window.addEventListener('pagehide',stop);
  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!panel.hidden)close.click();});
  render();
- return {sync,players:()=>client.players,authenticate:async(code:string)=>{await auth.authenticate(code);ownRole='operator';roleUntil=auth.expiresAt;badge.hidden=false;client.configure(identity,auth.token);sync();},operatorActive:()=>auth.active,operatorToken:()=>auth.token,logout:async()=>{await auth.logout();client.configure(identity,'');ownRole='player';badge.hidden=true;sync();},stop:()=>{clearInterval(timer);chat?.stop();badge.remove();client.stop();document.removeEventListener('visibilitychange',visibility);window.removeEventListener('pagehide',stop);tools.remove();}};
+ return {sync,declineInvite:(invite:PartyInvitation)=>client.declineInvite(invite),invite:(targetId:string,code:string,token:string)=>client.invite(targetId,code,token),players:()=>client.players,authenticate:async(code:string)=>{await auth.authenticate(code);ownRole='operator';roleUntil=auth.expiresAt;badge.hidden=false;client.configure(identity,auth.token);sync();},operatorActive:()=>auth.active,operatorToken:()=>auth.token,logout:async()=>{await auth.logout();client.configure(identity,'');ownRole='player';badge.hidden=true;sync();},stop:()=>{clearInterval(timer);chat?.stop();badge.remove();client.stop();document.removeEventListener('visibilitychange',visibility);window.removeEventListener('pagehide',stop);tools.remove();}};
 }
