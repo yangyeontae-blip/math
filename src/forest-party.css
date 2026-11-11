@@ -1,1 +1,57 @@
-.forest-party-sheet{position:relative}.party-heading{padding-right:45px}.party-heading small{color:#7b936b}.party-code{display:block;font-size:30px;font-weight:900;letter-spacing:.18em;color:#405f47;padding:16px;border-radius:16px;background:#eff6e6;text-align:center}.party-members{list-style:none;padding:0;display:grid;gap:8px}.party-members li{padding:10px 14px;background:#f3f7eb;border-radius:12px}.party-members small{float:right;color:#76816b}.party-actions{display:grid;gap:10px;margin:14px 0}.party-join{display:flex;gap:8px;flex-wrap:wrap}.party-join input{flex:1;min-width:150px;min-height:48px;padding:12px;border:1px solid #c8d0bb;border-radius:12px}.party-question{padding:22px 12px;background:#eef7e3;border-radius:20px;text-align:center}.party-question h3{font-size:30px;margin:14px 0;color:#365842}.party-answer-row{display:flex;gap:8px;max-width:420px;margin:16px auto;flex-wrap:wrap}.party-answer-row input{width:100%;text-align:center;font-size:24px;padding:12px;border:2px solid #8fa97b;border-radius:12px;min-height:48px}.party-answer-row button{flex:1;min-height:48px}.party-chat-form{display:flex;gap:8px;margin-top:16px}.party-chat-form input{flex:1;min-width:0;min-height:48px;border:1px solid #c8d0bb;border-radius:12px;padding:8px}.party-chat-form button{min-height:48px}.party-chat-log{max-height:110px;overflow:auto;padding:0;list-style:none;font-size:12px}.party-chat-log li{padding:5px 0;color:#56654c}.party-notice{padding:12px;background:#fff5d8;border-radius:12px;line-height:1.6}.party-question-open{position:absolute;left:50%;bottom:190px;transform:translateX(-50%);pointer-events:auto;min-height:48px;border:1px solid #9bae87;background:#fffbea;color:#365842;border-radius:16px;padding:10px 18px;font-weight:800;z-index:20}.forest-party-sheet .close{position:sticky;float:right;top:0;z-index:5;margin-bottom:-48px;min-height:48px;min-width:48px}.party-word{min-width:65px}@media(max-width:700px){.party-question-open{bottom:184px;max-width:180px}.party-question h3{font-size:25px}.party-heading h2{font-size:22px}.party-code{font-size:25px}}
+.forest-party-sheet{position:relative;max-width:640px;margin:auto}
+.party-heading{padding-right:52px;margin-bottom:18px}
+.party-heading small{color:#637958}
+.party-heading h2{margin:6px 0;font-size:28px}
+.forest-party-sheet button,.forest-party-sheet input,.forest-party-sheet select,.forest-party-sheet summary,.party-invite-banner button,.plaza-friend-invite{min-height:48px}
+.forest-party-sheet .close{position:sticky;float:right;top:0;z-index:5;margin-bottom:-48px;min-width:48px}
+.party-intro,.party-steps{color:#52634c;line-height:1.6}
+.party-steps{font-size:13px;text-align:center}
+.party-members{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;list-style:none;padding:0;margin:18px 0}
+.party-members li{display:flex;flex-direction:column;align-items:center;gap:7px;min-width:0;padding:16px 6px;border:1px solid #d4ddc5;border-radius:18px;background:#f3f6ed;text-align:center}
+.party-members li>span{font-size:28px}
+.party-members b{font-size:14px;overflow-wrap:anywhere}
+.party-members small{font-size:12px;color:#62715c}
+.party-members .is-ready{background:#e8f3da;border-color:#a6bd88}
+.party-members .is-empty{background:transparent;border-style:dashed;color:#6a7762}
+.party-destination{display:flex;flex-direction:column;gap:9px;padding:20px;background:#f6eed8;border-radius:18px;margin:16px 0}
+.party-destination small{color:#746847}
+.party-destination strong{font-size:23px;color:#465f3d}
+.party-destination label{display:flex;flex-direction:column;gap:8px}
+.party-destination select{width:100%;border:1px solid #b8bea9;border-radius:12px;padding:8px;background:white;color:#344f3b}
+.party-readiness{text-align:center;line-height:1.6}
+.party-nearby{list-style:none;padding:0;display:grid;gap:10px}
+.party-nearby li{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px;background:#f2f5ec;border-radius:14px}
+.party-nearby span{display:flex;flex-direction:column;gap:4px;min-width:0}
+.party-nearby b{overflow-wrap:anywhere}
+.party-nearby small{color:#6b7864}
+.party-nearby button{max-width:55%;font-size:13px}
+.forest-party-sheet details{margin:12px 0;border-top:1px solid #dce2d2}
+.forest-party-sheet summary{display:flex;align-items:center;cursor:pointer;color:#4c6947;font-weight:700}
+.party-code{display:block;padding:14px;text-align:center;font-size:26px;letter-spacing:.12em;background:#edf3e2;border-radius:12px}
+.party-join,.party-chat-form{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.party-join input,.party-chat-form input{flex:1;min-width:130px;border:1px solid #b8c7aa;border-radius:12px;padding:10px}
+.party-question{padding:20px 12px;background:#eef5e4;border-radius:20px;text-align:center}
+.party-question h3{font-size:30px;margin:18px 0;color:#365842}
+.party-answer-row{display:flex;gap:8px;max-width:420px;margin:16px auto;flex-wrap:wrap}
+.party-answer-row input{width:100%;text-align:center;font-size:24px;padding:12px;border:2px solid #8fa97b;border-radius:12px}
+.party-answer-row button{flex:1}
+.party-chat-log{max-height:130px;overflow:auto;padding:0;list-style:none;font-size:14px}
+.party-chat-log li{padding:6px 0;color:#4d6048}
+.party-notice{padding:12px;background:#fff2d3;border-radius:12px;line-height:1.6}
+.party-save-notice{border:1px solid #d7a777}
+.party-question-open{position:absolute;left:12px;bottom:184px;pointer-events:auto;max-width:220px;min-height:48px;border:1px solid #a1b18b;background:#fffbea;color:#365842;border-radius:16px;padding:10px 14px;font-weight:700;z-index:20}
+.party-invite-banner{position:absolute;right:12px;top:130px;max-width:min(340px,calc(100% - 24px));padding:16px;border-radius:20px;border:1px solid #a7ba8c;background:#fff9e9;box-shadow:0 8px 24px #263d2829;pointer-events:auto;z-index:45;color:#344f3b}
+.party-invite-banner p{margin:0 0 12px;line-height:1.5}
+.party-invite-body>div{display:flex;gap:10px}
+.party-invite-banner button{flex:1}
+.plaza-friend-invite{margin-top:6px;padding:8px 12px;border-radius:12px;border:1px solid #b6c8a6;background:#f3f7e8;color:#39533a}
+@media(max-width:700px){.party-heading h2{font-size:24px}.party-members{grid-template-columns:repeat(2,minmax(0,1fr))}.party-members li{padding:12px 8px}.party-question h3{font-size:25px}.party-question-open{bottom:180px;max-width:170px;font-size:12px}.party-invite-banner{top:128px}.party-nearby button{max-width:52%}}
+
+.party-nearby .party-friend-name,.plaza-friend-name{max-width:100%;padding:2px 0;border:0;background:transparent;text-align:left;color:#34553c;font:inherit;font-weight:700;cursor:pointer}.party-friend-name:disabled,.plaza-friend-name:disabled{color:#62715c;cursor:default}
+
+.party-invite-peek{display:none}
+.party-invite-body>div{display:flex;gap:10px}
+.party-invite-banner[data-compact=true]{top:64px;right:12px;max-width:min(320px,calc(100% - 24px))}
+.party-invite-banner[data-compact=true][data-expanded=false]{padding:0;border:0;box-shadow:none;background:transparent}
+.party-invite-banner[data-compact=true][data-expanded=false] .party-invite-body{display:none}
+.party-invite-banner[data-compact=true][data-expanded=false] .party-invite-peek{display:block}

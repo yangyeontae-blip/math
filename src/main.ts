@@ -100,7 +100,8 @@ root.innerHTML = `<div id="world" aria-label="베리숲 3D 마을"></div><div id
 let nearNpcName = '';
 const career = mountCareer({state:()=>state,world:()=>world,persist,stored:()=>saveStore.status!=='error',refresh,open:(html,cls)=>openModal(html,cls),close:closeModal,toast,enterSchool:enterAcademy,learning:()=>openAdventureBook('learning'),plaza:()=>switchStage(0),equipmentShop:(kind,id)=>openShop(kind,id),openWorldTwo:html=>{rememberMenu('world2',()=>career.showWorldTwo());openModal(html,'academy-modal');},supplyShop:()=>openPotionShop('recovery')});
 const astral = mountAstralStudy({state:()=>state,world:()=>world,persist,stored:()=>saveStore.status!=='error',refresh,open:openModal,close:closeModal,toast,plaza:()=>switchStage(0),host:document.querySelector<HTMLElement>('#hud')!});
-const plaza = mountPlaza({state:()=>state,world:()=>world,host:document.querySelector<HTMLElement>('#hud')!});
+let friendAdventure:ReturnType<typeof mountForestParty>|undefined;
+const plaza = mountPlaza({invite:peer=>friendAdventure?.invitePeer(peer),invitation:invite=>friendAdventure?.receiveInvite(invite),inviteStatus:message=>friendAdventure?.inviteStatus(message),state:()=>state,world:()=>world,host:document.querySelector<HTMLElement>('#hud')!});
 function renderAcademyBar(){career.render();}
 function enterAcademy(){
  if(!state)return;if(state.expedition.active){toast('진행 중인 원정을 마친 뒤 학교에 들러 주세요.');return;}
@@ -313,7 +314,7 @@ storyPanel.setAttribute('aria-label', '숲속 수학 놀이'); root.append(story
 let world: World, AvatarPreviewRuntime: typeof AvatarPreview;
 const hall=mountHall({state:()=>state,active:()=>!!world?.active,operator:()=>plaza.operatorActive(),token:()=>plaza.operatorToken(),open:openModal,close:closeModal});
 const display=mountDisplayControls($('#hud'),()=>world);
-const party=mountForestParty({state:()=>state,world:()=>world,host:$('#hud'),open:openModal,close:closeModal,persist,stored:()=>saveStore.status!=='error',refresh,toast,enter:c=>{battle=null;switchStage(c.stage,c.forest);},operatorToken:()=>plaza.operatorToken(),publicPeers:()=>plaza.players()});
+const party=mountForestParty({state:()=>state,world:()=>world,host:$('#hud'),open:openModal,close:closeModal,persist,stored:()=>saveStore.status!=='error',refresh,toast,enter:c=>{battle=null;switchStage(c.stage,c.forest);},operatorToken:()=>plaza.operatorToken(),publicPeers:()=>plaza.players(),invite:(peerId,code,token)=>plaza.invite(peerId,code,token),declineInvite:invite=>plaza.declineInvite(invite)});friendAdventure=party;
 const audio = new Sound(), STORAGE = 'berry-forest-save-v1', RANKING_STORAGE = 'berry-forest-local-expedition-ranking-v1';
 let ambienceTimer: ReturnType<typeof setTimeout> | undefined;
 const refreshAmbience = (change = false) => {
