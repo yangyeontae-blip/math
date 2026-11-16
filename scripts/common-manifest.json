@@ -106,7 +106,7 @@
     "src/world-two-ui.ts": "22b2d29ad23728bb3f4cce96730b026edf6de4cfe500eb3e192519f951125d80",
     "src/world-two-models.ts": "1556cdc00a679e8e4565fb1f351db4037f00be9c0084544e1d7a69bea282e5cf",
     "tests/world-two.test.ts": "a4e056d8c9f8f265106837ed26e3dcb4660d2784769b270631b0558c01b68c9d",
-    "e2e/world-two.spec.mjs": "68a362659f09fa0537c90b4cafb26622ccdc5e98d8a20ffecccf9c83f251ef26",
+    "e2e/world-two.spec.mjs": "8e8337437a09397031bd1b3f09d00d9aedc64683916efe696bed2a91e5b01e00",
     "src/plaza-protocol.ts": "b72be2188f1c4576e06a5a14e9a5c431f7fe17245df00957fd7d16bd7efa3752",
     "src/plaza-identity.ts": "761b6765d77bb67fb641e11c211487c26bd95dab9d95d6bc751cdff33a32e880",
     "src/plaza-client.ts": "52243641e0bf1c6daabc35d901847f1af803da9ee160e13e2d155088dd8ce806",
@@ -203,5 +203,5 @@
     "src/party-lobby.ts": "6aac1eb108109d2d2fef2f7b93221fc5020481ece7d32ecb55f76b442067b63a",
     "tests/party-lobby.test.ts": "9294650b6c3e2a1e0dc3c4eed3635c10eb3bef810537584b34a24b902362a22c"
   },
-  "generation": "e502e3dc22a05353a6494798f32d2fc7cb94871094bc425697346ca13f5f9d66"
+  "generation": "222aff31d9f039cb632bb1330c609c4e8975854133ab08a3893c16f89013a336"
 }
