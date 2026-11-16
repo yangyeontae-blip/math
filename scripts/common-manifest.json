@@ -185,7 +185,7 @@
     "realtime/party.test.mjs": "e40f16c26968df4a142076f51263891a4e4e9cdb9a3e995d941f6488fa40170f",
     "tests/mail-feedback.test.ts": "beba37eb1192dbee56f56362aa14d87b1f2eb5b065b87d35c8249504bdb0e179",
     "tests/career-expansion.test.ts": "bf844578658c41b9279f16534dae1b3d00d6afe2d3c0fc72bb2a0471de58ec9f",
-    "e2e/mail-feedback.spec.mjs": "d8b1d9afd41bdc4e15b78ddd8d0096a6b39c2cbce838db8ee8d4fbcb828fec7e",
+    "e2e/mail-feedback.spec.mjs": "146ff942b3fec6d680b5657bda5ff668a0620d7ae96fbf76d80601362fc40127",
     "server/community.js": "9367dbf4520e48b539952d83d3eb0bd1f2775ded6917196874bfb64afc4c8f28",
     "server/community-migration.sql": "a3837add61612288f1c31cd02a4f84091911c7a39f7a8bcf19770d4d3b8e9823",
     "src/community.ts": "9a133ddd7886537c938777d1d5fcde32b05e728709dfa9077828d4fe9db042f7",
@@ -203,5 +203,5 @@
     "src/party-lobby.ts": "6aac1eb108109d2d2fef2f7b93221fc5020481ece7d32ecb55f76b442067b63a",
     "tests/party-lobby.test.ts": "9294650b6c3e2a1e0dc3c4eed3635c10eb3bef810537584b34a24b902362a22c"
   },
-  "generation": "222aff31d9f039cb632bb1330c609c4e8975854133ab08a3893c16f89013a336"
+  "generation": "86625f7bee9fea3481ba464aacabbe392a429be2e613ef4a4eb01c47cf627c52"
 }

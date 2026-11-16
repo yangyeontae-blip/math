@@ -17,6 +17,8 @@ test('mail feedback: shop visit keeps an active expedition and resumes its exact
  const s=newSave('별길친구',0,3);for(let n=1;n<=10;n++){s.journey.maps[n].cleared=true;s.journey.maps[n].monsters=stageMonsters(n).map((_,id)=>id);}
  startExpedition(s);collectExpeditionStar(s,expeditionLayout(0).stars[0]);
  await start(page,s);
+ // Exercise the existing full-game expedition in the native app. Web ignores this separate entitlement.
+ await page.evaluate(()=>localStorage.setItem('berry-forest-entitlements-v1',JSON.stringify({'full-grades':true})));
  await page.locator('#stage-map').click();await page.locator('[data-nav="shops"]').first().click();await page.locator('[data-nav="walk"]').click();
  await expect.poll(()=>page.evaluate(()=>window.__berry.getWorld().inMarket)).toBe(true);
  expect(await page.evaluate(()=>window.__berry.getState().expedition.active)).toEqual(s.expedition.active);
