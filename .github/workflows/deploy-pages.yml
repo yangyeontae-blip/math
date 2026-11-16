@@ -38,13 +38,7 @@ jobs:
         run: pnpm test:browser e2e/plaza.spec.mjs --output=test-results-plaza
       - name: Verify World 2 exploration before the existing flows
         run: pnpm test:browser e2e/world-two.spec.mjs --output=test-results-world2
-      - name: Verify requested exploration and growth feedback
-        run: pnpm test:browser e2e/mail-feedback.spec.mjs --output=test-results-feedback
-      - name: Verify live guilds and friend duels with a fresh browser
-        run: pnpm test:browser e2e/community.spec.mjs --output=test-results-community
-      - name: Verify input and graphics recovery with a fresh browser
-        run: pnpm test:browser e2e/stability-feedback.spec.mjs --output=test-results-stability
-      - run: pnpm test:browser --grep-invert "World 2|shared plaza|mail feedback:|community:|stability:"
+      - run: pnpm test:browser --grep-invert "World 2|shared plaza"
       - name: Keep isolated browser screenshots and traces
         if: always()
         uses: actions/upload-artifact@v4
@@ -54,9 +48,6 @@ jobs:
             test-results/
             test-results-world2/
             test-results-plaza/
-            test-results-feedback/
-            test-results-community/
-            test-results-stability/
           if-no-files-found: ignore
           retention-days: 14
       - run: pnpm build
