@@ -10,8 +10,12 @@ export const PLANET_THEMES=[
  {sky:0x391f38,ground:0x925b59,side:0x573342,path:0xf6d5ae,plant:0xe4a47f,glow:0xffc16e,planet:0xde8e74,water:0xdb9272},
  {sky:0x231e53,ground:0x615683,side:0x352a5d,path:0xded9f5,plant:0xa69bee,glow:0xc2c6ff,planet:0x9189d0,water:0x9189dd},
  {sky:0x1d193d,ground:0x58486d,side:0x302345,path:0xe6d3f2,plant:0xba94dc,glow:0xffb9d2,planet:0x9c74bf,water:0xab75bf},
+ {sky:0x153b42,ground:0x79aaa2,side:0x244b57,path:0xe5ecd6,plant:0xa8e0cf,glow:0xd6ffff,planet:0x83bec8,water:0x73c8cb},
+ {sky:0x493345,ground:0xae8b82,side:0x5d4655,path:0xffe5af,plant:0xeec98d,glow:0xffe6a0,planet:0xe9be87,water:0xdba987},
+ {sky:0x2b315e,ground:0x8a8ebc,side:0x404679,path:0xf3def1,plant:0xb8d8e4,glow:0xfbd5ff,planet:0xbfa4dc,water:0x9aabdf},
 ] as const;
 export function planetThemeIndex(region:number,boss=false) {
+ if(region>=10)return 8+Math.min(2,region-10);
  return region>=6 ? [4,2,1,0][Math.min(3,region-6)] : boss ? (region===5 ? 7 : 3) : region>=3 && region<=5 ? region+1 : Math.max(0,Math.min(2,region));
 }
 type Motion={object:T.Object3D;y:number;phase:number;spin:number};
@@ -54,7 +58,10 @@ export function planetaryScenery(region:number,boss=false){const index=planetThe
  const flora=a.material(t.plant) as T.MeshStandardMaterial;flora.onBeforeCompile=shader=>{shader.uniforms.planetTime=wind;shader.vertexShader='uniform float planetTime;\n'+shader.vertexShader;shader.vertexShader=shader.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\n transformed.x += sin(planetTime*.65+position.y*2.)*.045*max(position.y,0.);');};flora.customProgramCacheKey=()=> 'planet-flora-1';
  const plantGeo=region===1?new T.OctahedronGeometry(1):new T.ConeGeometry(.55,2.2,region===2?5:7);const plants=new T.InstancedMesh(plantGeo,flora,96);plants.name='planetary-vegetation';plants.castShadow=true;plants.userData.planetDensity=true;plants.instanceMatrix.setUsage(T.StaticDrawUsage);const dummy=new T.Object3D();for(let i=0;i<96;i++){const side=i%2?1:-1,x=side*(12.8+(i*2.43%7)),z=-24+(i*3.17%27),height=.6+(i*1.61%1.8);dummy.position.set(x,height*.7,z);dummy.rotation.set(0,i*2.399,Math.sin(i*1.7)*.24);dummy.scale.set(region===1?.7:.5,height,region===1?.7:.5);dummy.updateMatrix();plants.setMatrixAt(i,dummy.matrix);}a.root.add(plants);
  for(const side of [-1,1])for(let i=0;i<7;i++){const x=side*(14+i%2*4),z=-23+i*4.3;
-  if(index===0){const stalk=a.put(a.geo('stem',()=>new T.CylinderGeometry(.09,.2,2.4,7)),0x6b5999,x,1.2,z);stalk.rotation.z=side*.18;const crown=a.put(a.geo('crown',()=>new T.SphereGeometry(1,12,8)),i%2?0xe8b6de:0xf3d9a8,x,2.4,z);crown.scale.set(1.35,.34,1.1);a.ring(t.glow,x,2.36,z,1.3,.04).rotation.x=Math.PI/2;a.orb(t.glow,x,2.78,z,.16,true);}
+  if(index===8){a.put(a.geo('dew-stem',()=>new T.CylinderGeometry(.12,.2,2.5,7)),t.side,x,1.25,z);a.orb(t.plant,x,2.6,z,1.2);const loop=a.ring(t.glow,x,3.2,z,1.55,.055);loop.rotation.x=Math.PI/2;a.float(loop,i*.7);}
+  else if(index===9){a.put(a.geo('clock-stem',()=>new T.CylinderGeometry(.2,.35,3,6)),t.side,x,1.5,z);const clock=a.ring(t.glow,x,3.2,z,1.1,.12);a.float(clock,i,.18);for(let k=0;k<6;k++)a.crystal(t.plant,x+Math.cos(k*Math.PI/3)*1.1,3.2+Math.sin(k*Math.PI/3)*1.1,z,.16,.28,.16);}
+  else if(index===10){a.put(a.geo('root-tree',()=>new T.CylinderGeometry(.2,.55,3.2,8)),t.side,x,1.6,z);for(let k=0;k<3;k++){a.orb([0xd3ade8,0xa1dcd3,0xf1cf9e][k],x+Math.cos(k*2.1)*.6,3+k*.35,z+Math.sin(k*2.1)*.6,.9);}const halo=a.ring(t.glow,x,4.7,z,1.5,.05);halo.rotation.x=Math.PI/2;a.float(halo,i);}
+  else if(index===0){const stalk=a.put(a.geo('stem',()=>new T.CylinderGeometry(.09,.2,2.4,7)),0x6b5999,x,1.2,z);stalk.rotation.z=side*.18;const crown=a.put(a.geo('crown',()=>new T.SphereGeometry(1,12,8)),i%2?0xe8b6de:0xf3d9a8,x,2.4,z);crown.scale.set(1.35,.34,1.1);a.ring(t.glow,x,2.36,z,1.3,.04).rotation.x=Math.PI/2;a.orb(t.glow,x,2.78,z,.16,true);}
   else if(index===1){const pool=a.put(a.geo('pool',()=>new T.CircleGeometry(2.3,32)),t.water,x,.07,z);pool.rotation.x=-Math.PI/2;pool.scale.y=.7;for(let k=0;k<3;k++){const shard=a.crystal(k%2?t.plant:0xb3cbed,x+(k-1)*.7,.95+k*.2,z,.5,1.5+k*.4,.55);shard.rotation.z=(k-1)*.25;}a.float(a.put(a.geo('droplet',()=>new T.SphereGeometry(.2,10,8)),0xb5f5ef,x+.8,2.9,z,true),i,.08);}
   else if (index===4) {
    for (let k=0;k<3;k++) {const branch=a.crystal(k===1?t.glow:t.plant,x+(k-1)*.7,1.6,z,.32,2.2-k*.3,.4);branch.rotation.z=(k-1)*.45;}

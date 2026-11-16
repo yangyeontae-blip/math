@@ -1,0 +1,6 @@
+import {createServer} from 'node:http';import {DatabaseSync} from 'node:sqlite';import {readFileSync} from 'node:fs';
+import {handleCommunity} from '../server/community.js';
+const db=new DatabaseSync(':memory:');db.exec(readFileSync('server/community-migration.sql','utf8'));
+const DB={prepare(sql){const statement=db.prepare(sql);return {bind(...args){return {first:async()=>statement.get(...args)??null,run:async()=>({meta:{changes:Number(statement.run(...args).changes)}})};}};}};
+const server=createServer(async(req,res)=>{try{if(req.url==='/health'){res.writeHead(200);res.end('ok');return;}const chunks=[];for await(const chunk of req)chunks.push(chunk);const request=new Request('http://127.0.0.1:5190'+req.url,{method:req.method,headers:req.headers,...(req.method!=='GET'&&req.method!=='HEAD'?{body:Buffer.concat(chunks)}:{})});const response=await handleCommunity(request,{DB});res.writeHead(response.status,Object.fromEntries(response.headers));res.end(Buffer.from(await response.arrayBuffer()));}catch{res.writeHead(500);res.end('test-server-error');}});
+server.listen(5190,'127.0.0.1');for(const signal of ['SIGINT','SIGTERM'])process.once(signal,()=>server.close(()=>{db.close();process.exit(0);}));

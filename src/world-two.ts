@@ -1,5 +1,7 @@
 /** World 2 data is independent of rendering, persistence and any future server transport. */
 export const WORLD_TWO_NAME='별너머 군도';
+export const WORLD_THREE_NAME='새벽의 세계수';
+export const WORLD_THREE_START=10;
 export const WORLD_TWO_LEVEL=60;
 export const WORLD_TWO_BOSS_NAME='고대 별나무 수호자';
 export const WORLD_TWO_REGIONS=[
@@ -13,36 +15,36 @@ export const WORLD_TWO_REGIONS=[
  {id:7,name:'혜성유리 사막',level:400,icon:'🔮',description:'보랏빛 유리 모래와 떠오른 혜성 파편이 빛나는 외계 사막이에요.',hp:68000,damage:120,berries:1350,xp:880,bonus:24000,killGoal:6,enemyNames:{melee:'유리별 파수꾼',charge:'모래혜성 돌진이',ranged:'보라빛 수정술사'}},
  {id:8,name:'영원의 별바다',level:450,icon:'🌊',description:'공중에서 흐르는 별의 바다 위, 은빛 징검섬을 탐험해요.',hp:82000,damage:132,berries:1500,xp:1000,bonus:28000,killGoal:6,enemyNames:{melee:'별물결 정령',charge:'은빛물살 돌격대',ranged:'심해별 마법이'}},
  {id:9,name:'정령왕의 빛숲',level:500,icon:'🧚',description:'금빛 뿌리와 청록빛 별꽃이 피는 군도 가장 깊은 빛의 숲이에요.',hp:98000,damage:145,berries:1700,xp:1150,bonus:32000,killGoal:6,enemyNames:{melee:'빛뿌리 수호자',charge:'별꽃 사슴정령',ranged:'정령왕의 등불'}},
+ {id:10,name:'새벽이슬 수림',level:600,icon:'🍄',description:'빛나는 버섯 지붕과 거대한 이슬 고리가 떠 있는 세계 3의 첫 숲이에요.',hp:135000,damage:155,berries:2300,xp:1550,bonus:45000,killGoal:8,enemyNames:{melee:'이슬버섯 정령',charge:'새벽이끼 돌진이',ranged:'푸른 포자술사'}},
+ {id:11,name:'시간꽃 정원',level:700,icon:'⏳',description:'꽃잎 모양 시계와 황금빛 고리가 천천히 돌아가는 새로운 정원이에요.',hp:190000,damage:175,berries:3000,xp:2050,bonus:60000,killGoal:8,enemyNames:{melee:'초침꽃 파수꾼',charge:'황금시계 돌격대',ranged:'시간씨앗 마법이'}},
+ {id:12,name:'무지개 뿌리 성소',level:800,icon:'🌈',description:'구름 위 일곱 빛 나무 아래, 세계수 수호자의 성소를 밝혀요.',hp:260000,damage:195,berries:3900,xp:2700,bonus:80000,killGoal:8,enemyNames:{melee:'무지개 뿌리정령',charge:'일곱빛 사슴',ranged:'성소의 빛술사'}},
 ] as const;
 export const WORLD_TWO_CORE_REGIONS = 3;
 export const WORLD_TWO_BOSSES = {
   2: { region: 2, name: WORLD_TWO_BOSS_NAME, level: 100, hp: 90000, damage: 72, berries: 1500, xp: 1000, firstBerries: 20000, firstXp: 3000, dailySlot: 3 },
   5: { region: 5, name: '성운룡 아스트라', level: 300, hp: 260000, damage: 155, berries: 3100, xp: 1800, firstBerries: 35000, firstXp: 12000, dailySlot: 7 },
+  12: {region:12,name:'세계수 수호자 아르보',level:800,hp:1200000,damage:230,berries:7500,xp:5500,firstBerries:150000,firstXp:50000,dailySlot:15},
 } as const;
 export function worldTwoBoss(region:number) {
-  return region === 2 || region === 5 ? WORLD_TWO_BOSSES[region] : undefined;
+  return region === 2 || region === 5 || region===12 ? WORLD_TWO_BOSSES[region] : undefined;
 }
 export const WORLD_TWO_BEACONS=[{x:-9,z:-14},{x:9,z:-14},{x:0,z:-17}] as const;
 export const WORLD_TWO_GATE={x:17,z:-8} as const;
 export type WorldTwoLocation={region:number;boss:boolean};
 export type WorldTwoRegionProgress={beacons:number[];kills:number;claimed:boolean};
-export type WorldTwoProgress={location:WorldTwoLocation|null;regions:WorldTwoRegionProgress[];bossWins:number;bossClaimed:boolean;bestBossSeconds:number|null;outerBoss:{wins:number;bestSeconds:number|null};totalBerries:number;totalXp:number;daily:{date:string;counts:number[]}};
+export type WorldTwoProgress={location:WorldTwoLocation|null;regions:WorldTwoRegionProgress[];bossWins:number;bossClaimed:boolean;bestBossSeconds:number|null;outerBoss:{wins:number;bestSeconds:number|null};thirdBoss:{wins:number;bestSeconds:number|null};totalBerries:number;totalXp:number;daily:{date:string;counts:number[]}};
 const emptyRegion = (): WorldTwoRegionProgress => ({beacons:[],kills:0,claimed:false});
-export const emptyWorldTwoDaily = (date = "") => ({date, counts:Array<number>(WORLD_TWO_REGIONS.length+2).fill(0)});
+export const emptyWorldTwoDaily = (date = "") => ({date, counts:Array<number>(WORLD_TWO_REGIONS.length+3).fill(0)});
 export function emptyWorldTwo():WorldTwoProgress {
-  return {location:null,regions:WORLD_TWO_REGIONS.map(emptyRegion),bossWins:0,bossClaimed:false,bestBossSeconds:null,outerBoss:{wins:0,bestSeconds:null},totalBerries:0,totalXp:0,daily:emptyWorldTwoDaily()};
+  return {location:null,regions:WORLD_TWO_REGIONS.map(emptyRegion),bossWins:0,bossClaimed:false,bestBossSeconds:null,outerBoss:{wins:0,bestSeconds:null},thirdBoss:{wins:0,bestSeconds:null},totalBerries:0,totalXp:0,daily:emptyWorldTwoDaily()};
 }
 /** Expand the original v24 archipelago without shifting its guardian’s daily count. */
 export function expandWorldTwoSave(value:unknown):unknown {
-  let p = value as Partial<WorldTwoProgress> | null;
-  if(p&&Array.isArray(p.regions)&&p.regions.length===6&&Array.isArray(p.daily?.counts)&&p.daily.counts.length===8&&p.outerBoss!==undefined)return {...p,regions:[...p.regions,...WORLD_TWO_REGIONS.slice(6).map(emptyRegion)],daily:{...p.daily,counts:[...p.daily.counts,0,0,0,0]}};
-  if (!p || p.outerBoss !== undefined || !Array.isArray(p.regions) || p.regions.length !== 3 || !Array.isArray(p.daily?.counts) || p.daily.counts.length !== 4) return value;
-  return {
-    ...p,
-    regions: [...p.regions, ...WORLD_TWO_REGIONS.slice(WORLD_TWO_CORE_REGIONS).map(emptyRegion)],
-    outerBoss: {wins:0,bestSeconds:null},
-    daily: {...p.daily,counts:[...p.daily.counts,...Array<number>(WORLD_TWO_REGIONS.length-2).fill(0)]},
-  };
+ const p=value as Partial<WorldTwoProgress>|null;
+ if(!p||!Array.isArray(p.regions)||!Array.isArray(p.daily?.counts)||p.thirdBoss!==undefined)return value;
+ const old=p.regions.length,counts=p.daily.counts.length;
+ if(!((old===3&&counts===4&&p.outerBoss===undefined)||(old===6&&counts===8&&p.outerBoss!==undefined)||(old===10&&counts===12&&p.outerBoss!==undefined)))return value;
+ return {...p,regions:[...p.regions,...WORLD_TWO_REGIONS.slice(old).map(emptyRegion)],outerBoss:p.outerBoss??{wins:0,bestSeconds:null},thirdBoss:{wins:0,bestSeconds:null},daily:{...p.daily,counts:[...p.daily.counts,...Array<number>(WORLD_TWO_REGIONS.length+3-counts).fill(0)]}};
 }
 export function validWorldTwo(value:unknown):value is WorldTwoProgress {
   const p = value as WorldTwoProgress;
@@ -56,7 +58,8 @@ export function validWorldTwo(value:unknown):value is WorldTwoProgress {
   }
   if (!count(p.bossWins) || p.bossClaimed!==(p.bossWins>0) || p.bossClaimed&&!p.regions[2].claimed || !best(p.bestBossSeconds,p.bossWins)) return false;
   if (!p.outerBoss || !count(p.outerBoss.wins) || p.outerBoss.wins>0&&!p.regions[5].claimed || !best(p.outerBoss.bestSeconds,p.outerBoss.wins)) return false;
-  if (!count(p.totalBerries) || !count(p.totalXp) || !p.daily || typeof p.daily.date!=="string" || p.daily.date!==""&&!/^\d{4}-\d{2}-\d{2}$/.test(p.daily.date) || !Array.isArray(p.daily.counts) || p.daily.counts.length!==WORLD_TWO_REGIONS.length+2 || p.daily.counts.some(v=>!count(v))) return false;
+  if(!p.thirdBoss||!count(p.thirdBoss.wins)||p.thirdBoss.wins>0&&!p.regions[12].claimed||!best(p.thirdBoss.bestSeconds,p.thirdBoss.wins))return false;
+  if (!count(p.totalBerries) || !count(p.totalXp) || !p.daily || typeof p.daily.date!=="string" || p.daily.date!==""&&!/^\d{4}-\d{2}-\d{2}$/.test(p.daily.date) || !Array.isArray(p.daily.counts) || p.daily.counts.length!==WORLD_TWO_REGIONS.length+3 || p.daily.counts.some(v=>!count(v))) return false;
   const location=p.location;
   return location===null || !!location && count(location.region,WORLD_TWO_REGIONS.length-1) && typeof location.boss==="boolean" && canEnterWorldTwo(p,Infinity,location.region,location.boss);
 }

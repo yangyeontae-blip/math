@@ -37,7 +37,7 @@ export class HuntingRuntime{
  private time=0;private hp:number;private maxHp:number;private invincibleUntil=0;private nextAttack=0;private cooldowns:Partial<Record<SkillId,number>>={};private buffs:Partial<Record<SkillId,number>>={};private enemies:EnemyRuntime[]=[];private effects:Area[]=[];private serial=0;private readonly session:string;private windStart:HuntPoint|null=null;
  constructor(private readonly options:HuntingOptions){
   if(!Number.isInteger(options.zone)||options.zone<0||options.zone>3||!Number.isFinite(options.level)||options.level<1||!Number.isFinite(options.power)||options.power<=0||!validCompanionOptions(options)||!options.practice&&!operatorAccess()&&options.level<HUNT_ZONES[options.zone].level)throw Error('아직 갈 수 없는 사냥터예요.');
-  if(options.encounter&&(!/^world2-(?:[0-9]|[25]-boss)$/.test(options.encounter.id)||!Number.isFinite(options.encounter.hp)||options.encounter.hp<=0||options.encounter.hp>1e8||!Number.isFinite(options.encounter.damage)||options.encounter.damage<=0||typeof options.encounter.boss!=='boolean'||options.practice))throw Error('잘못된 모험 설정이에요.');
+  if(options.encounter&&(!/^world2-(?:[0-9]|1[0-2]|[25]-boss|12-boss)$/.test(options.encounter.id)||!Number.isFinite(options.encounter.hp)||options.encounter.hp<=0||options.encounter.hp>1e8||!Number.isFinite(options.encounter.damage)||options.encounter.damage<=0||typeof options.encounter.boss!=='boolean'||options.practice))throw Error('잘못된 모험 설정이에요.');
   this.maxHp=this.profileMaxHp(options);this.hp=this.maxHp;
   this.session=`hunt-${globalThis.crypto?.randomUUID?.()??++runtimeSerial}`;
   this.reset();

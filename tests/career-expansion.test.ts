@@ -21,7 +21,7 @@ test('hidden career requires each step of the documented route',()=>{
 test('v1 careers migrate without replacing slots, earned ranks, or hunting totals',()=>{
  const s=newSave('옛숲친구',0,3),c=s.career;c.job='mage';c.ranks.mage=c.trials.mage=3;c.learned=['starfall'];c.loadouts.mage=['starfall',null,null,null];
  const legacy=JSON.parse(JSON.stringify(s));legacy.career.version=1;delete legacy.career.upgrades;for(const key of ['ranks','trials','loadouts']){delete legacy.career[key].druid;delete legacy.career[key].alchemist;}
- const restored=validateSave(legacy);assert.equal(restored.career.version,2);assert.deepEqual(restored.career.loadouts.mage,c.loadouts.mage);assert.deepEqual(restored.career.stats,c.stats);assert.equal(restored.career.ranks.mage,3);assert.equal(restored.career.ranks.druid,0);assert.deepEqual(restored.career.upgrades,{});
+ const restored=validateSave(legacy);assert.equal(restored.career.version,3);assert.deepEqual(restored.career.loadouts.mage,c.loadouts.mage);assert.deepEqual(restored.career.stats,c.stats);assert.equal(restored.career.ranks.mage,3);assert.equal(restored.career.ranks.druid,0);assert.deepEqual(restored.career.upgrades,{});
 });
 
 test('all new attack skills hit real enemies, empty casts spend no cooldown and upgrades affect damage',()=>{

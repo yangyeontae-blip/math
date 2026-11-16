@@ -849,6 +849,8 @@ export class World {
     box(stall, 0x4f496f, 0, 2.56, -.24, 2.9, .14, 1.45);
     ball(stall, 0xffd180, .88, 2.21, .52, .17);
     this.scene.add(stall);
+    {const mill=new T.Group();box(mill,0xa8794d,0,.65,0,1.1,1.3,.85);const roof=mesh(new T.ConeGeometry(.85,.75,4),0x79ab8d,0,1.65,0,mill);roof.rotation.y=Math.PI/4;const wheel=new T.Group();wheel.position.set(0,1.1,.55);for(let i=0;i<4;i++){const blade=box(wheel,0xf0d99c,0,0,0,.14,1.65,.07);blade.rotation.z=i*Math.PI/4;}mill.add(wheel);ball(mill,0xe7879d,0,1.1,.64,.18);this.addEntity('berryMachine','베리 풍차 · 모험 공방',-7,5.5,mill);this.sign(mill,'베리 풍차',0,2.6,0,3,'#365b45',true);}
+
     this.sign(stall, '비밀상인', 0, 3.15, .52, 3.3, '#55426e', true);
     const exit=this.gate(0x91b9a1);this.addEntity('marketExit','중앙 광장 · 돌아가기',0,11,exit);this.sign(exit,'중앙 광장',0,4.6,0,4.5);
     stoneLane(this.scene,0,8,4,18);
@@ -1779,7 +1781,7 @@ export class World {
     return this.guideTarget.name;
   }
   private clearGuide() { this.guideTarget = null; this.guideElement.hidden = true; }
-  moveStick(x: number, z: number) { this.stick = { x, z }; }
+  moveStick(x: number, z: number) { if(this.textInputFocus&&Math.hypot(x,z)>.05&&!document.querySelector('dialog[open]')){(document.activeElement as HTMLElement|null)?.blur();this.setTextInputFocus(false);this.clearInput();}this.stick = { x, z }; }
   jump() { if(this.roomActivity)this.stopRoomActivity();if (this.active && !this.paused && !this.textInputFocus && !this.storyActivityFocus && this.grounded) { this.vy = 7.4; this.grounded = false; this.onJump(); } }
   interact() { if (this.active && !this.paused && !this.textInputFocus && !this.storyActivityFocus) {if(this.inHomestead&&atHomeExit(this.player.position.x,this.player.position.z))this.onInteract('homeExit');else if(this.selectedId)this.onInteract(this.selectedId);} }
   attack() { if (!this.active || this.paused || this.textInputFocus || this.storyActivityFocus) return; if (this.combatRuntime) { this.huntAttack(); return; } this.swingUntil = this.time + .28; this.onAttack(this.selectedId?.startsWith('tree') ? this.selectedId : null); }

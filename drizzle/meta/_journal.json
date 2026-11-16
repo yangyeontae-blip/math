@@ -36,6 +36,13 @@
       "when": 1794313914215,
       "tag": "0004_abandoned_silver_fox",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1794804285788,
+      "tag": "0005_aromatic_queen_noir",
+      "breakpoints": true
     }
   ]
 }

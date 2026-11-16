@@ -78,8 +78,8 @@ const extraSigils:Record<string,string>={
 };
 const expandedPaintedIds=['acornRush','vinePull','dawnSlash','leafOrb','thunderChain','comet','tripleShot','galeShot','moonArrow'];
 export function renderSkillIcon(id:string,index:number,label=''){
- const custom=Object.hasOwn(extraSigils,id)?extraSigils[id]:undefined,expandedIndex=expandedPaintedIds.indexOf(id);
- const paintedId=Object.hasOwn(jobSigils,id)?jobSigils[id]:id,knownIndex=paintedSkillIds.indexOf(paintedId);
+ const paintedId=Object.hasOwn(jobSigils,id)?jobSigils[id]:id;
+ const custom=Object.hasOwn(extraSigils,paintedId)?extraSigils[paintedId]:undefined,expandedIndex=expandedPaintedIds.indexOf(id),knownIndex=paintedSkillIds.indexOf(paintedId);
  const legacyIndex=Number.isInteger(index)&&index>=0&&index<paintedSkillIds.length?index:-1;
  const i=custom?-1:knownIndex>=0?knownIndex:legacyIndex,vector=custom||sigils[i>=0?i:0];
  const position=expandedIndex>=0?` style="--sigil-x:${(expandedIndex%3)*50}%;--sigil-y:${Math.floor(expandedIndex/3)*50}%"`:i>=0?` style="--sigil-x:${(i%5)*25}%;--sigil-y:${Math.floor(i/5)*50}%"`:'';

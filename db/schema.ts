@@ -41,3 +41,10 @@ export const adventureSessions = sqliteTable('adventure_sessions', {
 export const accountLimits = sqliteTable('account_limits', {
  key: text('key').primaryKey(), bucket: integer('bucket').notNull(), hits: integer('hits').notNull().default(1),
 }, table => [index('idx_account_limit_bucket').on(table.bucket)]);
+
+export const communityRooms = sqliteTable('community_rooms', {
+ id:text('id').primaryKey(),kind:text('kind').notNull(),payload:text('payload').notNull(),revision:integer('revision').notNull().default(0),expiresAt:integer('expires_at').notNull().default(0),
+},table=>[index('idx_community_room_expiry').on(table.expiresAt)]);
+export const communityLimits=sqliteTable('community_limits',{
+ key:text('key').primaryKey(),bucket:integer('bucket').notNull(),hits:integer('hits').notNull().default(1),
+},table=>[index('idx_community_limit_bucket').on(table.bucket)]);

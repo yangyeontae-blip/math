@@ -1,3 +1,4 @@
+import {chargeBerryMachine,berryMachineMultiplier} from './berry-machine';
 import {titleEffect} from './titles';
 import {operatorAccess} from './operator-access';
 import type {Save} from './rules';
@@ -18,7 +19,7 @@ export function worldTwoRewardFor(s:Save,region:number,boss=false,now=Date.now()
   const count = s.world2.daily.date===todayKey(new Date(now)) ? s.world2.daily.counts[dailySlot(region,boss)] : 0;
   const multiplier = boss && count>=3 ? .25 : 1;
   const potion = potionEffects(s,now), guardian = s.pet===PPOJJAK_PET_ID;
-  return {berries:Math.floor(base.berries*multiplier*potion.berryMultiplier*titleEffect(s).berries*(guardian?1.5:1)),xp:Math.floor(base.xp*multiplier*potion.xpMultiplier*(guardian?1.4:1)),multiplier};
+  return {berries:Math.floor(base.berries*multiplier*potion.berryMultiplier*titleEffect(s).berries*berryMachineMultiplier(s)*(guardian?1.5:1)),xp:Math.floor(base.xp*multiplier*potion.xpMultiplier*(guardian?1.4:1)),multiplier};
 }
 export function grantWorldTwoReward(s:Save,event:HuntDefeatEvent,seconds:number,now=Date.now()) {
   const empty={berries:0,xp:0,levels:0,completed:false,boss:false,first:false,multiplier:0};
@@ -28,7 +29,7 @@ export function grantWorldTwoReward(s:Save,event:HuntDefeatEvent,seconds:number,
   if (seen.has(event.id)) return empty;
   const reward=worldTwoRewardFor(s,location.region,location.boss,now);
   if (!reward.multiplier) return empty;
-  seen.add(event.id); claims.set(s,seen);
+  seen.add(event.id); claims.set(s,seen);chargeBerryMachine(s);
   const date=todayKey(new Date(now)), slot=dailySlot(location.region,location.boss);
   if (s.world2.daily.date!==date) s.world2.daily=emptyWorldTwoDaily(date);
   s.world2.daily.counts[slot]=Math.min(1e9,s.world2.daily.counts[slot]+1);
@@ -47,7 +48,7 @@ export function grantWorldTwoReward(s:Save,event:HuntDefeatEvent,seconds:number,
         if (!s.discoveries.outfits.includes(id)) s.discoveries.outfits.push(id);
       }
     } else {
-      const progress=s.world2.outerBoss;
+      const progress=location.region===12?s.world2.thirdBoss:s.world2.outerBoss;
       first=progress.wins===0;
       progress.wins=Math.min(1e9,progress.wins+1);
       progress.bestSeconds=Math.min(progress.bestSeconds??Infinity,seconds);

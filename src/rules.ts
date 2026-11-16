@@ -1,3 +1,4 @@
+import {chargeBerryMachine,berryMachineMultiplier} from './berry-machine';
 import {operatorAccess} from './operator-access';
 import {SKYWARD_WEAPONS,SKYWARD_OUTFITS,SKYWARD_RIDES,SKYWARD_PETS,skywardItem} from './skyward-collection';
 import {emptyAstralStudy,validAstralStudy,type AstralStudy} from './astral-study';
@@ -662,7 +663,7 @@ export function battleRewardReason(s: Save, question: Question, usedHint: boolea
 }
 /** A correct math answer keeps at least 10% of the next-level XP at high levels. */
 export function mathQuestionXp(level:number,base:number,questions=1){return Math.max(base,Math.ceil(Math.max(1,Math.min(100000,level))*4)*questions);}
-export function grantMathQuestionXp(s:Save,base=12,now=Date.now()){const xp=mathQuestionXp(s.level,base)*potionEffects(s,now).xpMultiplier;s.xp+=xp;let levels=0;while(s.level<100000&&s.xp>=s.level*40){s.xp-=s.level*40;s.level++;levels++;s.berries=Math.min(1e9,s.berries+20+({30:30000,50:50000,100:100000}[s.level]??0));}if(s.level===100000)s.xp=Math.min(s.xp,s.level*40-1);return {xp,levels};}
+export function grantMathQuestionXp(s:Save,base=12,now=Date.now()){chargeBerryMachine(s);const xp=mathQuestionXp(s.level,base)*potionEffects(s,now).xpMultiplier;s.xp+=xp;let levels=0;while(s.level<100000&&s.xp>=s.level*40){s.xp-=s.level*40;s.level++;levels++;s.berries=Math.min(1e9,s.berries+20+({30:30000,50:50000,100:100000}[s.level]??0));}if(s.level===100000)s.xp=Math.min(s.xp,s.level*40-1);return {xp,levels};}
 export function rewardFor(s: Save, monster: number, arena: boolean, now = Date.now(), eligible = true) {
   const m = MONSTERS[monster], w = WEAPONS[s.weapon];
   const { berryMultiplier, xpMultiplier } = potionEffects(s, now);
@@ -671,7 +672,7 @@ export function rewardFor(s: Save, monster: number, arena: boolean, now = Date.n
   const berries = stage > 0 ? Math.round(baseBerries * 1.1) : baseBerries;
   const xp = stage > 0 ? Math.round(m.xp * 1.1) : m.xp;
   return {
-    berries: eligible ? (berries + w.bonus) * berryMultiplier : 0,
+    berries: eligible ? Math.floor((berries + w.bonus) * berryMultiplier * berryMachineMultiplier(s)) : 0,
     xp: eligible ? (mathQuestionXp(s.level,xp,arena?1:stage===10&&monster===stageMonsters(10).at(-1)!.type?5:monsterBattleRounds(monster,false)) + OUTFITS[s.outfit].xpBonus) * xpMultiplier : 0,
     score: eligible && arena ? Math.round(m.score * (w.multiplier + s.weapons[s.weapon] * 0.1)) : 0,
   };
@@ -697,7 +698,7 @@ export function huntingRewardFor(s:Save,zone:number,now=Date.now()){
   // Never penalize the highest zone this player can actually enter.
   const higherZoneOpen=HUNT_ZONES.some(next=>next.level>z.level&&s.level>=next.level);
   const multiplier=(higherZoneOpen&&s.level>=z.level+20?.1:1),potion=potionEffects(s,now);
-  return {berries:Math.floor(z.berries*multiplier*potion.berryMultiplier*titleEffect(s).berries*(s.pet===PPOJJAK_PET_ID?1.5:1)),xp:Math.floor(z.xp*multiplier*potion.xpMultiplier*(s.pet===PPOJJAK_PET_ID?1.4:1)),eligible:true,multiplier};
+  return {berries:Math.floor(z.berries*multiplier*potion.berryMultiplier*titleEffect(s).berries*berryMachineMultiplier(s)*(s.pet===PPOJJAK_PET_ID?1.5:1)),xp:Math.floor(z.xp*multiplier*potion.xpMultiplier*(s.pet===PPOJJAK_PET_ID?1.4:1)),eligible:true,multiplier};
 }
 const huntingClaims=new WeakMap<Save,Set<string>>();
 export function grantHuntingReward(s:Save,zoneOrEvent:number|HuntDefeatEvent,enemyTypeOrNow:string|number='melee',now=Date.now()){
@@ -707,7 +708,7 @@ export function grantHuntingReward(s:Save,zoneOrEvent:number|HuntDefeatEvent,ene
   if(event){const claims=huntingClaims.get(s)??new Set<string>();if(claims.has(event.id))return zero;claims.add(event.id);huntingClaims.set(s,claims);}
   const reward=huntingRewardFor(s,zone,now);if(!reward.eligible)return zero;
   const date=todayKey(new Date(now));if(s.career.daily.date!==date)s.career.daily={date,counts:[0,0,0,0]};
-  s.career.daily.counts[zone]++;s.career.stats.defeats++;s.career.stats.byZone[zone]++;s.career.stats.totalBerries+=reward.berries;s.career.stats.totalXp+=reward.xp;
+  chargeBerryMachine(s);s.career.daily.counts[zone]++;s.career.stats.defeats++;s.career.stats.byZone[zone]++;s.career.stats.totalBerries+=reward.berries;s.career.stats.totalXp+=reward.xp;
   const enemyType=event?.enemyType??(typeof enemyTypeOrNow==='string'?enemyTypeOrNow:'melee');if(['melee','charge','ranged'].includes(enemyType)&&!s.career.stats.seen.includes(enemyType))s.career.stats.seen.push(enemyType);
   s.berries=Math.min(1e9,s.berries+reward.berries);s.xp+=reward.xp;let levels=0;const milestones:{level:number;berries:number}[]=[];
   while(s.level<100000&&s.xp>=s.level*40){s.xp-=s.level*40;s.level++;levels++;s.berries=Math.min(1e9,s.berries+20);const gift=s.level===30?30000:s.level===50?50000:s.level===100?100000:0;if(gift){s.berries=Math.min(1e9,s.berries+gift);milestones.push({level:s.level,berries:gift});}}

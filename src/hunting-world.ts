@@ -1,5 +1,6 @@
 import * as T from 'three';
 import {worldTwoScenery} from './world-two-models';
+import {PLANET_THEMES} from './world-two-planet';
 import { skillInfo, type JobId, type SkillId } from './academy';
 import type { HuntEnemy, HuntEvent, HuntSnapshot } from './hunting';
 
@@ -34,6 +35,7 @@ export const HUNT_THEMES = [
  {title:'황혼 운석 협곡',sky:0x391f38,fog:0x391f38,ground:0x925b59,path:0xf6d5ae,foliage:0xe4a47f,tint:0xab6958,eye:0xffdb8d,glow:0xffbd6e},
  {title:'은하 폭풍 성채',sky:0x231e53,fog:0x231e53,ground:0x615683,path:0xded9f5,foliage:0xa69bee,tint:0x827abd,eye:0xf0dcff,glow:0xc2c6ff},
  {title:'성운룡의 둥지',sky:0x1d193d,fog:0x1d193d,ground:0x58486d,path:0xe6d3f2,foliage:0xba94dc,tint:0x9468b1,eye:0xffdea4,glow:0xffb9d2},
+ ...PLANET_THEMES.slice(8).map((t,i)=>({title:['새벽이슬 수림','시간꽃 정원','무지개 뿌리 성소'][i],sky:t.sky,fog:t.sky,ground:t.ground,path:t.path,foliage:t.plant,tint:t.plant,eye:t.glow,glow:t.glow})),
 ] as const;
 
 /** 구역마다 다른 장식(놀이 공간 바깥에만 둬요). 보상·충돌·저장과 상관없는 그림이에요. */
