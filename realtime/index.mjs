@@ -1,3 +1,4 @@
+import {handlePartyInvite} from './party-invites.mjs';
 import {HallOfFame} from './hall.mjs';
 import {hallResponseLimit} from '../src/hall.ts';
 import {parseForestRoom,forestRoomKey,presenceIdFromHash} from '../src/forest-room.ts';
@@ -35,7 +36,7 @@ export class SharedPlaza extends DurableObject {
   ctx.setWebSocketAutoResponse(new WebSocketRequestResponsePair('ping','pong'));
  }
  sessions(){return this.ctx.getWebSockets().map(ws=>[ws,ws.deserializeAttachment()]).filter(([ws,s])=>s&&ws.readyState===WebSocket.OPEN);}
- public(s,catalog=PLAZA_AVATAR_CATALOG,titleSelection=true,titleCatalog=PLAZA_TITLE_CATALOG){const profile={...compatibleTitleProfile(compatiblePlazaProfile(s.profile,catalog),titleCatalog)};if(!titleSelection)delete profile.selectedTitleId;return {id:s.id,profile,pose:s.pose,role:this.social.role(s)};}
+ public(s,catalog=PLAZA_AVATAR_CATALOG,titleSelection=true,titleCatalog=PLAZA_TITLE_CATALOG){const profile={...compatibleTitleProfile(compatiblePlazaProfile(s.profile,catalog),titleCatalog)};if(!titleSelection)delete profile.selectedTitleId;return {id:s.id,profile,pose:s.pose,role:this.social.role(s),...(s.partyInvites?{party:{grade:s.grade,invites:true,presenceId:presenceIdFromHash(s.chatSender)}}:{})};}
  send(ws,value){try{ws.send(JSON.stringify(value));return true;}catch{return false;}}
  broadcast(value,except){const variants=new Map();for(const [ws,s] of this.sessions())if(s.joined&&ws!==except){try{const key=(s.avatarCatalog??1)+':'+!!s.titleSelection+':'+(s.titleCatalog??1);if(!variants.has(key)){const message=value.type==='upsert'?{...value,player:{...value.player,profile:{...compatibleTitleProfile(compatiblePlazaProfile(value.player.profile,s.avatarCatalog??1),s.titleCatalog??1)}}}:value;if(message.type==='upsert'&&!s.titleSelection)delete message.player.profile.selectedTitleId;variants.set(key,JSON.stringify(message));}ws.send(variants.get(key));}catch{}}}
  queuePose(s){this.pendingPoses.set(s.id,{id:s.id,pose:s.pose});if(this.poseTimer===null)this.poseTimer=setTimeout(()=>this.flushPoses(),100);}
@@ -71,12 +72,13 @@ export class SharedPlaza extends DurableObject {
    if(s.joining)return;s.joining=true;ws.serializeAttachment(s);
    await this.social.prepare(s,m);const profile=parsePlazaProfile(m.profile,this.social.role(s)==='operator'),pose=parsePlazaPose(m.pose,!!s.forestRoom);
    if(!profile||!pose){this.send(ws,{type:'error',code:'profile'});ws.close(1008,'profile');return;}
-   if(s.forestRoom&&s.chatEnabled){s.id=presenceIdFromHash(s.chatSender);for(const [old,other] of this.sessions())if(old!==ws&&other.joined&&other.id===s.id)try{old.close(1000,'reconnected');}catch{}}s.joined=true;s.joining=false;s.profile=profile;s.pose=pose;s.moveAt=now;s.profileAt=now;s.batchedPoses=m.batchedPoses===true;s.titleSelection=m.titleSelection===true;s.titleCatalog=m.titleCatalog===PLAZA_TITLE_CATALOG?PLAZA_TITLE_CATALOG:1;s.avatarCatalog=m.salonCatalog===true||m.avatarCatalog===PLAZA_AVATAR_CATALOG?PLAZA_AVATAR_CATALOG:m.avatarCatalog===2?2:1;
+   if(s.forestRoom&&s.chatEnabled){s.id=presenceIdFromHash(s.chatSender);for(const [old,other] of this.sessions())if(old!==ws&&other.joined&&other.id===s.id)try{old.close(1000,'reconnected');}catch{}}s.joined=true;s.joining=false;s.profile=profile;s.pose=pose;s.moveAt=now;s.profileAt=now;s.batchedPoses=m.batchedPoses===true;s.partyInvites=m.partyInvites===true&&Number.isInteger(m.grade)&&m.grade>=1&&m.grade<=6&&s.chatEnabled;s.grade=s.partyInvites?m.grade:null;s.titleSelection=m.titleSelection===true;s.titleCatalog=m.titleCatalog===PLAZA_TITLE_CATALOG?PLAZA_TITLE_CATALOG:1;s.avatarCatalog=m.salonCatalog===true||m.avatarCatalog===PLAZA_AVATAR_CATALOG?PLAZA_AVATAR_CATALOG:m.avatarCatalog===2?2:1;
    ws.serializeAttachment(s);
-   this.send(ws,{type:'welcome',id:s.id,room:PLAZA_ROOM,role:this.social.role(s),operatorUntil:s.operatorUntil,features:{chat:!!s.chatEnabled,operator:true,titleSelection:true,titleCatalog:PLAZA_TITLE_CATALOG,avatarCatalog:PLAZA_AVATAR_CATALOG},players:this.sessions().filter(([other,a])=>other!==ws&&a.joined).map(([,a])=>this.public(a,s.avatarCatalog??1,!!s.titleSelection,s.titleCatalog??1)).slice(0,s.batchedPoses?PLAZA_CAPACITY-1:63)});
+   this.send(ws,{type:'welcome',id:s.id,room:PLAZA_ROOM,role:this.social.role(s),operatorUntil:s.operatorUntil,features:{partyInvites:true,chat:!!s.chatEnabled,operator:true,titleSelection:true,titleCatalog:PLAZA_TITLE_CATALOG,avatarCatalog:PLAZA_AVATAR_CATALOG},players:this.sessions().filter(([other,a])=>other!==ws&&a.joined).map(([,a])=>this.public(a,s.avatarCatalog??1,!!s.titleSelection,s.titleCatalog??1)).slice(0,s.batchedPoses?PLAZA_CAPACITY-1:63)});
    this.broadcast({type:'upsert',player:this.public(s)},ws);await this.social.welcome(ws,s);return;
   }
   if(!s.joined){ws.close(1008,'join_required');return;}
+  if(m.type==='party-invite'||m.type==='party-invite-reply'){await handlePartyInvite(this,ws,s,m);return;}
   if(typeof m.type==='string'&&m.type.startsWith('chat')&&await this.social.handle(ws,s,m))return;
   if(m.type==='pose'){
    const pose=parsePlazaPose(m.pose,!!s.forestRoom);
@@ -90,7 +92,7 @@ export class SharedPlaza extends DurableObject {
   }
   if(m.type==='profile'&&now-s.profileAt>=1000){
    const profile=parsePlazaProfile(m.profile,this.social.role(s)==='operator');if(!profile){this.send(ws,{type:'error',code:'profile'});return;}
-   s.profile=profile;s.profileAt=now;ws.serializeAttachment(s);this.broadcast({type:'upsert',player:this.public(s)},ws);return;
+   s.profile=profile;if(s.partyInvites&&Number.isInteger(m.grade)&&m.grade>=1&&m.grade<=6)s.grade=m.grade;s.profileAt=now;ws.serializeAttachment(s);this.broadcast({type:'upsert',player:this.public(s)},ws);return;
   }
   if(m.type==='emote'&&isPlazaEmote(m.emote)&&now-s.emoteAt>=3000){s.emoteAt=now;ws.serializeAttachment(s);this.broadcast({type:'emote',id:s.id,emote:m.emote});return;}
   if(m.type==='sync'){this.send(ws,{type:'snapshot',players:this.sessions().filter(([other,a])=>other!==ws&&a.joined).map(([,a])=>this.public(a,s.avatarCatalog??1,!!s.titleSelection,s.titleCatalog??1))});}
