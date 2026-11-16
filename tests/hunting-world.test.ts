@@ -87,10 +87,10 @@ test('cast visuals travel from the actor, freeze at zero delta and recycle after
 
 test('all skill silhouettes have bounded shared resources and quality changes take effect without reallocating', () => {
   const visual = new HuntingWorld(), camera = new T.PerspectiveCamera(), base = new HuntingRuntime({ zone: 0, level: 60, power: 10 }).snapshot();
-  const snapshot = { ...base, effects: ACADEMY_SKILLS.map((skill, index) => ({ id: `skill-${index}`, skill: skill.id, x: index, z: 0, radius: 6, duration: skill.duration, remaining: skill.duration * .75 })) };
+  const snapshot = { ...base, effects: ACADEMY_SKILLS.slice(0,24).map((skill, index) => ({ id: `skill-${index}`, skill: skill.id, x: index, z: 0, radius: 6, duration: skill.duration, remaining: skill.duration * .75 })) };
   const original = JSON.stringify(snapshot); visual.update(snapshot, camera, null, 0);
   const effects = visual.root.children.filter(child => typeof child.userData.skill === 'string');
-  assert.equal(effects.length, ACADEMY_SKILLS.length); assert.ok(effects.length <= 24);
+  assert.equal(effects.length, Math.min(24,ACADEMY_SKILLS.length)); assert.ok(effects.length <= 24);
   const geometries = new Set<T.BufferGeometry>(), materials = new Set<T.Material>();
   effects.forEach(group => group.traverse(object => { if (object instanceof T.Mesh) { geometries.add(object.geometry); materials.add(object.material as T.Material); assert.equal(object.castShadow, false); } }));
   assert.ok(geometries.size <= 5, 'skills reuse simple geometry instead of allocating particles each frame');
@@ -169,4 +169,14 @@ test('multi-target shots use actual hit destinations and chain lightning starts 
     visual.update(snapshot, camera, null, 1); assert.equal(visual.root.children.some(child => child.userData.huntProjectile), false);
     visual.dispose();
   }
+});
+
+test('each added skill renders a bounded real effect and returns its meshes to the pool',()=>{
+ const visual=new HuntingWorld(),camera=new T.PerspectiveCamera(),base=new HuntingRuntime({zone:0,level:100,power:10}).snapshot();
+ for(const [i,s] of ACADEMY_SKILLS.slice(24).entries()){
+  visual.update({...base,effects:[{id:'new-'+i,skill:s.id,x:0,z:0,radius:6,duration:s.duration,remaining:s.duration*.75}]},camera,null,0);
+  const groups=visual.root.children.filter(c=>c.userData.skill===s.id);assert.equal(groups.length,1);assert.ok(groups[0].children.length>2&&groups[0].children.length<24);
+  visual.update(base,camera,null,1);assert.equal(visual.root.children.filter(c=>typeof c.userData.skill==='string').length,0);
+ }
+ visual.dispose();
 });

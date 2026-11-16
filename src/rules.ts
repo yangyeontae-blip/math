@@ -2,7 +2,7 @@ import {operatorAccess} from './operator-access';
 import {SKYWARD_WEAPONS,SKYWARD_OUTFITS,SKYWARD_RIDES,SKYWARD_PETS,skywardItem} from './skyward-collection';
 import {emptyAstralStudy,validAstralStudy,type AstralStudy} from './astral-study';
 import { isBlockedNickname } from './nickname';
-import {migratedTitle,titleDefinition,type TitleId} from './titles';
+import {migratedTitle,titleDefinition,titleEffect,type TitleId} from './titles';
 import {emptyWorldTwo,expandWorldTwoSave,validWorldTwo,WORLD_TWO_WEAPONS,WORLD_TWO_OUTFITS,worldTwoEquipment,worldTwoEquipmentSource,type WorldTwoProgress} from './world-two';
 import {HUNT_RECOVERY_ITEMS,LEGACY_POTION_COUNT,huntingSupply,supplyFailure,type SupplyUseResult} from './hunt-supplies';
 import { emptyHomestead, validHomestead, type Homestead } from './homestead';
@@ -14,7 +14,7 @@ import { emptyExpedition, expeditionLayout, EXPEDITION_TITLES, type ExpeditionPr
 import { DAILY_MISSIONS, DAILY_GOAL_LIMITS, DATE_KEY, recordDaily, type DailyState } from './daily';
 import { sha256Hex } from './sha256';
 import { j } from './grade-helpers';
-import {emptyCareer,validCareer,type CareerProgress} from './academy';
+import {emptyCareer,validCareer,expandCareer,type CareerProgress} from './academy';
 import {HUNT_ZONES,type HuntDefeatEvent} from './hunting';
 import {todayKey} from './daily';
 export const WEAPONS = [
@@ -47,6 +47,9 @@ export const WEAPONS = [
   { name: '은하수 왕관검', price: 22000, bonus: 86, multiplier: 11.6, treePower: 16, icon: '🌌', color: 0x8f7ff0 },
 ...WORLD_TWO_WEAPONS,
 ...SKYWARD_WEAPONS,
+ {name:'여명 숲지기 망치',price:45000,bonus:86,multiplier:11.6,treePower:22,icon:'🔨',color:0xd5ae65},
+ {name:'달그늘 초승달 낫',price:78000,bonus:86,multiplier:11.6,treePower:26,icon:'🌒',color:0x88c8b4},
+ {name:'별서리 마도서',price:120000,bonus:86,multiplier:11.6,treePower:30,icon:'📖',color:0xa59bde},
 ] as const;
 export const OUTFITS = [
   { name: '새싹 탐험복', price: 0, color: 0x4d9c78, accent: 0xffe4a3, desc: '처음 떠나는 모험의 설렘', effect: '추가 효과가 없는 기본 옷이에요.', berryBonus: 0, xpBonus: 0, clearBonus: 0 },
@@ -183,7 +186,7 @@ export const POTIONS = [
   { name: '별빛 집중물약', icon: '✨', price: 680, kind: 'xp', multiplier: 4, durationMinutes: 5, desc: '사용한 뒤 5분 동안 몬스터에게 받는 경험치가 4배가 돼요. 짧고 힘이 센 물약이에요.' },
   ...HUNT_RECOVERY_ITEMS,
 ] as const;
-export const WEAPON_UPGRADES = [60, 120, 240];
+export const WEAPON_UPGRADES = [60,120,240,1200,3000,7000,15000,30000,60000,120000];
 export const OUTFIT_UPGRADES = [50, 100];
 export type Operation = 'addition' | 'subtraction' | 'multiplication' | 'division';
 export type ForestKind = Operation;
@@ -687,14 +690,14 @@ export function grantReward(s: Save, monster: number, arena: boolean, now = Date
 }
 /** Combat power is separate from all learning reward bonuses. */
 export function huntingCompanionStats(s:{pet?:number;outfit?:number}){const armor=s.outfit===undefined?1:skywardItem('outfit',s.outfit)?1.2:worldTwoEquipment('outfit',s.outfit)?1.15:1;return s.pet===PPOJJAK_PET_ID?{maxHpMultiplier:1.35*armor,damageReduction:.2}:{maxHpMultiplier:armor,damageReduction:0};}
-export function huntingPower(s:Pick<Save,'level'|'weapon'|'weapons'>&{pet?:number}){const w=WEAPONS[s.weapon]??WEAPONS[0],upgrade=Math.max(0,Math.min(3,s.weapons[s.weapon]??0)),level=Math.min(100000,s.level);return (8+level*1.15+Math.sqrt(level)*1.8)*(1+(w.treePower-1)*.22+upgrade*.15)*(s.pet===PPOJJAK_PET_ID?1.45:1);} // 레벨의 힘을 키우되 기존 무기·강화 배율은 유지해요.
+export function huntingPower(s:Pick<Save,'level'|'weapon'|'weapons'>&{pet?:number;selectedTitleId?:TitleId|null}){const w=WEAPONS[s.weapon]??WEAPONS[0],upgrade=Math.max(0,Math.min(10,s.weapons[s.weapon]??0)),level=Math.min(100000,s.level);return (8+level*1.15+Math.sqrt(level)*1.8)*(1+(w.treePower-1)*.22+upgrade*.15)*(s.pet===PPOJJAK_PET_ID?1.45:1)*(s.selectedTitleId?titleEffect(s as Save).attack:1);} // 레벨의 힘을 키우되 기존 무기·강화 배율은 유지해요.
 export function huntingRewardFor(s:Save,zone:number,now=Date.now()){
   const z=HUNT_ZONES[zone];if(!z||s.level<z.level||!Number.isFinite(now)||!Number.isFinite(new Date(now).getTime()))return {berries:0,xp:0,eligible:false,multiplier:0};
   const date=todayKey(new Date(now)),count=s.career.daily.date===date?s.career.daily.counts[zone]:0;
   // Never penalize the highest zone this player can actually enter.
   const higherZoneOpen=HUNT_ZONES.some(next=>next.level>z.level&&s.level>=next.level);
-  const multiplier=(higherZoneOpen&&s.level>=z.level+20?.1:1)*(count>=100?.25:1),potion=potionEffects(s,now);
-  return {berries:Math.floor(z.berries*multiplier*potion.berryMultiplier*(s.pet===PPOJJAK_PET_ID?1.5:1)),xp:Math.floor(z.xp*multiplier*potion.xpMultiplier*(s.pet===PPOJJAK_PET_ID?1.4:1)),eligible:true,multiplier};
+  const multiplier=(higherZoneOpen&&s.level>=z.level+20?.1:1),potion=potionEffects(s,now);
+  return {berries:Math.floor(z.berries*multiplier*potion.berryMultiplier*titleEffect(s).berries*(s.pet===PPOJJAK_PET_ID?1.5:1)),xp:Math.floor(z.xp*multiplier*potion.xpMultiplier*(s.pet===PPOJJAK_PET_ID?1.4:1)),eligible:true,multiplier};
 }
 const huntingClaims=new WeakMap<Save,Set<string>>();
 export function grantHuntingReward(s:Save,zoneOrEvent:number|HuntDefeatEvent,enemyTypeOrNow:string|number='melee',now=Date.now()){
@@ -955,6 +958,7 @@ export function validateSave(value: unknown): Save {
   if(migrated.version===25){migrated.version=26;migrated.partyClaims=[];}
   migrated.world2 = expandWorldTwoSave(migrated.world2);
   if(migrated.version===26&&migrated.profileId===undefined){const hash=sha256Hex('berry-profile-v26:'+JSON.stringify(value));migrated.profileId=hash.slice(0,8)+'-'+hash.slice(8,12)+'-'+hash.slice(12,16)+'-'+hash.slice(16,20)+'-'+hash.slice(20,32);}
+  migrated.career=expandCareer(migrated.career);
   const s = migrated as unknown as Save;
   // Older v22 saves retain their six potion quantities; new recovery slots start empty.
   if(s.potions&&Array.isArray(s.potions.stock)&&s.potions.stock.length===LEGACY_POTION_COUNT)s.potions.stock.push(...HUNT_RECOVERY_ITEMS.map(()=>s.teacherMode?9:0));
@@ -993,7 +997,7 @@ export function validateSave(value: unknown): Save {
     for (const [found, allowed] of [[active.stars, layout.stars], [active.monsters, layout.monsters]] as const) if (found.some(id => !allowed.includes(id)) || new Set(found).size !== found.length) return fail();
     if (!q || !integer(q.dividend, 10, 180) || q.dividend % 10 !== 0 || !integer(q.divisor, 2, 9) || q.dividend % q.divisor !== 0 || q.answer !== q.dividend / q.divisor) return fail();
   }
-  for (const [key, total, max] of [['weapons', WEAPONS.length, 3], ['outfits', OUTFITS.length, 2]] as const) {
+  for (const [key, total, max] of [['weapons', WEAPONS.length, WEAPON_UPGRADES.length], ['outfits', OUTFITS.length, 2]] as const) {
     const map = s[key];
     if (!map || typeof map !== 'object' || Array.isArray(map) || !Object.hasOwn(map, '0')) return fail();
     for (const [id, v] of Object.entries(map)) if (!/^\d+$/.test(id) || !integer(Number(id), 0, total - 1) || !integer(v, 0, max)) return fail();

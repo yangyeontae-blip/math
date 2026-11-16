@@ -20,7 +20,7 @@ export type HuntEffect={id:string;skill:SkillId;x:number;z:number;radius:number;
 export type HuntDefeatEvent={type:'defeat';id:string;enemyId:string;enemyType:'melee'|'charge'|'ranged';zone:number;practice:boolean;encounter?:string};
 export type HuntEvent=HuntDefeatEvent|{type:'hit';enemyId:string;damage:number;skill:SkillId|'basic'}|{type:'playerHit';damage:number;hp:number}|{type:'retreat';x:number;z:number}|{type:'cast';skill:SkillId}|{type:'respawn';enemyId:string}|{type:'practiceEffect';skill:SkillId;kind:'block'|'root'|'escape'|'reveal'|'hit';enemyIds?:string[]};
 export type HuntEncounter={id:string;hp:number;damage:number;boss:boolean};
-export type HuntingOptions={encounter?:HuntEncounter;zone:number;level:number;power:number;job?:JobId|null;learned?:readonly SkillId[];loadout?:readonly(SkillId|null)[];practice?:boolean;practiceMode?:PracticeMode;maxHpMultiplier?:number;damageReduction?:number};
+export type HuntingOptions={upgrades?:Partial<Record<SkillId,number>>;encounter?:HuntEncounter;zone:number;level:number;power:number;job?:JobId|null;learned?:readonly SkillId[];loadout?:readonly(SkillId|null)[];practice?:boolean;practiceMode?:PracticeMode;maxHpMultiplier?:number;damageReduction?:number};
 export type HuntSnapshot={bossPhase?:number;bossFightSeconds?:number;time:number;zone:number;playerHp:number;maxHp:number;invulnerable:number;enemies:HuntEnemy[];cooldowns:Partial<Record<SkillId,number>>;effects:HuntEffect[];speedMultiplier:number;supplies:{food:number;health:number;mealRemaining:number}};
 type EnemyRuntime=HuntEnemy&{spawn:HuntPoint;ready:number;rootUntil:number;pattern:number};
 type Area=HuntEffect&{damage:number;root:number;trigger:boolean;hit:boolean};
@@ -43,7 +43,7 @@ export class HuntingRuntime{
   this.reset();
  }
  private profileMaxHp(profile:HuntingOptions){return huntingMaxHp(profile.level,profile.practice?1:profile.maxHpMultiplier??1);}
- updateProfile(profile:Pick<HuntingOptions,'level'|'power'>&Partial<Pick<HuntingOptions,'job'|'learned'|'loadout'|'maxHpMultiplier'|'damageReduction'>>){if(!Number.isFinite(profile.level)||profile.level<1||!Number.isFinite(profile.power)||profile.power<=0||!validCompanionOptions(profile))return false;const maxHp=this.profileMaxHp({...this.options,...profile});this.hp=Math.min(maxHp,this.hp+Math.max(0,maxHp-this.maxHp));this.maxHp=maxHp;Object.assign(this.options,profile);return true;}
+ updateProfile(profile:Pick<HuntingOptions,'level'|'power'>&Partial<Pick<HuntingOptions,'job'|'learned'|'loadout'|'upgrades'|'maxHpMultiplier'|'damageReduction'>>){if(!Number.isFinite(profile.level)||profile.level<1||!Number.isFinite(profile.power)||profile.power<=0||!validCompanionOptions(profile))return false;const maxHp=this.profileMaxHp({...this.options,...profile});this.hp=Math.min(maxHp,this.hp+Math.max(0,maxHp-this.maxHp));this.maxHp=maxHp;Object.assign(this.options,profile);return true;}
  reset(){this.bossStarted=null;this.supplyReady={food:0,health:0};this.meal=null;this.time=0;this.hp=this.maxHp;this.invincibleUntil=0;this.nextAttack=0;this.cooldowns={};this.buffs={};this.effects=[];this.windStart=null;const positions=this.options.encounter?.boss?[[0,-8]]:[[-6,-3],[0,-6],[6,-3],[-8,-10],[0,-13],[8,-10]];
   const count=this.options.practice?(this.options.practiceMode==='multi'?3:this.options.practiceMode==='attacking'?2:1):this.options.encounter?.boss?1:6;
   this.enemies=positions.slice(0,count).map(([x,z],i)=>({id:String(i),type:(['melee','charge','ranged'] as const)[i%3],x:this.options.practice?i*3-((count-1)*1.5):x,z:this.options.practice?0:z,hp:this.options.encounter?.hp??HUNT_ZONES[this.options.zone].hp,maxHp:this.options.encounter?.hp??HUNT_ZONES[this.options.zone].hp,state:'idle',respawnIn:0,ready:0,rootUntil:0,pattern:0,spawn:{x:this.options.practice?i*3-((count-1)*1.5):x,z:this.options.practice?0:z}}));
@@ -66,8 +66,17 @@ export class HuntingRuntime{
  attack(player:HuntPoint,facing?:HuntPoint,targetId?:string|null):HuntEvent[]{const events:HuntEvent[]=[];if(!finitePoint(player)||this.time<this.nextAttack||!this.options.practice&&distance(player,HUNT_CAMP)<HUNT_CAMP_RADIUS)return events;const range=this.options.job==='ranger'?10:this.options.job==='mage'?8:2.8;const chosen=targetId?this.enemies.find(e=>e.id===targetId&&e.hp>0&&distance(e,player)<=range):undefined;const e=chosen??this.targets(player,range,facing)[0];if(!e)return events;this.nextAttack=this.time+.85;const power=this.options.power*(this.active('guardian')?1.3:1),splash=this.enemies.filter(o=>o!==e&&o.hp>0&&distance(o,e)<=HUNT_SPLASH_RADIUS);this.hurt(e,power,'basic',events);for(const o of splash)this.hurt(o,power*HUNT_SPLASH_SHARE,'basic',events);return events;}
  cast(id:SkillId,player:HuntPoint,facing?:HuntPoint):HuntEvent[]{const events:HuntEvent[]=[];
   if(!isSkill(id)||!finitePoint(player)||(this.cooldowns[id]??0)>this.time)return events;
-  const skill=skillInfo(id);if(!this.options.learned?.includes(id)||skill.job&&this.options.job!==skill.job||this.options.loadout&&!this.options.loadout.includes(id))return events;
+  const definition=skillInfo(id),skill={...definition,power:definition.power*(1+Math.min(5,Math.max(0,this.options.upgrades?.[id]??0))*.08)};if(!this.options.learned?.includes(id)||skill.job&&this.options.job!==skill.job||this.options.loadout&&!this.options.loadout.includes(id))return events;
   if(skill.job&&!this.options.practice&&distance(player,HUNT_CAMP)<HUNT_CAMP_RADIUS)return events;
+  if(['earthsong','moonseed','bloomring','ancientGrove','worldroot','sparkFlask','frostFlask','prismBurst','auroraSeal','starforge','dawnCrown','galaxyNova','skyTempest'].includes(id)){
+   const range=id==='dawnCrown'?9:id==='skyTempest'?14:id==='moonseed'?5:12;
+   const primary=this.targets(player,range,id==='dawnCrown'?facing:undefined)[0];if(!primary)return events;
+   const single=id==='earthsong'||id==='sparkFlask',radius=skill.rank===4?7:skill.rank===3?6:id==='frostFlask'?4:5;
+   const targets=single?[primary]:id==='dawnCrown'?this.targets(player,range,facing):this.targets(id==='moonseed'?player:primary,radius);
+   this.cooldowns[id]=this.time+skill.cooldown;events.push({type:'cast',skill:id});this.addEffect(id,primary,radius,skill.duration,0,0,false);
+   for(const enemy of targets){this.hurt(enemy,this.options.power*skill.power,id,events);if(enemy.hp>0&&['moonseed','ancientGrove','worldroot','frostFlask','auroraSeal'].includes(id)){enemy.rootUntil=this.time+(this.options.encounter?.boss?.5:skill.duration);enemy.state='rooted';enemy.telegraph=undefined;if(this.options.practice)events.push({type:'practiceEffect',skill:id,kind:'root',enemyIds:[enemy.id]});}}
+   return events;
+  }
   if(['acornRush','vinePull','dawnSlash','leafOrb','thunderChain','comet','tripleShot','galeShot','moonArrow'].includes(id)){
    const range=id==='moonArrow'?14:id==='vinePull'?8:id==='dawnSlash'?7:id==='acornRush'?5:12;
    const directional=['acornRush','dawnSlash','leafOrb','tripleShot','moonArrow'].includes(id),area=id==='comet'||id==='galeShot';

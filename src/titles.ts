@@ -48,6 +48,13 @@ export function migratedTitle(s:Save):TitleId|null{
  return null;
 }
 export function activeTitle(s:Save){const t=titleDefinition(s.selectedTitleId);return t&&titleAvailable(s,t)?t:null;}
+/** One equipped, earned title grants one bonus. Merely owning titles never stacks effects. */
+export function titleEffect(s:Save){
+ const t=activeTitle(s);
+ if(!t||t.id==='expedition-0')return {attack:1,berries:1,label:'칭호 능력 효과 없음'};
+ const bonus=t.style==='explorer'?Math.min(.15,(t.expeditions??0)*.005):t.style==='divine'?.15:t.style==='star'?.1:.05;
+ return {attack:1+bonus,berries:1+bonus,label:`사냥 공격력·사냥 베리 +${Math.round(bonus*100)}%`};
+}
 export function selectTitle(s:Save,id:TitleId|null){
  const t=titleDefinition(id);
  if(id!==null&&(!t||!titleAvailable(s,t)))throw Error('아직 사용할 수 없는 칭호예요.');

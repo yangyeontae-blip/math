@@ -44,6 +44,9 @@ export function startExpedition(s: Save) {
   }
   s.journey.stage = progress.active.stage;
   s.room.inside = false;
+  s.homestead.inside = false;
+  s.career.location = null;
+  s.world2.location = null;
   if (!alreadyThere) s.position = { x: 0, z: stageSize(progress.active.stage).z - 9 };
   return true;
 }

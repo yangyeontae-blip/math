@@ -307,6 +307,12 @@ export class HuntingWorld {
     } else if (id === 'comet') {
       const core = add(this.sphere, 0, 3.5, 0, .45, .55, .45, .9, 0xffda82); core.userData.role = 'comet';
       for (let i = 0; i < 4; i++) { const flame = add(this.cone, i * .06, 3.9 + i * .3, 0, .23 - i * .04, .65, .18, .7 - i * .1); flame.userData.role = 'cometTail'; flame.userData.phase = i; }
+    } else if (skillInfo(id).job === 'druid') {
+      for(let i=0;i<7;i++){const a=i*Math.PI*2/7;const stem=add(this.cone,Math.cos(a)*.65,.45,Math.sin(a)*.65,.12,.7,.12,.75);stem.rotation.z=Math.sin(a)*.4;const leaf=add(this.sphere,Math.cos(a)*.8,.7,Math.sin(a)*.8,.18,.07,.3,.8);leaf.rotation.y=-a;}
+      const ring=add(this.arc,0,.08,0,.9,.6,.9,.7);ring.rotation.x=Math.PI/2;ring.userData.role='ribbon';
+    } else if (skillInfo(id).job === 'alchemist') {
+      for(let i=0;i<7;i++){const a=i*2.399;const bubble=add(this.sphere,Math.cos(a)*.65,.25+i*.18,Math.sin(a)*.65,.11+i*.008,.11+i*.008,.11+i*.008,.8);bubble.userData.role='rain';bubble.userData.phase=i;}
+      for(let i=0;i<2;i++){const ring=add(this.arc,0,.3+i*.3,0,.7,.6,.7,.6);ring.rotation.set(Math.PI/2,0,i);ring.userData.role='ribbon';ring.userData.phase=i;}
     } else if (id === 'lantern') {
       add(this.sphere, 0, 1, 0, .18, .28, .18, .9, 0xffd77c);
       for (let i = 0; i < 4; i++) { const pointer = add(this.cone, Math.cos(i * Math.PI / 2) * .65, .08, Math.sin(i * Math.PI / 2) * .65, .1, .35, .1); pointer.rotation.set(Math.PI / 2, 0, i * Math.PI / 2); }

@@ -44,7 +44,7 @@ import { StorybookScene, leafMaterial } from './storybook-scene';
 
 type Entity = { id: string; name: string; x: number; z: number; mesh: T.Group; label: HTMLDivElement };
 export type GuideKind = 'astralQuestion' | 'astralNext' | 'astralExit' | 'world2Gate' | 'world2Beacon' | 'huntingGate' | 'huntingExit' | 'academyGate' | 'academyBook' | 'guide' | 'marketExit' | 'noticeBoard' | 'homesteadGate' | 'shopStreet' | 'homeEditor' | 'homeExit' | 'homeVisitor' | 'discovery' | 'forestWork' | 'trailSeed' | 'trailLamp' | 'berry' | 'monster' | 'shop' | 'journey' | 'next' | 'star' | 'expMonster' | 'roomExit' | 'storyClue' | 'storyPuzzle' | 'storyMailbox' | 'village' | 'villageProject0' | 'villageProject1' | 'villageProject2';
-export type TrainingOptions = { job?: JobId | null; mode: 'single' | 'multi' | 'attacking'; skills: readonly SkillId[]; trialRank?: 1 | 2 | 3; skill?: SkillId | null };
+export type TrainingOptions = { job?: JobId | null; mode: 'single' | 'multi' | 'attacking'; skills: readonly SkillId[]; trialRank?: 1 | 2 | 3 | 4; skill?: SkillId | null };
 export const PLAZA_COMBAT_GATES = { hunting: { x: -18, z: -3 }, market: { x: -18, z: 5.5 } } as const;
 const mat = (color: number, roughness = .86) => new T.MeshStandardMaterial({ color, roughness });
 const materials = new Map<number, T.MeshStandardMaterial>();
@@ -141,7 +141,12 @@ export function makeCharacter(character: number, outfit: number, weapon: number,
     for (let i = 0; i < 5; i++) ball(w, i % 2 ? 0xffffff : 0xffe16d, Math.cos(i * 1.257) * .22, .48 + Math.sin(i * 1.257) * .22, .12, .05);
   }
   if (weapon >= 27 && weapon < 36) w.add(worldTwoEquipmentModel('weapon',weapon,WEAPONS[weapon].color));
-  if(weapon>=36){w.clear();w.add(createSkywardWeapon(weapon,skywardKit));}
+  if(weapon>=36&&weapon<39){w.clear();w.add(createSkywardWeapon(weapon,skywardKit));}
+  if(weapon>=39){w.clear();const c=WEAPONS[weapon].color;cylinder(w,0x775c44,0,.55,0,.05,.06,.85,8);
+   if(weapon===39){box(w,c,0,1,0,.68,.3,.3);for(const side of [-1,1])box(w,0xffe3a3,side*.23,1,0,.07,.34,.34);mesh(new T.OctahedronGeometry(.11),0xffffff,0,1.24,0,w);}
+   if(weapon===40){const arc=mesh(new T.TorusGeometry(.4,.07,6,18,Math.PI*1.4),c,.15,1.02,0,w);arc.rotation.z=-.5;mesh(new T.ConeGeometry(.11,.36,6),0xe8f9dd,.5,.81,0,w).rotation.z=2.4;}
+   if(weapon===41){for(const side of [-1,1]){const cover=box(w,c,side*.18,1,0,.34,.46,.1);cover.rotation.y=side*-.3;box(w,0xfff1d4,side*.18,1,.06,.3,.4,.05);}mesh(new T.OctahedronGeometry(.14),0xbfeef9,0,1.33,.05,w);}
+  }
   if (outfit >= 26 && outfit < 29) body.add(worldTwoEquipmentModel('outfit',outfit,o.color,o.accent));
   if(outfit>=29)body.add(createSkywardOutfit(outfit,skywardKit,o.color,o.accent));
   if (weapon >= 18 && weapon <= 26) { // 새 상점 무기: 각자 색이 다른 반짝이는 모험 지팡이
@@ -709,7 +714,7 @@ export class World {
   inAstralStudy:AstralLocation|null=null;private astralSave:Save|null=null;
   inHunting=false; inTraining=false; inWorldTwo:WorldTwoLocation|null=null;
   private combatRuntime: HuntingRuntime | null = null; private combatWorld: HuntingWorld | null = null;
-  private combatProfile: { job: JobId | null; learned: readonly SkillId[]; loadout: readonly (SkillId | null)[] } = { job: null, learned: [], loadout: [] };
+  private combatProfile: { job: JobId | null; learned: readonly SkillId[]; loadout: readonly (SkillId | null)[];upgrades?:Partial<Record<SkillId,number>> } = { job: null, learned: [], loadout: [] };
   private huntTarget: string | null = null; private combatSave: Save | null = null;
   private combatAimUntil = 0; private combatAimAngle = 0;
   private chargeMotion: { remaining: number; direction: { x: number; z: number } } | null = null;
@@ -1099,8 +1104,8 @@ export class World {
     this.colliders.push({x:-4,z:-2,r:1},{x:4,z:-1,r:.65});
     this.mergeStaticScenery();this.vy=0;this.grounded=true;this.player.position.set(0,0,3.7);this.placePetNearPlayer();this.lastSafe.copy(this.player.position);this.follow.copy(this.player.position);this.onStageLoaded(0);this.resize();this.renderOnce();
   }
-  configureCombat(profile: { job?: JobId | null; learned: readonly SkillId[]; loadout: readonly (SkillId | null)[] }) {
-    this.combatProfile = { job: profile.job ?? null, learned: [...profile.learned], loadout: [...profile.loadout] };
+  configureCombat(profile: { job?: JobId | null; learned: readonly SkillId[]; loadout: readonly (SkillId | null)[];upgrades?:Partial<Record<SkillId,number>> }) {
+    this.combatProfile = { job: profile.job ?? null, learned: [...profile.learned], loadout: [...profile.loadout],upgrades:{...profile.upgrades} };
     if (this.inHunting && this.combatRuntime && this.combatSave) this.combatRuntime.updateProfile({ level: this.combatSave.level, power: huntingPower(this.combatSave), ...huntingCompanionStats(this.combatSave), ...this.combatProfile });
   }
   get huntingStatus(): (HuntSnapshot & { targetId: string | null; safe: boolean; player: { x: number; z: number } }) | null { const snapshot = this.combatRuntime?.snapshot(); return snapshot ? { ...snapshot, targetId: this.huntTarget, safe: this.inHunting && Math.hypot(this.player.position.x - HUNT_CAMP.x, this.player.position.z - HUNT_CAMP.z) < 3, player: { x: this.player.position.x, z: this.player.position.z } } : null; }
@@ -1833,7 +1838,7 @@ export class World {
       const n = Math.hypot(dx, dz); if (n > 1) { dx /= n; dz /= n; }
       const ride = this.rideIndex >= 0 ? RIDES[this.rideIndex] : null, flying = !!ride?.flying, speed = PLAYER_MOVE_SPEED * (ride?.speed ?? 1) * (this.combatRuntime?.snapshot().speedMultiplier ?? (this.skillRuntime.active('wind',this.time)?1.6:1));
       const vx = (dx * .8 + dz * .6) * speed, vz = (-dx * .6 + dz * .8) * speed;
-      const allowed = (x: number, z: number) => flying || (!this.colliders.some(c => (!c.id || this.entities.find(e => e.id === c.id)?.mesh.visible) && Math.hypot(x - c.x, z - c.z) < c.r + .32) && !this.platforms.some(t => Math.abs(x - t.x) < t.w / 2 + .2 && Math.abs(z - t.z) < t.d / 2 + .2 && p.y < t.h - .13));
+      const allowed = (x: number, z: number) => flying || (!(p.y <= .2 && this.water(x,z)) && !this.colliders.some(c => (!c.id || this.entities.find(e => e.id === c.id)?.mesh.visible) && Math.hypot(x - c.x, z - c.z) < c.r + .32) && !this.platforms.some(t => Math.abs(x - t.x) < t.w / 2 + .2 && Math.abs(z - t.z) < t.d / 2 + .2 && p.y < t.h - .13));
       if (allowed(p.x + vx * dt, p.z)) p.x += vx * dt; if (allowed(p.x, p.z + vz * dt)) p.z += vz * dt;
       if (this.chargeMotion) { const motion = this.chargeMotion, elapsed = Math.min(dt, motion.remaining), limits = this.inHunting ? { x: 19.4, z: 19.4 } : { x: 6.9, z: 7.9 }; const moved = advanceHuntCharge(p, motion.direction, elapsed * 12, (x, z) => Math.abs(x) <= limits.x && Math.abs(z) <= limits.z && allowed(x, z) && !this.water(x, z)); p.x = moved.x; p.z = moved.z; motion.remaining -= elapsed; if (moved.blocked || motion.remaining <= .00001) this.chargeMotion = null; }
       this.walkBlend = T.MathUtils.damp(this.walkBlend,n>.05?1:0,12,dt);
