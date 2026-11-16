@@ -6,7 +6,7 @@
     "src/storybook-scene.ts": "36a0e7cb656b8e85f5fdf04833325997a7f6de2c2353452f1f1aeef77dc58043",
     "tests/storybook-art.test.ts": "ddefef8a1e556afdff88f34a5505004c3df51b95824c82640ee79dc8d95489de",
     "e2e/core-flows.spec.mjs": "204387f065a1f2e347ab40724fd5b2d3ae0e82b909d670981d26a7be2d05dc0f",
-    "playwright.config.mjs": "7d222dd64bfc9e62086432ae489ba94810c0aa0ff256585a31df9f0e2ce44686",
+    "playwright.config.mjs": "cc85c25025e815371fe1a6de73e87fbce1d977e8bb1dbc044d31c4ac9d600e25",
     "scripts/check-common.mjs": "04faf72d9b67113d1cc1e04718198933a4d1e4451cc4585a385b5c9dd3311d39",
     "scripts/sync-common.mjs": "4375626348ebfdf9f60d9ef355b5baf310a1c480c007f20d41c5258c95e698cb",
     "src/adaptive.ts": "b943e7d99164396cd587e3191cecee50107276a776c78824f28bf3c6f8ae46c2",
@@ -86,7 +86,7 @@
     "src/village-layout.ts": "34f8c177633a9255e686bd0d82b5d0556428eb9df85b24b47c040c72311011d3",
     "tests/hunting.test.ts": "0e951d7dc8cb38f82e04f1979151b8d77ce8e746ca0b2142aeb85652e08e83f1",
     "tests/hunting-world.test.ts": "e3042142c4134835628f0018ecde0e4891ee1d62234199e6ec85af7edf9e0adc",
-    "e2e/hunting.spec.mjs": "0f2a88915538a42a73dea23b47f2493c97f8621e544ebf5b8f4d25b51a70f78b",
+    "e2e/hunting.spec.mjs": "2ff406ac403feccf42fed0b011625735129c4a1ee2d5000c45cc85dd27f58055",
     "src/item-rarity.ts": "8f061ff5da236ee8ab53afd0c62ba58a50ff07ac2fa24ead0b6a4d8ba7d075a7",
     "src/item-rarity.css": "a082b792039009205f444a227c1b824c20a6ea3acd5f4a13d9ac58bf03e599c3",
     "src/legendary-pet.ts": "8f3169d988e96a56e7fa0984fc61d9b9ba6c7b1e25c321a3cb8975d51d08181d",
@@ -203,5 +203,5 @@
     "src/party-lobby.ts": "6aac1eb108109d2d2fef2f7b93221fc5020481ece7d32ecb55f76b442067b63a",
     "tests/party-lobby.test.ts": "9294650b6c3e2a1e0dc3c4eed3635c10eb3bef810537584b34a24b902362a22c"
   },
-  "generation": "86625f7bee9fea3481ba464aacabbe392a429be2e613ef4a4eb01c47cf627c52"
+  "generation": "352fb0895ebca00018259203529d55a49e4ab347d67b00023af02281449f52b2"
 }
