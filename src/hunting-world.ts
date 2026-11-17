@@ -279,7 +279,11 @@ export class HuntingWorld {
       const mesh = new T.Mesh(geometry, this.material(tint, opacity)); mesh.position.set(x, y, z); mesh.scale.set(sx, sy, sz); group.add(mesh); return mesh;
     };
     const ground = add(this.ring, 0, 0, 0, 1, 1, 1, .42); ground.rotation.x = -Math.PI / 2; ground.userData.role = 'ground';
-    if (id === 'shield' || id === 'guardian') {
+    if (skillInfo(id).rank===5 || skillInfo(id).job==='bard') {
+      const music=skillInfo(id).job==='bard',n=skillInfo(id).rank===5?8:5;
+      for(let i=0;i<n;i++){const a=i*Math.PI*2/n,stem=add(music?this.cube:this.cone,Math.cos(a)*.8,.7,Math.sin(a)*.8,music?.035:.09,music?.3:.48,.035,.9);stem.userData.role='orbit';stem.userData.phase=i;if(music)add(this.sphere,Math.cos(a)*.8-.07,.42,Math.sin(a)*.8,.1,.065,.07,.9);}
+      const halo=add(this.ring,0,.85,0,.85,.85,.85,.7);halo.userData.role='orbit';
+    } else if (id === 'shield' || id === 'guardian') {
       add(this.sphere, 0, .65, 0, .65, .85, .65, .13);
       for (let i = 0; i < (id === 'guardian' ? 6 : 3); i++) {
         const a = i * Math.PI * 2 / (id === 'guardian' ? 6 : 3);

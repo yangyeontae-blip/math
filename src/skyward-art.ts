@@ -1,5 +1,6 @@
 import * as T from 'three';
 export interface SkywardKit {ball:(p:T.Object3D,c:number,x:number,y:number,z:number,sx?:number,sy?:number,sz?:number)=>T.Mesh;box:(p:T.Object3D,c:number,x:number,y:number,z:number,w:number,h:number,d:number)=>T.Mesh;cylinder:(p:T.Object3D,c:number,x:number,y:number,z:number,top:number,bottom:number,h:number,sides?:number)=>T.Mesh;mesh:(geo:T.BufferGeometry,c:number,x?:number,y?:number,z?:number,parent?:T.Object3D)=>T.Mesh;}
+export {mark as registerSkywardMotion};
 type MotionKind='gait'|'tail'|'flap'|'blink'|'wheel'|'sway'|'orbit'|'breath';
 type Part={object:T.Object3D;kind:MotionKind;phase:number;amount:number;rotation:T.Euler;scale:T.Vector3;y:number;angle:number};
 const gold=0xd5b371,ivory=0xf6e8c9,ink=0x263542,rose=0xe7a5a5;

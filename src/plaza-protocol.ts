@@ -1,18 +1,12 @@
+import {CAREER_TITLES} from './career-catalog';
 import {titleDefinition,type TitleId} from './titles';
 import {isBlockedNickname} from './nickname';
 export const PLAZA_VERSION = 1;
 export const PLAZA_ROOM = 'central-plaza-v1';
 export const PLAZA_CAPACITY = 128;
-export const PLAZA_AVATAR_CATALOG=4;
-export const AVATAR_LIMITS = {character:4,outfit:32,weapon:42,hairstyle:13,face:17,pet:24,ride:24} as const;
-export const JOB_TITLES = {
- novice:['새싹 모험가','새싹 모험가','새싹 모험가','새싹 모험가','새싹 모험가'],
- knight:['새싹 모험가','기사','수호기사','고대숲 기사','여명의 성기사'],
- mage:['새싹 모험가','마법사','마도사','별빛 현자','은하 대마법사'],
- ranger:['새싹 모험가','궁수','레인저','폭풍의 궁수','하늘의 명궁'],
- druid:['새싹 모험가','정령술사','숲의 영매','고대숲 현인','세계수의 목소리'],
- alchemist:['새싹 모험가','별길 연금술사','수정 연성사','오로라 현자','별의 창조자'],
-} as const;
+export const PLAZA_AVATAR_CATALOG=5;
+export const AVATAR_LIMITS = {character:4,outfit:35,weapon:45,hairstyle:13,face:17,pet:26,ride:26} as const;
+export const JOB_TITLES=CAREER_TITLES;
 export const ADVENTURE_TITLES = ['모험가','첫 발자국','숲길 길잡이','반짝임 수집가','별사탕 해결사','별빛 탐험가','달빛 개척자','해바라기 수호대','베리숲 수호자','두 숲의 전설','영원한 별빛 영웅'] as const;
 export const PLAZA_EMOTES = {wave:'안녕! 👋',heart:'반가워! 💛',cheer:'멋지다! ✨',play:'함께 놀자! 🌿'} as const;
 export type PlazaEmote = keyof typeof PLAZA_EMOTES;
@@ -24,6 +18,8 @@ export interface PlazaProfile {
 /** Older web/app clients keep seeing the same friend, with a similar legacy model. */
 export function compatiblePlazaProfile(p:PlazaProfile,catalog:number|undefined) {
  if (catalog === PLAZA_AVATAR_CATALOG) return p;
+ p={...p,job:p.job==='bard'?'mage':p.job,rank:Math.min(4,p.rank),weapon:p.weapon>=42?36+(p.weapon-42):p.weapon,outfit:p.outfit>=32?29+(p.outfit-32):p.outfit,pet:p.pet>=24?21+(p.pet-24):p.pet,ride:p.ride>=24?22+(p.ride-24):p.ride};
+ if(catalog===4)return p;
  p={...p,job:p.job==='druid'?'ranger':p.job==='alchemist'?'mage':p.job,rank:Math.min(3,p.rank)};
  if(p.weapon>=39)p={...p,weapon:23+(p.weapon-39)};
  if(catalog===3)return p;
@@ -52,7 +48,7 @@ export function parsePlazaProfile(value:unknown,operator=false):PlazaProfile|nul
  const p=value as Record<string,unknown>;
  if(typeof p.nickname!=='string'||p.nickname!==p.nickname.trim()||![...p.nickname].length||[...p.nickname].length>10||/[\u0000-\u001f\u007f<>]/.test(p.nickname)||isBlockedNickname(p.nickname)||!integer(p.level,1,100000))return null;
  if(p.job==='novice'&&Number(p.rank)>3)return null;
- if(typeof p.job!=='string'||!Object.hasOwn(JOB_TITLES,p.job)||!integer(p.rank,0,4)||!integer(p.achievement,0,ADVENTURE_TITLES.length-1)||!integer(p.gradeTitle,0,6)||typeof p.multiplicationTitle!=='boolean'||!integer(p.outfitLevel,0,3)||!integer(p.weaponLevel,0,3))return null;
+ if(typeof p.job!=='string'||!Object.hasOwn(JOB_TITLES,p.job)||!integer(p.rank,0,5)||!integer(p.achievement,0,ADVENTURE_TITLES.length-1)||!integer(p.gradeTitle,0,6)||typeof p.multiplicationTitle!=='boolean'||!integer(p.outfitLevel,0,3)||!integer(p.weaponLevel,0,3))return null;
  const result={nickname:p.nickname,level:p.level,job:p.job,rank:p.rank,achievement:p.achievement,gradeTitle:p.gradeTitle,multiplicationTitle:p.multiplicationTitle,outfitLevel:p.outfitLevel,weaponLevel:p.weaponLevel} as PlazaProfile;
  for(const [key,count] of Object.entries(AVATAR_LIMITS)){const id=p[key],min=key==='pet'||key==='ride'?-1:0;if(!integer(id,min,count-1))return null;(result as unknown as Record<string,unknown>)[key]=id;}
  if(p.selectedTitleId!==undefined){const t=titleDefinition(p.selectedTitleId);if(p.selectedTitleId!==null&&!t)return null;if(!operator&&(t?.level&&Number(p.level)<t.level||t?.id==='ppojjaki'&&p.pet!==20||t?.grade&&p.gradeTitle!==t.grade||t?.id==='multiplication'&&!p.multiplicationTitle))return null;result.selectedTitleId=p.selectedTitleId as TitleId|null;}

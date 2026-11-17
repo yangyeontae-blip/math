@@ -1,5 +1,7 @@
+import {dawnSkillArt} from './skill-art';
+import {CAREER_LEVELS,CAREER_TITLES,type CareerJob} from './career-catalog';
 /** Pure presentation: the caller owns learning, equipment, combat and persistence. */
-export type CareerJobId = 'knight'|'mage'|'ranger'|'druid'|'alchemist';
+export type CareerJobId = CareerJob;
 export type CareerJournalTab = 'career'|'skills'|'hunting';
 export type CareerTrainingMode = 'single'|'multi'|'attacking';
 export type CareerSkillView = {
@@ -49,9 +51,20 @@ const sigils=[
 ];
 // Painted cells remain tied to skill IDs when new skills are inserted into a job's list.
 const paintedSkillIds=['shield','wind','lantern','crescent','charge','roots','guardian','starbolt','frost','vortex','starfall','arrow','pierce','trap','storm'];
-const jobSigils:Record<string,string>={knight:'crescent',mage:'starbolt',ranger:'arrow',druid:'earthsong',alchemist:'sparkFlask',attack:'crescent'};
+const jobSigils:Record<string,string>={knight:'crescent',mage:'starbolt',ranger:'arrow',druid:'earthsong',alchemist:'sparkFlask',bard:'noteBolt',attack:'crescent'};
 // Broad, original silhouettes also read at the compact 20–24px icon size.
 const extraSigils:Record<string,string>={
+ solarOath:'<path d="m24 3 4 9 10-3-3 10 10 5-10 4 3 10-10-3-4 10-4-10-10 3 3-10-10-4 10-5-3-10 10 3Z"/><path d="M24 13v22m-7-8 7 8 7-8"/>',
+ cosmicGenesis:'<ellipse cx="24" cy="24" rx="21" ry="9" transform="rotate(-30 24 24)"/><circle cx="24" cy="24" r="12"/><path d="m24 14 3 7 7 3-7 3-3 7-3-7-7-3 7-3Z"/>',
+ celestialHunt:'<path d="M12 6q31 18 0 36l11-18ZM8 24h35m-8-7 8 7-8 7M5 12l4-4m-4 28 4 4"/>',
+ everbloom:'<path d="M24 26C8 25 8 12 13 7c9 1 12 10 11 19Zm0 0c16-1 16-14 11-19-9 1-12 10-11 19ZM24 42V22M24 35C8 37 5 29 6 23c12-2 18 4 18 12Zm0 0c16 2 19-6 18-12-12-2-18 4-18 12Z"/>',
+ astralCrucible:'<path d="M17 5h14M20 5v14L8 37q-2 6 5 6h22q7 0 5-6L28 19V5M12 31h24m-12-9 3 5-3 5-3-5Z"/><path d="m7 9 2 4 4 2-4 2-2 4-2-4-4-2 4-2Z"/>',
+ noteBolt:'<path d="M18 34V12l19-5v23M18 19l19-5"/><ellipse cx="12" cy="35" rx="6" ry="5"/><ellipse cx="31" cy="31" rx="6" ry="5"/>',
+ chordRing:'<circle cx="24" cy="24" r="19"/><path d="M24 31V13l10-3v17"/><ellipse cx="19" cy="32" rx="5" ry="4"/><path d="M5 24h7M36 24h7M13 9l4 6M31 35l4 6"/>',
+ moonSonata:'<path d="M29 5A19 19 0 1 0 43 32 19 19 0 0 1 29 5ZM20 34V20l10-3v15"/><ellipse cx="16" cy="35" rx="4" ry="3"/>',
+ auroraAnthem:'<path d="M5 25q7-25 14 0t14 0 10 0M5 33q7-25 14 0t14 0 10 0M24 31V10l12-3v21"/><ellipse cx="19" cy="32" rx="5" ry="4"/>',
+ starlitFinale:'<path d="m24 3 5 12 13 3-10 9 2 14-10-7-12 7 3-14-10-9 13-3ZM23 29V17l9-2"/><ellipse cx="19" cy="29" rx="4" ry="3"/>',
+ oceanSymphony:'<path d="M3 32q7-8 14 0t14 0 14 0M3 41q7-8 14 0t14 0 14 0M20 27V8l17-4v20M20 15l17-4"/><ellipse cx="15" cy="27" rx="5" ry="4"/><ellipse cx="32" cy="24" rx="5" ry="4"/>',
  earthsong:'<path d="M24 42V10M24 25C7 27 5 13 7 8c14-2 19 6 17 17ZM24 33c18 0 20-12 17-18-12-1-18 7-17 18Z"/><circle cx="24" cy="24" r="2"/>',
  moonseed:'<path d="M24 42V10M24 25C7 27 5 13 7 8c14-2 19 6 17 17ZM24 33c18 0 20-12 17-18-12-1-18 7-17 18Z"/><circle cx="24" cy="24" r="3"/>',
  bloomring:'<path d="M24 42V10M24 25C7 27 5 13 7 8c14-2 19 6 17 17ZM24 33c18 0 20-12 17-18-12-1-18 7-17 18Z"/><circle cx="24" cy="24" r="4"/>',
@@ -79,6 +92,7 @@ const extraSigils:Record<string,string>={
 const expandedPaintedIds=['acornRush','vinePull','dawnSlash','leafOrb','thunderChain','comet','tripleShot','galeShot','moonArrow'];
 export function renderSkillIcon(id:string,index:number,label=''){
  const paintedId=Object.hasOwn(jobSigils,id)?jobSigils[id]:id;
+ const art=dawnSkillArt(paintedId);if(art)return `<span class="career-sigil career-dawn-sigil" data-skill-icon="${attr(id)}" style="--sigil-x:${art.x}%;--sigil-y:${art.y}%" aria-hidden="true"><span class="career-painted-sigil career-painted-dawn"></span></span>${label?`<span class="career-skill-name">${escape(label)}</span>`:''}`;
  const custom=Object.hasOwn(extraSigils,paintedId)?extraSigils[paintedId]:undefined,expandedIndex=expandedPaintedIds.indexOf(id),knownIndex=paintedSkillIds.indexOf(paintedId);
  const legacyIndex=Number.isInteger(index)&&index>=0&&index<paintedSkillIds.length?index:-1;
  const i=custom?-1:knownIndex>=0?knownIndex:legacyIndex,vector=custom||sigils[i>=0?i:0];
@@ -98,14 +112,14 @@ function loadout(vm:CareerSchoolView){
  }).join('')}</div></section>`;
 }
 export function renderCareerSteps(vm:CareerSchoolView){
- const ready=vm.canAdvance,trial=vm.trialAvailable,completed=vm.rank===4;
- const message=!vm.job?(vm.level<10?'레벨 10이 되면 첫 직업을 고를 수 있어요.':'먼저 아래에서 기사·마법사·궁수·정령술사 중 하나를 골라요.'):completed?'4차 전직을 모두 마쳤어요. 다른 직업도 무료로 골라 볼 수 있어요.':ready?'수련을 통과했어요! 전직 완료하기를 누르면 새 직업과 스킬을 배워요.':trial?'수련 시작 → 안내된 기술로 허수아비 맞히기 → 수련 마치기 → 학교에서 전직 완료 순서예요.':vm.advanceRequirement||'다음 전직 레벨을 확인해요.';
+ const ready=vm.canAdvance,trial=vm.trialAvailable,completed=vm.rank===5;
+ const message=!vm.job?(vm.level<10?'레벨 10이 되면 첫 직업을 고를 수 있어요.':'먼저 아래에서 기사·마법사·궁수·정령술사·음유시인 중 하나를 골라요.'):completed?'5차 전직을 모두 마쳤어요. 다른 직업도 무료로 골라 볼 수 있어요.':ready?'수련을 통과했어요! 전직 완료하기를 누르면 새 직업과 스킬을 배워요.':trial?'수련 시작 → 안내된 기술로 허수아비 맞히기 → 수련 마치기 → 학교에서 전직 완료 순서예요.':vm.advanceRequirement||'다음 전직 레벨을 확인해요.';
  const label=!vm.job?'직업 고르는 곳 보기':completed?'다른 직업 보기':ready?'전직 완료하기':trial?'전직 수련 바로 시작':'다음 전직 레벨 기다리기';
- return '<section class="career-howto" aria-label="전직 방법"><h3>전직은 이렇게 해요</h3><ol><li><b>10·30·60·100레벨</b>에 학교에서 직업을 골라요.</li><li><b>전직 수련</b>에서 안내된 스킬로 허수아비를 맞혀요.</li><li><b>수련 마치기</b>로 나와 학교에서 <b>전직 완료</b>를 눌러요.</li></ol><p role="status">'+escape(message)+'</p><small>베리 비용·시간제한·실패 벌칙은 없어요. 전직 후 스킬 네 칸에서 기술을 골라요.</small><button class="career-primary" data-career-action="next-career-step" '+(vm.level<10||vm.job&&!completed&&!ready&&!trial?'disabled':'')+'>'+label+'</button></section>';
+ return '<section class="career-howto" aria-label="전직 방법"><div><h3>나의 다음 한 걸음</h3><p role="status">'+escape(message)+'</p></div><button class="career-primary" data-career-action="next-career-step" '+(vm.level<10||vm.job&&!completed&&!ready&&!trial?'disabled':'')+'>'+label+'</button><details><summary>전직 방법과 레벨 자세히 보기</summary><ol><li><b>10·30·60·100·200레벨</b>에 학교에서 직업을 골라요.</li><li><b>전직 수련</b>에서 안내된 스킬로 허수아비를 맞혀요.</li><li><b>수련 마치기</b>로 나와 학교에서 <b>전직 완료</b>를 눌러요.</li></ol><small>베리 비용·시간제한·실패 벌칙은 없어요. 전직 후 스킬 네 칸에서 기술을 골라요.</small></details></section>';
 }
 export function renderCareerSchool(vm:CareerSchoolView){
  const current=vm.jobs.find(j=>j.id===vm.job);
- return `<section class="career-sheet"><header class="career-heading"><small>베리숲 모험학교 · 직업과 스킬</small><h2>${current?escape(current.rankName||current.name):'어떤 모험가가 되고 싶나요?'}</h2><p>레벨 ${count(vm.level)} · ${current?escape(current.subtitle):'검과 방패, 별빛 마법, 숲의 활을 만나 보세요.'}</p></header>${renderCareerSteps(vm)}${vm.notice?`<p class="career-notice" role="status">${escape(vm.notice)}</p>`:''}<div class="career-job-grid">${vm.jobs.map((job,i)=>`<article class="career-job-card${vm.job===job.id?' is-selected':''}">${renderSkillIcon(job.id,[3,7,11][i]??3)}<h3>${escape(job.name)}</h3><strong>${escape(job.subtitle)}</strong><p>${escape(job.description)}</p><button type="button" data-career-action="choose-job" data-job="${job.id}" ${!vm.canChooseJob||job.locked?'disabled':''}>${vm.job===job.id?'나의 직업':job.locked?'해금 경로를 마쳐요':vm.canChooseJob?'이 직업 고르기':'레벨 10에 선택해요'}</button></article>`).join('')}</div><section class="career-advancement"><h3>한 걸음씩 자라는 모험가</h3><ol>${[10,30,60,100].map((level,i)=>`<li class="${vm.rank>i?'is-complete':''}"><b>${level}</b><span>${i+1}차 전직${vm.rank>i?' 완료':''}</span></li>`).join('')}</ol>${vm.nextRankName?`<p>다음 목표: <strong>${escape(vm.nextRankName)}</strong></p>`:''}${vm.advanceRequirement?`<p>${escape(vm.advanceRequirement)}</p>`:''}${vm.trialAvailable?`<button type="button" data-career-action="start-trial" data-job="${attr(vm.trialJob||vm.job)}" data-rank="${count(vm.trialRank||vm.rank+1)}">전직 수련 시작</button>`:''}${vm.canAdvance?'<button type="button" class="career-primary" data-career-action="advance-job">다음 직업으로 전직하기</button>':''}</section>${loadout(vm)}<section><h3>나의 스킬</h3>${skillCards(vm)}</section>${renderTrainingSettings(vm.trainingMode||'single')}<button type="button" class="career-return" data-career-action="close">게임으로 돌아가기</button></section>`;
+ return `<section class="career-sheet career-release"><header class="career-heading career-release-heading"><span class="career-edition">새로운 성장의 장 · 5차 전직</span><small>베리숲 모험학교 · 직업과 스킬</small><h2>${current?escape(current.rankName||current.name):'어떤 모험가가 되고 싶나요?'}</h2><p>레벨 ${count(vm.level)} · ${current?escape(current.subtitle):'검과 방패, 별빛 마법, 숲의 활을 만나 보세요.'}</p></header><div class="career-release-intro"><span>✦</span><p><b>내가 고른 길, 다섯 번의 새로운 시작</b><br>새 직업 별노래 음유시인과 레벨 200의 궁극 스킬을 만나 보세요.</p></div>${renderCareerSteps(vm)}${vm.notice?`<p class="career-notice" role="status">${escape(vm.notice)}</p>`:''}<div class="career-job-grid">${vm.jobs.map((job,i)=>`<article data-job-card="${attr(job.id)}" class="career-job-card${vm.job===job.id?' is-selected':''}"><div class="career-job-emblem">${renderSkillIcon(job.id,[3,7,11][i]??3)}${job.id==='bard'?'<span class="career-new">NEW</span>':''}</div><h3>${escape(job.name)}</h3><strong>${escape(job.subtitle)}</strong><p>${escape(job.description)}</p><button type="button" data-career-action="choose-job" data-job="${job.id}" ${!vm.canChooseJob||job.locked?'disabled':''}>${vm.job===job.id?'나의 직업':job.locked?'해금 경로를 마쳐요':vm.canChooseJob?'이 직업 고르기':'레벨 10에 선택해요'}</button></article>`).join('')}</div><section class="career-advancement"><h3>한 걸음씩 자라는 모험가</h3><ol aria-label="전직 성장 경로">${CAREER_LEVELS.map((level,i)=>`<li class="${vm.rank>i?'is-complete':''}"><b>${i+1}차</b><strong>Lv. ${level}</strong><span>${current?escape(CAREER_TITLES[current.id][i+1]):`${i+1}차 전직`}</span><span>${i+1}차 전직${vm.rank>i?' 완료':''}</span></li>`).join('')}</ol>${vm.nextRankName?`<p>다음 목표: <strong>${escape(vm.nextRankName)}</strong></p>`:''}${vm.advanceRequirement?`<p>${escape(vm.advanceRequirement)}</p>`:''}${vm.trialAvailable?`<button type="button" data-career-action="start-trial" data-job="${attr(vm.trialJob||vm.job)}" data-rank="${count(vm.trialRank||vm.rank+1)}">전직 수련 시작</button>`:''}${vm.canAdvance?'<button type="button" class="career-primary" data-career-action="advance-job">다음 직업으로 전직하기</button>':''}</section>${loadout(vm)}<section><h3>나의 스킬</h3>${skillCards(vm)}</section>${renderTrainingSettings(vm.trainingMode||'single')}<button type="button" class="career-return" data-career-action="close">게임으로 돌아가기</button></section>`;
 }
 export function renderTrainingSettings(mode:CareerTrainingMode){
  const modes=[['single','한 마리','움직임과 거리를 익혀요.'],['multi','여러 마리','함께 맞히는 기술을 연습해요.'],['attacking','공격하는 허수아비','피하고 막는 타이밍을 익혀요.']] as const;

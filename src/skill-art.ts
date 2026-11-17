@@ -1,0 +1,3 @@
+export const DAWN_SKILL_ART_IDS=["earthsong","moonseed","bloomring","ancientGrove","worldroot","sparkFlask","frostFlask","prismBurst","auroraSeal","starforge","dawnCrown","galaxyNova","skyTempest","solarOath","cosmicGenesis","celestialHunt","everbloom","astralCrucible","noteBolt","chordRing","moonSonata","auroraAnthem","starlitFinale","oceanSymphony"] as const;
+/** Percentage background positions work at every combat/HUD icon size. */
+export function dawnSkillArt(id:string){const i=(DAWN_SKILL_ART_IDS as readonly string[]).indexOf(id);return i<0?null:{column:i%4,row:Math.floor(i/4),x:i%4*100/3,y:Math.floor(i/4)*20};}
