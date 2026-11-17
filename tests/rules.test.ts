@@ -156,7 +156,7 @@ test('money codes add the exact berries and pet and beauty purchases stay safe',
   const s = newSave('꾸미기', 0); applyTeacherCode(s, 'showmethemoney'); assert.equal(s.berries, 1000); applyTeacherCode(s, 'greedisgood'); assert.equal(s.berries, 11000);
   const beforePet = s.berries; buyPet(s, 0); assert.equal(s.berries, beforePet - PETS[0].price); assert.equal(s.pet, 0); buyPet(s, 0); assert.equal(s.berries, beforePet - PETS[0].price);
   const beforeHair = s.berries; buyLook(s, 'hairstyle', 1); assert.equal(s.berries, beforeHair - HAIRSTYLES[1].price); assert.equal(s.hairstyle, 1); buyLook(s, 'hairstyle', 0); assert.equal(s.hairstyle, 0);
-  assert.throws(() => applyTeacherCode(s, 'SHOWMETHEMONEY')); assert.equal(RIDES.length, 24); assert.equal(PETS.length, 24);
+  assert.throws(() => applyTeacherCode(s, 'SHOWMETHEMONEY')); assert.equal(RIDES.length, 26); assert.equal(PETS.length, 26);
   assert.equal(applyTeacherCode(s, 'star'), '이신비의 별을 얻고 바로 함께하기로 했어요!'); assert.equal(s.pets[SHINBI_STAR_PET_ID], true); assert.equal(s.pet, SHINBI_STAR_PET_ID); assert.ok(s.discoveries.pets.includes(SHINBI_STAR_PET_ID));
 });
 test('teacher level codes raise only the requested number of levels', () => {

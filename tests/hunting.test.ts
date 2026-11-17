@@ -5,8 +5,8 @@ import {newSave,validateSave,huntingPower,huntingRewardFor,grantHuntingReward,WE
 import {ACADEMY_SKILLS,emptyCareer,validCareer,selectJob,recordCareerTrial,advanceJob,careerSkills,equipCareerSkill,learnCareerSkill,migrateAcademy,ACADEMY_KEY,emptyAcademy,saveAcademy} from '../src/academy';
 const profile={nickname:'모험가',grade:3,character:0};
 const store=()=>{const map=new Map<string,string>();return {getItem:(k:string)=>map.get(k)??null,setItem:(k:string,v:string)=>{map.set(k,v);},map};};
-test('37 unique skills have exact class rank gates and retained per-class four-slot loadouts',()=>{
- assert.equal(ACADEMY_SKILLS.length,37);assert.equal(new Set(ACADEMY_SKILLS.map(s=>s.id)).size,37);
+test('48 unique skills have exact class rank gates and retained per-class four-slot loadouts',()=>{
+ assert.equal(ACADEMY_SKILLS.length,48);assert.equal(new Set(ACADEMY_SKILLS.map(s=>s.id)).size,48);
  const c=emptyCareer();assert.equal(selectJob(c,'mage',9),false);assert.equal(selectJob(c,'mage',NaN),false);assert.equal(selectJob(c,'mage',10),true);
  assert.equal(advanceJob(c,'mage',100),false);assert.equal(learnCareerSkill(c,'starfall',100),false);
  assert.equal(recordCareerTrial(c,'mage',2),false);assert.equal(recordCareerTrial(c,'mage',1),true);assert.equal(advanceJob(c,'mage',10),true);

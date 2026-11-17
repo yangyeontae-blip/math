@@ -1,3 +1,4 @@
+import {createDawnWeapon,createDawnOutfit,createDawnPet,createDawnRide} from './dawn-art';
 import {operatorAccess} from './operator-access';
 import {safeLanding} from './safe-landing';
 import {animateSkywardTree,createSkywardWeapon,createSkywardOutfit,createSkywardPet,createSkywardRide,type SkywardKit} from './skyward-art';
@@ -44,7 +45,7 @@ import { StorybookScene, leafMaterial } from './storybook-scene';
 
 type Entity = { id: string; name: string; x: number; z: number; mesh: T.Group; label: HTMLDivElement };
 export type GuideKind = 'astralQuestion' | 'astralNext' | 'astralExit' | 'world2Gate' | 'world2Beacon' | 'huntingGate' | 'huntingExit' | 'academyGate' | 'academyBook' | 'guide' | 'marketExit' | 'noticeBoard' | 'homesteadGate' | 'shopStreet' | 'homeEditor' | 'homeExit' | 'homeVisitor' | 'discovery' | 'forestWork' | 'trailSeed' | 'trailLamp' | 'berry' | 'monster' | 'shop' | 'journey' | 'next' | 'star' | 'expMonster' | 'roomExit' | 'storyClue' | 'storyPuzzle' | 'storyMailbox' | 'village' | 'villageProject0' | 'villageProject1' | 'villageProject2';
-export type TrainingOptions = { job?: JobId | null; mode: 'single' | 'multi' | 'attacking'; skills: readonly SkillId[]; trialRank?: 1 | 2 | 3 | 4; skill?: SkillId | null };
+export type TrainingOptions = { job?: JobId | null; mode: 'single' | 'multi' | 'attacking'; skills: readonly SkillId[]; trialRank?: 1 | 2 | 3 | 4 | 5; skill?: SkillId | null };
 export const PLAZA_COMBAT_GATES = { hunting: { x: -18, z: -3 }, market: { x: -18, z: 5.5 } } as const;
 const mat = (color: number, roughness = .86) => new T.MeshStandardMaterial({ color, roughness });
 const materials = new Map<number, T.MeshStandardMaterial>();
@@ -142,13 +143,15 @@ export function makeCharacter(character: number, outfit: number, weapon: number,
   }
   if (weapon >= 27 && weapon < 36) w.add(worldTwoEquipmentModel('weapon',weapon,WEAPONS[weapon].color));
   if(weapon>=36&&weapon<39){w.clear();w.add(createSkywardWeapon(weapon,skywardKit));}
-  if(weapon>=39){w.clear();const c=WEAPONS[weapon].color;cylinder(w,0x775c44,0,.55,0,.05,.06,.85,8);
+  if(weapon>=39&&weapon<42){w.clear();const c=WEAPONS[weapon].color;cylinder(w,0x775c44,0,.55,0,.05,.06,.85,8);
    if(weapon===39){box(w,c,0,1,0,.68,.3,.3);for(const side of [-1,1])box(w,0xffe3a3,side*.23,1,0,.07,.34,.34);mesh(new T.OctahedronGeometry(.11),0xffffff,0,1.24,0,w);}
    if(weapon===40){const arc=mesh(new T.TorusGeometry(.4,.07,6,18,Math.PI*1.4),c,.15,1.02,0,w);arc.rotation.z=-.5;mesh(new T.ConeGeometry(.11,.36,6),0xe8f9dd,.5,.81,0,w).rotation.z=2.4;}
    if(weapon===41){for(const side of [-1,1]){const cover=box(w,c,side*.18,1,0,.34,.46,.1);cover.rotation.y=side*-.3;box(w,0xfff1d4,side*.18,1,.06,.3,.4,.05);}mesh(new T.OctahedronGeometry(.14),0xbfeef9,0,1.33,.05,w);}
   }
+  if(weapon>=42){w.clear();w.add(createDawnWeapon(weapon,skywardKit));}
+  if(outfit>=32)body.add(createDawnOutfit(outfit,skywardKit,o.color,o.accent));
   if (outfit >= 26 && outfit < 29) body.add(worldTwoEquipmentModel('outfit',outfit,o.color,o.accent));
-  if(outfit>=29)body.add(createSkywardOutfit(outfit,skywardKit,o.color,o.accent));
+  if(outfit>=29&&outfit<32)body.add(createSkywardOutfit(outfit,skywardKit,o.color,o.accent));
   if (weapon >= 18 && weapon <= 26) { // 새 상점 무기: 각자 색이 다른 반짝이는 모험 지팡이
     cylinder(w, WEAPONS[weapon].color, 0, .86, 0, .07, .09, .95, 8);
     if (weapon === 18) { mesh(new T.OctahedronGeometry(.24), 0xffed91, 0, 1.38, .02, w); box(w, 0xfff7cf, 0, 1.02, .1, .13, .42, .035); }
@@ -258,6 +261,7 @@ function makeYeontae() {
 
 const makeRide = smoothModel(buildRide);
 function buildRide(id: number) {
+  if(id>=24)return createDawnRide(id,skywardKit);
   if(id>=19)return createSkywardRide(id,skywardKit);
   const g = new T.Group(), ride = RIDES[id]; g.userData.rideModel = true;
   // 동물 탈것 공통 부품: 눈, 다리, 깃털 날개, 안장. 머리는 목을 세워 앞쪽 위에 두어 탄 사람에게 가려지지 않게 해요.
@@ -421,6 +425,7 @@ function buildRide(id: number) {
 
 const makePet = smoothModel(buildPet);
 function buildPet(id: number) {
+  if(id>=24)return createDawnPet(id,skywardKit);
   if(id>=21)return createSkywardPet(id,skywardKit);
   if(id===PPOJJAK_PET_ID)return createPpojjakiPet();
   const g = new T.Group(), pet = PETS[id];
@@ -808,7 +813,7 @@ export class World {
     const exit=(id:string,name:string,x:number,z:number,color:number)=>{const g=this.gate(color);this.addEntity(id,name,x,z,g);this.sign(g,name.split(' · ')[0],0,4.8,0,6);};
     const gateway=this.astralGateway=worldTwoGateway();this.addEntity('world2Gate','별너머 군도 · 세계 2',WORLD_TWO_GATE.x,WORLD_TWO_GATE.z,gateway);this.sign(gateway,'별너머 군도',0,4.15,0,5.4,'#585282',true);const approachStart={x:15,z:-2},dx=WORLD_TWO_GATE.x-approachStart.x,dz=WORLD_TWO_GATE.z-approachStart.z;const skyPath=box(this.scene,theme.path,(approachStart.x+WORLD_TWO_GATE.x)/2,.035,(approachStart.z+WORLD_TWO_GATE.z)/2,2.8,.07,Math.hypot(dx,dz));skyPath.rotation.y=Math.atan2(dx,dz);skyPath.name='world2-fitted-approach';
     exit('huntingGate','가시덩굴숲 · 왼쪽 위 사냥터',PLAZA_COMBAT_GATES.hunting.x,PLAZA_COMBAT_GATES.hunting.z,0x6d9563);
-    exit('shopStreet','상점거리 · 왼쪽 아래 길',PLAZA_COMBAT_GATES.market.x,PLAZA_COMBAT_GATES.market.z,0xd69aa9);const mathGate=mathForestGateway();this.addEntity('journey','수학숲으로 모험하기 · 아래쪽 메인 입구',0,16,mathGate);this.sign(mathGate,'수학숲으로 모험하기',0,6.3,0,7.8,'#235c3d',true);
+    exit('shopStreet','상점거리 · 왼쪽 아래 길',PLAZA_COMBAT_GATES.market.x,PLAZA_COMBAT_GATES.market.z,0xd69aa9);const mathGate=mathForestGateway();this.addEntity('journey','수학숲으로 모험하기 · 아래쪽 메인 입구',0,16,mathGate);this.sign(mathGate,'수학숲으로 모험하기',0,6.3,0,7.8,'#235c3d',true);this.sign(mathGate,'수학 문제로 경험치 듬뿍!',0,5.45,0,6,'#6c552c',true);
     for(const [x,z]of [[-17,-13],[-12,-15],[11,-15],[17,-13],[-19,14],[18,16],[-23,-5],[23,-6]])this.tree(x,z,1.05,false,theme.foliage);
     stageTrees(0).forEach(({x,z},id)=>{const at=villageTreeSpot(id,x,z);this.addChoppableTree(id,at.x,at.z,1,false,theme.foliage);});
     // Keep the earned story pond and bridge exactly where earlier saves expect them.
@@ -1168,7 +1173,7 @@ export class World {
   selectHuntTarget(id: string | null) { if (id !== null && !this.combatRuntime?.snapshot().enemies.some(enemy => enemy.id === id && enemy.hp > 0)) return; this.huntTarget = id; }
   private combatFacing(range = 12) { const target = autoHuntTarget(this.combatRuntime?.snapshot().enemies ?? [], this.player.position, range, this.huntTarget); this.huntTarget = target?.id ?? null; if (!target) return { x: Math.sin(this.player.rotation.y), z: Math.cos(this.player.rotation.y) }; const facing = { x: target.x - this.player.position.x, z: target.z - this.player.position.z }; if (Math.hypot(facing.x, facing.z) < .001) { facing.x = Math.sin(this.player.rotation.y); facing.z = Math.cos(this.player.rotation.y); } this.combatAimUntil = this.time + .35; this.combatAimAngle = Math.atan2(facing.x, facing.z); return facing; }
   useHuntSupply(id:number):SupplyUseResult{if(!this.combatRuntime||!this.inHunting||this.inTraining||!this.active||this.paused)return {used:false,reason:'location'};const result=this.combatRuntime.consumeSupply(id);if(result.used)this.burst(this.player.position,huntingSupply(id)?.kind==='food'?0xf0bf70:0x81d7a0);return result;}
-  huntAttack() { if (!this.combatRuntime || this.paused || !this.active) return false; const job = this.trainingOptions?.job ?? this.combatProfile.job, range = job === 'mage' ? 8 : job === 'ranger' ? 10 : 2.8; const events = this.combatRuntime.attack(this.player.position, this.combatFacing(range), this.huntTarget); if (events.length) this.swingUntil = this.time + .28; this.handleHuntEvents(events); return events.length > 0; }
+  huntAttack() { if (!this.combatRuntime || this.paused || !this.active) return false; const job = this.trainingOptions?.job ?? this.combatProfile.job, range = job === 'mage' || job === 'bard' ? 8 : job === 'ranger' ? 10 : 2.8; const events = this.combatRuntime.attack(this.player.position, this.combatFacing(range), this.huntTarget); if (events.length) this.swingUntil = this.time + .28; this.handleHuntEvents(events); return events.length > 0; }
   useHuntSkill(id: SkillId) { if (!this.combatRuntime || this.paused || !this.active) return false; const range = id==='moonArrow'?14:id==='vinePull'?8:id==='dawnSlash'?7:['starbolt','arrow','pierce','lantern','leafOrb','thunderChain','comet','galeShot','tripleShot','vortex','starfall','storm'].includes(id)?12:id==='charge'?7:id==='trap'?8:6, facing = this.combatFacing(range); const events = this.combatRuntime.cast(id, this.player.position, facing); this.handleHuntEvents(events); const cast = events.some(event => event.type === 'cast'); if (cast && id === 'charge') { this.chargeMotion = { remaining: .2, direction: facing }; this.swingUntil = this.time + .28; } if (cast && id === 'lantern') { const enemy = this.combatRuntime.snapshot().enemies.filter(enemy => enemy.hp > 0).sort((a, b) => Math.hypot(a.x - this.player.position.x, a.z - this.player.position.z) - Math.hypot(b.x - this.player.position.x, b.z - this.player.position.z))[0]; const object = enemy && this.combatWorld?.targetObject(enemy.id); if (object) { this.guideTarget = { object, name: this.inTraining ? '수련 허수아비' : '다음 사냥 대상', arrivalDistance: 2.5 }; this.guideElement.querySelector('b')!.textContent = this.guideTarget.name; this.guideElement.hidden = false; } } return cast; }
   private handleHuntEvents(events: HuntEvent[]) {
     if (!this.combatRuntime) return; const snapshot = this.combatRuntime.snapshot();
