@@ -74,7 +74,7 @@
     "src/academy.ts": "99a49d0b6fe90c64a83ce924bc6175ae397a2ba358feaf3ae78364c703aabb1f",
     "src/academy.css": "fd720e9376d2b1a03d58fefc271e8cbf80ad9e7d0e1f8ef6ecb144e2c8900e27",
     "tests/academy.test.ts": "818e1e04f72d8342c450cd9be56e17d1475a436843d89acbfc05b1369d74434e",
-    "e2e/academy.spec.mjs": "d979d933d35baa0a2ec48d7e113c4d73f186bab4583c6326cec324aeb6979816",
+    "e2e/academy.spec.mjs": "59f0e164b455f03d89ec962196925ed40eeb6177984579439cc04f64272a6ab0",
     "tests/common-line-endings.test.mjs": "a26a99e5f73e489d088fd03eebdf2582aa148ff378b8c094e142fb570e2e82bf",
     "src/home-exit.ts": "055824644f9cc9bba4ba9f4166170b636f6e3849a7288e2ace60ebdbb4b9e0ad",
     "tests/home-exit.test.ts": "55615d3f051ce152b5d39ebd346777997051e6fa71344602999a10962db4efc3",
@@ -222,5 +222,5 @@
     "public/art/dawn-weapon-43.svg": "4d4aace4244ecda730ea86b19250e0ebb771a7a146b0eee02b23250e1e66c067",
     "public/art/dawn-weapon-44.svg": "656a7025136e9667e56e667e1b4262a508e191e15ea497ff413da2c7ea3b1287"
   },
-  "generation": "f0ecca544dbac6d79292f0423a583db56ebdfbe4a7618d8a17f5b163e4060f2c"
+  "generation": "ec243b8b7bd9a52cb03f623be1ad056204f3ee302d8165e8f0dddc980aa79950"
 }
