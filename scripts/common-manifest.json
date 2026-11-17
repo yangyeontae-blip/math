@@ -82,7 +82,7 @@
     "src/hunting-world.ts": "e5dc47526da119d886268bd3c32d8b5f084b96f42b35f4905266917dcc75c60d",
     "src/career-controller.ts": "1feb8247fc184dcc3b790d7dced67cf0fad4c9bb2d0f536cda8e345d4a8485cb",
     "src/career-ui.ts": "c6c5631f6a6f4cde5572f3bb3148d3174b2e8ff093d4a077020ff4d976b6a6af",
-    "src/career.css": "55cedc9961fec2322053634228207d193238edde5bc5cf5208812b05d754fc81",
+    "src/career.css": "c7855f0d187d55b81f738670c32560ddddb5f26493ce47bebb7aa357a7ceb023",
     "src/village-layout.ts": "34f8c177633a9255e686bd0d82b5d0556428eb9df85b24b47c040c72311011d3",
     "tests/hunting.test.ts": "486ca6f75b683c5b32ff559fe00da033a2837727c2446d358fa8895f106d1875",
     "tests/hunting-world.test.ts": "e3042142c4134835628f0018ecde0e4891ee1d62234199e6ec85af7edf9e0adc",
@@ -209,7 +209,7 @@
     "src/skill-art.ts": "1af62715fbf0a955f3db79f60c0619fca4d0fd37226fe038ffb79b9686fd2679",
     "src/learning-reward-view.ts": "ebe5f3b33476c9b1639a09fc8729385f12335cf48c02e4b191d1c9484e57f432",
     "tests/dawn-release.test.ts": "a1abeec285d4178c56978e08f9b7bbeaa291cba7240e2435f13a151fb22e7300",
-    "e2e/dawn-release.spec.mjs": "26ac48c85bbca401dea8b337462c358d612ae02fe1ed766619d3855ea358759f",
+    "e2e/dawn-release.spec.mjs": "c545116b9f8a60861b62b5aaae1ef5ae5964066f4487c90e83a781ab1c510097",
     "public/art/skill-sigils-dawn-v1.webp": "915b66d44624f581f258a97645580656e957a97605b92f756bdb1fb07db87667",
     "public/art/dawn-outfit-32.svg": "3e8102ee347f1994fb1e789575a7b4c5b5d9f7a1b5453fc2776819f751f71bfa",
     "public/art/dawn-outfit-33.svg": "6c2807d7a7a9fd13bbb5de908c598c53e9498df627701d239b343515f4c5ceaf",
@@ -222,5 +222,5 @@
     "public/art/dawn-weapon-43.svg": "4d4aace4244ecda730ea86b19250e0ebb771a7a146b0eee02b23250e1e66c067",
     "public/art/dawn-weapon-44.svg": "656a7025136e9667e56e667e1b4262a508e191e15ea497ff413da2c7ea3b1287"
   },
-  "generation": "ae0cfd85ce0342e7865114aecf1bf334b2d48521d5370732151d3208a7579319"
+  "generation": "3478fdf021a028859313aadd38d84e1a187fa6eee2fc4456c5cf7b55d54f619f"
 }
