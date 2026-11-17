@@ -6,7 +6,7 @@
     "src/storybook-scene.ts": "36a0e7cb656b8e85f5fdf04833325997a7f6de2c2353452f1f1aeef77dc58043",
     "tests/storybook-art.test.ts": "ddefef8a1e556afdff88f34a5505004c3df51b95824c82640ee79dc8d95489de",
     "e2e/core-flows.spec.mjs": "204387f065a1f2e347ab40724fd5b2d3ae0e82b909d670981d26a7be2d05dc0f",
-    "playwright.config.mjs": "cc85c25025e815371fe1a6de73e87fbce1d977e8bb1dbc044d31c4ac9d600e25",
+    "playwright.config.mjs": "c65b3dafccb4b91f45639df669e6c35ec10435890f5cd52cef732570fe8a87ef",
     "scripts/check-common.mjs": "04faf72d9b67113d1cc1e04718198933a4d1e4451cc4585a385b5c9dd3311d39",
     "scripts/sync-common.mjs": "4375626348ebfdf9f60d9ef355b5baf310a1c480c007f20d41c5258c95e698cb",
     "src/adaptive.ts": "b943e7d99164396cd587e3191cecee50107276a776c78824f28bf3c6f8ae46c2",
@@ -222,5 +222,5 @@
     "public/art/dawn-weapon-43.svg": "4d4aace4244ecda730ea86b19250e0ebb771a7a146b0eee02b23250e1e66c067",
     "public/art/dawn-weapon-44.svg": "656a7025136e9667e56e667e1b4262a508e191e15ea497ff413da2c7ea3b1287"
   },
-  "generation": "ec243b8b7bd9a52cb03f623be1ad056204f3ee302d8165e8f0dddc980aa79950"
+  "generation": "808a2827b96426d55a6ba526046631309081270c666f830ca0cc4f677c1b4795"
 }

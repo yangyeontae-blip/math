@@ -518,8 +518,11 @@ function openRescue(round: number) {
   };
   draw();
 }
-function closeModal() { if (!keepingMenus) menuHistory.clear(); menuPending = false; audio.setBattle(false); stopSpeech(); preview?.dispose(); preview = null; curriculumRun = null; $('#modal').classList.remove('shop-modal'); ($('#modal') as HTMLDialogElement).close(); if (world!) { world.setPaused(!state); world.clearInput(); } if (modalOpener?.isConnected && !modalOpener.closest('[hidden]')) modalOpener.focus(); }
+let stopSalonThumbnails: (() => void) | null = null;
+function clearSalonThumbnails() { stopSalonThumbnails?.(); stopSalonThumbnails = null; }
+function closeModal() { clearSalonThumbnails(); if (!keepingMenus) menuHistory.clear(); menuPending = false; audio.setBattle(false); stopSpeech(); preview?.dispose(); preview = null; curriculumRun = null; $('#modal').classList.remove('shop-modal'); ($('#modal') as HTMLDialogElement).close(); if (world!) { world.setPaused(!state); world.clearInput(); } if (modalOpener?.isConnected && !modalOpener.closest('[hidden]')) modalOpener.focus(); }
 function openModal(html: string, cls = '') {
+  clearSalonThumbnails();
   preview?.dispose(); preview = null; if (world!) { world.setPaused(true); world.clearInput(); }
   const dialog = $('#modal') as HTMLDialogElement; if (!dialog.open) modalOpener = document.activeElement as HTMLElement;
   const tracked = menuPending, parent = tracked ? (menuHistory.hasParent ? previousMenu : null) : menuHistory.current;
@@ -1778,20 +1781,23 @@ function openBeauty(kind: 'hairstyle' | 'face' = 'hairstyle', selectedId?: numbe
   const mirror = preview, portraits = [...document.querySelectorAll<HTMLImageElement>('[data-salon-image]')];
   const {character,outfit,hairstyle,face}=s;
   let thumbnails: typeof mirror | undefined;
+  let portraitFrame = 0, cancelled = false;
+  stopSalonThumbnails = () => { cancelled = true; cancelAnimationFrame(portraitFrame); thumbnails?.dispose(); thumbnails = undefined; };
   const renderPortrait = () => {
-    if (preview !== mirror || !portraits.length) { thumbnails?.dispose(); return; }
+    if (cancelled) return;
+    if (preview !== mirror || !portraits.length) { thumbnails?.dispose(); thumbnails = undefined; return; }
     const image = portraits.shift()!;
     const look = Number(image.dataset.salonImage);
     try {
       thumbnails ??= new AvatarPreviewRuntime(document.createElement('div'));
       image.src = thumbnails.salonPortrait(character, outfit, kind === 'hairstyle' ? look : hairstyle, kind === 'face' ? look : face);
     } catch {
-      thumbnails?.dispose();
+      thumbnails?.dispose(); thumbnails = undefined;
       return;
     }
-    requestAnimationFrame(renderPortrait);
+    portraitFrame = requestAnimationFrame(renderPortrait);
   };
-  requestAnimationFrame(renderPortrait);
+  portraitFrame = requestAnimationFrame(renderPortrait);
   preview.showSalon(s.character, s.outfit, kind === 'hairstyle' ? id : s.hairstyle, kind === 'face' ? id : s.face);
   document.querySelectorAll<HTMLButtonElement>('[data-beauty-tab]').forEach(button => button.onclick = () => openBeauty(button.dataset.beautyTab as 'hairstyle' | 'face'));
   const cards = [...document.querySelectorAll<HTMLButtonElement>('[data-look]')];
