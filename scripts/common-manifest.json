@@ -160,7 +160,7 @@
     "src/title-view.ts": "2b031f25c05ce6b1a46263d16d955d3cc65da1a63aabb8ad9aebac90b6108492",
     "src/safe-landing.ts": "c3bb10a850a4946528cf1dfc9086a40af18c84e6743175526dd990a13cf83991",
     "src/display-controls.ts": "8fefe62bc87a8545a65b26dabf2977a84024d2dc38dad184f6e187cfea2cdfcb",
-    "src/feedback-ui.css": "8b80427f5d9724e1ccfc06a8091bf84ea39371098cd359ada0f47dce8950f15a",
+    "src/feedback-ui.css": "f58cae87e40d0c81e576bdb8e66f4f90c7a1a3d0dc34e3a70220cb4b9cfe785c",
     "tests/feedback-upgrade.test.ts": "24973ddf7a3c1310124f995ec09cf2220df8290800106dca9fe540967fd2695f",
     "e2e/feedback-upgrade.spec.mjs": "1ef4b2838b5c1acb677c967975c083e6e473f5b245988ca70bf54f89421b7b6d",
     "src/character-stats.ts": "30adc2cd9bc72f5b00286399f5e0cab697e8a19fdd78cbe63c3b6f6c6a57d17b",
@@ -209,7 +209,7 @@
     "src/skill-art.ts": "1af62715fbf0a955f3db79f60c0619fca4d0fd37226fe038ffb79b9686fd2679",
     "src/learning-reward-view.ts": "ebe5f3b33476c9b1639a09fc8729385f12335cf48c02e4b191d1c9484e57f432",
     "tests/dawn-release.test.ts": "a1abeec285d4178c56978e08f9b7bbeaa291cba7240e2435f13a151fb22e7300",
-    "e2e/dawn-release.spec.mjs": "c545116b9f8a60861b62b5aaae1ef5ae5964066f4487c90e83a781ab1c510097",
+    "e2e/dawn-release.spec.mjs": "4dd7dc06a981d27c67d4559bdc941fecdd54c343d1a8f66b7fd1da74aa447994",
     "public/art/skill-sigils-dawn-v1.webp": "915b66d44624f581f258a97645580656e957a97605b92f756bdb1fb07db87667",
     "public/art/dawn-outfit-32.svg": "3e8102ee347f1994fb1e789575a7b4c5b5d9f7a1b5453fc2776819f751f71bfa",
     "public/art/dawn-outfit-33.svg": "6c2807d7a7a9fd13bbb5de908c598c53e9498df627701d239b343515f4c5ceaf",
@@ -222,5 +222,5 @@
     "public/art/dawn-weapon-43.svg": "4d4aace4244ecda730ea86b19250e0ebb771a7a146b0eee02b23250e1e66c067",
     "public/art/dawn-weapon-44.svg": "656a7025136e9667e56e667e1b4262a508e191e15ea497ff413da2c7ea3b1287"
   },
-  "generation": "3478fdf021a028859313aadd38d84e1a187fa6eee2fc4456c5cf7b55d54f619f"
+  "generation": "f0ecca544dbac6d79292f0423a583db56ebdfbe4a7618d8a17f5b163e4060f2c"
 }
