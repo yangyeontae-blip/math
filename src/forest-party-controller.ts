@@ -47,6 +47,11 @@ export function mountForestParty(h:Hooks){
   const s=h.state(),w=h.world(),c=state?.run?.config;
   return !!s&&!!w&&!!c&&!document.hidden&&w.active&&!w.inHunting&&!w.inAcademy&&!w.inAstralStudy&&!w.inRoom&&!w.inHomestead&&s.forest===c.forest&&s.grade===c.grade&&journeyFor(s).stage===c.stage;
  }
+ function sendPresence(present=here()){
+  const w=h.world();if(!w)return;
+  const p=w.player.position;
+  client.send({type:'pose',pose:{x:p.x,y:p.y,z:p.z,angle:w.player.rotation.y},here:present});
+ }
  const client=new ForestPartyClient(endpoint,{
   profile,
   status:value=>{
@@ -218,7 +223,7 @@ export function mountForestParty(h:Hooks){
   on('party-leave',()=>{client.leave();state=null;entered='';pendingPeer=null;notice='';h.world()?.clearPlazaPlayers();if(h.world())h.world()!.partyScene=false;syncPeers();close();});
   on('party-start',()=>client.send({type:'start'}));
   on('party-ready',()=>client.send({type:'ready',revision:state?.lobby?.revision}));
-  on('party-next',()=>client.send({type:'next',questionId:state?.run?.question?.id}));
+  on('party-next',()=>{sendPresence();client.send({type:'next',questionId:state?.run?.question?.id});});
   on('party-return',()=>{if(state?.run)h.enter(state.run.config);close();});
   on('party-manage',()=>show('lobby'));
   on('party-retry',()=>{h.persist();client.send({type:'sync'});});
@@ -231,7 +236,7 @@ export function mountForestParty(h:Hooks){
   const join=document.querySelector<HTMLFormElement>('#party-join-form');
   if(join)join.onsubmit=e=>{e.preventDefault();const code=normalizedPartyCode(document.querySelector<HTMLInputElement>('#party-code-input')!.value);if(!/^[A-Z0-9]{8}$/.test(code)){notice='친구에게 받은 8자리 코드를 확인해 주세요.';render();return;}notice='친구를 찾고 있어요.';client.join(code);render();};
   const answer=document.querySelector<HTMLFormElement>('#party-answer-form');
-  if(answer)answer.onsubmit=e=>{e.preventDefault();client.send({type:'answer',questionId:state?.run?.question?.id,value:document.querySelector<HTMLInputElement>('#party-answer')!.value});};
+  if(answer)answer.onsubmit=e=>{e.preventDefault();sendPresence();client.send({type:'answer',questionId:state?.run?.question?.id,value:document.querySelector<HTMLInputElement>('#party-answer')!.value});};
   const chat=document.querySelector<HTMLFormElement>('#party-chat-form');
   if(chat)chat.onsubmit=e=>{e.preventDefault();const input=document.querySelector<HTMLInputElement>('#party-chat-input')!;if(input.value.trim()){client.send({type:'chat',text:input.value});input.value='';}};
  }
@@ -245,7 +250,7 @@ export function mountForestParty(h:Hooks){
   syncPeers();renderInvitation();render();
  },200);
  document.addEventListener('visibilitychange',()=>{
-  if(document.hidden){const w=h.world();if(w){const p=w.player.position;client.send({type:'pose',pose:{x:p.x,y:p.y,z:p.z,angle:w.player.rotation.y},here:false});}}
+  sendPresence();
   syncPeers();
  });
  window.addEventListener('pagehide',()=>{clearInterval(timer);client.stop();});

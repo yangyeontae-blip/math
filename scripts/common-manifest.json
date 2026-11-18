@@ -169,11 +169,11 @@
     "tests/growth-status.test.ts": "ca04a3d16ee58838a6d7a76720a6adf4cd881f73b8043c1f2e6d37bfdcf03962",
     "src/forest-party.ts": "0339a0bd68ac7849f580009c7e79602dc51e363810b19c92245b2d9bd867bf92",
     "src/forest-party-rewards.ts": "61d382ab7338484da91f1c9a4c702a471d370beb20f22ce23c420a75c1669f93",
-    "src/forest-party-client.ts": "0572a5229b57952ecf1060ad84c88f6410bd89832b4267bde4e59f232e950973",
-    "src/forest-party-controller.ts": "7198d3d728129e9a51a95b1a6a726845abc022bf948f4cf13ccac5d808b3cf06",
+    "src/forest-party-client.ts": "86e32322febdc61c2bc1802f705f4825c2deae923f82d1118bfeed7b5cf8ef44",
+    "src/forest-party-controller.ts": "abd7ff541dedcf73a0034750294e012f63a5647b2527315e82b86e1c45284a9d",
     "src/forest-party.css": "e83ccd062ef3065a27f40ee2aa40f7bd55773567ccebb7a726eb83e8a91cb734",
     "tests/forest-party.test.ts": "7ba4b0075564ff725e865fc9ba8c10e87dbd9363cedce4b1bd618b8b17fea8ae",
-    "e2e/forest-party.spec.mjs": "3da08fef306311acf46a0ab587ab6f85c97b3ab11d4d2f104760741f64c229ad",
+    "e2e/forest-party.spec.mjs": "d5f25b34f8f03715d3618ee5635aaedd375d64cc3d5eba17ed369b8e05af3ee6",
     "src/forest-room.ts": "cf039d8ec262ef5a25c56f1dab49272803af9fc70b3b8d1e0505971b295d8e66",
     "src/hall.ts": "3c191d7f1235aeb222d49d9fac3dd5c3a13e6f556dc89b771e031931e440dd0f",
     "src/hall.css": "ea71f1e15901d465cacdff02993a857056bd1b5f5065ff19809df5f15c2fee2b",
@@ -220,7 +220,8 @@
     "public/art/dawn-ride-25.svg": "93b39d40a4d69a9727ae079e3e8643deb23edf326e698be60c1480f330f2716e",
     "public/art/dawn-weapon-42.svg": "c96b9d444cf9df4ed375cc1a496cee1029d912acd3bb30eb574ac54f6b8a06a6",
     "public/art/dawn-weapon-43.svg": "4d4aace4244ecda730ea86b19250e0ebb771a7a146b0eee02b23250e1e66c067",
-    "public/art/dawn-weapon-44.svg": "656a7025136e9667e56e667e1b4262a508e191e15ea497ff413da2c7ea3b1287"
+    "public/art/dawn-weapon-44.svg": "656a7025136e9667e56e667e1b4262a508e191e15ea497ff413da2c7ea3b1287",
+    "tests/forest-party-presence.test.ts": "2f043cef28ecd4b3ca5caad8041ad0a6454ece4de84c2bf37bff27029bfb5115"
   },
-  "generation": "808a2827b96426d55a6ba526046631309081270c666f830ca0cc4f677c1b4795"
+  "generation": "135e65dc3e65813b26af6a939f79d6a7cc7c47074561315cb1f8450d2c4725ac"
 }

@@ -14,8 +14,16 @@ export class ForestPartyClient{
  get code(){return this.session?.code??'';}
  join(code:string,create=false,invitation=''){this.close();this.invitation=invitation;this.lastPose='';this.attempt=0;this.session={code:normalizedPartyCode(code),token:''};this.create=create;this.stopped=false;this.retryAt=0;this.tick();}
  leave(){this.send({type:'leave'});this.close();this.session=null;try{localStorage.removeItem(KEY);}catch{}this.hooks.status(false);}
- send(message:unknown){if(this.socket?.readyState===1)try{this.socket.send(JSON.stringify(message));return true;}catch{}return false;}
- tick(pose?:PlazaPose,here=false){const now=Date.now();if(this.stopped||!this.session||!this.hooks.profile()||document.hidden)return;if(!this.socket&&now>=this.retryAt){this.connect();return;}if(this.socket?.readyState===0&&now-this.openAt>15000){this.close();this.retryAt=now+5000;return;}if(this.socket?.readyState===1){if(now-this.lastPong>35000){this.close();this.retryAt=now+3000;return;}if(now-this.lastPing>10000){this.socket.send('ping');this.lastPing=now;}const profile=this.hooks.profile();if(this.connected&&profile){const signature=JSON.stringify(profile);if(signature!==this.lastProfile&&now-this.profileAt>=1200){this.profileAt=now;this.lastProfile=signature;this.send({type:'profile',...profile});}}if(this.connected&&pose){const signature=JSON.stringify([here,here?pose:null]);if(signature!==this.lastPose&&this.send({type:'pose',pose,here}))this.lastPose=signature;}}}
+ send(message:unknown){
+  if(this.socket?.readyState!==1)return false;
+  try{
+   this.socket.send(JSON.stringify(message));
+   const sent=message as {type?:unknown;here?:unknown;pose?:PlazaPose}|null;
+   if(this.connected&&sent?.type==='pose'&&typeof sent.here==='boolean'&&sent.pose&&[sent.pose.x,sent.pose.y,sent.pose.z,sent.pose.angle].every(Number.isFinite))this.lastPose=JSON.stringify([sent.here,sent.here?sent.pose:null]);
+   return true;
+  }catch{return false;}
+ }
+ tick(pose?:PlazaPose,here=false){const now=Date.now();if(this.stopped||!this.session||!this.hooks.profile()||document.hidden)return;if(!this.socket&&now>=this.retryAt){this.connect();return;}if(this.socket?.readyState===0&&now-this.openAt>15000){this.close();this.retryAt=now+5000;return;}if(this.socket?.readyState===1){if(now-this.lastPong>35000){this.close();this.retryAt=now+3000;return;}if(now-this.lastPing>10000){this.socket.send('ping');this.lastPing=now;}const profile=this.hooks.profile();if(this.connected&&profile){const signature=JSON.stringify(profile);if(signature!==this.lastProfile&&now-this.profileAt>=1200){this.profileAt=now;this.lastProfile=signature;this.send({type:'profile',...profile});}}if(this.connected&&pose){const signature=JSON.stringify([here,here?pose:null]);if(signature!==this.lastPose)this.send({type:'pose',pose,here});}}}
  private close(){const ws=this.socket;this.socket=null;this.connected=false;this.lastPose='';if(ws){ws.onopen=ws.onclose=ws.onerror=ws.onmessage=null;try{ws.close(1000,'disconnected');}catch{}}}
  private connect(){const session=this.session!,profile=this.hooks.profile();if(!profile)return;const url=new URL(this.endpoint);url.pathname='/party/connect';url.search='?code='+session.code+(this.create?'&create=1':'');this.openAt=Date.now();let ws:WebSocket;try{ws=new WebSocket(url.href);}catch{this.retryAt=Date.now()+5000;return;}this.socket=ws;
   ws.onopen=()=>{if(this.socket!==ws)return;this.lastPing=this.lastPong=Date.now();this.profileAt=Date.now();this.lastProfile=JSON.stringify(profile);this.send({type:'join',...profile,lobbyV1:true,...(this.invitation?{invitation:this.invitation}:{}),...(session.token?{token:session.token}:{})});};
