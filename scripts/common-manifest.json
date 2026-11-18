@@ -109,8 +109,8 @@
     "e2e/world-two.spec.mjs": "8e8337437a09397031bd1b3f09d00d9aedc64683916efe696bed2a91e5b01e00",
     "src/plaza-protocol.ts": "78c97c84efe9f61c759fce06b85deb281d4d1c48640d2f84b9873fc04fea80b1",
     "src/plaza-identity.ts": "761b6765d77bb67fb641e11c211487c26bd95dab9d95d6bc751cdff33a32e880",
-    "src/plaza-client.ts": "b36ff35fa4c4d9641faa9091fdf10e414387a3e9cb2d418472df241ac50c39b0",
-    "src/plaza-controller.ts": "d43e869aad3a194486d62a7e4a032aa34283ca74a9053c390f8c872e32d1f6e5",
+    "src/plaza-client.ts": "9d47054e941124b73a03c2ee1a8a1ded1b32385c1792d889c54c17d442d82b5a",
+    "src/plaza-controller.ts": "094c001248ab741d38dad5ed3e940cf1e8fc43a2b36079ad570380e4eed224bb",
     "src/plaza-world.ts": "373418f19c84378add629ce3c29882d907cb4716e6e71604317605f41a8401ca",
     "src/plaza-endpoint.ts": "8209e54c95cbd78b65a44eefd6bfd658759567b7d8af6af4a2e87a102249e790",
     "src/plaza.css": "225ab9b43d909cd6559cadcf744e5faac83a30b15eafbe95996ca8c1fd71d888",
@@ -118,9 +118,9 @@
     "e2e/plaza.spec.mjs": "4f77e9bc0ecbb676b66bebac10ec4d69107bdd8e6bae9ffa2175bc26f599882c",
     "e2e/plaza-server.mjs": "cd016309ab2ef4b00c50c706f47a120efd73e6ad09e25646404a2aeb90f5d16b",
     "scripts/build-plaza.mjs": "cd9262c9c77bdb2ed4bb6589c14f3d211405f5b8f9a37b815832200d7c15538d",
-    "realtime/index.mjs": "2976b7339c8455e0eed8a4fb7073ee3ed7387bc12c21e0e587e841a1dd5e2592",
+    "realtime/index.mjs": "0876b5a742422ae50360c7b46d2991eae1d1168146871be96eb8352f449c0cc2",
     "realtime/wrangler.jsonc": "f5a20cb84d35d340acf6afb3302bd49985272666cbc171408495f562d33f0cae",
-    "realtime/plaza.test.mjs": "7a4190604615a07ddba158dcb70551f5d19a6b49edb3f692387c85209bc622fd",
+    "realtime/plaza.test.mjs": "d81b8721f70eb043a76764031fa91c4448574333cf206d2b8d775e79130ae585",
     "src/world-two-planet.ts": "71cf7902894fd36bdeb3476930a0363976cd342a50f177491402633f308eeb0d",
     "src/astral-questions.ts": "f22cdfe23dba16a5bd41e1062cbbb95925465d198b00401b676f5eb1714da6e4",
     "src/astral-study.ts": "be9e7191cf5adee5a81fdd5a29f8547f12320a52a1b218e43a50bf90c2982210",
@@ -369,5 +369,5 @@
     "public/art/berry-items-v1/weapon-8.svg": "e0ff61f6ebf6747f5af8484e58f460f8bc8906ec60b55ef7422a356f3ac958ea",
     "public/art/berry-items-v1/weapon-9.svg": "f8a6c5fd10d7dd5073bc00d3690a85c2097ff1ea27b0633891d98ece61d0c5d5"
   },
-  "generation": "4c1ee45ca76ea85705c35a0c694e236b05687707934119183b04176923f56d3e"
+  "generation": "a56a031eaf3e566d1f1e9e3ba96aa4b2db17495d0d842ed20f433cb862d425af"
 }

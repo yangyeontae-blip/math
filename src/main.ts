@@ -23,6 +23,7 @@ import {mountAstralStudy} from './astral-study-controller';
 import {ASTRAL_FORESTS} from './astral-study';
 import './plaza.css';
 import {mountPlaza} from './plaza-controller';
+import {mountTrade} from './trade-view';
 import { type SkillId } from './academy';
 import { mountCareer } from './career-controller';
 import {WORLD_TWO_NAME,WORLD_THREE_NAME,WORLD_TWO_REGIONS,worldTwoEquipmentSource,worldTwoEquipment} from './world-two';
@@ -112,7 +113,7 @@ const community=mountCommunity({state:()=>state,open:html=>openModal(html),toast
 const career = mountCareer({state:()=>state,world:()=>world,persist,stored:()=>saveStore.status!=='error',refresh,open:(html,cls)=>openModal(html,cls),close:closeModal,toast,enterSchool:enterAcademy,learning:()=>openAdventureBook('learning'),plaza:()=>switchStage(0),equipmentShop:(kind,id)=>openShop(kind,id),openWorldTwo:html=>{rememberMenu('world2',()=>career.showWorldTwo());openModal(html,'academy-modal');},supplyShop:()=>openPotionShop('recovery')});
 const astral = mountAstralStudy({state:()=>state,world:()=>world,persist,stored:()=>saveStore.status!=='error',refresh,open:openModal,close:closeModal,toast,plaza:()=>switchStage(0),host:document.querySelector<HTMLElement>('#hud')!});
 let friendAdventure:ReturnType<typeof mountForestParty>|undefined;
-const plaza = mountPlaza({invite:peer=>friendAdventure?.invitePeer(peer),invitation:invite=>friendAdventure?.receiveInvite(invite),inviteStatus:message=>friendAdventure?.inviteStatus(message),state:()=>state,world:()=>world,host:document.querySelector<HTMLElement>('#hud')!});
+const plaza = mountPlaza({trade:m=>tradeDesk.receive(m),tradeWith:peer=>tradeDesk.start(peer),invite:peer=>friendAdventure?.invitePeer(peer),invitation:invite=>friendAdventure?.receiveInvite(invite),inviteStatus:message=>friendAdventure?.inviteStatus(message),state:()=>state,world:()=>world,host:document.querySelector<HTMLElement>('#hud')!});
 function renderAcademyBar(){career.render();}
 function enterAcademy(){
  if(!state)return;if(state.expedition.active){toast('진행 중인 원정을 마친 뒤 학교에 들러 주세요.');return;}
@@ -339,6 +340,8 @@ storyPanel.setAttribute('aria-label', '숲속 수학 놀이'); root.append(story
 let world: World, AvatarPreviewRuntime: typeof AvatarPreview;
 const hall=mountHall({state:()=>state,active:()=>!!world?.active,operator:()=>plaza.operatorActive(),token:()=>plaza.operatorToken(),open:openModal,close:closeModal});
 const display=mountDisplayControls($('#hud'),()=>world);
+// 광장·상점거리 거래 창. 보내기는 광장 연결을 통해요.
+const tradeDesk=mountTrade({state:()=>state,send:m=>plaza.trade(m),open:openModal,close:closeModal,persist:()=>persist(),refresh:()=>refresh(),toast:text=>toast(text)});
 // 레벨 숫자가 길거나 직업·수호자·운영자 배지가 늘어 프로필 카드가 커지면 '지금 할 일' 판이 카드를 덮지 않게 그만큼 아래로 내려요.
 const keepQuestClearOfProfile=()=>{const quest=document.querySelector<HTMLElement>('#hud .quest-card'),card=document.querySelector<HTMLElement>('#hud .player-card');if(!quest||!card)return;quest.style.removeProperty('top');if($('#hud').hidden||!quest.offsetParent)return;const q=quest.getBoundingClientRect(),c=card.getBoundingClientRect(),gap=10;if(q.left<c.right&&q.right>c.left&&q.top<c.bottom+gap)quest.style.top=`${Math.ceil(c.bottom+gap-quest.offsetParent.getBoundingClientRect().top)}px`;};
 if(typeof ResizeObserver!=='undefined'){const watch=new ResizeObserver(()=>requestAnimationFrame(keepQuestClearOfProfile));watch.observe($('#hud .player-card'));watch.observe($('#hud'));}

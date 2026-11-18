@@ -3,7 +3,8 @@ import {forestRoomKey,type ForestRoom} from './forest-room';
 import {parseChatMessage,type PlazaChatMessage,type PlazaChatMute,type PlazaRole} from './plaza-social';
 import {PLAZA_VERSION,PLAZA_ROOM,PLAZA_CAPACITY,PLAZA_AVATAR_CATALOG,PLAZA_TITLE_CATALOG,compatibleTitleProfile,compatiblePlazaProfile,parsePlazaPlayer,parsePlazaPose,isPlazaEmote,type PlazaProfile,type PlazaPose,type PlazaPlayer,type PlazaEmote} from './plaza-protocol';
 export type PlazaConnection='offline'|'connecting'|'online'|'retrying'|'nickname'|'full';
-type Hooks={invitation?:(invite:PartyInvitation)=>void;inviteStatus?:(message:string)=>void;status:(status:PlazaConnection,count:number)=>void;player:(player:PlazaPlayer)=>void;leave:(id:string)=>void;clear:()=>void;emote:(id:string,emote:PlazaEmote)=>void;social?:(ready:boolean,role:PlazaRole,expiresAt:number,verified?:boolean)=>void;chat?:(messages:PlazaChatMessage[],replace:boolean)=>void;speech?:(playerId:string|null,message:PlazaChatMessage)=>void;removed?:(id:string)=>void;chatStatus?:(until:number)=>void;chatError?:(reason:string)=>void;mutes?:(mutes:PlazaChatMute[])=>void};
+export type TradeMessage={type:'trade-invite'|'trade-pending'|'trade-state'|'trade-done'|'trade-closed';[key:string]:unknown};
+type Hooks={trade?:(message:TradeMessage)=>void;invitation?:(invite:PartyInvitation)=>void;inviteStatus?:(message:string)=>void;status:(status:PlazaConnection,count:number)=>void;player:(player:PlazaPlayer)=>void;leave:(id:string)=>void;clear:()=>void;emote:(id:string,emote:PlazaEmote)=>void;social?:(ready:boolean,role:PlazaRole,expiresAt:number,verified?:boolean)=>void;chat?:(messages:PlazaChatMessage[],replace:boolean)=>void;speech?:(playerId:string|null,message:PlazaChatMessage)=>void;removed?:(id:string)=>void;chatStatus?:(until:number)=>void;chatError?:(reason:string)=>void;mutes?:(mutes:PlazaChatMute[])=>void};
 export class PlazaClient {
  private grade=0;private invitationsEnabled=false;
  setGrade(grade:number){this.grade=grade;}
@@ -11,6 +12,8 @@ export class PlazaClient {
  declineInvite(invite:PartyInvitation){if(this.connected)this.send({type:'party-invite-reply',accepted:false,code:invite.code,id:invite.id});}
  private scene:ForestRoom|null=null;private market=false;private titleCatalog=1;private titleSelection=false;private serverCatalog=2;private identity='';private operatorToken='';public chatReady=false;public role:PlazaRole='player';
  configure(identity:string,operatorToken:string){if(this.operatorToken!==operatorToken){this.disconnect();this.retryAt=0;}this.identity=identity;this.operatorToken=operatorToken;}
+ /** 광장·상점거리에서만 거래 메시지를 보내요. */
+ trade(message:{type:'trade-request'|'trade-reply'|'trade-offer'|'trade-lock'|'trade-cancel';[key:string]:unknown}){if(!this.connected||this.scene)return false;this.send(message);return true;}
  chat(text:string){if(!this.connected||!this.chatReady)return false;this.send({type:'chat',text});return true;}
  moderate(action:'chat-delete'|'chat-mute'|'chat-unmute'|'chat-mutes',data:Record<string,unknown>={}){if(!this.connected||this.role!=='operator')return false;this.send({type:action,...data});return true;}
  private socket:WebSocket|null=null;private active=false;private profile:PlazaProfile|null=null;private pose:PlazaPose={x:0,y:0,z:8,angle:0};
@@ -58,6 +61,7 @@ export class PlazaClient {
   if(m.type==='party-invitation'){const invite=parsePartyInvitation(m.invitation);if(invite)this.hooks.invitation?.(invite);return;}
   if(m.type==='party-invite-status'&&typeof m.message==='string'&&m.message.length<200){this.hooks.inviteStatus?.(m.message);return;}
 
+  if(typeof m.type==='string'&&['trade-invite','trade-pending','trade-state','trade-done','trade-closed'].includes(m.type)){this.hooks.trade?.(m as TradeMessage);return;}
   if(m.type==='role'){this.role=m.role==='operator'?'operator':'player';this.hooks.social?.(this.chatReady,this.role,Number(m.expiresAt)||0,true);}
   if(m.type==='role-player'&&m.role==='player'){const old=this.peers.get(m.id);if(old){old.role='player';this.hooks.player(old);}}
   if(m.type==='chat-history'&&Array.isArray(m.messages))this.hooks.chat?.(m.messages.slice(-50).map(parseChatMessage).filter((x:PlazaChatMessage|null):x is PlazaChatMessage=>!!x),true);

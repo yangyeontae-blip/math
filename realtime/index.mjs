@@ -7,6 +7,7 @@ import {PlazaSocial} from './social.mjs';
 import {DurableObject} from 'cloudflare:workers';
 import {PLAZA_VERSION,PLAZA_ROOM,PLAZA_CAPACITY,PLAZA_AVATAR_CATALOG,PLAZA_TITLE_CATALOG,compatibleTitleProfile,compatiblePlazaProfile,parsePlazaProfile,parsePlazaPose,isPlazaEmote} from '../src/plaza-protocol.ts';
 const MARKET_ROOM='berry-forest-market-street';
+import {handleTrade,closeTradesFor} from './trade.mjs';
 const ORIGINS=new Set(['https://yangyeontae-blip.github.io','https://berry-forest-school.yangyeontae.chatgpt.site','capacitor://localhost','ionic://localhost','https://localhost','http://localhost']);
 export function allowedPlazaOrigin(origin){return ORIGINS.has(origin)||/^http:\/\/(localhost|127\.0\.0\.1):[0-9]+$/.test(origin??'');}
 const json=(value,status=200)=>new Response(JSON.stringify(value),{status,headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store','x-content-type-options':'nosniff'}});
@@ -82,6 +83,7 @@ export class SharedPlaza extends DurableObject {
   }
   if(!s.joined){ws.close(1008,'join_required');return;}
   if(m.type==='party-invite'||m.type==='party-invite-reply'){await handlePartyInvite(this,ws,s,m);return;}
+  if(typeof m.type==='string'&&m.type.startsWith('trade-')&&!s.forestRoom){handleTrade(this,ws,s,m,now);return;}
   if(typeof m.type==='string'&&m.type.startsWith('chat')&&await this.social.handle(ws,s,m))return;
   if(m.type==='pose'){
    const pose=parsePlazaPose(m.pose,!!s.forestRoom);
@@ -101,7 +103,7 @@ export class SharedPlaza extends DurableObject {
   if(m.type==='sync'){this.send(ws,{type:'snapshot',players:this.sessions().filter(([other,a])=>other!==ws&&a.joined).map(([,a])=>this.public(a,s.avatarCatalog??1,!!s.titleSelection,s.titleCatalog??1))});}
   ws.serializeAttachment(s);
  }
- webSocketClose(ws,code,reason){const s=ws.deserializeAttachment();if(s)this.pendingPoses.delete(s.id);if(s?.joined)this.broadcast({type:'leave',id:s.id},ws);try{ws.close(code===1005?1000:code,reason);}catch{}}
+ webSocketClose(ws,code,reason){const s=ws.deserializeAttachment();if(s)this.pendingPoses.delete(s.id);if(s?.joined)closeTradesFor(this,s.id);if(s?.joined)this.broadcast({type:'leave',id:s.id},ws);try{ws.close(code===1005?1000:code,reason);}catch{}}
  async alarm(){await this.social.alarm();}
  webSocketError(ws){this.webSocketClose(ws,1011,'connection');}
 }

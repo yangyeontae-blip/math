@@ -6,11 +6,11 @@ import {mountPlazaChat} from './plaza-chat-view';
 import {PlazaOperator,plazaDeviceIdentity} from './plaza-operator';
 import type {Save} from './rules';
 import type {World} from './world';
-import {PlazaClient,type PlazaConnection} from './plaza-client';
+import {PlazaClient,type PlazaConnection,type TradeMessage} from './plaza-client';
 import {plazaProfile} from './plaza-identity';
 import {PLAZA_ENDPOINT} from './plaza-endpoint';
 import {PLAZA_EMOTES,profileTitles,type PlazaEmote} from './plaza-protocol';
-export function mountPlaza(h:{state:()=>Save|null;world:()=>World|undefined;host:HTMLElement;invite?:(peer:PlazaPlayer)=>void;invitation?:(invite:PartyInvitation)=>void;inviteStatus?:(message:string)=>void}){
+export function mountPlaza(h:{state:()=>Save|null;world:()=>World|undefined;host:HTMLElement;invite?:(peer:PlazaPlayer)=>void;invitation?:(invite:PartyInvitation)=>void;inviteStatus?:(message:string)=>void;trade?:(message:TradeMessage)=>void;tradeWith?:(peer:PlazaPlayer)=>void}){
  const tools=document.createElement('section');tools.className='plaza-tools';tools.hidden=true;tools.setAttribute('aria-label','친구들과 함께하는 광장');
  const status=document.createElement('button');status.id='plaza-status';status.className='plaza-status';status.textContent='🌐 광장 연결 중';status.setAttribute('aria-expanded','false');
  const panel=document.createElement('div');panel.className='plaza-panel';panel.hidden=true;
@@ -29,7 +29,7 @@ export function mountPlaza(h:{state:()=>Save|null;world:()=>World|undefined;host
  const badge=document.createElement('span');badge.id='operator-title';badge.className='operator-title';badge.textContent='운영자';badge.hidden=true;h.host.querySelector('.career-badges')?.append(badge);
  let chat:ReturnType<typeof mountPlazaChat>|undefined;
  const client=new PlazaClient(endpoint,{
-  invitation:invite=>h.invitation?.(invite),inviteStatus:message=>h.inviteStatus?.(message),
+  invitation:invite=>h.invitation?.(invite),inviteStatus:message=>h.inviteStatus?.(message),trade:message=>h.trade?.(message),
   status:(value,total)=>{connection=value;memberCount=total;render();},
   player:p=>h.world()?.upsertPlazaPlayer(p),leave:id=>h.world()?.removePlazaPlayer(id),clear:()=>{if(!h.world()?.partyScene)h.world()?.clearPlazaPlayers();},
   emote:(id,value)=>h.world()?.plazaEmote(id,value),
@@ -50,7 +50,8 @@ export function mountPlaza(h:{state:()=>Save|null;world:()=>World|undefined;host
   if(signature===lastRoster)return;lastRoster=signature;roster.replaceChildren();
   if(me){const li=document.createElement('li');li.textContent='Lv. '+me.level+' '+me.nickname+' · 나';roster.append(li);}
   for(const p of others.sort((a,b)=>Number(b.party?.grade===me?.grade)-Number(a.party?.grade===me?.grade))){const li=document.createElement('li'),name=document.createElement('button'),title=document.createElement('span');name.textContent=`Lv. ${p.profile.level} ${p.profile.nickname}`;name.className='plaza-friend-name';name.disabled=!p.party?.invites||p.party.grade!==me?.grade;name.onclick=()=>{panel.hidden=true;h.invite?.(p);};title.textContent=profileTitles(p.profile).title;li.append(name,title);
-   if(p.party){const invite=document.createElement('button');invite.className='plaza-friend-invite';invite.textContent=p.party.grade===me?.grade?'함께 모험 초대':p.party.grade+'학년 · 같은 학년만 가능';invite.disabled=p.party.grade!==me?.grade;invite.onclick=()=>{panel.hidden=true;h.invite?.(p);};li.append(invite);}roster.append(li);}
+   if(p.party){const invite=document.createElement('button');invite.className='plaza-friend-invite';invite.textContent=p.party.grade===me?.grade?'함께 모험 초대':p.party.grade+'학년 · 같은 학년만 가능';invite.disabled=p.party.grade!==me?.grade;invite.onclick=()=>{panel.hidden=true;h.invite?.(p);};li.append(invite);}
+   if(!forestScene&&h.tradeWith){const trade=document.createElement('button');trade.className='plaza-friend-invite plaza-trade';trade.textContent='거래하기';trade.onclick=()=>{panel.hidden=true;h.tradeWith?.(p);};li.append(trade);}roster.append(li);}
  }
  status.onclick=()=>{chat?.hide();panel.hidden=!panel.hidden;status.setAttribute('aria-expanded',String(!panel.hidden));lastRoster='';render();};
  close.onclick=()=>{panel.hidden=true;status.setAttribute('aria-expanded','false');};
@@ -68,5 +69,5 @@ export function mountPlaza(h:{state:()=>Save|null;world:()=>World|undefined;host
  document.addEventListener('visibilitychange',visibility);window.addEventListener('pagehide',stop);
  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!panel.hidden)close.click();});
  render();
- return {sync,declineInvite:(invite:PartyInvitation)=>client.declineInvite(invite),invite:(targetId:string,code:string,token:string)=>client.invite(targetId,code,token),players:()=>client.players,authenticate:async(code:string)=>{await auth.authenticate(code);ownRole='operator';roleUntil=auth.expiresAt;badge.hidden=false;client.configure(identity,auth.token);sync();},operatorActive:()=>auth.active,operatorToken:()=>auth.token,logout:async()=>{await auth.logout();client.configure(identity,'');ownRole='player';badge.hidden=true;sync();},stop:()=>{clearInterval(timer);chat?.stop();badge.remove();client.stop();document.removeEventListener('visibilitychange',visibility);window.removeEventListener('pagehide',stop);tools.remove();}};
+ return {sync,trade:(message:Parameters<PlazaClient['trade']>[0])=>client.trade(message),declineInvite:(invite:PartyInvitation)=>client.declineInvite(invite),invite:(targetId:string,code:string,token:string)=>client.invite(targetId,code,token),players:()=>client.players,authenticate:async(code:string)=>{await auth.authenticate(code);ownRole='operator';roleUntil=auth.expiresAt;badge.hidden=false;client.configure(identity,auth.token);sync();},operatorActive:()=>auth.active,operatorToken:()=>auth.token,logout:async()=>{await auth.logout();client.configure(identity,'');ownRole='player';badge.hidden=true;sync();},stop:()=>{clearInterval(timer);chat?.stop();badge.remove();client.stop();document.removeEventListener('visibilitychange',visibility);window.removeEventListener('pagehide',stop);tools.remove();}};
 }
