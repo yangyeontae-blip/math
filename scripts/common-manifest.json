@@ -79,7 +79,7 @@
     "src/home-exit.ts": "055824644f9cc9bba4ba9f4166170b636f6e3849a7288e2ace60ebdbb4b9e0ad",
     "tests/home-exit.test.ts": "55615d3f051ce152b5d39ebd346777997051e6fa71344602999a10962db4efc3",
     "src/hunting.ts": "edbc8e067a4388886d04b9cf686414f19a266bbe1ba311d35e57b344da84ca00",
-    "src/hunting-world.ts": "e5dc47526da119d886268bd3c32d8b5f084b96f42b35f4905266917dcc75c60d",
+    "src/hunting-world.ts": "f5c5c96478a8279bac0e911154d4fe6a4f1dd21825cd5906b0a52b171999ec15",
     "src/career-controller.ts": "1feb8247fc184dcc3b790d7dced67cf0fad4c9bb2d0f536cda8e345d4a8485cb",
     "src/career-ui.ts": "fe7ec17a9165e1c6097868c00e6c1e48ecc5b68f69bb69a59807fe9360cd530c",
     "src/career.css": "e6f856c6fe4d089611bb4561ce5a41a3edb8eef62a66cf58d25ed2124cb9564f",
@@ -368,6 +368,11 @@
     "public/art/berry-items-v1/weapon-7.svg": "0e422b733dff81038a46d8ea2dd7eb0f0821318a32dfbd3bde16b93b27d878fc",
     "public/art/berry-items-v1/weapon-8.svg": "e0ff61f6ebf6747f5af8484e58f460f8bc8906ec60b55ef7422a356f3ac958ea",
     "public/art/berry-items-v1/weapon-9.svg": "f8a6c5fd10d7dd5073bc00d3690a85c2097ff1ea27b0633891d98ece61d0c5d5",
+    "src/combat-art.ts": "80851703aef88bc100f6ae284074762976defd6d962c55a008b3d1012a1557a1",
+    "src/combat-monsters.ts": "79fc245810e870567fd9eb9740a2000ad69c8ebc005389154ebcd9f329c53d6f",
+    "src/combat-vfx.ts": "176c36228533512cc1a78708ff54ec4a78105cc0e8bdb0ba10a51f24e0f3a13e",
+    "tests/combat-art.test.ts": "cddf2cfd00c5bebee5b06d820b8be30f782dc0ed8fb20880e7750a0ddc5a5965",
+    "e2e/combat-visuals.spec.mjs": "ef449df4e1417d640389dfc1f25638663ecc07d4c8d0cf65316490bafb3a6b2e",
     "src/ui-icons.ts": "a773211d3781be2758dd233fa8221c3a3e8ab63ed2385a2eb47ef650fea4cc11",
     "src/design-tokens.css": "67b13e736e25d89ce1579df1e5e844e6e726784ecf3df9c4ea38017b63077379",
     "scripts/generate-design-fonts.py": "5141879c7fdb175e008e301df9a18a0fd90008f10b1be846e3e4e8b756ef17d5",
@@ -376,5 +381,5 @@
     "public/fonts/LICENSE-NotoSansKR.txt": "a5cb775427506f70605da52b87cda1f39708c0165a3b5c23a24405916c1f33ec",
     "public/fonts/LICENSE-NotoSerifKR.txt": "7ae17b30116f90172a9a3d6afe13e0d275f7494e5eb1eed2f87b536539c746ee"
   },
-  "generation": "22cb52c2be4ea47825fc14be9ea092a5483bd101f16aa64695ed147cc632de13"
+  "generation": "1ffaa56cc7fa331dc9187f34cbbc73be7bae1a89b790c0e8bae327982083cef3"
 }

@@ -1,3 +1,6 @@
+import { COMBAT_ART, attackStyle, attackPose, type AttackStyle } from './combat-art';
+import { CombatVfx } from './combat-vfx';
+import { monsterModel, animateMonster } from './combat-monsters';
 import {createDawnWeapon,createDawnOutfit,createDawnPet,createDawnRide} from './dawn-art';
 import {operatorAccess} from './operator-access';
 import {safeLanding} from './safe-landing';
@@ -56,6 +59,7 @@ const sphereGeometry = new T.SphereGeometry(1, 12, 8); sharedGeometries.add(sphe
 // 펫·탈것은 가까이서 크게 보이므로 매끈한 공을 써요. 숲·마을의 수많은 공은 가벼운 공을 그대로 써요.
 const smoothSphereGeometry = new T.SphereGeometry(1, 28, 20); sharedGeometries.add(smoothSphereGeometry);
 let activeSphere = sphereGeometry;
+const monsterShadowGeometry = new T.CircleGeometry(1, 24); sharedGeometries.add(monsterShadowGeometry);
 const particleGeometry = new T.OctahedronGeometry(.09); sharedGeometries.add(particleGeometry);
 const expeditionStarGeometry = new T.OctahedronGeometry(.42); sharedGeometries.add(expeditionStarGeometry);
 const boxGeometries = new Map<string, T.BoxGeometry>(), cylinderGeometries = new Map<string, T.CylinderGeometry>();
@@ -115,7 +119,7 @@ export function makeCharacter(character: number, outfit: number, weapon: number,
     for (let i = 0; i < 7; i++) mesh(new T.OctahedronGeometry(.065), o.accent, Math.cos(i * .9) * .8, .6 + (i % 3) * .45, Math.sin(i * .9) * .8, halo);
   }
   const w = new T.Group(); w.position.set(.62, .63, .12); w.rotation.z = -.28; body.add(w);
-  g.userData.weapon = w;
+  g.userData.weapon = w; g.userData.weaponId = weapon;
   cylinder(w, 0x8a6044, 0, .26, 0, .055, .065, .8, 8);
   if (weapon === 0) { const blade = box(w, WEAPONS[weapon].color, 0, .63, 0, .15, .52, .09); blade.rotation.z = -.08; box(w, o.accent, 0, .36, 0, .34, .07, .13); }
   if (weapon === 1) { cylinder(w, 0x89552f, 0, .74, 0, .3, .33, .36); ball(w, 0xc7985c, 0, .68, 0, .35, .3, .3); }
@@ -230,20 +234,7 @@ export function makeCharacter(character: number, outfit: number, weapon: number,
 }
 
 export function makeMonster(type: number) {
-  const g = new T.Group(), c = MONSTERS[type].color;
-  ball(g, c, 0, .5, 0, .66, .57, .6);
-  ball(g, c, -.4, .13, .22, .24, .15, .32); ball(g, c, .4, .13, .22, .24, .15, .32);
-  if (type === 0) { const leaf = ball(g, 0x3f9861, -.13, 1.1, 0, .18, .36, .08); leaf.rotation.z = .6; const l2 = ball(g, 0x66b956, .13, 1.1, 0, .17, .3, .08); l2.rotation.z = -.6; }
-  if (type === 1) { ball(g, 0xe86c83, 0, 1, -.02, .84, .34, .72); for (const [x, z] of [[-.35, .2], [.25, .35], [.1, -.3]]) ball(g, 0xffe9cc, x, 1.28, z, .12, .04, .1); }
-  if (type === 2) for (const side of [-1, 1]) { ball(g, c, side * .26, 1.23, 0, .16, .49, .17); ball(g, 0xeeb8d1, side * .26, 1.26, .14, .075, .28, .03); }
-  if (type === 3) { ball(g, 0x866043, 0, .96, 0, .7, .25, .63); cylinder(g, 0x866043, 0, 1.18, 0, .08, .1, .3); }
-  if (type === 4) { for (const side of [-1, 1]) { cylinder(g, 0x4e4036, side * .23, 1.13, 0, .025, .025, .3); ball(g, 0xffdf57, side * .27, 1.32, 0, .07); const wing = mesh(new T.CircleGeometry(.3, 10), 0xfff0a4, side * .52, .58, -.1, g); wing.scale.y = 1.35; } for (const y of [.4, .66]) cylinder(g, 0x4e4036, 0, y, .02, .67, .67, .1); }
-  if (type === 5) { for (const side of [-1, 1]) { const ear = mesh(new T.ConeGeometry(.2, .42, 5), c, side * .3, 1.12, 0, g); ear.rotation.z = side * -.12; } ball(g, 0xffda67, .42, 1.04, .08, .18, .07, .16); }
-  if (type === 6) { for (const side of [-1, 1]) { const ear = mesh(new T.ConeGeometry(.23, .5, 5), c, side * .31, 1.13, 0, g); ear.rotation.z = side * -.18; } ball(g, 0xffe8c9, 0, .5, .55, .25, .2, .06); ball(g, 0xffffff, .48, .72, -.22, .32, .24, .18); }
-  if (type === 7) { for (let i = 0; i < 7; i++) ball(g, 0xfff8f0, (i % 4 - 1.5) * .22, .98 + (i % 2) * .16, -.05, .25, .2, .24); for (const side of [-1, 1]) ball(g, 0xf6c7db, side * .52, .83, 0, .16, .32, .13); }
-  if (type === 8) { for (const side of [-1, 1]) ball(g, c, side * .39, 1.02, 0, .22, .22, .17); for (let i = 0; i < 5; i++) { const a = i * Math.PI * 2 / 5; ball(g, 0xffdf72, Math.cos(a) * .25, 1.14 + Math.sin(a) * .22, .12, .07, .07, .035); } }
-  for (const side of [-1, 1]) { ball(g, 0x314c40, side * .23, .62, .52, .055, .07, .035); ball(g, 0xf5a2ac, side * .38, .47, .48, .1, .045, .03); }
-  ball(g, 0x805b54, 0, .44, .586, .055, .028, .016); return g;
+  return monsterModel(type, MONSTERS[type].color, { sphere: smoothSphereGeometry, cube: cachedBox(1,1,1), cone: cachedCylinder(0,1,1,12), circle: monsterShadowGeometry, material });
 }
 
 // A friendly original village captain: warm bread-like round face, rosy cheeks and a tiny red cape.
@@ -701,7 +692,9 @@ export class World {
   private plazaVisual: PlazaWorld;
   private planetVisual:T.Group|null=null;private astralGateway:T.Group|null=null;
   private guideTarget: { object: T.Object3D; name: string; arrivalDistance: number } | null = null; private guideElement: HTMLDivElement;
-  private swingUntil = 0; private rideIndex = -1; private petIndex = -1; private petModel: T.Group | null = null; private petTargetId: number | null = null; private animationRunning = false;
+  private attackMotion: { style: AttackStyle; elapsed: number } | null = null;
+  private poseStop = 0; private shakeLife = 0; private shakeReady = 0;
+  private combatVfx: CombatVfx | null = null; private rideIndex = -1; private petIndex = -1; private petModel: T.Group | null = null; private petTargetId: number | null = null; private animationRunning = false;
   private rideAnimated: T.Object3D[] = []; private butterflies: T.Object3D[] = []; private furnitureRoot: T.Group | null = null;
   private trailScenery: T.Group | null = null; private trailNext = 0;
   private storyScenery: T.Group | null = null; private restoredBridge = false;
@@ -1013,6 +1006,8 @@ export class World {
     this.addBerries();
   }
   private clearMap() {
+    this.combatVfx?.dispose(); this.combatVfx = null; this.attackMotion = null; this.poseStop = this.shakeLife = 0;
+    const combatBody = this.player.userData.body as T.Group | undefined; if (combatBody) combatBody.rotation.x = combatBody.rotation.y = 0;
     if(this.astralSave)this.astralSave.astralStudy.location=null;this.astralSave=null;this.inAstralStudy=null;
     this.plazaVisual.detach();this.planetVisual=null;this.astralGateway=null;
     this.stopRoomActivity();
@@ -1152,7 +1147,7 @@ export class World {
     else for (const area of HUNT_ZONES) { const x = -12 + area.id * 8; this.addEntity(`huntingZone${area.id}`, `${area.name} · 레벨 ${area.level}`, x, 5.5, new T.Group()); this.sign(this.scene, `${area.name} Lv.${area.level}`, x, 2.4, 5.5, 4.5, s.level >= area.level ? '#365842' : '#8b7866', true); }
     this.sign(this.scene, world2?(world2.boss?worldTwoBoss(world2.region)!.name:WORLD_TWO_REGIONS[world2.region].name):HUNT_ZONES[zone].name, 0,world2?5:3.2,world2?-23:-17,6, '#365842', true);
     this.combatRuntime = new HuntingRuntime({ ...(world2?{encounter:{id:'world2-'+world2.region+(world2.boss?'-boss':''),hp:world2.boss?worldTwoBoss(world2.region)!.hp:WORLD_TWO_REGIONS[world2.region].hp,damage:world2.boss?worldTwoBoss(world2.region)!.damage:WORLD_TWO_REGIONS[world2.region].damage,boss:world2.boss}}:{}),zone, level: s.level, power: huntingPower(s), ...huntingCompanionStats(s), ...this.combatProfile });
-    this.combatWorld = new HuntingWorld(false, visualZone, {lowQuality:s.settings.lowQuality,reducedMotion:matchMedia('(prefers-reduced-motion: reduce)').matches}); this.scene.add(this.combatWorld.root); this.mergeStaticScenery();
+    this.combatWorld = new HuntingWorld(false, visualZone, {lowQuality:s.settings.lowQuality,reducedMotion:matchMedia('(prefers-reduced-motion: reduce)').matches,boss:!!world2?.boss}); this.scene.add(this.combatWorld.root); this.mergeStaticScenery();
     this.setAvatar(s.character, s.outfit, s.weapon, s.outfits[s.outfit], s.weapons[s.weapon], -1, s.pet, s.hairstyle, s.face); this.placeAt(HUNT_CAMP.x, HUNT_CAMP.z); this.refreshWorldTwoBeacons(s);this.onStageLoaded(0); return true;
   }
   enterAstralStudy(s:Save,location:AstralLocation){
@@ -1180,12 +1175,13 @@ export class World {
   selectHuntTarget(id: string | null) { if (id !== null && !this.combatRuntime?.snapshot().enemies.some(enemy => enemy.id === id && enemy.hp > 0)) return; this.huntTarget = id; }
   private combatFacing(range = 12) { const target = autoHuntTarget(this.combatRuntime?.snapshot().enemies ?? [], this.player.position, range, this.huntTarget); this.huntTarget = target?.id ?? null; if (!target) return { x: Math.sin(this.player.rotation.y), z: Math.cos(this.player.rotation.y) }; const facing = { x: target.x - this.player.position.x, z: target.z - this.player.position.z }; if (Math.hypot(facing.x, facing.z) < .001) { facing.x = Math.sin(this.player.rotation.y); facing.z = Math.cos(this.player.rotation.y); } this.combatAimUntil = this.time + .35; this.combatAimAngle = Math.atan2(facing.x, facing.z); return facing; }
   useHuntSupply(id:number):SupplyUseResult{if(!this.combatRuntime||!this.inHunting||this.inTraining||!this.active||this.paused)return {used:false,reason:'location'};const result=this.combatRuntime.consumeSupply(id);if(result.used)this.burst(this.player.position,huntingSupply(id)?.kind==='food'?0xf0bf70:0x81d7a0);return result;}
-  huntAttack() { if (!this.combatRuntime || this.paused || !this.active) return false; const job = this.trainingOptions?.job ?? this.combatProfile.job, range = job === 'mage' || job === 'bard' ? 8 : job === 'ranger' ? 10 : 2.8; const events = this.combatRuntime.attack(this.player.position, this.combatFacing(range), this.huntTarget); if (events.length) this.swingUntil = this.time + .28; this.handleHuntEvents(events); return events.length > 0; }
-  useHuntSkill(id: SkillId) { if (!this.combatRuntime || this.paused || !this.active) return false; const range = id==='moonArrow'?14:id==='vinePull'?8:id==='dawnSlash'?7:['starbolt','arrow','pierce','lantern','leafOrb','thunderChain','comet','galeShot','tripleShot','vortex','starfall','storm'].includes(id)?12:id==='charge'?7:id==='trap'?8:6, facing = this.combatFacing(range); const events = this.combatRuntime.cast(id, this.player.position, facing); this.handleHuntEvents(events); const cast = events.some(event => event.type === 'cast'); if (cast && id === 'charge') { this.chargeMotion = { remaining: .2, direction: facing }; this.swingUntil = this.time + .28; } if (cast && id === 'lantern') { const enemy = this.combatRuntime.snapshot().enemies.filter(enemy => enemy.hp > 0).sort((a, b) => Math.hypot(a.x - this.player.position.x, a.z - this.player.position.z) - Math.hypot(b.x - this.player.position.x, b.z - this.player.position.z))[0]; const object = enemy && this.combatWorld?.targetObject(enemy.id); if (object) { this.guideTarget = { object, name: this.inTraining ? '수련 허수아비' : '다음 사냥 대상', arrivalDistance: 2.5 }; this.guideElement.querySelector('b')!.textContent = this.guideTarget.name; this.guideElement.hidden = false; } } return cast; }
+  huntAttack() { if (!this.combatRuntime || this.paused || !this.active) return false; const job = this.trainingOptions?.job ?? this.combatProfile.job, range = job === 'mage' || job === 'bard' ? 8 : job === 'ranger' ? 10 : 2.8; const events = this.combatRuntime.attack(this.player.position, this.combatFacing(range), this.huntTarget); if (events.length) this.beginAttack(); this.handleHuntEvents(events); return events.length > 0; }
+  useHuntSkill(id: SkillId) { if (!this.combatRuntime || this.paused || !this.active) return false; const range = id==='moonArrow'?14:id==='vinePull'?8:id==='dawnSlash'?7:['starbolt','arrow','pierce','lantern','leafOrb','thunderChain','comet','galeShot','tripleShot','vortex','starfall','storm'].includes(id)?12:id==='charge'?7:id==='trap'?8:6, facing = this.combatFacing(range); const events = this.combatRuntime.cast(id, this.player.position, facing); this.handleHuntEvents(events); const cast = events.some(event => event.type === 'cast'); if (cast) this.beginAttack(id); if (cast && id === 'charge') { this.chargeMotion = { remaining: .2, direction: facing }; } if (cast && id === 'lantern') { const enemy = this.combatRuntime.snapshot().enemies.filter(enemy => enemy.hp > 0).sort((a, b) => Math.hypot(a.x - this.player.position.x, a.z - this.player.position.z) - Math.hypot(b.x - this.player.position.x, b.z - this.player.position.z))[0]; const object = enemy && this.combatWorld?.targetObject(enemy.id); if (object) { this.guideTarget = { object, name: this.inTraining ? '수련 허수아비' : '다음 사냥 대상', arrivalDistance: 2.5 }; this.guideElement.querySelector('b')!.textContent = this.guideTarget.name; this.guideElement.hidden = false; } } return cast; }
   private handleHuntEvents(events: HuntEvent[]) {
     if (!this.combatRuntime) return; const snapshot = this.combatRuntime.snapshot();
     for (const event of events) {
       this.combatWorld?.onEvent(event, snapshot, {x:this.player.position.x,z:this.player.position.z,job:this.trainingOptions?.job??this.combatProfile.job});
+      if (event.type === 'hit' && this.time >= this.shakeReady && !matchMedia('(prefers-reduced-motion: reduce)').matches) { this.poseStop = .035; this.shakeLife = .12; this.shakeReady = this.time + .12; }
       if (event.type === 'retreat') this.placeAt(event.x, event.z);
       if (this.inTraining) {
         if (event.type === 'hit') { this.trainingStats.damage += event.damage; this.trainingStats.hits++; this.trainingTargets.add(event.enemyId); this.trainingStats.targetsHit = this.trainingTargets.size; if (event.skill !== 'basic') this.trainingHitSkills.add(event.skill); }
@@ -1216,6 +1212,7 @@ export class World {
   useSkill(id:SkillId,learned:readonly SkillId[]){
     if (this.combatRuntime) return this.useHuntSkill(id);
     if(!this.active||this.paused||this.storyActivityFocus||!this.skillRuntime.use(id,this.time,learned))return false;
+    this.combatVfx ??= new CombatVfx({lowQuality:this.lowQuality,reducedMotion:matchMedia('(prefers-reduced-motion: reduce)').matches}); if(!this.combatVfx.root.parent)this.scene.add(this.combatVfx.root);this.combatVfx.cast(id,this.player.position,this.player.position);this.beginAttack(id);
     this.removeSkillModel(id);const effect=skillEffectModel(id==='wind'||id==='lantern'?id:'shield');effect.userData.academyEffect=true;this.scene.add(effect);this.skillModels.set(id,effect);
     if(this.inAcademy)this.trial={id,started:this.time,distance:0,last:this.player.position.clone()};
     if(id==='lantern'){
@@ -1688,7 +1685,7 @@ export class World {
     const toPlayer = Math.hypot(p.x - home.x, p.z - home.z), near = this.active && toPlayer < 7;
     if (near) { const step = Math.max(0, Math.min(toPlayer - 2, 3.5)); tx = home.x + (p.x - home.x) / Math.max(toPlayer, .01) * step; tz = home.z + (p.z - home.z) / Math.max(toPlayer, .01) * step; }
     const ease = Math.min(1, dt * (near ? 2.2 : 1.2)), mx = (tx - e.x) * ease, mz = (tz - e.z) * ease; e.x += mx; e.z += mz;
-    e.mesh.position.set(e.x, Math.max(0, Math.sin(this.time * (near ? 5 : 2) + home.x)) * (near ? .28 : .16), e.z);
+    e.mesh.position.set(e.x, matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : Math.max(0, Math.sin(this.time * (near ? 5 : 2) + home.x)) * (near ? .18 : .08), e.z);
     const face = near ? Math.atan2(p.x - e.x, p.z - e.z) : Math.hypot(mx, mz) > .0005 ? Math.atan2(mx, mz) : e.mesh.rotation.y;
     e.mesh.rotation.y += Math.atan2(Math.sin(face - e.mesh.rotation.y), Math.cos(face - e.mesh.rotation.y)) * Math.min(1, dt * 4);
   }
@@ -1779,7 +1776,7 @@ export class World {
   }
   private renderOnce() { if (!document.hidden) { this.scene.fog=null;this.storybook.update(this.time,this.player.position,this.petModel?.position??null,this.shadowFloor);this.renderer.render(this.scene, this.camera); } }
   restore(s: Save) { this.setAvatar(s.character, s.outfit, s.weapon, s.outfits[s.outfit], s.weapons[s.weapon], s.ride, s.pet, s.hairstyle, s.face); if(s.astralStudy.location)this.enterAstralStudy(s,{...s.astralStudy.location});else if (s.homestead.inside) this.enterHomestead(s,true); else if (s.room.inside) this.enterRoom(s); else this.loadStage(s); this.quality(s.settings.lowQuality); }
-  quality(low: boolean) { this.lowQuality = low;this.combatWorld?.setQuality({lowQuality:low,reducedMotion:matchMedia('(prefers-reduced-motion: reduce)').matches});this.storybook.quality(low); const touchDevice = matchMedia('(pointer: coarse)').matches; this.renderer.setPixelRatio(Math.min(devicePixelRatio, low ? (this.container.clientWidth >= 1000 ? .75 : 1) : touchDevice ? 1 : 1.25)); this.renderer.shadowMap.enabled = !low; this.sun.castShadow = !low;this.homeVisitors.forEach((v,i)=>v.entity.mesh.visible=i<(low?2:3)); }
+  quality(low: boolean) { this.lowQuality = low; this.combatVfx?.setQuality({lowQuality:low,reducedMotion:matchMedia('(prefers-reduced-motion: reduce)').matches});this.combatWorld?.setQuality({lowQuality:low,reducedMotion:matchMedia('(prefers-reduced-motion: reduce)').matches});this.storybook.quality(low); const touchDevice = matchMedia('(pointer: coarse)').matches; this.renderer.setPixelRatio(Math.min(devicePixelRatio, low ? (this.container.clientWidth >= 1000 ? .75 : 1) : touchDevice ? 1 : 1.25)); this.renderer.shadowMap.enabled = !low; this.sun.castShadow = !low;this.homeVisitors.forEach((v,i)=>v.entity.mesh.visible=i<(low?2:3)); }
   textInputFocus=false;
   setTextInputFocus(focused:boolean){this.textInputFocus=focused;if(focused)this.clearInput();}
   clearInput() { this.keys.clear(); this.stick = { x: 0, z: 0 }; }
@@ -1801,14 +1798,43 @@ export class World {
   moveStick(x: number, z: number) { if(this.textInputFocus&&Math.hypot(x,z)>.05&&!document.querySelector('dialog[open]')){(document.activeElement as HTMLElement|null)?.blur();this.setTextInputFocus(false);this.clearInput();}this.stick = { x, z }; }
   jump() { if(this.roomActivity)this.stopRoomActivity();if (this.active && !this.paused && !this.textInputFocus && !this.storyActivityFocus && this.grounded) { this.vy = 7.4; this.grounded = false; this.onJump(); } }
   interact() { if (this.active && !this.paused && !this.textInputFocus && !this.storyActivityFocus) {if(this.inHomestead&&atHomeExit(this.player.position.x,this.player.position.z))this.onInteract('homeExit');else if(this.selectedId)this.onInteract(this.selectedId);} }
-  attack() { if (!this.active || this.paused || this.textInputFocus || this.storyActivityFocus) return; if (this.combatRuntime) { this.huntAttack(); return; } this.swingUntil = this.time + .28; this.onAttack(this.selectedId?.startsWith('tree') ? this.selectedId : null); }
+  private beginAttack(skill?: SkillId) {
+    const job = this.trainingOptions?.job ?? this.combatProfile.job;
+    this.attackMotion = { style: attackStyle(job, Number(this.player.userData.weaponId ?? 0)), elapsed: 0 };
+    if (!skill) {
+      this.combatVfx ??= new CombatVfx({ lowQuality: this.lowQuality, reducedMotion: matchMedia('(prefers-reduced-motion: reduce)').matches });
+      if (!this.combatVfx.root.parent) this.scene.add(this.combatVfx.root);
+      const a = this.combatRuntime ? this.combatAimAngle : this.player.rotation.y, p = this.player.position;
+      const art = job === 'ranger' ? COMBAT_ART.arrow : job === 'bard' ? COMBAT_ART.noteBolt : job === 'mage' ? COMBAT_ART.starbolt : job === 'druid' ? COMBAT_ART.earthsong : job === 'alchemist' ? COMBAT_ART.sparkFlask : COMBAT_ART.crescent;
+      const ranged = ['bow','cast','music','throw'].includes(this.attackMotion.style);
+      this.combatVfx.cue(ranged ? 'cast' : 'basic', art, p, { x: p.x + Math.sin(a) * 1.2, z: p.z + Math.cos(a) * 1.2 }, 1, -a);
+    }
+  }
+  private animateAttack(dt: number) {
+    const motion = this.attackMotion, reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const weapon = this.player.userData.weapon as T.Group | undefined, body = this.player.userData.body as T.Group | undefined;
+    if (weapon) { weapon.rotation.set(0,0,-.28); weapon.position.set(.62,.63,.12); }
+    const limbs = [...(this.player.userData.arms ?? []), ...(this.player.userData.hands ?? [])] as T.Object3D[];
+    for (const limb of limbs) { limb.userData.attackRest ??= { position: limb.position.clone(), rotation: limb.rotation.clone() }; const rest=limb.userData.attackRest;limb.position.copy(rest.position);limb.rotation.copy(rest.rotation); }
+    if (!motion || !body || !weapon) return;
+    if (this.poseStop > 0 && motion.elapsed >= .1 && !reduced) this.poseStop = Math.max(0, this.poseStop - dt); else motion.elapsed += dt;
+    const pose = attackPose(motion.style, motion.elapsed, reduced), q = pose.swing;
+    body.rotation.y = -q * .32; body.rotation.x = 0;
+    if (motion.style === 'bow') { weapon.rotation.set(-1.1, -.4, -.45); weapon.position.set(.2,.95,.4); for (const [i,limb] of limbs.entries()) { limb.rotation.x=-.85;limb.position.z += i%2 ? -.18*q : .22; } body.rotation.y=q*.15; }
+    else if (motion.style === 'cast' || motion.style === 'music') { weapon.rotation.x=-q*.85;weapon.rotation.z=-.28+q*.45;weapon.position.y+=q*.3;body.rotation.x=-q*.08;for(const limb of limbs)limb.rotation.x=-q*.75; }
+    else if (motion.style === 'throw') { weapon.rotation.x=-q*1.8;weapon.position.z+=q*.38;body.rotation.y=-q*.5; }
+    else if (motion.style === 'thrust') { weapon.rotation.x=-1.1*q;weapon.position.z+=q*.65;body.rotation.x=q*.12; }
+    else { weapon.rotation.z=-.28-q*(motion.style==='heavy'?2.2:1.9);weapon.rotation.x=-q*.8;body.rotation.x=motion.style==='heavy'?q*.14:0;for(const [i,limb]of limbs.entries())if(i%2)limb.rotation.z-=q*.8; }
+    if (pose.done) { this.attackMotion=null;body.rotation.x=body.rotation.y=0; }
+  }
+  attack() { if (!this.active || this.paused || this.textInputFocus || this.storyActivityFocus) return; if (this.combatRuntime) { this.huntAttack(); return; } this.beginAttack(); this.onAttack(this.selectedId?.startsWith('tree') ? this.selectedId : null); }
   hitTree(id: string, damage: number) {
     const e = this.entities.find(e => e.id === id && e.mesh.visible); if (!e || !id.startsWith('tree')) return null;
     e.mesh.userData.hp = Math.max(0, Number(e.mesh.userData.hp) - damage); e.mesh.userData.shakeUntil = this.time + .28; this.burst(e.mesh.position, 0xc5e88b, 5);
     if (e.mesh.userData.hp === 0) { e.mesh.visible = false; e.label.hidden = true; cylinder(this.scene, 0xa77b50, e.x, .2, e.z, .32, .43, .4, 9); this.burst(e.mesh.position, 0xffa1b8, 12); this.selectedId = null; this.onNear(null, null); }
     return { fell: e.mesh.userData.hp === 0, remaining: e.mesh.userData.hp as number };
   }
-  defeat(id: string) { const e = this.entities.find(e => e.id === id); if (e) { const type = id.startsWith('expMonster') ? Number(e.mesh.userData.monsterType) : stageMonsters(this.stage)[Number(id.slice(7))].type; this.burst(e.mesh.position, MONSTERS[type].color); e.mesh.visible = false; } }
+  defeat(id: string) { const e = this.entities.find(e => e.id === id); if (e) { const type = id.startsWith('expMonster') ? Number(e.mesh.userData.monsterType) : stageMonsters(this.stage)[Number(id.slice(7))].type; this.burst(e.mesh.position, MONSTERS[type].color); this.combatVfx ??= new CombatVfx({lowQuality:this.lowQuality,reducedMotion:matchMedia('(prefers-reduced-motion: reduce)').matches});if(!this.combatVfx.root.parent)this.scene.add(this.combatVfx.root);this.combatVfx.defeat(e.mesh.position,MONSTERS[type].color); e.mesh.visible = false; } }
   celebrate() { this.burst(this.player.position, 0xffd371, 10); }
   private burst(pos: T.Vector3, color: number, count = 14) { if (matchMedia('(prefers-reduced-motion: reduce)').matches) return; const available = Math.max(0, 48 - this.particles.length); for (let i = 0; i < Math.min(count, available); i++) { const m = mesh(particleGeometry, color, pos.x, pos.y + .9, pos.z, this.scene); this.particles.push({ mesh: m, v: new T.Vector3((Math.random() - .5) * 3.5, 1.5 + Math.random() * 2, (Math.random() - .5) * 3.5), life: .75 }); } }
   private water(x: number, z: number) { return !this.inAstralStudy && !this.inHunting && !this.inTraining && !this.inAcademy && !this.inMarket && !this.inHomestead && !this.inRoom && !(this.stage === 0 && this.restoredBridge && x > 14 && x < 24 && Math.abs(z - 8) < 1) && isVillagePond(this.stage, x, z); }
@@ -1841,6 +1867,9 @@ export class World {
   private frame() {
     if (document.hidden || this.paused || !this.active) return;
     const frame = this.clock.getDelta(), dt = Math.min(frame, .04); this.time += dt;
+    const combatReduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    this.combatWorld?.setQuality({ lowQuality: this.lowQuality, reducedMotion: combatReduced });
+    this.combatVfx?.setQuality({ lowQuality: this.lowQuality, reducedMotion: combatReduced });
     if (this.hallGuideDog?.parent) animatePpojjakiPet(this.hallGuideDog, this.time, false, this.lowQuality, matchMedia('(prefers-reduced-motion: reduce)').matches);
     if(this.inHomestead)this.animateHomeVisitors(dt);
     this.updateSkills(dt);
@@ -1944,6 +1973,7 @@ export class World {
     for(const e of this.entities){const d=reach(e);if(e.mesh.visible&&d<distance){near=e;distance=d;}}
     for (const e of this.entities) {
       if (e.id.startsWith('monster')&&!(this.skillRuntime.active('shield',this.time)&&Math.hypot(e.x-p.x,e.z-p.z)<6)) this.wander(e, p, dt);
+      if (e.mesh.userData.combatMonster) { const previous = e.mesh.userData.previousMonsterPosition as {x:number;z:number} | undefined; const moving = !!previous && Math.hypot(previous.x-e.x,previous.z-e.z)>.002; e.mesh.userData.previousMonsterPosition={x:e.x,z:e.z}; for(const detail of e.mesh.userData.monsterDetails as T.Object3D[])detail.visible=!this.lowQuality; animateMonster(e.mesh, this.time + e.x, dt, matchMedia('(prefers-reduced-motion: reduce)').matches, 'idle', moving); }
       if (e.id.startsWith('tree') && e.mesh.userData.shakeUntil > this.time) e.mesh.rotation.z = Math.sin(this.time * 55) * .08; else if (e.id.startsWith('tree')) e.mesh.rotation.z = 0;
       if (e.mesh.userData.magicGate) { e.mesh.rotation.y = Math.sin(this.time * .45 + e.x) * .045; e.mesh.traverse(o => {
         if (o.userData.sparkle) { o.rotation.y += dt * 2.4; o.rotation.z += dt * 1.2; }
@@ -1965,7 +1995,7 @@ export class World {
     }
     for (const butterfly of this.butterflies) { butterfly.position.y += Math.sin(this.time * 4 + butterfly.position.x) * .0015; butterfly.rotation.y += dt * .7; }
     if(this.inHomestead)this.homeVisitors.forEach(v=>v.entity.label.hidden=v.entity.id!==this.selectedId||!v.entity.mesh.visible);
-    const weapon = this.player.userData.weapon as T.Group | undefined; if (weapon) weapon.rotation.z = -.28 + (this.swingUntil > this.time ? Math.sin((this.swingUntil - this.time) / .28 * Math.PI) * -1.35 : 0);
+    this.animateAttack(dt);
     for (const o of this.rideAnimated) {
       if (o.userData.rideWing) o.rotation.z = Number(o.userData.rideWing) * (-.72 + Math.sin(this.time * 7) * .18);
       if (o.userData.ridePropeller) o.rotation.z += dt * 11;
@@ -1995,7 +2025,7 @@ export class World {
     if (this.player.userData.sparkles) this.player.userData.sparkles.rotation.y += dt;
     for (let i = this.particles.length - 1; i >= 0; i--) { const q = this.particles[i]; q.life -= dt; q.v.y -= dt * 5; q.mesh.position.addScaledVector(q.v, dt); q.mesh.scale.setScalar(Math.max(0, q.life)); if (q.life <= 0) { this.scene.remove(q.mesh); this.particles.splice(i, 1); } }
     const target = this.storyActivityFocus ?? (this.active ? p : this.cameraTarget.set(0, 0, -1)); this.follow.lerp(target, 1 - Math.exp(-dt * (this.storyActivityFocus ? 8 : 6))); if (this.active && !this.storyActivityFocus && (this.occlusionTick++ & 7) === 0) this.updateOcclusion();
-    this.camera.position.copy(this.follow).add(this.storyActivityFocus ? this.cameraTarget.set(0, 13, 16) : this.inRoom || this.inAcademy ? ROOM_CAMERA_OFFSET : CAMERA_OFFSET); this.camera.lookAt(this.follow); this.updateGuide();this.plazaVisual.update(dt,this.camera,this.player,this.isPublicPlaza||this.isPublicMarket||this.isPublicForest||this.partyScene,this.active&&!this.storyActivityFocus,this.lowQuality,matchMedia('(prefers-reduced-motion: reduce)').matches);this.scene.fog=null;this.storybook.update(this.time,p,this.petModel?.position??null,this.shadowFloor);updatePlanetaryScenery(this.planetVisual,this.time,this.lowQuality,matchMedia('(prefers-reduced-motion: reduce)').matches);updatePlanetaryScenery(this.astralGateway,this.time,this.lowQuality,matchMedia('(prefers-reduced-motion: reduce)').matches); this.renderer.render(this.scene, this.camera);
+    this.camera.position.copy(this.follow).add(this.storyActivityFocus ? this.cameraTarget.set(0, 13, 16) : this.inRoom || this.inAcademy ? ROOM_CAMERA_OFFSET : CAMERA_OFFSET); this.camera.lookAt(this.follow); this.updateGuide();this.plazaVisual.update(dt,this.camera,this.player,this.isPublicPlaza||this.isPublicMarket||this.isPublicForest||this.partyScene,this.active&&!this.storyActivityFocus,this.lowQuality,matchMedia('(prefers-reduced-motion: reduce)').matches);this.scene.fog=null;this.storybook.update(this.time,p,this.petModel?.position??null,this.shadowFloor);updatePlanetaryScenery(this.planetVisual,this.time,this.lowQuality,matchMedia('(prefers-reduced-motion: reduce)').matches);updatePlanetaryScenery(this.astralGateway,this.time,this.lowQuality,matchMedia('(prefers-reduced-motion: reduce)').matches); this.shakeLife = Math.max(0, this.shakeLife - dt); if (this.shakeLife > 0 && !matchMedia('(prefers-reduced-motion: reduce)').matches) { const strength = (this.lowQuality ? .025 : .065) * this.shakeLife / .12; this.camera.position.x += Math.sin(this.time*137)*strength; this.camera.position.y += Math.cos(this.time*109)*strength*.6; } this.combatVfx?.update(dt); this.renderer.render(this.scene, this.camera);
   }
   private updateGuide() {
     const target = this.guideTarget;

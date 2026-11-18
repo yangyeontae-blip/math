@@ -16,3 +16,6 @@ test-results/
 .plaza-worker/
 test-results-*/
 .design-tmp/
+
+# Isolated combat validation servers, browser profiles and temporary builds.
+.work/combat/

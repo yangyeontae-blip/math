@@ -3,6 +3,9 @@ import {worldTwoScenery} from './world-two-models';
 import {PLANET_THEMES} from './world-two-planet';
 import { skillInfo, type JobId, type SkillId } from './academy';
 import type { HuntEnemy, HuntEvent, HuntSnapshot } from './hunting';
+import { COMBAT_ART } from './combat-art';
+import { CombatVfx } from './combat-vfx';
+import { monsterModel, animateMonster } from './combat-monsters';
 
 /** A touched target wins while it is alive and in range; otherwise aim at the nearest living enemy. */
 export function autoHuntTarget(enemies: readonly HuntEnemy[], player: { x: number; z: number }, range: number, selectedId: string | null): HuntEnemy | null {
@@ -100,7 +103,11 @@ export class HuntingWorld {
   private projectilePool = new Map<SkillId, T.Group[]>();
   private castOrigins = new Map<SkillId, { x: number; z: number }>();
   private lastBasicShot = -Infinity;
-  private numbers: { sprite: T.Sprite; texture: T.CanvasTexture; material: T.SpriteMaterial; life: number }[] = [];
+  private vfx: CombatVfx;
+  private numbers: { sprite: T.Sprite; texture: T.CanvasTexture; material: T.SpriteMaterial; life: number; critical: boolean; y: number }[] = [];
+  private numberPool: typeof this.numbers = [];
+  private criticalDamage = new Set<string>();
+  private hitTimes = new Map<string, number>();
   private pendingDamage = new Map<string, number>(); private damageClock = 0;
   private sphere = this.geometry(new T.SphereGeometry(1, 12, 8));
   private cube = this.geometry(new T.BoxGeometry(1, 1, 1));
@@ -110,8 +117,8 @@ export class HuntingWorld {
   private ring = this.geometry(new T.RingGeometry(.88, 1, 32));
   private plane = this.geometry(new T.PlaneGeometry(1, 1));
   private arc = this.geometry(new T.TorusGeometry(1, .075, 6, 24, Math.PI));
-  constructor(readonly training = false, readonly zone = 0, readonly options: { lowQuality?: boolean; reducedMotion?: boolean } = {}) { this.root.userData.huntingRuntime = true; }
-  setQuality(options: { lowQuality: boolean; reducedMotion: boolean }) { Object.assign(this.options, options); }
+  constructor(readonly training = false, readonly zone = 0, readonly options: { lowQuality?: boolean; reducedMotion?: boolean; boss?: boolean } = {}) { this.root.userData.huntingRuntime = true; this.vfx = new CombatVfx(options); this.root.add(this.vfx.root); }
+  setQuality(options: { lowQuality: boolean; reducedMotion: boolean }) { Object.assign(this.options, options); this.vfx.setQuality(options); }
   private glowing = new Map<number, T.MeshBasicMaterial>();
   private glow(color: number) { let m = this.glowing.get(color); if (!m) { m = new T.MeshBasicMaterial({ color }); this.glowing.set(color, m); this.materials.add(m); } return m; }
   private geometry<G extends T.BufferGeometry>(geometry: G): G { this.geometries.add(geometry); return geometry; }
@@ -145,42 +152,35 @@ export class HuntingWorld {
         wing.rotation.z=side*.44;
         const horn=this.piece(body,this.cone,0xf2c989,side*.51,3.82,.91,.15,.67,.15);
         horn.rotation.z=-side*.34;
-        this.piece(body,this.sphere,0xffdd9e,side*.43,3.39,1.73,.16,.1,.08);
+        this.piece(body,this.sphere,0xfffaf0,side*.43,3.39,1.73,.22,.25,.10);
         this.piece(body,this.sphere,0x7653a2,side*.86,.6,.26,.39,.55,.64);
       }
       for(let i=0;i<5;i++)this.piece(body,this.sphere,0x754f9a,0,1-i*.1,-1.25-i*.43,.55-i*.085,.45-i*.065,.56);
-    } else if(this.zone===7){
+    } else if(this.zone===7 || this.zone===14 && this.options.boss){
       body.name='ancient-star-tree';this.piece(body,this.cube,0x52768a,0,1.65,0,1.7,2.6,1.3);this.piece(body,this.sphere,0x9cd7cf,0,3.45,0,2.1,1.1,1.5);
-      for(const side of [-1,1]){const arm=this.piece(body,this.cube,0x6f91a0,side*1.4,1.8,0,.7,1.65,.65);arm.rotation.z=-side*.35;this.piece(body,this.sphere,0xb6e2d8,side*1.45,2.8,0,.9,.5,.65);this.piece(body,this.cube,0x4b6b83,side*.65,.35,.15,.8,.6,1.1);this.piece(body,this.sphere,0xffe6a0,side*.4,2.25,.7,.16,.12,.08);}
+      for(const side of [-1,1]){const arm=this.piece(body,this.cube,0x6f91a0,side*1.4,1.8,0,.7,1.65,.65);arm.rotation.z=-side*.35;this.piece(body,this.sphere,0xb6e2d8,side*1.45,2.8,0,.9,.5,.65);this.piece(body,this.cube,0x4b6b83,side*.65,.35,.15,.8,.6,1.1);this.piece(body,this.sphere,0xfffaf0,side*.4,2.25,.7,.23,.27,.10);}
       for(let i=0;i<5;i++)this.piece(body,this.cone,0xe6cc83,Math.cos(i*1.26)*1.05,4.15,Math.sin(i*1.26)*.6,.18,.65,.18);this.piece(body,this.sphere,0xc6dfa5,0,1.5,.7,.4,.5,.12);
       const crown=new T.Mesh(this.geometry(new T.TorusGeometry(2.2,.06,6,36)),this.glow(0xf3ddaa));crown.position.y=3.5;crown.rotation.x=Math.PI/2;body.add(crown);
     } else if(this.zone>=4){
-      const theme=HUNT_THEMES[this.zone],crystal=this.geometry(new T.OctahedronGeometry(1));body.name='planetary-spirit-'+this.zone;body.scale.setScalar(1.2);
-      if(this.zone===4){this.piece(body,this.sphere,0xb7a1cf,0,.75,0,.65,.65,.55);for(const side of [-1,1]){const petal=this.piece(body,this.sphere,theme.foliage,side*.55,.95,-.08,.35,.16,.5);petal.rotation.z=side*.5;this.piece(body,this.sphere,theme.glow,side*.3,1.42,0,.13,.25,.13);}}
-      else if(this.zone===5){this.piece(body,crystal,0x8bcddc,0,.85,0,.65,.9,.55);for(const side of [-1,1])this.piece(body,crystal,0xc7eced,side*.6,.7,0,.2,.45,.25);}
-      else{this.piece(body,this.cube,this.zone>=8?theme.tint:0x9d8bc4,0,.85,0,1.05,1.25,.8);for(const side of [-1,1])this.piece(body,crystal,theme.glow,side*.65,1.1,0,.16,.3,.2);}
-      for(const side of [-1,1]){const eye=new T.Mesh(this.sphere,this.glow(theme.eye));eye.position.set(side*.2,.95,.53);eye.scale.set(.085,.1,.035);body.add(eye);this.piece(body,this.sphere,theme.tint,side*.32,.15,.12,.22,.13,.28);}const orbit=new T.Mesh(this.ring,this.glow(theme.glow));orbit.position.y=.18;orbit.rotation.x=-Math.PI/2;orbit.scale.setScalar(.9);body.add(orbit);
+      const theme=HUNT_THEMES[this.zone],crystal=this.geometry(new T.OctahedronGeometry(1));body.name='planetary-spirit-'+this.zone;
+      const species = [0,8,3,0,4,6,2,8,0,1,7][this.zone-4] ?? index%9;
+      const model=monsterModel(species,theme.tint,{sphere:this.sphere,cube:this.cube,cone:this.cone,circle:this.circle,material:c=>this.material(c)});
+      body.add(model);body.scale.setScalar(1.15);root.userData.studioModel=model;
+      for(const side of [-1,1]){const jewel=this.piece(body,crystal,theme.glow,side*.72,.7,-.1,.16,.35,.13);jewel.rotation.z=-side*.4;}
+      if(this.zone===5)for(let i=0;i<3;i++){const shard=this.piece(body,crystal,theme.foliage,(i-1)*.35,1.45+(i===1?.2:0),-.15,.17,.45,.14);shard.rotation.z=(i-1)*-.3;}
+      const orbit=new T.Mesh(this.ring,this.material(theme.glow,.45));orbit.position.y=.06;orbit.rotation.x=-Math.PI/2;orbit.scale.setScalar(.95);body.add(orbit);
     } else {
-      // 구역이 높을수록 크고 어두우며, 볼터치 대신 빛나는 눈·찡그린 눈썹·이빨을 달아요.
-      const theme = HUNT_THEMES[this.zone] ?? HUNT_THEMES[0], dark = new T.Color(color).lerp(new T.Color(theme.tint), .55).multiplyScalar(.82).getHex();
-      body.scale.setScalar(1 + Math.min(this.zone,3) * .14);
-      this.piece(body, this.sphere, dark, 0, .68, 0, .7, .64, .61);
-      for (const side of [-1, 1]) {
-        const eye = new T.Mesh(this.sphere, this.glow(theme.eye)); eye.position.set(side * .22, .82, .56); eye.scale.set(.1, .07, .03); body.add(eye);
-        const brow = this.piece(body, this.cube, 0x1e1a1a, side * .22, .95, .57, .26, .05, .04); brow.rotation.z = side * .45;
-        this.piece(body, this.sphere, dark, side * .4, .18, .12, .24, .16, .29);
-      }
-      for (const x of [-.12, .12]) { const fang = this.piece(body, this.cone, 0xfff4dc, x, .5, .57, .045, .13, .045); fang.rotation.x = Math.PI; }
-      if (this.zone >= 2) for (let i = 0; i < 5; i++) { const spike = this.piece(body, this.cone, 0x2a2430, -.36 + i * .18, 1.05 - Math.abs(i - 2) * .06, -.32, .1, .4, .1); spike.rotation.x = -.5; }
-      if (this.zone >= 3) for (const side of [-1, 1]) { const horn = this.piece(body, this.cone, 0x3a2a24, side * .38, 1.28, .05, .12, .55, .12); horn.rotation.z = -side * .5; }
-      if (index % 6 === 0) for (const side of [-1, 1]) { const leaf = this.piece(body, this.sphere, 0x4c7951, side * .16, 1.31, 0, .17, .4, .1); leaf.rotation.z = -side * .6; }
-      else if (index % 6 === 1) { this.piece(body, this.sphere, 0x81583e, 0, 1.1, 0, .78, .26, .7); this.piece(body, this.cone, 0xe8d7ac, 0, 1.45, 0, .17, .55, .17); }
-      else if (index % 6 === 2) for (const side of [-1, 1]) this.piece(body, this.sphere, color, side * .31, 1.44, 0, .18, .58, .17);
-      else if (index % 6 === 3) { for (let i = 0; i < 4; i++) this.piece(body, this.cone, 0x487b71, -.42 + i * .28, 1.14, -.12, .18, .5, .18); }
-      else if (index % 6 === 4) { this.piece(body, this.sphere, 0xf1d59c, 0, .65, .57, .25, .2, .05); for (const side of [-1, 1]) this.piece(body, this.cone, color, side * .36, 1.28, 0, .24, .52, .23); }
-      else for (const side of [-1, 1]) { this.piece(body, this.cone, 0x8f7850, side * .36, 1.35, 0, .14, .6, .14); this.piece(body, this.sphere, 0xf1d990, side * .55, .7, 0, .25, .12, .5); }
+      const theme = HUNT_THEMES[this.zone] ?? HUNT_THEMES[0];
+      const colors = [0x8aca83, 0xf1b2a2, 0xc6a1ee, 0xe6b272, 0xffd26e, 0xf19a7f];
+      const model = monsterModel(index % 9, new T.Color(colors[index % 6]).lerp(new T.Color(theme.tint), .16).getHex(), { sphere: this.sphere, cube: this.cube, cone: this.cone, circle: this.circle, material: c => this.material(c) });
+      body.add(model); root.userData.studioModel = model; body.scale.setScalar(1 + this.zone * .08);
     }
-    const bar = new T.Group(); bar.position.y = this.zone===7?4.9:2.2; root.add(bar);
+    const boss = this.options.boss || this.zone === 7 || this.zone === 11;
+    if(boss) for(const side of [-1,1]){const y=this.zone===11?3.4:2.27,z=this.zone===11?1.82:.79,x=this.zone===11?.43:.4;this.piece(body,this.sphere,0x334357,side*x,y,z,.11,.15,.04);this.piece(body,this.sphere,0xffffff,side*x-.035,y+.06,z+.035,.04,.05,.02);}
+    root.userData.monsterBody = body; body.userData.restScale = body.scale.clone(); root.userData.phase = index * 1.7;
+    if (boss) { const aura = new T.Mesh(this.ring, this.material(HUNT_THEMES[this.zone].glow, .36)); aura.rotation.x = -Math.PI / 2; aura.position.y = .06; aura.scale.setScalar(2.6); root.add(aura); root.userData.bossAura = aura; root.userData.entry = 0; }
+    const flash = new T.Mesh(this.sphere, this.material(0xffefc9)); flash.scale.setScalar(boss ? 1.6 : .73); flash.position.y = boss ? 1.8 : .75; flash.visible = false; root.add(flash); root.userData.hitFlash = flash;
+    const bar = new T.Group(); bar.position.y = boss ? this.zone===11?4.4:4.9 : 2.5; root.add(bar);
     const background = new T.Mesh(this.plane, this.material(0x473d39)); background.scale.set(1.5, .16, 1); bar.add(background);
     const hp = new T.Mesh(this.plane, this.material(0x87bd76)); hp.position.z = .009; hp.scale.set(1.44, .105, 1); bar.add(hp);
     const target = new T.Mesh(this.ring, this.material(0xffda6e, .9)); target.rotation.x = -Math.PI / 2; target.position.y = .045; target.visible = false; root.add(target);
@@ -190,12 +190,31 @@ export class HuntingWorld {
   update(snapshot: HuntSnapshot, camera: T.Camera, selected: string | null, dt: number, player?: { x: number; z: number }) {
     dt = Number.isFinite(dt) ? Math.max(0, dt) : 0;
     this.damageClock += dt;
-    if (this.damageClock >= .25) { this.damageClock = 0; for (const [id, damage] of this.pendingDamage) { const enemy = snapshot.enemies.find(value => value.id === id); if (enemy) this.damageNumber(damage, enemy.x, enemy.z); } this.pendingDamage.clear(); }
+    if (this.damageClock >= .12) { this.damageClock = 0; for (const [id, damage] of this.pendingDamage) { const enemy = snapshot.enemies.find(value => value.id === id); if (enemy) this.damageNumber(damage, enemy.x, enemy.z, this.criticalDamage.has(id)); } this.pendingDamage.clear(); this.criticalDamage.clear(); }
     for (const [index, enemy] of snapshot.enemies.entries()) {
       const visual = this.enemies.get(enemy.id) ?? this.enemy(enemy.id, index);
-      visual.root.visible = enemy.state !== 'defeated'; visual.root.position.set(enemy.x, 0, enemy.z);
-      visual.body.position.y = this.training ? 0 : Math.sin(snapshot.time * 3 + index) * .045;
-      visual.body.rotation.z = enemy.state === 'recovery' ? Math.sin(snapshot.time * 18) * .06 : 0;
+      const root = visual.root, reduced = !!this.options.reducedMotion;
+      const moving = Math.hypot(root.position.x - enemy.x, root.position.z - enemy.z) > .002;
+      const dead = enemy.state === 'defeated';
+      if (dead) root.userData.death = Number(root.userData.death ?? 0) + dt; else root.userData.death = 0;
+      root.visible = !dead || !reduced && root.userData.death < .24; root.position.set(enemy.x, 0, enemy.z);
+      const hitAt = this.hitTimes.get(enemy.id);
+      if (hitAt !== undefined && root.userData.lastHit !== hitAt) { root.userData.lastHit = hitAt; root.userData.hitLife = .225; const studio = root.userData.studioModel as T.Group | undefined; if (studio) { studio.userData.hitLife = .225; studio.userData.kickX = root.userData.kickX; studio.userData.kickZ = root.userData.kickZ; } }
+      const studio = root.userData.studioModel as T.Group | undefined;
+      if (studio) for (const detail of studio.userData.monsterDetails as T.Object3D[]) detail.visible = !this.options.lowQuality;
+      visual.body.scale.copy(visual.body.userData.restScale as T.Vector3);
+      if (studio) animateMonster(studio, snapshot.time + index, dt, reduced, enemy.state, moving);
+      else animateMonster(root, snapshot.time + index, dt, reduced, enemy.state, moving);
+      root.userData.hitLife = Math.max(0, Number(root.userData.hitLife ?? 0) - (studio ? dt : 0));
+      (root.userData.hitFlash as T.Mesh).visible = !reduced && !dead && Number(root.userData.hitLife) > .17;
+      if (dead && !reduced) visual.body.scale.multiplyScalar(Math.max(.02, 1 - root.userData.death / .24));
+      if (root.userData.bossAura) {
+        if (root.userData.entry === 0) this.vfx.cast(this.zone === 11 ? 'cosmicGenesis' : 'worldroot', enemy, enemy);
+        root.userData.entry = Math.min(1, Number(root.userData.entry) + dt / .65);
+        if (!reduced) visual.body.scale.multiplyScalar(.65 + .35 * T.MathUtils.smoothstep(root.userData.entry, 0, 1));
+        const aura = root.userData.bossAura as T.Mesh; aura.rotation.z = reduced ? 0 : snapshot.time * .2; aura.scale.setScalar(reduced ? 2.6 : 2.6 + Math.sin(snapshot.time * 2) * .12);
+      }
+      visual.bar.visible = !dead;
       visual.bar.quaternion.copy(camera.quaternion);
       const ratio = T.MathUtils.clamp(enemy.hp / Math.max(1, enemy.maxHp), 0, 1); visual.hp.scale.x = ratio * 1.44; visual.hp.position.x = -(1 - ratio) * .72;
       visual.target.visible = enemy.id === selected && visual.root.visible;
@@ -220,6 +239,7 @@ export class HuntingWorld {
       const impact = this.impacts[i]; impact.life -= dt;
       if (impact.life <= 0) { this.root.remove(impact.group); this.impactPool.push(impact.group); this.impacts.splice(i, 1); continue; }
       const p = 1 - impact.life / impact.duration;
+      impact.group.visible = !this.options.reducedMotion;
       impact.group.scale.setScalar(this.options.reducedMotion ? .7 : .35 + p * .65);
       impact.group.rotation.y = this.options.reducedMotion ? 0 : p * .5;
       impact.group.children.forEach((child, index) => { child.visible = index < (this.options.lowQuality || this.options.reducedMotion ? 3 : 7); });
@@ -229,19 +249,34 @@ export class HuntingWorld {
       if (shot.elapsed >= .48) { this.root.remove(shot.group); const pool = this.projectilePool.get(shot.skill) ?? []; if (pool.length < 3) pool.push(shot.group); this.projectilePool.set(shot.skill, pool); this.projectiles.splice(i, 1); continue; }
       this.animateEffect(shot.group, { id: '', skill: shot.skill, ...shot.target, radius: 1, duration: .48, remaining: .48 - shot.elapsed }, shot.origin);
     }
-    for (let i = this.numbers.length - 1; i >= 0; i--) { const value = this.numbers[i]; value.life -= dt; value.sprite.position.y += dt * .8; value.material.opacity = Math.min(1, value.life * 2); if (value.life <= 0) { this.root.remove(value.sprite); value.texture.dispose(); value.material.dispose(); this.numbers.splice(i, 1); } }
+    for (let i = this.numbers.length - 1; i >= 0; i--) {
+      const value = this.numbers[i]; value.life -= dt; const p = Math.max(0, 1 - value.life / 1.1), reduced = !!this.options.reducedMotion;
+      value.sprite.position.y = value.y + (reduced ? 0 : Math.sin(Math.min(1, p * 1.5) * Math.PI / 2) * 1.1);
+      const pop = reduced ? 1 : 1 + Math.sin(Math.min(1, p * 4) * Math.PI) * .35;
+      value.sprite.scale.set(1.8 * pop * (value.critical ? 1.2 : 1), .9 * pop, 1); value.material.opacity = Math.min(1, value.life * 3);
+      if (value.life <= 0) { this.root.remove(value.sprite); this.numberPool.push(value); this.numbers.splice(i, 1); }
+    }
+    this.vfx.update(dt);
   }
-  onEvent(event: HuntEvent, snapshot: HuntSnapshot, origin?: { x: number; z: number; job?: JobId | null }) {
+  onEvent(event: HuntEvent & { critical?: boolean }, snapshot: HuntSnapshot, origin?: { x: number; z: number; job?: JobId | null }) {
+    if (event.type === 'defeat') { const enemy = snapshot.enemies.find(e => e.id === event.enemyId); if (enemy) this.vfx.defeat(enemy); return; }
     if (event.type === 'cast') {
       const effect = snapshot.effects.filter(effect => effect.skill === event.skill).at(-1);
+      if (origin) this.vfx.cast(event.skill, origin, effect ?? origin);
       if (origin && Number.isFinite(origin.x) && Number.isFinite(origin.z)) { this.castOrigins.set(event.skill, { ...origin }); if (effect) this.effectOrigins.set(effect.id, { ...origin }); }
       if ((event.skill === 'storm' || event.skill === 'galeShot') && effect && origin) this.launchProjectile('arrow', origin, effect);
       return;
     }
     if (event.type !== 'hit' || !snapshot.enemies.some(enemy => enemy.id === event.enemyId)) return;
     this.pendingDamage.set(event.enemyId, (this.pendingDamage.get(event.enemyId) ?? 0) + event.damage);
+    if (event.critical) this.criticalDamage.add(event.enemyId);
     const enemy = snapshot.enemies.find(enemy => enemy.id === event.enemyId)!;
-    if (event.skill === 'basic' && origin?.job === 'ranger' && this.lastBasicShot !== snapshot.time) { this.lastBasicShot = snapshot.time; this.launchProjectile('arrow', origin, enemy); }
+    if (snapshot.time - (this.hitTimes.get(enemy.id) ?? -Infinity) >= .12) {
+      this.hitTimes.set(enemy.id, snapshot.time); this.vfx.hit(event.skill, enemy);
+      const root = this.enemies.get(enemy.id)?.root;
+      if (root && origin) { const length = Math.max(.01, Math.hypot(enemy.x-origin.x, enemy.z-origin.z)); root.userData.kickX=(enemy.x-origin.x)/length;root.userData.kickZ=(enemy.z-origin.z)/length; }
+    }
+    if (event.skill === 'basic' && origin?.job && this.lastBasicShot !== snapshot.time) { const basicShot: Partial<Record<JobId, SkillId>> = {ranger:'arrow',mage:'starbolt',druid:'leafOrb',alchemist:'sparkFlask',bard:'noteBolt'}; const shot=basicShot[origin.job]; if(shot){this.lastBasicShot = snapshot.time; this.launchProjectile(shot, origin, enemy);} }
     if (event.skill !== 'basic' && ['leafOrb', 'thunderChain', 'tripleShot', 'moonArrow'].includes(event.skill)) {
       const from = this.castOrigins.get(event.skill) ?? origin;
       if (from) { this.launchProjectile(event.skill, from, enemy); if (event.skill === 'thunderChain') this.castOrigins.set(event.skill, { x: enemy.x, z: enemy.z }); }
@@ -274,15 +309,27 @@ export class HuntingWorld {
   private makeEffect(id: SkillId) {
     const group = new T.Group(); group.userData.skill = id;
     const palette: Partial<Record<SkillId, number>> = { starbolt: 0xffd981, frost: 0x99ddf3, vortex: 0xff9e51, starfall: 0xc8b2ff, arrow: 0x8dded2, pierce: 0xb9f3be, storm: 0x80d9ed, acornRush: 0xe3b477, vinePull: 0x83d78c, dawnSlash: 0xffcd70, leafOrb: 0x99efb5, thunderChain: 0xffe98b, comet: 0xffa96c, tripleShot: 0xb3efc4, galeShot: 0x8ed9ee, moonArrow: 0xcdbdff };
-    const color = palette[id] ?? new T.Color(skillInfo(id).color).getHex();
+    const color = palette[id] ?? COMBAT_ART[id].color;
     const add = (geometry: T.BufferGeometry, x: number, y: number, z: number, sx: number, sy = sx, sz = sx, opacity = .85, tint = color) => {
       const mesh = new T.Mesh(geometry, this.material(tint, opacity)); mesh.position.set(x, y, z); mesh.scale.set(sx, sy, sz); group.add(mesh); return mesh;
     };
     const ground = add(this.ring, 0, 0, 0, 1, 1, 1, .42); ground.rotation.x = -Math.PI / 2; ground.userData.role = 'ground';
-    if (skillInfo(id).rank===5 || skillInfo(id).job==='bard') {
-      const music=skillInfo(id).job==='bard',n=skillInfo(id).rank===5?8:5;
-      for(let i=0;i<n;i++){const a=i*Math.PI*2/n,stem=add(music?this.cube:this.cone,Math.cos(a)*.8,.7,Math.sin(a)*.8,music?.035:.09,music?.3:.48,.035,.9);stem.userData.role='orbit';stem.userData.phase=i;if(music)add(this.sphere,Math.cos(a)*.8-.07,.42,Math.sin(a)*.8,.1,.065,.07,.9);}
-      const halo=add(this.ring,0,.85,0,.85,.85,.85,.7);halo.userData.role='orbit';
+    const art = COMBAT_ART[id];
+    if (skillInfo(id).rank >= 4 || ['druid', 'alchemist', 'bard'].includes(skillInfo(id).job ?? '')) {
+      const n = Math.min(10, art.petals), motif = art.motif;
+      for (let i = 0; i < n; i++) {
+        const a = i * Math.PI * 2 / n;
+        const shape = motif === 'flower' || motif === 'leaf' ? this.sphere : motif === 'note' || motif === 'wave' ? this.arc : motif === 'planet' || motif === 'galaxy' ? this.ring : this.cone;
+        const part = add(shape, Math.cos(a)*.62, .45 + (i%2)*.18, Math.sin(a)*.62, motif==='flower'?.23:.09, motif==='flower'?.08:.48, motif==='flower'?.42:.09, .8, i%3 ? art.color : art.accent);
+        part.rotation.set(motif==='flower' ? .2 : -.35, -a, motif==='blade'?-.5:a*.3);
+        part.userData.role = motif==='tree'?'sprout':motif==='arrow'?'rain':motif==='blade'?'blade':'orbit'; part.userData.phase=i;
+      }
+      if (motif==='tree') { add(this.cone,0,.6,0,.16,1.4,.16,.8,art.accent); add(this.sphere,0,1.1,0,.65,.35,.55,.45,art.color); }
+      else if (motif==='flask') { add(this.sphere,0,.45,0,.32,.34,.32,.65,art.color); add(this.cube,0,.85,0,.15,.35,.15,.85,art.accent); }
+      else if (motif==='planet'||motif==='galaxy') { add(this.sphere,0,.8,0,.4,.4,.4,.65,art.color);const orbit=add(this.arc,0,.8,0,.8,.8,.8,.8,art.accent);orbit.rotation.set(.8,.2,-.4);orbit.userData.role='ribbon'; }
+      else if (motif==='crown'||motif==='blade') { const blade=add(this.arc,0,.85,0,1.1,.85,.3,.9,art.accent);blade.userData.role='blade'; }
+      else if (motif==='moon') { const moon=add(this.arc,0,.7,0,.7,.7,.3,.85,art.accent);moon.rotation.z=.5;moon.userData.role='orbit'; }
+      else {const ring=add(this.arc,0,.55,0,.85,.5,.85,.6,art.accent);ring.rotation.x=Math.PI/2;ring.userData.role='ribbon';}
     } else if (id === 'shield' || id === 'guardian') {
       add(this.sphere, 0, .65, 0, .65, .85, .65, .13);
       for (let i = 0; i < (id === 'guardian' ? 6 : 3); i++) {
@@ -338,7 +385,7 @@ export class HuntingWorld {
   }
   private animateEffect(group: T.Group, effect: HuntSnapshot['effects'][number], origin?: { x: number; z: number }) {
     const id = effect.skill, elapsed = Math.max(0, effect.duration - effect.remaining), progress = T.MathUtils.clamp(elapsed / Math.max(.01, effect.duration), 0, 1), reduced = !!this.options.reducedMotion;
-    const projectile = ['starbolt', 'arrow', 'pierce', 'leafOrb', 'tripleShot', 'moonArrow'].includes(id), melee = ['crescent', 'charge', 'acornRush', 'dawnSlash'].includes(id);
+    const projectile = ['starbolt', 'arrow', 'pierce', 'leafOrb', 'tripleShot', 'moonArrow', 'sparkFlask', 'noteBolt', 'earthsong'].includes(id), melee = ['crescent', 'charge', 'acornRush', 'dawnSlash'].includes(id);
     // A radius-six gameplay area has a low silhouette; never grow a six-metre-tall effect over labels.
     group.position.set(effect.x, .12, effect.z); group.rotation.set(0, 0, 0);
     group.scale.setScalar(projectile ? 1 : melee ? 1.3 : Math.min(4.6, Math.max(.7, effect.radius)));
@@ -369,19 +416,27 @@ export class HuntingWorld {
       else if (role === 'orbit') child.position.y += Math.sin(elapsed * 2 + index) * .07;
     });
   }
-  private damageNumber(damage: number, x: number, z: number) {
+  private damageNumber(damage: number, x: number, z: number, critical = false) {
     if (typeof document === 'undefined') return;
-    const canvas = document.createElement('canvas'); canvas.width = 128; canvas.height = 64; const ctx = canvas.getContext('2d'); if (!ctx) return;
-    const label = String(Math.max(1, Math.round(damage))); ctx.font = 'bold 42px sans-serif'; ctx.textAlign = 'center'; ctx.lineWidth = 6; ctx.strokeStyle = '#4b372d'; ctx.strokeText(label, 64, 48); ctx.fillStyle = '#fff1b3'; ctx.fillText(label, 64, 48);
-    const texture = new T.CanvasTexture(canvas); texture.colorSpace = T.SRGBColorSpace;
-    const material = new T.SpriteMaterial({ map: texture, transparent: true, depthTest: false, depthWrite: false });
-    const sprite = new T.Sprite(material); sprite.scale.set(1.7, .85, 1); sprite.position.set(x, 2.6, z); this.root.add(sprite); this.numbers.push({ sprite, texture, material, life: 1.1 });
-    if (this.numbers.length > 24) { const oldest = this.numbers.shift()!; this.root.remove(oldest.sprite); oldest.texture.dispose(); oldest.material.dispose(); }
+    let value = this.numberPool.pop();
+    if (!value && this.numbers.length >= 24) { value = this.numbers.shift()!; this.root.remove(value.sprite); }
+    if (!value) {
+      const canvas = document.createElement('canvas'); canvas.width = 256; canvas.height = 128;
+      const texture = new T.CanvasTexture(canvas); texture.colorSpace = T.SRGBColorSpace;
+      const material = new T.SpriteMaterial({ map: texture, transparent: true, depthTest: false, depthWrite: false, toneMapped: false });
+      value = { sprite: new T.Sprite(material), texture, material, life: 1.1, y: 2.3, critical };
+    }
+    const canvas = value.texture.image as HTMLCanvasElement, ctx = canvas.getContext('2d'); if (!ctx) { this.numberPool.push(value); return; }
+    ctx.clearRect(0, 0, 256, 128); ctx.textAlign = 'center'; ctx.lineJoin = 'round'; ctx.font = '900 66px sans-serif';
+    const label = String(Math.max(1, Math.round(damage))), gradient = ctx.createLinearGradient(0, 45, 0, 110); gradient.addColorStop(0, '#ffffff'); gradient.addColorStop(.45, critical ? '#ffe7a0' : '#fff8bf'); gradient.addColorStop(1, critical ? '#ff9354' : '#ffc968');
+    ctx.lineWidth = 10; ctx.strokeStyle = critical ? '#9c3d56' : '#4b3b55'; ctx.strokeText(label, 128, 107, 240); ctx.fillStyle = gradient; ctx.fillText(label, 128, 107, 240);
+    if (critical) { ctx.font = '900 26px sans-serif'; ctx.lineWidth = 5; ctx.strokeText('치명타', 128, 35); ctx.fillStyle = '#fff2c0'; ctx.fillText('치명타', 128, 35); }
+    value.texture.needsUpdate = true; value.life = 1.1; value.critical = critical; value.material.opacity = 1; value.sprite.scale.set(1.8, .9, 1); value.sprite.position.set(x, value.y, z); this.root.add(value.sprite); this.numbers.push(value);
   }
   pick(ndc: T.Vector2, camera: T.Camera): string | null {
     const ray = new T.Raycaster(); ray.setFromCamera(ndc, camera);
     for (const hit of ray.intersectObjects([...this.enemies.values()].filter(value => value.root.visible).map(value => value.root), true)) { let node: T.Object3D | null = hit.object; while (node) { if (typeof node.userData.huntEnemyId === 'string') return node.userData.huntEnemyId; node = node.parent; } }
     return null;
   }
-  dispose() { this.root.removeFromParent(); for (const value of this.numbers) { value.texture.dispose(); value.material.dispose(); } this.numbers = []; for (const geometry of this.geometries) geometry.dispose(); for (const material of this.materials) material.dispose(); this.geometries.clear(); this.materials.clear(); this.enemies.clear(); this.effects.clear(); this.effectOrigins.clear(); this.effectPool.clear(); this.impacts = []; this.impactPool = []; this.projectiles = []; this.projectilePool.clear(); this.castOrigins.clear(); this.colors.clear(); this.glowing.clear(); this.pendingDamage.clear(); this.root.clear(); }
+  dispose() { this.vfx.dispose(); this.hitTimes.clear(); this.criticalDamage.clear(); this.root.removeFromParent(); for (const value of [...this.numbers, ...this.numberPool]) { value.texture.dispose(); value.material.dispose(); } this.numbers = []; this.numberPool = []; for (const geometry of this.geometries) geometry.dispose(); for (const material of this.materials) material.dispose(); this.geometries.clear(); this.materials.clear(); this.enemies.clear(); this.effects.clear(); this.effectOrigins.clear(); this.effectPool.clear(); this.impacts = []; this.impactPool = []; this.projectiles = []; this.projectilePool.clear(); this.castOrigins.clear(); this.colors.clear(); this.glowing.clear(); this.pendingDamage.clear(); this.root.clear(); }
 }
