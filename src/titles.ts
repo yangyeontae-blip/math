@@ -1,3 +1,4 @@
+import {uiLabel} from './ui-icons';
 import {operatorAccess} from './operator-access';
 import type {Save} from './rules';
 
@@ -63,5 +64,5 @@ export function selectTitle(s:Save,id:TitleId|null){
  s.selectedTitleId=id;if(t?.id.startsWith('expedition-')&&s.expedition.completed>=(t.expeditions??0))s.expedition.selectedTitle=Number(t.id.slice(11));
 }
 export function renderTitle(t:TitleDefinition|null){
- return t?'<span class="chosen-title title-'+t.style+'" data-title-id="'+t.id+'"><b aria-hidden="true">'+t.icon+'</b><span>'+t.name+'</span><i class="title-sparks" aria-hidden="true">'+Array.from({length:6},(_,i)=>'<i style="--spark:'+i+'">✦</i>').join('')+'</i></span>':'<span class="title-empty">칭호 없음</span>';
+ return t?'<span class="chosen-title title-'+t.style+'" data-title-id="'+t.id+'"><b aria-hidden="true">'+uiLabel(t.icon)+'</b><span>'+t.name+'</span><i class="title-sparks" aria-hidden="true">'+Array.from({length:6},(_,i)=>'<i style="--spark:'+i+'">✦</i>').join('')+'</i></span>':'<span class="title-empty">칭호 없음</span>';
 }

@@ -1,3 +1,4 @@
+import {uiLabel} from './ui-icons';
 import {plazaDeviceIdentity} from './plaza-operator';
 import type {PlazaPlayer} from './plaza-protocol';
 import {ForestPartyClient,type PartyState} from './forest-party-client';
@@ -27,7 +28,7 @@ export function mountForestParty(h:Hooks){
  let chatLines:string[]=[];
  const defeated=new Set<string>();
  const button=document.createElement('button');
- button.id='party-open';button.textContent='🤝 친구와 모험';button.setAttribute('aria-label','친구와 모험');
+ button.id='party-open';button.innerHTML=uiLabel('🤝 친구와 모험');button.setAttribute('aria-label','친구와 모험');
  h.host.querySelector('.display-controls')!.append(button);
  const questionButton=document.createElement('button');
  questionButton.id='party-question-open';questionButton.className='party-question-open';questionButton.hidden=true;
@@ -198,10 +199,10 @@ export function mountForestParty(h:Hooks){
  }
  function render(){
   const run=state?.run;
-  button.textContent=state?'🤝 친구와 모험 '+state.members.length+'/4':'🤝 친구와 모험';
+  button.innerHTML=uiLabel(state?'🤝 친구와 모험 '+state.members.length+'/4':'🤝 친구와 모험');
   button.setAttribute('aria-label',button.textContent);
   questionButton.hidden=!here()||!connected;
-  questionButton.textContent=run?.done?'🌟 친구 모험 완료': '🤝 함께 모험 · '+(run?.completed.length??0)+'마리 완료';
+  questionButton.innerHTML=uiLabel(run?.done?'🌟 친구 모험 완료': '🤝 함께 모험 · '+(run?.completed.length??0)+'마리 완료');
   if(!opened||!h.state())return;
   const modal=document.querySelector<HTMLDialogElement>('#modal')!;
   if(modal.open&&!document.querySelector('.forest-party-sheet')&&renderKey){opened=false;return;}

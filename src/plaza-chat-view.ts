@@ -1,7 +1,8 @@
+import {uiLabel} from './ui-icons';
 import {CHAT_TTL,CHAT_LIMIT,CHAT_INTERVAL,normalizeChat,type PlazaChatMessage,type PlazaChatMute} from './plaza-social';
 import type {PlazaClient} from './plaza-client';
 export function mountPlazaChat(host:HTMLElement,client:()=>PlazaClient,focus:(open:boolean)=>void,hideSpeech:(senderId?:string)=>void){
- const button=document.createElement('button');button.id='plaza-chat-toggle';button.className='plaza-status';button.textContent='💬 광장 대화';button.setAttribute('aria-expanded','false');
+ const button=document.createElement('button');button.id='plaza-chat-toggle';button.className='plaza-status';button.innerHTML=uiLabel('💬 광장 대화');button.setAttribute('aria-expanded','false');
  const panel=document.createElement('section');panel.id='plaza-chat';panel.className='plaza-chat';panel.hidden=true;panel.setAttribute('aria-label','광장 전체 대화');
  const heading=document.createElement('strong');heading.textContent='광장 전체 대화';
  const close=document.createElement('button');close.textContent='닫기';close.className='plaza-chat-close';

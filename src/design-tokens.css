@@ -1,0 +1,40 @@
+/* Local OFL font subsets keep the notebook typography available offline. */
+@font-face{font-family:'Berry Forest Sans';src:url('/fonts/berry-forest-sans.woff2') format('woff2');font-weight:100 900;font-style:normal;font-display:swap}
+@font-face{font-family:'Berry Notebook Serif';src:url('/fonts/berry-notebook-serif.woff2') format('woff2');font-weight:700;font-style:normal;font-display:swap}
+/* Tone A: cream paper, wood edges and leaf ink. Shared by existing component rules. */
+:root {
+  --color-bg: #d0eade;
+  --color-surface: #fffaee;
+  --color-surface-muted: #fff3d6;
+  --color-text: #5a4a3a;
+  --color-text-muted: #6d624f;
+  --color-border: #9b8664;
+  --color-primary: #36774b;
+  --color-primary-hover: #2c653f;
+  --color-on-primary: #fffef0;
+  --color-selected-bg: #dff0d6;
+  --color-berry: #9c5264;
+  --color-berry-soft: #f7dfe7;
+  --color-reward: #ffd463;
+  --color-success: #2f6b45;
+  --color-warning: #805815;
+  --color-danger: #9c3f4b;
+  --color-focus: #295f97;
+  --color-backdrop: rgba(32,55,42,.48);
+  --color-night-surface: #294e43;
+  --color-night-text: #fff5dc;
+  --radius-button: 14px;
+  --radius-card: 16px;
+  --radius-dialog: 24px;
+  --shadow-card: 0 2px 0 #5a4a3a18;
+  --shadow-panel: 0 8px 24px #3a4a3526;
+  --shadow-dialog: 0 20px 64px #20372a38;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+}
+.ui-icon { display:inline-block; width:24px; height:24px; flex:0 0 24px; vertical-align:middle; margin-inline-end:4px; pointer-events:none; }
+.icon-button .ui-icon { margin:0; }

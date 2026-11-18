@@ -1,0 +1,1102 @@
+{
+  "phase": "after",
+  "browserChannel": "chrome",
+  "browserVersion": "157.0.8103.79",
+  "viewportNotes": "Viewport captures; ranking is scrolled into view. All online responses are fixtures; no real records are submitted.",
+  "results": [
+    {
+      "device": "pc",
+      "screen": "start",
+      "file": "pc-start.png",
+      "mode": "normal",
+      "audit": {
+        "styles": [
+          {
+            "selector": "#character-desc",
+            "fontSize": "14px",
+            "color": "rgb(109, 98, 79)",
+            "background": "rgba(0, 0, 0, 0)",
+            "top": 332,
+            "bottom": 353
+          },
+          {
+            "selector": "#new-game",
+            "fontSize": "18px",
+            "color": "rgb(255, 254, 240)",
+            "background": "rgb(54, 119, 75)",
+            "top": 479,
+            "bottom": 535
+          },
+          {
+            "selector": ".save-note",
+            "fontSize": "14px",
+            "color": "rgb(109, 98, 79)",
+            "background": "rgba(0, 0, 0, 0)",
+            "top": 543,
+            "bottom": 565
+          }
+        ],
+        "remainingUiEmoji": [],
+        "fonts": [
+          {
+            "family": "Berry Forest Sans",
+            "status": "loaded"
+          },
+          {
+            "family": "Berry Notebook Serif",
+            "status": "loaded"
+          }
+        ],
+        "horizontalOverflow": false
+      }
+    },
+    {
+      "device": "pc",
+      "screen": "hud",
+      "file": "pc-hud.png",
+      "mode": "normal",
+      "audit": {
+        "styles": [
+          {
+            "selector": "#save-status",
+            "fontSize": "14px",
+            "color": "rgb(32, 92, 61)",
+            "background": "rgba(0, 0, 0, 0)",
+            "top": 119,
+            "bottom": 139
+          },
+          {
+            "selector": "#today-adventure",
+            "fontSize": "14px",
+            "color": "rgb(255, 254, 240)",
+            "background": "rgb(54, 119, 75)",
+            "top": 181,
+            "bottom": 229
+          }
+        ],
+        "remainingUiEmoji": [],
+        "fonts": [
+          {
+            "family": "Berry Forest Sans",
+            "status": "loaded"
+          },
+          {
+            "family": "Berry Notebook Serif",
+            "status": "loaded"
+          }
+        ],
+        "horizontalOverflow": false
+      }
+    },
+    {
+      "device": "pc",
+      "screen": "offline",
+      "file": "pc-offline.png",
+      "mode": "normal",
+      "audit": {
+        "styles": [
+          {
+            "selector": "#save-status",
+            "fontSize": "14px",
+            "color": "rgb(32, 92, 61)",
+            "background": "rgba(0, 0, 0, 0)",
+            "top": 119,
+            "bottom": 139
+          },
+          {
+            "selector": "#today-adventure",
+            "fontSize": "14px",
+            "color": "rgb(255, 254, 240)",
+            "background": "rgb(54, 119, 75)",
+            "top": 181,
+            "bottom": 229
+          }
+        ],
+        "remainingUiEmoji": [],
+        "fonts": [
+          {
+            "family": "Berry Forest Sans",
+            "status": "loaded"
+          },
+          {
+            "family": "Berry Notebook Serif",
+            "status": "loaded"
+          }
+        ],
+        "horizontalOverflow": false
+      }
+    },
+    {
+      "device": "pc",
+      "screen": "question",
+      "file": "pc-question.png",
+      "mode": "normal",
+      "audit": {
+        "styles": [
+          {
+            "selector": "#save-status",
+            "fontSize": "14px",
+            "color": "rgb(32, 92, 61)",
+            "background": "rgba(0, 0, 0, 0)",
+            "top": 119,
+            "bottom": 139
+          },
+          {
+            "selector": "#today-adventure",
+            "fontSize": "14px",
+            "color": "rgb(255, 254, 240)",
+            "background": "rgb(54, 119, 75)",
+            "top": 181,
+            "bottom": 229
+          }
+        ],
+        "remainingUiEmoji": [],
+        "fonts": [
+          {
+            "family": "Berry Forest Sans",
+            "status": "loaded"
+          },
+          {
+            "family": "Berry Notebook Serif",
+            "status": "loaded"
+          }
+        ],
+        "horizontalOverflow": false
+      }
+    },
+    {
+      "device": "pc",
+      "screen": "bag",
+      "file": "pc-bag.png",
+      "mode": "normal",
+      "audit": {
+        "styles": [
+          {
+            "selector": "#save-status",
+            "fontSize": "14px",
+            "color": "rgb(32, 92, 61)",
+            "background": "rgba(0, 0, 0, 0)",
+            "top": 119,
+            "bottom": 139
+          },
+          {
+            "selector": "#today-adventure",
+            "fontSize": "14px",
+            "color": "rgb(255, 254, 240)",
+            "background": "rgb(54, 119, 75)",
+            "top": 181,
+            "bottom": 229
+          }
+        ],
+        "remainingUiEmoji": [],
+        "fonts": [
+          {
+            "family": "Berry Forest Sans",
+            "status": "loaded"
+          },
+          {
+            "family": "Berry Notebook Serif",
+            "status": "loaded"
+          }
+        ],
+        "horizontalOverflow": false
+      }
+    },
+    {
+      "device": "pc",
+      "screen": "shop",
+      "file": "pc-shop.png",
+      "mode": "normal",
+      "audit": {
+        "styles": [
+          {
+            "selector": "#save-status",
+            "fontSize": "14px",
+            "color": "rgb(32, 92, 61)",
+            "background": "rgba(0, 0, 0, 0)",
+            "top": 119,
+            "bottom": 139
+          },
+          {
+            "selector": "#today-adventure",
+            "fontSize": "14px",
+            "color": "rgb(255, 254, 240)",
+            "background": "rgb(54, 119, 75)",
+            "top": 181,
+            "bottom": 229
+          }
+        ],
+        "remainingUiEmoji": [
+          {
+            "selector": "#dawn-featured",
+            "marks": [
+              "↗"
+            ]
+          }
+        ],
+        "fonts": [
+          {
+            "family": "Berry Forest Sans",
+            "status": "loaded"
+          },
+          {
+            "family": "Berry Notebook Serif",
+            "status": "loaded"
+          }
+        ],
+        "horizontalOverflow": false
+      }
+    },
+    {
+      "device": "pc",
+      "screen": "salon",
+      "file": "pc-salon.png",
+      "mode": "normal",
+      "audit": {
+        "styles": [
+          {
+            "selector": "#save-status",
+            "fontSize": "14px",
+            "color": "rgb(32, 92, 61)",
+            "background": "rgba(0, 0, 0, 0)",
+            "top": 119,
+            "bottom": 139
+          },
+          {
+            "selector": "#today-adventure",
+            "fontSize": "14px",
+            "color": "rgb(255, 254, 240)",
+            "background": "rgb(54, 119, 75)",
+            "top": 181,
+            "bottom": 229
+          },
+          {
+            "selector": ".salon-ribbon",
+            "fontSize": "16px",
+            "color": "rgb(255, 254, 240)",
+            "background": "rgb(156, 82, 100)",
+            "top": 445,
+            "bottom": 492
+          },
+          {
+            "selector": ".salon-description",
+            "fontSize": "14.08px",
+            "color": "rgb(109, 98, 79)",
+            "background": "rgba(0, 0, 0, 0)",
+            "top": 693,
+            "bottom": 741
+          },
+          {
+            "selector": ".salon-note",
+            "fontSize": "14px",
+            "color": "rgb(109, 98, 79)",
+            "background": "rgba(0, 0, 0, 0)",
+            "top": 835,
+            "bottom": 883
+          }
+        ],
+        "remainingUiEmoji": [],
+        "fonts": [
+          {
+            "family": "Berry Forest Sans",
+            "status": "loaded"
+          },
+          {
+            "family": "Berry Notebook Serif",
+            "status": "loaded"
+          }
+        ],
+        "horizontalOverflow": false
+      }
+    },
+    {
+      "device": "pc",
+      "screen": "career",
+      "file": "pc-career.png",
+      "mode": "normal",
+      "audit": {
+        "styles": [
+          {
+            "selector": "#save-status",
+            "fontSize": "14px",
+            "color": "rgb(32, 92, 61)",
+            "background": "rgba(0, 0, 0, 0)",
+            "top": 119,
+            "bottom": 139
+          },
+          {
+            "selector": "#today-adventure",
+            "fontSize": "14px",
+            "color": "rgb(255, 254, 240)",
+            "background": "rgb(54, 119, 75)",
+            "top": 181,
+            "bottom": 229
+          }
+        ],
+        "remainingUiEmoji": [],
+        "fonts": [
+          {
+            "family": "Berry Forest Sans",
+            "status": "loaded"
+          },
+          {
+            "family": "Berry Notebook Serif",
+            "status": "loaded"
+          }
+        ],
+        "horizontalOverflow": false
+      }
+    },
+    {
+      "device": "pc",
+      "screen": "expedition",
+      "file": "pc-expedition.png",
+      "mode": "normal",
+      "audit": {
+        "styles": [
+          {
+            "selector": "#save-status",
+            "fontSize": "14px",
+            "color": "rgb(32, 92, 61)",
+            "background": "rgba(0, 0, 0, 0)",
+            "top": 119,
+            "bottom": 139
+          },
+          {
+            "selector": "#today-adventure",
+            "fontSize": "14px",
+            "color": "rgb(255, 254, 240)",
+            "background": "rgb(54, 119, 75)",
+            "top": 181,
+            "bottom": 229
+          },
+          {
+            "selector": ".ranking-note",
+            "fontSize": "14px",
+            "color": "rgb(109, 98, 79)",
+            "background": "rgba(0, 0, 0, 0)",
+            "top": 1178,
+            "bottom": 1226
+          }
+        ],
+        "remainingUiEmoji": [],
+        "fonts": [
+          {
+            "family": "Berry Forest Sans",
+            "status": "loaded"
+          },
+          {
+            "family": "Berry Notebook Serif",
+            "status": "loaded"
+          }
+        ],
+        "horizontalOverflow": false
+      }
+    },
+    {
+      "device": "pc",
+      "screen": "ranking",
+      "file": "pc-ranking.png",
+      "mode": "normal",
+      "audit": {
+        "styles": [
+          {
+            "selector": "#save-status",
+            "fontSize": "14px",
+            "color": "rgb(32, 92, 61)",
+            "background": "rgba(0, 0, 0, 0)",
+            "top": 119,
+            "bottom": 139
+          },
+          {
+            "selector": "#today-adventure",
+            "fontSize": "14px",
+            "color": "rgb(255, 254, 240)",
+            "background": "rgb(54, 119, 75)",
+            "top": 181,
+            "bottom": 229
+          },
+          {
+            "selector": ".ranking-note",
+            "fontSize": "14px",
+            "color": "rgb(109, 98, 79)",
+            "background": "rgba(0, 0, 0, 0)",
+            "top": 693,
+            "bottom": 741
+          }
+        ],
+        "remainingUiEmoji": [],
+        "fonts": [
+          {
+            "family": "Berry Forest Sans",
+            "status": "loaded"
+          },
+          {
+            "family": "Berry Notebook Serif",
+            "status": "loaded"
+          }
+        ],
+        "horizontalOverflow": false
+      }
+    },
+    {
+      "device": "pc",
+      "screen": "ranking-empty",
+      "file": "pc-ranking-empty.png",
+      "mode": "empty",
+      "audit": {
+        "styles": [
+          {
+            "selector": "#save-status",
+            "fontSize": "14px",
+            "color": "rgb(32, 92, 61)",
+            "background": "rgba(0, 0, 0, 0)",
+            "top": 119,
+            "bottom": 139
+          },
+          {
+            "selector": "#today-adventure",
+            "fontSize": "14px",
+            "color": "rgb(255, 254, 240)",
+            "background": "rgb(54, 119, 75)",
+            "top": 181,
+            "bottom": 229
+          },
+          {
+            "selector": ".note",
+            "fontSize": "14px",
+            "color": "rgb(109, 98, 79)",
+            "background": "rgb(255, 243, 214)",
+            "top": 631,
+            "bottom": 679
+          },
+          {
+            "selector": ".ranking-note",
+            "fontSize": "14px",
+            "color": "rgb(109, 98, 79)",
+            "background": "rgba(0, 0, 0, 0)",
+            "top": 693,
+            "bottom": 741
+          }
+        ],
+        "remainingUiEmoji": [],
+        "fonts": [
+          {
+            "family": "Berry Forest Sans",
+            "status": "loaded"
+          },
+          {
+            "family": "Berry Notebook Serif",
+            "status": "loaded"
+          }
+        ],
+        "horizontalOverflow": false
+      }
+    },
+    {
+      "device": "pc",
+      "screen": "ranking-error",
+      "file": "pc-ranking-error.png",
+      "mode": "error",
+      "audit": {
+        "styles": [
+          {
+            "selector": "#save-status",
+            "fontSize": "14px",
+            "color": "rgb(32, 92, 61)",
+            "background": "rgba(0, 0, 0, 0)",
+            "top": 119,
+            "bottom": 139
+          },
+          {
+            "selector": "#today-adventure",
+            "fontSize": "14px",
+            "color": "rgb(255, 254, 240)",
+            "background": "rgb(54, 119, 75)",
+            "top": 181,
+            "bottom": 229
+          },
+          {
+            "selector": ".ranking-unavailable",
+            "fontSize": "16px",
+            "color": "rgb(156, 63, 75)",
+            "background": "rgb(255, 243, 214)",
+            "top": 583,
+            "bottom": 677
+          },
+          {
+            "selector": ".ranking-note",
+            "fontSize": "14px",
+            "color": "rgb(109, 98, 79)",
+            "background": "rgba(0, 0, 0, 0)",
+            "top": 693,
+            "bottom": 741
+          }
+        ],
+        "remainingUiEmoji": [],
+        "fonts": [
+          {
+            "family": "Berry Forest Sans",
+            "status": "loaded"
+          },
+          {
+            "family": "Berry Notebook Serif",
+            "status": "loaded"
+          }
+        ],
+        "horizontalOverflow": false
+      }
+    },
+    {
+      "device": "pc",
+      "screen": "server-unavailable",
+      "file": "pc-server-unavailable.png",
+      "mode": "error",
+      "audit": {
+        "styles": [
+          {
+            "selector": "#save-status",
+            "fontSize": "14px",
+            "color": "rgb(32, 92, 61)",
+            "background": "rgba(0, 0, 0, 0)",
+            "top": 119,
+            "bottom": 139
+          },
+          {
+            "selector": "#today-adventure",
+            "fontSize": "14px",
+            "color": "rgb(255, 254, 240)",
+            "background": "rgb(54, 119, 75)",
+            "top": 181,
+            "bottom": 229
+          },
+          {
+            "selector": ".note",
+            "fontSize": "14px",
+            "color": "rgb(109, 98, 79)",
+            "background": "rgb(255, 243, 214)",
+            "top": 363,
+            "bottom": 434
+          }
+        ],
+        "remainingUiEmoji": [],
+        "fonts": [
+          {
+            "family": "Berry Forest Sans",
+            "status": "loaded"
+          },
+          {
+            "family": "Berry Notebook Serif",
+            "status": "loaded"
+          }
+        ],
+        "horizontalOverflow": false
+      }
+    },
+    {
+      "device": "pc",
+      "screen": "weather-error",
+      "file": "pc-weather-error.png",
+      "mode": "weather-error"
+    },
+    {
+      "device": "mobile",
+      "screen": "start",
+      "file": "mobile-start.png",
+      "mode": "normal",
+      "audit": {
+        "styles": [
+          {
+            "selector": "#character-desc",
+            "fontSize": "14px",
+            "color": "rgb(109, 98, 79)",
+            "background": "rgba(0, 0, 0, 0)",
+            "top": 484,
+            "bottom": 503
+          },
+          {
+            "selector": "#new-game",
+            "fontSize": "16px",
+            "color": "rgb(255, 254, 240)",
+            "background": "rgb(54, 119, 75)",
+            "top": 610,
+            "bottom": 664
+          },
+          {
+            "selector": ".save-note",
+            "fontSize": "14px",
+            "color": "rgb(109, 98, 79)",
+            "background": "rgba(0, 0, 0, 0)",
+            "top": 672,
+            "bottom": 695
+          }
+        ],
+        "remainingUiEmoji": [],
+        "fonts": [
+          {
+            "family": "Berry Forest Sans",
+            "status": "loaded"
+          },
+          {
+            "family": "Berry Notebook Serif",
+            "status": "loaded"
+          }
+        ],
+        "horizontalOverflow": false
+      }
+    },
+    {
+      "device": "mobile",
+      "screen": "hud",
+      "file": "mobile-hud.png",
+      "mode": "normal",
+      "audit": {
+        "styles": [
+          {
+            "selector": "#save-status",
+            "fontSize": "14px",
+            "color": "rgb(32, 92, 61)",
+            "background": "rgba(0, 0, 0, 0)",
+            "top": 99,
+            "bottom": 119
+          }
+        ],
+        "remainingUiEmoji": [],
+        "fonts": [
+          {
+            "family": "Berry Forest Sans",
+            "status": "loaded"
+          },
+          {
+            "family": "Berry Notebook Serif",
+            "status": "loaded"
+          }
+        ],
+        "horizontalOverflow": false
+      }
+    },
+    {
+      "device": "mobile",
+      "screen": "offline",
+      "file": "mobile-offline.png",
+      "mode": "normal",
+      "audit": {
+        "styles": [
+          {
+            "selector": "#save-status",
+            "fontSize": "14px",
+            "color": "rgb(32, 92, 61)",
+            "background": "rgba(0, 0, 0, 0)",
+            "top": 99,
+            "bottom": 119
+          }
+        ],
+        "remainingUiEmoji": [],
+        "fonts": [
+          {
+            "family": "Berry Forest Sans",
+            "status": "loaded"
+          },
+          {
+            "family": "Berry Notebook Serif",
+            "status": "loaded"
+          }
+        ],
+        "horizontalOverflow": false
+      }
+    },
+    {
+      "device": "mobile",
+      "screen": "question",
+      "file": "mobile-question.png",
+      "mode": "normal",
+      "audit": {
+        "styles": [
+          {
+            "selector": "#save-status",
+            "fontSize": "14px",
+            "color": "rgb(32, 92, 61)",
+            "background": "rgba(0, 0, 0, 0)",
+            "top": 99,
+            "bottom": 119
+          }
+        ],
+        "remainingUiEmoji": [],
+        "fonts": [
+          {
+            "family": "Berry Forest Sans",
+            "status": "loaded"
+          },
+          {
+            "family": "Berry Notebook Serif",
+            "status": "loaded"
+          }
+        ],
+        "horizontalOverflow": false
+      }
+    },
+    {
+      "device": "mobile",
+      "screen": "bag",
+      "file": "mobile-bag.png",
+      "mode": "normal",
+      "audit": {
+        "styles": [
+          {
+            "selector": "#save-status",
+            "fontSize": "14px",
+            "color": "rgb(32, 92, 61)",
+            "background": "rgba(0, 0, 0, 0)",
+            "top": 99,
+            "bottom": 119
+          }
+        ],
+        "remainingUiEmoji": [],
+        "fonts": [
+          {
+            "family": "Berry Forest Sans",
+            "status": "loaded"
+          },
+          {
+            "family": "Berry Notebook Serif",
+            "status": "loaded"
+          }
+        ],
+        "horizontalOverflow": false
+      }
+    },
+    {
+      "device": "mobile",
+      "screen": "shop",
+      "file": "mobile-shop.png",
+      "mode": "normal",
+      "audit": {
+        "styles": [
+          {
+            "selector": "#save-status",
+            "fontSize": "14px",
+            "color": "rgb(32, 92, 61)",
+            "background": "rgba(0, 0, 0, 0)",
+            "top": 99,
+            "bottom": 119
+          }
+        ],
+        "remainingUiEmoji": [
+          {
+            "selector": "#dawn-featured",
+            "marks": [
+              "↗"
+            ]
+          }
+        ],
+        "fonts": [
+          {
+            "family": "Berry Forest Sans",
+            "status": "loaded"
+          },
+          {
+            "family": "Berry Notebook Serif",
+            "status": "loaded"
+          }
+        ],
+        "horizontalOverflow": false
+      }
+    },
+    {
+      "device": "mobile",
+      "screen": "salon",
+      "file": "mobile-salon.png",
+      "mode": "normal",
+      "audit": {
+        "styles": [
+          {
+            "selector": "#save-status",
+            "fontSize": "14px",
+            "color": "rgb(32, 92, 61)",
+            "background": "rgba(0, 0, 0, 0)",
+            "top": 99,
+            "bottom": 119
+          },
+          {
+            "selector": ".salon-ribbon",
+            "fontSize": "16px",
+            "color": "rgb(255, 254, 240)",
+            "background": "rgb(156, 82, 100)",
+            "top": 788,
+            "bottom": 834
+          },
+          {
+            "selector": ".salon-description",
+            "fontSize": "14px",
+            "color": "rgb(109, 98, 79)",
+            "background": "rgba(0, 0, 0, 0)",
+            "top": 519,
+            "bottom": 566
+          },
+          {
+            "selector": ".salon-note",
+            "fontSize": "14px",
+            "color": "rgb(109, 98, 79)",
+            "background": "rgba(0, 0, 0, 0)",
+            "top": 659,
+            "bottom": 754
+          }
+        ],
+        "remainingUiEmoji": [],
+        "fonts": [
+          {
+            "family": "Berry Forest Sans",
+            "status": "loaded"
+          },
+          {
+            "family": "Berry Notebook Serif",
+            "status": "loaded"
+          }
+        ],
+        "horizontalOverflow": false
+      }
+    },
+    {
+      "device": "mobile",
+      "screen": "career",
+      "file": "mobile-career.png",
+      "mode": "normal",
+      "audit": {
+        "styles": [
+          {
+            "selector": "#save-status",
+            "fontSize": "14px",
+            "color": "rgb(32, 92, 61)",
+            "background": "rgba(0, 0, 0, 0)",
+            "top": 99,
+            "bottom": 119
+          }
+        ],
+        "remainingUiEmoji": [],
+        "fonts": [
+          {
+            "family": "Berry Forest Sans",
+            "status": "loaded"
+          },
+          {
+            "family": "Berry Notebook Serif",
+            "status": "loaded"
+          }
+        ],
+        "horizontalOverflow": false
+      }
+    },
+    {
+      "device": "mobile",
+      "screen": "expedition",
+      "file": "mobile-expedition.png",
+      "mode": "normal",
+      "audit": {
+        "styles": [
+          {
+            "selector": "#save-status",
+            "fontSize": "14px",
+            "color": "rgb(32, 92, 61)",
+            "background": "rgba(0, 0, 0, 0)",
+            "top": 99,
+            "bottom": 119
+          },
+          {
+            "selector": ".ranking-note",
+            "fontSize": "14px",
+            "color": "rgb(109, 98, 79)",
+            "background": "rgba(0, 0, 0, 0)",
+            "top": 1604,
+            "bottom": 1651
+          }
+        ],
+        "remainingUiEmoji": [],
+        "fonts": [
+          {
+            "family": "Berry Forest Sans",
+            "status": "loaded"
+          },
+          {
+            "family": "Berry Notebook Serif",
+            "status": "loaded"
+          }
+        ],
+        "horizontalOverflow": false
+      }
+    },
+    {
+      "device": "mobile",
+      "screen": "ranking",
+      "file": "mobile-ranking.png",
+      "mode": "normal",
+      "audit": {
+        "styles": [
+          {
+            "selector": "#save-status",
+            "fontSize": "14px",
+            "color": "rgb(32, 92, 61)",
+            "background": "rgba(0, 0, 0, 0)",
+            "top": 99,
+            "bottom": 119
+          },
+          {
+            "selector": ".ranking-note",
+            "fontSize": "14px",
+            "color": "rgb(109, 98, 79)",
+            "background": "rgba(0, 0, 0, 0)",
+            "top": 754,
+            "bottom": 801
+          }
+        ],
+        "remainingUiEmoji": [],
+        "fonts": [
+          {
+            "family": "Berry Forest Sans",
+            "status": "loaded"
+          },
+          {
+            "family": "Berry Notebook Serif",
+            "status": "loaded"
+          }
+        ],
+        "horizontalOverflow": false
+      }
+    },
+    {
+      "device": "mobile",
+      "screen": "ranking-empty",
+      "file": "mobile-ranking-empty.png",
+      "mode": "empty",
+      "audit": {
+        "styles": [
+          {
+            "selector": "#save-status",
+            "fontSize": "14px",
+            "color": "rgb(32, 92, 61)",
+            "background": "rgba(0, 0, 0, 0)",
+            "top": 99,
+            "bottom": 119
+          },
+          {
+            "selector": ".note",
+            "fontSize": "14px",
+            "color": "rgb(109, 98, 79)",
+            "background": "rgb(255, 243, 214)",
+            "top": 668,
+            "bottom": 739
+          },
+          {
+            "selector": ".ranking-note",
+            "fontSize": "14px",
+            "color": "rgb(109, 98, 79)",
+            "background": "rgba(0, 0, 0, 0)",
+            "top": 753,
+            "bottom": 801
+          }
+        ],
+        "remainingUiEmoji": [],
+        "fonts": [
+          {
+            "family": "Berry Forest Sans",
+            "status": "loaded"
+          },
+          {
+            "family": "Berry Notebook Serif",
+            "status": "loaded"
+          }
+        ],
+        "horizontalOverflow": false
+      }
+    },
+    {
+      "device": "mobile",
+      "screen": "ranking-error",
+      "file": "mobile-ranking-error.png",
+      "mode": "error",
+      "audit": {
+        "styles": [
+          {
+            "selector": "#save-status",
+            "fontSize": "14px",
+            "color": "rgb(32, 92, 61)",
+            "background": "rgba(0, 0, 0, 0)",
+            "top": 99,
+            "bottom": 119
+          },
+          {
+            "selector": ".ranking-unavailable",
+            "fontSize": "16px",
+            "color": "rgb(156, 63, 75)",
+            "background": "rgb(255, 243, 214)",
+            "top": 617,
+            "bottom": 737
+          },
+          {
+            "selector": ".ranking-note",
+            "fontSize": "14px",
+            "color": "rgb(109, 98, 79)",
+            "background": "rgba(0, 0, 0, 0)",
+            "top": 753,
+            "bottom": 801
+          }
+        ],
+        "remainingUiEmoji": [],
+        "fonts": [
+          {
+            "family": "Berry Forest Sans",
+            "status": "loaded"
+          },
+          {
+            "family": "Berry Notebook Serif",
+            "status": "loaded"
+          }
+        ],
+        "horizontalOverflow": false
+      }
+    },
+    {
+      "device": "mobile",
+      "screen": "server-unavailable",
+      "file": "mobile-server-unavailable.png",
+      "mode": "error",
+      "audit": {
+        "styles": [
+          {
+            "selector": "#save-status",
+            "fontSize": "14px",
+            "color": "rgb(32, 92, 61)",
+            "background": "rgba(0, 0, 0, 0)",
+            "top": 99,
+            "bottom": 119
+          },
+          {
+            "selector": ".note",
+            "fontSize": "14px",
+            "color": "rgb(109, 98, 79)",
+            "background": "rgb(255, 243, 214)",
+            "top": 364,
+            "bottom": 459
+          }
+        ],
+        "remainingUiEmoji": [],
+        "fonts": [
+          {
+            "family": "Berry Forest Sans",
+            "status": "loaded"
+          },
+          {
+            "family": "Berry Notebook Serif",
+            "status": "loaded"
+          }
+        ],
+        "horizontalOverflow": false
+      }
+    },
+    {
+      "device": "mobile",
+      "screen": "weather-error",
+      "file": "mobile-weather-error.png",
+      "mode": "weather-error"
+    }
+  ]
+}
