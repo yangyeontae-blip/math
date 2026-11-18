@@ -784,8 +784,8 @@ export class World {
     const signAt=new T.Vector3();
     plaque.onBeforeRender=()=>{parent.getWorldQuaternion(parentRotation);plaque.quaternion.copy(parentRotation.invert().multiply(this.camera.quaternion));plaque.updateMatrixWorld(true);plaque.getWorldPosition(signAt);const far=Math.hypot(signAt.x-this.player.position.x,signAt.z-this.player.position.z);material.opacity=far<13?1:Math.max(.16,1-(far-13)/7);};
     if(document.fonts){
-      this.signFontReady??=document.fonts.load('116px "Jua"').catch(()=>null);
-      void this.signFontReady.then(()=>{if(!this.signResources.some(r=>r.texture===texture))return;paint();texture.needsUpdate=true;this.renderOnce();});
+      // 주아 글꼴은 글자 묶음별로 나눠 받아요. 이 간판에 쓰인 글자 묶음을 모두 받은 뒤 다시 그려야 글꼴이 섞이지 않아요.
+      void document.fonts.load('116px "Jua"',text).catch(()=>null).then(()=>{if(!this.signResources.some(r=>r.texture===texture))return;paint();texture.needsUpdate=true;this.renderOnce();});
     }
   }
   private buildVillage(theme: VillageTheme = VILLAGE_THEMES.division) {

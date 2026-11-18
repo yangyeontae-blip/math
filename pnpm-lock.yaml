@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      '@fontsource/jua':
+        specifier: ^5.3.0
+        version: 5.3.0
       onnxruntime-web:
         specifier: 1.24.3
         version: 1.24.3
@@ -585,6 +588,9 @@ packages:
     engines: {node: '>=18'}
     cpu: [x64]
     os: [win32]
+
+  '@fontsource/jua@5.3.0':
+    resolution: {integrity: sha512-k9ZTVYVqY4WxiDl55Udf2mLHca+voxTeIZ7qvLZUmR3VaUqM+RCZDYigEj1iKgV0Gx90NvzJy4CQpEPjDHBisA==}
 
   '@img/colour@1.1.0':
     resolution: {integrity: sha512-Td76q7j57o/tLVdgS746cYARfSyxk8iEfRxewL9h4OMzYhbW4TAcppl0mT4eyqXddh6L/jwoM75mo7ixa/pCeQ==}
@@ -1790,6 +1796,8 @@ snapshots:
 
   '@esbuild/win32-x64@0.28.2':
     optional: true
+
+  '@fontsource/jua@5.3.0': {}
 
   '@img/colour@1.1.0': {}
 

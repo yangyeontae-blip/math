@@ -15,6 +15,7 @@
     "test:plaza": "node scripts/build-plaza.mjs && node --import tsx --test realtime/*.test.mjs"
   },
   "dependencies": {
+    "@fontsource/jua": "^5.3.0",
     "onnxruntime-web": "1.24.3",
     "three": "^0.180.0"
   },

@@ -487,4 +487,8 @@ input:not([type=checkbox]):not([type=radio]),select,textarea{min-height:44px}
 .math-card-slot.is-missing{border-style:dashed;background:#f3eedf;color:#8a7d66}.math-card-slot[aria-disabled=true]{opacity:.75}
 .math-card-unknown{display:grid;place-items:center;width:72px;height:90px;border-radius:10px;background:#e6dcc4;font-size:2rem;font-weight:800;color:#a3967c}
 .fishing-complete{padding:10px 14px;border-radius:14px;background:#fff3c8;border:2px solid #e0b040;font-weight:700}
+/* 글꼴 역할: 제목·버튼·이름표는 귀여운 주아, 설명과 문제는 깔끔한 본문 글꼴(Berry Forest Sans = Noto Sans KR). */
+:root{--font-display:'Jua','Berry Forest Sans','Noto Sans KR',sans-serif;--font-body:'Berry Forest Sans','Noto Sans KR','Malgun Gothic',sans-serif}
+#start-screen .welcome-card h1,#start-screen h1,#start-screen .start-button,button.primary,h1,h2,h3,.brand-mini,.level-badge,.wallet b,.primary,.career-primary,.nav-tabs button,.destination-card strong,.entity-label,.math-card h3,.math-card-tier,.fishing-cast,.trade-sheet h2,.world-three-banner strong,#modal-content>header h2,.plaza-status,.location-pill strong{font-family:var(--font-display)!important;font-weight:400;letter-spacing:.01em}
+p,small,li,label,input,.note,.quest,.math-card-story,.math-card-deed{font-family:var(--font-body)}
 

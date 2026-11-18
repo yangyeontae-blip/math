@@ -1,4 +1,6 @@
 import './design-tokens.css';
+// 제목·버튼·간판용 귀여운 글꼴(주아, OFL). 필요한 글자 조각만 내려받아요.
+import '@fontsource/jua/400.css';
 import {uiIcon, uiLabel, decorateUiIcons} from './ui-icons';
 import {mathLearningNotice} from './learning-reward-view';
 import {dawnItem,dawnShopBanner,dawnShopOrder,DAWN_START} from './dawn-collection';
