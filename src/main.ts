@@ -1901,9 +1901,10 @@ function openSettings() {
   for (const [id, key] of [['music', 'music'], ['sound', 'sound'], ['quality', 'lowQuality']] as const) $<HTMLInputElement>(`#${id}-toggle`).onchange = e => { state!.settings[key] = (e.target as HTMLInputElement).checked; refresh(); if (key === 'lowQuality') { world.quality(state!.settings.lowQuality); world.setWeather(null); refreshAmbience(); } persist(); };
   $<HTMLInputElement>('#ambience-toggle').onchange = e => { setAmbience((e.target as HTMLInputElement).checked); refreshAmbience(); };
   $<HTMLSelectElement>('#weather-region').onchange = e => { const region = (e.target as HTMLSelectElement).value; setWeatherRegion(region); refreshAmbience(!region); };
-  const speechToggle = document.querySelector<HTMLInputElement>('#speech-toggle'); if (speechToggle) speechToggle.onchange = () => { setAutoRead(speechToggle.checked); if (!speechToggle.checked) stopSpeech(); };
+  const speechToggle = document.querySelector<HTMLInputElement>('#speech-toggle'); if (speechToggle) speechToggle.onchange = () => { setAutoRead(speechToggle.checked); if (!speechToggle.checked) stopSpeech(); const list=$('.settings-list'),panel=list.querySelector('.voice-controls'); if (speechToggle.checked && !panel) voiceControls(list); else if (!speechToggle.checked) panel?.remove(); };
   $<HTMLInputElement>('#quest-visible-toggle').onchange=e=>display.setQuestVisible((e.target as HTMLInputElement).checked);
-  voiceControls($('.settings-list'),true);
+  // 읽어주기를 켰을 때만, 접힌 한 줄로 보여 줘요.
+  if(autoReadEnabled())voiceControls($('.settings-list'));
   const range = document.querySelector<HTMLSelectElement>('#question-range'); if (range) range.onchange = () => { state!.settings.maxDividend = Number(range.value) as 0 | 90 | 180; persist(); };
   const multiplicationRange = document.querySelector<HTMLSelectElement>('#multiplication-range'); if (multiplicationRange) multiplicationRange.onchange = () => { state!.settings.multiplicationRange = multiplicationRange.value as 'stage' | 'tables'; persist(); };
   const focusUnit = document.querySelector<HTMLSelectElement>('#focus-unit'); if (focusUnit) focusUnit.onchange = () => { state!.settings.focusUnit = focusUnit.value as Save['settings']['focusUnit']; persist(); };
