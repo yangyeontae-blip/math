@@ -15,3 +15,6 @@ test-results/
 .wrangler/
 .plaza-worker/
 test-results-*/
+
+# Isolated combat validation servers, browser profiles and temporary builds.
+.work/combat/

@@ -1,0 +1,14 @@
+{
+  "branch": "visual/combat",
+  "baseCommit": "7ab0e51",
+  "typecheck": "passed: pnpm.cmd exec tsc --noEmit",
+  "unitTests": { "command": "pnpm.cmd test", "passed": 488, "failed": 0 },
+  "build": "passed: pnpm.cmd build",
+  "commonSources": { "command": "node scripts/check-common.mjs", "verified": 372, "generationVerified": true, "peerCopied": false },
+  "browser": "system Chrome, headless software WebGL, isolated local test services",
+  "e2e": { "huntingAndDawnDesktopPassed": 9, "combatVisualsDesktopAndMobilePassed": 2, "heldTouchAttackMobilePassed": 1, "desktopTouchOnlySkipped": true },
+  "capture": { "before": "before/", "after": "after/", "comparison": "comparison.html", "pageAndShaderErrors": 0 },
+  "unchanged": ["tests/protected-behavior.test.ts", "src/hunting.ts", "src/rules.ts", "src/curriculum.ts"],
+  "limitations": ["Physical Chromebook/tablet FPS not measured", "Critical-hit styling accepts a presentation signal; existing combat has no critical-hit rule", "Existing Vite chunk-size and mixed-import warnings remain"],
+  "gitOperations": { "commit": false, "push": false, "merge": false }
+}
