@@ -142,7 +142,7 @@ export const PETS = [
   { name: '꿀벌 몽이', price: 4500, radius: 5.8, flying: false, icon: '🐝', color: 0xf2c94c, desc: '꽃가루를 반짝이며 먼 베리까지 날아가요' },
   { name: '해바라기 여우', price: 5500, radius: 6.4, flying: false, icon: '🦊', color: 0xe8a15b, desc: '해바라기 꼬리를 흔들며 넓게 찾아요' },
   { name: '도토리 다람쥐 콩이', price: 6500, radius: 7, flying: false, icon: '🐿️', color: 0xb97a4a, desc: '도토리 모자를 쓰고 먼 베리까지 쪼르르 찾아요' },
-  { name: '이신비의 별', price: 9000, radius: 9, flying: false, icon: '⭐', color: 0xffd54a, desc: '밤하늘에서 내려온 신비한 별. 넓은 곳의 베리를 반짝반짝 찾아내요' },
+  { name: '신비의 별', price: 9000, radius: 9, flying: false, icon: '⭐', color: 0xffd54a, desc: '밤하늘에서 내려온 신비한 별. 넓은 곳의 베리를 반짝반짝 찾아내요' },
   { name: '달빛 수달 모모', price: 12000, radius: 10, flying: false, icon: '🦦', color: 0x76b8c4, desc: '반달 가방을 메고 물가처럼 부드럽게 베리를 찾아요' },
   { name: '무지개 알파카 포포', price: 22000, radius: 12, flying: false, icon: '🦙', color: 0xf1dfca, desc: '몽실몽실한 털과 무지개 안장을 갖춘 멀리 보는 탐험 친구예요' },
   { name: '호빵 별용사 팡팡', price: 50000, radius: 16, flying: false, icon: '🥯', color: 0xd69a62, desc: '따뜻한 빵 얼굴과 별빛 망토를 갖춘 최고급 용사. 장착하면 캐릭터 주위에 황금빛 광채가 돌아요' },
@@ -820,7 +820,7 @@ export function applyTeacherCode(s: Save, code: string, teacherHash = TEACHER_CO
   if (code === 'star') {
     s.pets[SHINBI_STAR_PET_ID] = true; s.pet = SHINBI_STAR_PET_ID;
     if (!s.discoveries.pets.includes(SHINBI_STAR_PET_ID)) s.discoveries.pets.push(SHINBI_STAR_PET_ID);
-    return '이신비의 별을 얻고 바로 함께하기로 했어요!';
+    return '신비의 별을 얻고 바로 함께하기로 했어요!';
   }
   // 브라우저 데이터가 지워진 학생 복구용: level숫자는 그 레벨로 바꾸고, yeontae숫자는 그만큼 베리를 더해요.
   const levelTo = /^level([1-9]\d{0,5})$/.exec(code);

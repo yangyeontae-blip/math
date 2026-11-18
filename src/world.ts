@@ -528,7 +528,7 @@ function buildPet(id: number) {
     ball(body, 0x8a5a36, 0, .93, .14, .24, .1, .24); ball(body, 0xc99562, 0, .86, .14, .2, .06, .2); cylinder(body, 0x6b4a2d, 0, 1.03, .14, .012, .018, .09, 5);
     ball(body, 0x9a6a3c, 0, .28, .44, .07, .09, .07);
     for (let i = 0; i < 6; i++) ball(tailRoot, i < 4 ? pet.color : 0xffe2b8, 0, .08 + i * .12, -.1 - Math.sin(i * .5) * .2, .2 - i * .005, .17, .2);
-  } else if (id === 8) { // 이신비의 별: 반짝이는 금빛 별 몸통, 졸린 듯 귀여운 얼굴, 별가루와 빛 고리
+  } else if (id === 8) { // 신비의 별: 반짝이는 금빛 별 몸통, 졸린 듯 귀여운 얼굴, 별가루와 빛 고리
     const k = .6, cy = .6;
     const outline = new T.Shape();
     for (let i = 0; i < 10; i++) { const radius = (i % 2 ? .3 : .68) * k, angle = Math.PI / 2 + i * Math.PI / 5, x = Math.cos(angle) * radius, y = Math.sin(angle) * radius; if (i === 0) outline.moveTo(x, y); else outline.lineTo(x, y); }
@@ -799,8 +799,6 @@ export class World {
     box(this.scene,theme.path,0,.02,5,4,.06,29);box(this.scene,theme.path,-7,.025,2,14,.07,4);box(this.scene,theme.path,12,.025,-2,25,.07,4);
     stoneLane(this.scene,0,6,4.4,27);stoneLane(this.scene,-7,2,14,4);stoneLane(this.scene,12,-2,24,4);
     for (const end of Object.values(PLAZA_COMBAT_GATES)) { const dx = end.x + 11, dz = end.z - 2, path = box(this.scene, theme.path, (-11 + end.x) / 2, .04, (2 + end.z) / 2, 3.8, .08, Math.hypot(dx, dz)); path.rotation.y = Math.atan2(dx, dz); }
-    const forkSign = new T.Group(); forkSign.position.set(-11, 0, 2.2); cylinder(forkSign, 0x94704c, 0, 1.15, 0, .09, .13, 2.3, 8); this.scene.add(forkSign);
-    this.sign(forkSign, '↖ 가시덩굴 숲', 0, 2.7, 0, 4.3, '#33573c', true); this.sign(forkSign, '↙ 상점거리', 0, 1.6, .15, 4.1, '#7d5260', true);
     this.scene.add(plazaGarden());districtBorder(this.scene,49,39);
     const fountain=fountainModel();fountain.position.set(-3,0,0);this.scene.add(fountain);this.colliders.push({x:-3,z:0,r:1.95});
     for(const [index,at] of PLAZA_BERRY_TREES.entries()){const tree=berryTreeModel(index%3);tree.position.set(at.x,0,at.z);tree.scale.setScalar(at.scale);this.scene.add(tree);this.colliders.push({x:at.x,z:at.z,r:.48});}
@@ -808,12 +806,12 @@ export class World {
     const arena=VILLAGE_SPOTS.arena;
     cylinder(this.scene,0xf1deb4,arena.x,.08,arena.z,2.4,2.4,.1,32);
     this.addEntity('arena','신비 · 수학 시합',arena.x,arena.z,makeCharacter(3,8,4));
-    this.sign(this.scene,'신비의 시합장',arena.x,5.2,arena.z,5.4,'#675282');
+    this.sign(this.scene,'시합장',arena.x,5.2,arena.z,5.4,'#675282');
     const school=academyBuilding();school.position.set(0,0,-12);this.scene.add(school);this.colliders.push({x:0,z:-12,r:4});this.sign(this.scene,'베리숲 모험학교',0,7.4,-9.4,5.4,'#173f30',true);this.addEntity('academyGate','🏛 모험학교 · 스킬 배우러 들어가기',0,-7,new T.Group());for(const x of [-4.8,4.8])this.colliders.push({x,z:-12,r:2.1});
     const exit=(id:string,name:string,x:number,z:number,color:number)=>{const g=this.gate(color);this.addEntity(id,name,x,z,g);this.sign(g,name.split(' · ')[0],0,4.8,0,6);};
     const gateway=this.astralGateway=worldTwoGateway();this.addEntity('world2Gate','별너머 군도 · 세계 2',WORLD_TWO_GATE.x,WORLD_TWO_GATE.z,gateway);this.sign(gateway,'별너머 군도',0,4.15,0,5.4,'#585282',true);const approachStart={x:15,z:-2},dx=WORLD_TWO_GATE.x-approachStart.x,dz=WORLD_TWO_GATE.z-approachStart.z;const skyPath=box(this.scene,theme.path,(approachStart.x+WORLD_TWO_GATE.x)/2,.035,(approachStart.z+WORLD_TWO_GATE.z)/2,2.8,.07,Math.hypot(dx,dz));skyPath.rotation.y=Math.atan2(dx,dz);skyPath.name='world2-fitted-approach';
     exit('huntingGate','가시덩굴숲 · 왼쪽 위 사냥터',PLAZA_COMBAT_GATES.hunting.x,PLAZA_COMBAT_GATES.hunting.z,0x6d9563);
-    exit('shopStreet','상점거리 · 왼쪽 아래 길',PLAZA_COMBAT_GATES.market.x,PLAZA_COMBAT_GATES.market.z,0xd69aa9);const mathGate=mathForestGateway();this.addEntity('journey','수학숲으로 모험하기 · 아래쪽 메인 입구',0,16,mathGate);this.sign(mathGate,'수학숲으로 모험하기',0,6.3,0,7.8,'#235c3d',true);this.sign(mathGate,'수학 문제로 경험치 듬뿍!',0,5.45,0,6,'#6c552c',true);
+    exit('shopStreet','상점거리 · 왼쪽 아래 길',PLAZA_COMBAT_GATES.market.x,PLAZA_COMBAT_GATES.market.z,0xd69aa9);const mathGate=mathForestGateway();this.addEntity('journey','수학숲으로 모험하기 · 아래쪽 메인 입구',0,16,mathGate);this.sign(mathGate,'수학숲으로 모험하기',0,6.3,0,7.8,'#235c3d',true);this.sign(mathGate,'수학 문제로 경험치 듬뿍!',0,4.35,0,5.4,'#6c552c',true);
     for(const [x,z]of [[-17,-13],[-12,-15],[11,-15],[17,-13],[-19,14],[18,16],[-23,-5],[23,-6]])this.tree(x,z,1.05,false,theme.foliage);
     stageTrees(0).forEach(({x,z},id)=>{const at=villageTreeSpot(id,x,z);this.addChoppableTree(id,at.x,at.z,1,false,theme.foliage);});
     // Keep the earned story pond and bridge exactly where earlier saves expect them.
@@ -854,7 +852,7 @@ export class World {
     box(stall, 0x4f496f, 0, 2.56, -.24, 2.9, .14, 1.45);
     ball(stall, 0xffd180, .88, 2.21, .52, .17);
     this.scene.add(stall);
-    {const mill=new T.Group();box(mill,0xa8794d,0,.65,0,1.1,1.3,.85);const roof=mesh(new T.ConeGeometry(.85,.75,4),0x79ab8d,0,1.65,0,mill);roof.rotation.y=Math.PI/4;const wheel=new T.Group();wheel.position.set(0,1.1,.55);for(let i=0;i<4;i++){const blade=box(wheel,0xf0d99c,0,0,0,.14,1.65,.07);blade.rotation.z=i*Math.PI/4;}mill.add(wheel);ball(mill,0xe7879d,0,1.1,.64,.18);this.addEntity('berryMachine','베리 풍차 · 모험 공방',-7,5.5,mill);this.sign(mill,'베리 풍차',0,2.6,0,3,'#365b45',true);}
+    // 베리 풍차는 2026-11-18 팀장 결정으로 광장에서 뺐어요. 이미 올린 단계의 보상 배율은 그대로 유지돼요.
 
     this.sign(stall, '비밀상인', 0, 3.15, .52, 3.3, '#55426e', true);
     const exit=this.gate(0x91b9a1);this.addEntity('marketExit','중앙 광장 · 돌아가기',0,11,exit);this.sign(exit,'중앙 광장',0,4.6,0,4.5);
