@@ -111,7 +111,7 @@
     "src/plaza-identity.ts": "761b6765d77bb67fb641e11c211487c26bd95dab9d95d6bc751cdff33a32e880",
     "src/plaza-client.ts": "9d47054e941124b73a03c2ee1a8a1ded1b32385c1792d889c54c17d442d82b5a",
     "src/plaza-controller.ts": "fd0b6b15cb95ba587753b3c49cb5f3a48790cc0e50eb67f4d09bb523ba142d9a",
-    "src/plaza-world.ts": "373418f19c84378add629ce3c29882d907cb4716e6e71604317605f41a8401ca",
+    "src/plaza-world.ts": "0a523c4f892560607b2b47741c9996e21b2e8262036681d1ccc2c9b46d2879a5",
     "src/plaza-endpoint.ts": "8209e54c95cbd78b65a44eefd6bfd658759567b7d8af6af4a2e87a102249e790",
     "src/plaza.css": "1841405ff2c88a4de5f3e59e1a1eb73e0dce300b3c66488ecf442c70af65dd20",
     "tests/plaza.test.ts": "68beb576f59a4c04c65a92294eefbcd8293bd6e9e512171e9aae12bbba6a47e1",
@@ -381,5 +381,5 @@
     "public/fonts/LICENSE-NotoSansKR.txt": "a5cb775427506f70605da52b87cda1f39708c0165a3b5c23a24405916c1f33ec",
     "public/fonts/LICENSE-NotoSerifKR.txt": "7ae17b30116f90172a9a3d6afe13e0d275f7494e5eb1eed2f87b536539c746ee"
   },
-  "generation": "1ffaa56cc7fa331dc9187f34cbbc73be7bae1a89b790c0e8bae327982083cef3"
+  "generation": "3ca9285013847daa4279c2f4f2591da47015312dfea7bbbf8724c894808d6c03"
 }
