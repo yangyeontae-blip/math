@@ -23,7 +23,7 @@
 
 ## 배포
 - 게임(프런트): `main`에 푸시하면 GitHub Actions(`deploy-pages.yml`)가 타입체크·테스트·빌드 후 GitHub Pages에 배포합니다.
-- 랭킹·협동 보스 서버(`worker/index.js`, D1 `drizzle/`): `*.chatgpt.site` 호스팅에 따로 배포해야 하며 Claude는 접근할 수 없습니다. 서버 코드를 바꾸면 바뀐 파일과 수동 배포 방법을 안내하세요. 새 테이블이 필요하면 `drizzle/*.sql` 마이그레이션이 함께 적용되어야 합니다.
+- 서버(`worker/index.js`: 랭킹·협동 보스·계정·커뮤니티·날씨, D1 `drizzle/`): 2026-11-18부터 Cloudflare Workers `berry-forest` → https://berry-forest.yangyeontae.workers.dev (ChatGPT Sites는 더 쓰지 않음). 게임이 보는 주소는 `.env.production`. 배포: PowerShell에서 `$env:NODE_OPTIONS='--use-system-ca'; pnpm build; npx wrangler deploy` (학교망 인증서 때문에 NODE_OPTIONS 필요). 새 테이블은 `npx wrangler d1 execute berry-forest-db --remote --file drizzle/<파일>.sql`. 비밀값은 `npx wrangler secret put <이름>`(ACCOUNT_PEPPER 설정됨, KMA_SERVICE_KEY 기상청 키).
 - 서버가 옛 버전이어도 게임이 깨지지 않게 만드세요(클라이언트는 서버 오류를 "준비 중"으로 처리).
 
 ## 구조 빠른 안내
