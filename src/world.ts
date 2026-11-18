@@ -44,7 +44,7 @@ import { STORYBOOK_LIGHTING, storybookMaterial, seasonalParticleAt } from './sto
 import { StorybookScene, leafMaterial } from './storybook-scene';
 
 type Entity = { id: string; name: string; x: number; z: number; mesh: T.Group; label: HTMLDivElement };
-export type GuideKind = 'astralQuestion' | 'astralNext' | 'astralExit' | 'world2Gate' | 'world2Beacon' | 'huntingGate' | 'huntingExit' | 'academyGate' | 'academyBook' | 'guide' | 'marketExit' | 'noticeBoard' | 'homesteadGate' | 'shopStreet' | 'homeEditor' | 'homeExit' | 'homeVisitor' | 'discovery' | 'forestWork' | 'trailSeed' | 'trailLamp' | 'berry' | 'monster' | 'shop' | 'journey' | 'next' | 'star' | 'expMonster' | 'roomExit' | 'storyClue' | 'storyPuzzle' | 'storyMailbox' | 'village' | 'villageProject0' | 'villageProject1' | 'villageProject2';
+export type GuideKind = 'village' | 'roomExit' | 'academyExit' | 'astralQuestion' | 'astralNext' | 'astralExit' | 'world2Gate' | 'world2Beacon' | 'huntingGate' | 'huntingExit' | 'academyGate' | 'academyBook' | 'guide' | 'marketExit' | 'noticeBoard' | 'homesteadGate' | 'shopStreet' | 'homeEditor' | 'homeExit' | 'homeVisitor' | 'discovery' | 'forestWork' | 'trailSeed' | 'trailLamp' | 'berry' | 'monster' | 'shop' | 'journey' | 'next' | 'star' | 'expMonster' | 'roomExit' | 'storyClue' | 'storyPuzzle' | 'storyMailbox' | 'village' | 'villageProject0' | 'villageProject1' | 'villageProject2';
 export type TrainingOptions = { job?: JobId | null; mode: 'single' | 'multi' | 'attacking'; skills: readonly SkillId[]; trialRank?: 1 | 2 | 3 | 4 | 5; skill?: SkillId | null };
 export const PLAZA_COMBAT_GATES = { hunting: { x: -18, z: -3 }, market: { x: -18, z: 5.5 } } as const;
 const mat = (color: number, roughness = .86) => new T.MeshStandardMaterial({ color, roughness });
@@ -787,7 +787,9 @@ export class World {
     const plaque=new T.Mesh(geometry,material);plaque.position.set(x,y,z);plaque.renderOrder=foreground?20:0;plaque.userData.sign=true;plaque.name=`표지판: ${text}`;parent.add(plaque);this.signResources.push({texture,material,geometry});
     // Orthographic camera-facing boards stay legible when the portal gently turns.
     const parentRotation=new T.Quaternion();
-    plaque.onBeforeRender=()=>{parent.getWorldQuaternion(parentRotation);plaque.quaternion.copy(parentRotation.invert().multiply(this.camera.quaternion));plaque.updateMatrixWorld(true);};
+    // 멀리 있는 간판은 흐리게 해서 첫 화면이 이름표로 가득 차지 않게 해요. 가까이 가면(13칸 안) 또렷해져요.
+    const signAt=new T.Vector3();
+    plaque.onBeforeRender=()=>{parent.getWorldQuaternion(parentRotation);plaque.quaternion.copy(parentRotation.invert().multiply(this.camera.quaternion));plaque.updateMatrixWorld(true);plaque.getWorldPosition(signAt);const far=Math.hypot(signAt.x-this.player.position.x,signAt.z-this.player.position.z);material.opacity=far<13?1:Math.max(.16,1-(far-13)/7);};
     if(document.fonts){
       this.signFontReady??=document.fonts.load('116px "Jua"').catch(()=>null);
       void this.signFontReady.then(()=>{if(!this.signResources.some(r=>r.texture===texture))return;paint();texture.needsUpdate=true;this.renderOnce();});
