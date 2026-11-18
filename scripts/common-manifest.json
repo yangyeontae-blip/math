@@ -103,7 +103,7 @@
     "tests/room-life.test.ts": "82da63ebe7d5cd2e9e9d4ee9fa5717834bd2a2a2bb521d1926ca2abf55d1ef94",
     "src/world-two.ts": "67947f061174e31c165e2ab571aed6a55141cbc449605e4cb50bd7c0aa56dc49",
     "src/world-two-rules.ts": "7219f637f5efb059df6c5659a0295408bbb709d4ad66048dbcfabf79f53bd057",
-    "src/world-two-ui.ts": "22b2d29ad23728bb3f4cce96730b026edf6de4cfe500eb3e192519f951125d80",
+    "src/world-two-ui.ts": "afb583f2e43dc91c80920f1220d5f0cf25c0755e7338adf6d82f83de12cca480",
     "src/world-two-models.ts": "1556cdc00a679e8e4565fb1f351db4037f00be9c0084544e1d7a69bea282e5cf",
     "tests/world-two.test.ts": "a4e056d8c9f8f265106837ed26e3dcb4660d2784769b270631b0558c01b68c9d",
     "e2e/world-two.spec.mjs": "8e8337437a09397031bd1b3f09d00d9aedc64683916efe696bed2a91e5b01e00",
@@ -369,5 +369,5 @@
     "public/art/berry-items-v1/weapon-8.svg": "e0ff61f6ebf6747f5af8484e58f460f8bc8906ec60b55ef7422a356f3ac958ea",
     "public/art/berry-items-v1/weapon-9.svg": "f8a6c5fd10d7dd5073bc00d3690a85c2097ff1ea27b0633891d98ece61d0c5d5"
   },
-  "generation": "8fc8a5d86ca0aa4db3e77ac679a2878a68c60e45748dd9b719840953c8af8474"
+  "generation": "d546398d43562800ce33f0bb0fa6cacb8e0f2e57537f4284824a62e2b2499838"
 }

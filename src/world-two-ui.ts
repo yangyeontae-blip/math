@@ -37,12 +37,19 @@ export function renderWorldTwo(s:Save) {
   </header><nav class="nav-tabs" aria-label="별너머 군도 모험 종류">
     <button class="secondary" aria-pressed="true" data-career-action="open-world2">⚔ 사냥 탐험</button>
     <button class="secondary" data-astral-action="map">📚 심화 수학숲</button>
-  </nav><h3 class="world-two-section">안쪽 군도 · 레벨 60–100</h3>
+    <button class="secondary" data-career-action="open-world3">🌈 세계 3</button>
+  </nav>${worldThreeBanner(s)}<h3 class="world-two-section">안쪽 군도 · 레벨 60–100</h3>
   <div class="world-two-regions">${regionCards(s,0,WORLD_TWO_CORE_REGIONS)}</div>${bossCard(s,2)}
   <h3 class="world-two-section">외곽 군도 · 레벨 120–500</h3>
   <div class="world-two-regions">${regionCards(s,WORLD_TWO_CORE_REGIONS,WORLD_THREE_START)}</div>${bossCard(s,5)}
   <button class="career-primary" data-career-action="open-world3">🌈 세계 3 · 새벽의 세계수</button>${collection}<p class="career-note">안쪽 군도 무기·의상은 가방과 상점 미리보기에서 장착·강화해요. 진행과 보상은 저장 파일에 담겨요.</p>
   <button class="career-return" data-career-action="close">게임으로 돌아가기</button></section>`;
+}
+// 세계 3으로 가는 길을 맨 위에서 바로 보여 줘요. 열렸으면 첫 지역으로 바로 들어가는 버튼, 아직이면 남은 조건을 알려 줘요.
+function worldThreeBanner(s:Save){
+  const first=WORLD_TWO_REGIONS[WORLD_THREE_START],open=canEnterWorldTwo(s.world2,s.level,first.id,false,operatorAccess());
+  return open?`<div class="world-three-banner is-open"><div><strong>세계 3 · 새벽의 세계수가 열렸어요</strong><small>${first.name}부터 이어서 탐험해요.</small></div><button class="career-primary" data-career-action="open-world3">세계 3으로 가기</button></div>`
+    :`<div class="world-three-banner"><div><strong>세계 3 · 새벽의 세계수</strong><small>정령왕의 빛숲 완수와 레벨 ${first.level} 달성 후 열려요. 지금 레벨 ${s.level}</small></div><button class="secondary" data-career-action="open-world3">미리 보기</button></div>`;
 }
 export function renderWorldThree(s:Save){return `<section class="career-sheet world-three-sheet"><header class="career-heading"><small>WORLD 03 · 새벽의 세계수</small><h2>${WORLD_THREE_NAME}</h2><p>정령왕의 빛숲 완수·레벨 600부터 이어지는 새 세계예요. 지역마다 등불 3개와 정령 8마리를 찾아 다음 길을 열어요. 마지막 성소에서는 세계수 수호자에게 도전해요.</p></header><div class="world-two-regions">${regionCards(s,WORLD_THREE_START,WORLD_TWO_REGIONS.length)}</div>${bossCard(s,12)}<button class="secondary wide" data-career-action="open-world2-map">세계 2 지도</button><button class="career-return" data-career-action="close">게임으로 돌아가기</button></section>`;}
 export function worldTwoTask(s:Save) {
