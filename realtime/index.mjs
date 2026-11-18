@@ -6,6 +6,7 @@ export {ForestParty} from './party.mjs';
 import {PlazaSocial} from './social.mjs';
 import {DurableObject} from 'cloudflare:workers';
 import {PLAZA_VERSION,PLAZA_ROOM,PLAZA_CAPACITY,PLAZA_AVATAR_CATALOG,PLAZA_TITLE_CATALOG,compatibleTitleProfile,compatiblePlazaProfile,parsePlazaProfile,parsePlazaPose,isPlazaEmote} from '../src/plaza-protocol.ts';
+const MARKET_ROOM='berry-forest-market-street';
 const ORIGINS=new Set(['https://yangyeontae-blip.github.io','https://berry-forest-school.yangyeontae.chatgpt.site','capacitor://localhost','ionic://localhost','https://localhost','http://localhost']);
 export function allowedPlazaOrigin(origin){return ORIGINS.has(origin)||/^http:\/\/(localhost|127\.0\.0\.1):[0-9]+$/.test(origin??'');}
 const json=(value,status=200)=>new Response(JSON.stringify(value),{status,headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store','x-content-type-options':'nosniff'}});
@@ -14,6 +15,8 @@ export default {
   const url=new URL(request.url);
   if(url.pathname==='/hall'){const origin=request.headers.get('origin');if(!allowedPlazaOrigin(origin))return json({error:'origin'},403);const cors={'access-control-allow-origin':origin,'vary':'Origin','access-control-allow-methods':'GET, POST, OPTIONS','access-control-allow-headers':'Authorization, Content-Type'};if(request.method==='OPTIONS')return new Response(null,{status:204,headers:cors});const r=await env.PLAZA.get(env.PLAZA.idFromName(PLAZA_ROOM)).fetch(request);const headers=new Headers(r.headers);for(const [k,v]of Object.entries(cors))headers.set(k,v);return new Response(r.body,{status:r.status,headers});}
   if(url.pathname==='/forest/connect'){if(!allowedPlazaOrigin(request.headers.get('origin')))return json({error:'origin'},403);if(request.method!=='GET'||request.headers.get('upgrade')?.toLowerCase()!=='websocket')return json({error:'websocket_required'},426);if(url.searchParams.get('v')!==String(PLAZA_VERSION))return json({error:'update_required'},409);const scene=parseForestRoom(url);if(!scene)return json({error:'forest'},400);return env.PLAZA.get(env.PLAZA.idFromName(forestRoomKey(scene))).fetch(request);}
+  // 상점거리: 광장과 같은 규칙의 고정된 방 하나예요.
+  if(url.pathname==='/market/connect'){if(!allowedPlazaOrigin(request.headers.get('origin')))return json({error:'origin'},403);if(request.method!=='GET'||request.headers.get('upgrade')?.toLowerCase()!=='websocket')return json({error:'websocket_required'},426);if(url.searchParams.get('v')!==String(PLAZA_VERSION))return json({error:'update_required'},409);return env.PLAZA.get(env.PLAZA.idFromName(MARKET_ROOM)).fetch(request);}
   if(url.pathname==='/party/connect'){if(!allowedPlazaOrigin(request.headers.get('origin')))return json({error:'origin'},403);if(request.method!=='GET'||request.headers.get('upgrade')?.toLowerCase()!=='websocket')return json({error:'websocket_required'},426);const code=url.searchParams.get('code');if(!/^[A-Z0-9]{8}$/.test(code??''))return json({error:'code'},400);return env.PARTIES.get(env.PARTIES.idFromName(code)).fetch(request);}
   if(url.pathname==='/health'&&request.method==='GET')return json({ok:true,version:PLAZA_VERSION,room:PLAZA_ROOM,capacity:PLAZA_CAPACITY});
   if(url.pathname==='/operator/session'){

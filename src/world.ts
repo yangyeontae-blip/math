@@ -1749,14 +1749,15 @@ export class World {
   forestPresenceOnline=false;
   get isPublicForest(){return this.active&&this.stage>0&&!this.inRoom&&!this.inHomestead&&!this.inMarket&&!this.inAcademy&&!this.inHunting&&!this.inTraining&&!this.inAstralStudy;}
   partyScene=false;
+  get isPublicMarket(){return this.active&&this.inMarket&&!this.inRoom&&!this.inHomestead&&!this.inAcademy&&!this.inHunting&&!this.inTraining&&!this.inAstralStudy;}
   get isPublicPlaza(){return this.active&&this.stage===0&&!this.inRoom&&!this.inHomestead&&!this.inMarket&&!this.inAcademy&&!this.inHunting&&!this.inTraining&&!this.inAstralStudy;}
   setPlazaIdentity(profile:PlazaProfile|null,role='player'){this.plazaVisual.setSelf(profile,this.player,role);}
-  upsertPlazaPlayer(player:PlazaPlayer){if(this.isPublicPlaza||this.isPublicForest||this.partyScene)this.plazaVisual.upsert(player);}
+  upsertPlazaPlayer(player:PlazaPlayer){if(this.isPublicPlaza||this.isPublicMarket||this.isPublicForest||this.partyScene)this.plazaVisual.upsert(player);}
   removePlazaPlayer(id:string){this.plazaVisual.remove(id);}
   clearPlazaPlayers(){this.plazaVisual.clearPeers();}
   plazaEmote(id:string,emote:PlazaEmote){this.plazaVisual.emote(id,emote);}
   selfPlazaEmote(emote:PlazaEmote){this.plazaVisual.selfEmote(emote);}
-  showPlazaSpeech(id:string|null,message:import('./plaza-social').PlazaChatMessage){if(this.isPublicPlaza||this.isPublicForest||this.partyScene)this.plazaVisual.speak(id,message);}
+  showPlazaSpeech(id:string|null,message:import('./plaza-social').PlazaChatMessage){if(this.isPublicPlaza||this.isPublicMarket||this.isPublicForest||this.partyScene)this.plazaVisual.speak(id,message);}
   clearPlazaSpeech(filter:{messageId?:string;senderId?:string}){this.plazaVisual.clearSpeech(filter);}
   setActive(active: boolean) { this.active = active; this.paused = !active; if (!active) this.clearInput(); this.syncAnimation(); }
   setPaused(paused: boolean) { this.paused = paused; if (paused) this.clearInput(); this.syncAnimation(); }
@@ -1983,7 +1984,7 @@ export class World {
     if (this.player.userData.sparkles) this.player.userData.sparkles.rotation.y += dt;
     for (let i = this.particles.length - 1; i >= 0; i--) { const q = this.particles[i]; q.life -= dt; q.v.y -= dt * 5; q.mesh.position.addScaledVector(q.v, dt); q.mesh.scale.setScalar(Math.max(0, q.life)); if (q.life <= 0) { this.scene.remove(q.mesh); this.particles.splice(i, 1); } }
     const target = this.storyActivityFocus ?? (this.active ? p : this.cameraTarget.set(0, 0, -1)); this.follow.lerp(target, 1 - Math.exp(-dt * (this.storyActivityFocus ? 8 : 6))); if (this.active && !this.storyActivityFocus && (this.occlusionTick++ & 7) === 0) this.updateOcclusion();
-    this.camera.position.copy(this.follow).add(this.storyActivityFocus ? this.cameraTarget.set(0, 13, 16) : this.inRoom || this.inAcademy ? ROOM_CAMERA_OFFSET : CAMERA_OFFSET); this.camera.lookAt(this.follow); this.updateGuide();this.plazaVisual.update(dt,this.camera,this.player,this.isPublicPlaza||this.isPublicForest||this.partyScene,this.active&&!this.storyActivityFocus,this.lowQuality,matchMedia('(prefers-reduced-motion: reduce)').matches);this.scene.fog=null;this.storybook.update(this.time,p,this.petModel?.position??null,this.shadowFloor);updatePlanetaryScenery(this.planetVisual,this.time,this.lowQuality,matchMedia('(prefers-reduced-motion: reduce)').matches);updatePlanetaryScenery(this.astralGateway,this.time,this.lowQuality,matchMedia('(prefers-reduced-motion: reduce)').matches); this.renderer.render(this.scene, this.camera);
+    this.camera.position.copy(this.follow).add(this.storyActivityFocus ? this.cameraTarget.set(0, 13, 16) : this.inRoom || this.inAcademy ? ROOM_CAMERA_OFFSET : CAMERA_OFFSET); this.camera.lookAt(this.follow); this.updateGuide();this.plazaVisual.update(dt,this.camera,this.player,this.isPublicPlaza||this.isPublicMarket||this.isPublicForest||this.partyScene,this.active&&!this.storyActivityFocus,this.lowQuality,matchMedia('(prefers-reduced-motion: reduce)').matches);this.scene.fog=null;this.storybook.update(this.time,p,this.petModel?.position??null,this.shadowFloor);updatePlanetaryScenery(this.planetVisual,this.time,this.lowQuality,matchMedia('(prefers-reduced-motion: reduce)').matches);updatePlanetaryScenery(this.astralGateway,this.time,this.lowQuality,matchMedia('(prefers-reduced-motion: reduce)').matches); this.renderer.render(this.scene, this.camera);
   }
   private updateGuide() {
     const target = this.guideTarget;

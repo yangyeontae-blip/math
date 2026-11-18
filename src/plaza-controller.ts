@@ -59,9 +59,9 @@ export function mountPlaza(h:{state:()=>Save|null;world:()=>World|undefined;host
  function sync(){
   const world=h.world(),s=h.state();if(!world||!s){tools.hidden=true;chat?.hide();client.stop();return;}
   const profile=plazaProfile(s);if(roleUntil&&roleUntil<=Date.now()){ownRole='player';badge.hidden=true;}world.setPlazaIdentity(profile,ownRole);client.configure(identity,auth.token);client.setGrade(s.grade);
-  const scene=world.isPublicForest?{grade:s.grade,forest:s.forest,stage:journeyFor(s).stage}:null;const here=world.isPublicPlaza||!!scene;if(forestScene!==!!scene){forestScene=!!scene;render();}world.forestPresenceOnline=!!scene&&connection==='online';heading.textContent=scene?'함께하는 수학숲':'함께하는 중앙광장';note.textContent=scene?'같은 학년·같은 숲·같은 단계의 친구들을 만나요. 진행 공유는 친구와 모험에서 시작해요.':'광장에서는 레벨·별명·칭호·외형이 친구들에게 보여요.';tools.hidden=!here;if(!here){chat?.hide();panel.hidden=true;status.setAttribute('aria-expanded','false');}
+  const scene=world.isPublicForest?{grade:s.grade,forest:s.forest,stage:journeyFor(s).stage}:null;const market=!scene&&world.isPublicMarket;const here=world.isPublicPlaza||market||!!scene;if(forestScene!==!!scene){forestScene=!!scene;render();}world.forestPresenceOnline=!!scene&&connection==='online';heading.textContent=scene?'함께하는 수학숲':market?'함께하는 상점거리':'함께하는 중앙광장';note.textContent=scene?'같은 학년·같은 숲·같은 단계의 친구들을 만나요. 진행 공유는 친구와 모험에서 시작해요.':'광장에서는 레벨·별명·칭호·외형이 친구들에게 보여요.';tools.hidden=!here;if(!here){chat?.hide();panel.hidden=true;status.setAttribute('aria-expanded','false');}
   const p=world.player.position;
-  client.sync(here&&enabled&&!document.hidden,profile,{x:p.x,y:p.y,z:p.z,angle:world.player.rotation.y},Date.now(),scene);
+  client.sync(here&&enabled&&!document.hidden,profile,{x:p.x,y:p.y,z:p.z,angle:world.player.rotation.y},Date.now(),scene,market);
  }
  const timer=setInterval(sync,200);
  const visibility=()=>sync();const stop=()=>client.stop();

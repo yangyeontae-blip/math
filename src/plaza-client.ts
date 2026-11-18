@@ -9,7 +9,7 @@ export class PlazaClient {
  setGrade(grade:number){this.grade=grade;}
  invite(targetId:string,code:string,memberToken:string){if(!this.connected||!this.invitationsEnabled)return false;this.send({type:'party-invite',targetId,code,memberToken});return true;}
  declineInvite(invite:PartyInvitation){if(this.connected)this.send({type:'party-invite-reply',accepted:false,code:invite.code,id:invite.id});}
- private scene:ForestRoom|null=null;private titleCatalog=1;private titleSelection=false;private serverCatalog=2;private identity='';private operatorToken='';public chatReady=false;public role:PlazaRole='player';
+ private scene:ForestRoom|null=null;private market=false;private titleCatalog=1;private titleSelection=false;private serverCatalog=2;private identity='';private operatorToken='';public chatReady=false;public role:PlazaRole='player';
  configure(identity:string,operatorToken:string){if(this.operatorToken!==operatorToken){this.disconnect();this.retryAt=0;}this.identity=identity;this.operatorToken=operatorToken;}
  chat(text:string){if(!this.connected||!this.chatReady)return false;this.send({type:'chat',text});return true;}
  moderate(action:'chat-delete'|'chat-mute'|'chat-unmute'|'chat-mutes',data:Record<string,unknown>={}){if(!this.connected||this.role!=='operator')return false;this.send({type:action,...data});return true;}
@@ -18,8 +18,9 @@ export class PlazaClient {
  constructor(private endpoint:string,private hooks:Hooks,private createSocket:(url:string)=>WebSocket=url=>new WebSocket(url)){}
  get players(){return [...this.peers.values()];}
  get connected(){return !!this.selfId&&this.socket?.readyState===1;}
- sync(active:boolean,profile:PlazaProfile|null,pose:PlazaPose,now=Date.now(),scene:ForestRoom|null=null){
-  if(forestRoomKey(scene)!==forestRoomKey(this.scene)){this.disconnect();this.scene=scene;this.retryAt=0;}
+ sync(active:boolean,profile:PlazaProfile|null,pose:PlazaPose,now=Date.now(),scene:ForestRoom|null=null,market=false){
+  // 상점거리는 광장과 같은 방식의 별도 방이에요. 장소가 바뀌면 이전 방에서 나가고 새 방에 들어가요.
+  if(forestRoomKey(scene)!==forestRoomKey(this.scene)||market!==this.market){this.disconnect();this.scene=scene;this.market=market;this.retryAt=0;}
   this.profile=profile;this.pose=pose;
   if(!active||!profile||!this.endpoint){this.active=false;this.disconnect();this.hooks.status(!profile&&active?'nickname':'offline',0);return;}
   this.active=true;
@@ -36,7 +37,7 @@ export class PlazaClient {
  }
  private send(value:unknown){try{this.socket?.send(JSON.stringify(value));}catch{if(this.socket)this.fail(this.socket);}}
  private connect(now:number){
-  let url:URL;try{url=new URL(this.endpoint);if(!['wss:','ws:'].includes(url.protocol))throw Error();url.pathname=this.scene?'/forest/connect':'/connect';url.search='?v='+PLAZA_VERSION+(this.scene?'&grade='+this.scene.grade+'&forest='+this.scene.forest+'&stage='+this.scene.stage:'');}catch{this.hooks.status('offline',0);this.retryAt=now+60000;return;}
+  let url:URL;try{url=new URL(this.endpoint);if(!['wss:','ws:'].includes(url.protocol))throw Error();url.pathname=this.scene?'/forest/connect':this.market?'/market/connect':'/connect';url.search='?v='+PLAZA_VERSION+(this.scene?'&grade='+this.scene.grade+'&forest='+this.scene.forest+'&stage='+this.scene.stage:'');}catch{this.hooks.status('offline',0);this.retryAt=now+60000;return;}
   this.openedAt=now;this.hooks.status(this.attempt?'retrying':'connecting',0);
   let socket:WebSocket;try{socket=this.createSocket(url.href);}catch{this.retryAt=now+5000;return;}this.socket=socket;
   socket.onopen=()=>{if(this.socket!==socket)return;this.lastPong=Date.now();this.lastPing=Date.now();this.profileAt=Date.now();this.serverCatalog=2;this.titleCatalog=1;this.titleSelection=false;const wireProfile={...compatiblePlazaProfile(this.profile!,2)};delete wireProfile.selectedTitleId;this.lastProfile=JSON.stringify([wireProfile,this.grade]);this.lastSent=JSON.stringify(this.pose);this.send({type:'join',profile:wireProfile,grade:this.grade,partyInvites:true,pose:this.pose,batchedPoses:true,titleSelection:true,titleCatalog:PLAZA_TITLE_CATALOG,avatarCatalog:2,salonCatalog:true,chatIdentity:this.identity,operatorToken:this.operatorToken});};
