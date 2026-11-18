@@ -1,3 +1,5 @@
+import './design-tokens.css';
+import {uiIcon, uiLabel, decorateUiIcons} from './ui-icons';
 import {mathLearningNotice} from './learning-reward-view';
 import {dawnItem,dawnShopBanner,dawnShopOrder,DAWN_START} from './dawn-collection';
 import './dawn-collection.css';
@@ -97,7 +99,7 @@ const $ = <T extends HTMLElement = HTMLElement>(selector: string) => document.qu
 const root = $('#game');
 const COPYRIGHT_OWNER = '양연태';
 const COPYRIGHT_YEAR = 2026;
-root.innerHTML = `<div id="world" aria-label="베리숲 3D 마을"></div><div id="hud" hidden>
+root.innerHTML = uiLabel(`<div id="world" aria-label="베리숲 3D 마을"></div><div id="hud" hidden>
   <header class="topbar"><div class="player-card"><span class="level-badge" id="level">1</span><div><strong id="nickname"></strong><div class="career-badges"><span id="career-title" class="career-title" aria-label="현재 직업">새싹 모험가</span><span id="guardian-title" class="guardian-title" hidden>뽀짝이의 수호자</span></div><span id="level-milestone" class="level-milestone" hidden></span><div class="xp-track"><div id="xp-fill"></div></div><small id="xp-text"></small><span id="save-status" class="save-status" role="status" aria-live="polite">✓ 저장됨</span></div></div><div class="brand-mini">베리숲 <span>모험학교</span></div><div class="top-actions"><span class="wallet">🍓 <b id="berries">0</b><span>베리</span></span><button id="inventory" class="icon-button" aria-label="내 가방">🎒</button><button id="stage-map" class="icon-button" aria-label="지도">🗺</button><button id="settings" class="icon-button" aria-label="설정과 저장">⚙</button></div></header>
   <aside class="quest-card"><button id="quest-toggle" class="quest-toggle" aria-expanded="true" aria-controls="quest-body"><span>🌿 지금 할 일</span><span class="quest-chevron" aria-hidden="true">⌃</span><span class="quest-peek" id="quest-peek"></span></button><div id="quest-body" class="quest-body"><strong id="quest-title">베리숲에 오신 걸 환영해요</strong><div id="quest-list"></div><button id="daily-open" class="text-button codex-open daily-open">📅 오늘의 미션<i class="daily-dot" aria-hidden="true"></i></button><button id="boss-open" class="text-button codex-open">🐉 우리 반 협동 보스</button><button id="codex-open" class="text-button codex-open">📖 모험 도감</button></div></aside>
   <div class="location-pill">❋ 베리숲 마을 <span>평화로운 오후</span></div>
@@ -105,7 +107,7 @@ root.innerHTML = `<div id="world" aria-label="베리숲 3D 마을"></div><div id
   <div class="controls-help"><kbd>W A S D</kbd> 이동 <kbd>Space</kbd> 점프 <kbd>E</kbd> 대화 <kbd>F</kbd> 휘두르기</div>
   <button id="interact" class="interaction" hidden></button>
   <div id="touch-controls"><div id="joystick" role="group" aria-label="이동 조이스틱"><span id="stick"></span></div><div class="touch-actions"><button id="touch-talk">대화</button><button id="touch-attack" hidden>휘두르기</button><button id="touch-jump">점프 ↟</button></div></div>
-</div><div id="start-screen" class="start-layer"></div><dialog id="modal"><div id="modal-content"></div></dialog><div id="toast" role="status" aria-live="polite"></div><input type="file" id="import-file" accept="application/json,.json" hidden>`;
+</div><div id="start-screen" class="start-layer"></div><dialog id="modal"><div id="modal-content"></div></dialog><div id="toast" role="status" aria-live="polite"></div><input type="file" id="import-file" accept="application/json,.json" hidden>`);
 
 let nearNpcName = '';
 const community=mountCommunity({state:()=>state,open:html=>openModal(html),toast});
@@ -127,11 +129,11 @@ function castAcademySkill(id:SkillId){career.cast(id);}
 
 const todayButton = document.createElement('button'); todayButton.id = 'today-adventure'; todayButton.className = 'adventure-launch';
 $('.quest-card').prepend(todayButton); todayButton.onclick = openTodayAdventure;
-const villageButton = document.createElement('button'); villageButton.id = 'village-projects'; villageButton.className = 'text-button codex-open'; villageButton.textContent = '🌷 우리 마을 만들기';
+const villageButton = document.createElement('button'); villageButton.id = 'village-projects'; villageButton.className = 'text-button codex-open'; villageButton.innerHTML = uiLabel('🌷 우리 마을 만들기');
 $('#codex-open').before(villageButton); villageButton.onclick = openVillageProjects;
-const adventureMenu = document.createElement('button'); adventureMenu.id = 'adventure-menu'; adventureMenu.className = 'secondary wide'; adventureMenu.textContent = '🧭 지도'; $('.quest-card').append(adventureMenu);
+const adventureMenu = document.createElement('button'); adventureMenu.id = 'adventure-menu'; adventureMenu.className = 'secondary wide'; adventureMenu.innerHTML = uiLabel('🧭 지도'); $('.quest-card').append(adventureMenu);
 for (const id of ['daily-open', 'codex-open', 'village-projects']) document.getElementById(id)!.hidden = true;
-const feedbackButton = document.createElement('button'); feedbackButton.id = 'feedback-open'; feedbackButton.className = 'secondary wide main-feedback'; feedbackButton.textContent = '✉ 의견 보내기'; $('.quest-card').append(feedbackButton); feedbackButton.onclick = openFeedback;
+const feedbackButton = document.createElement('button'); feedbackButton.id = 'feedback-open'; feedbackButton.className = 'secondary wide main-feedback'; feedbackButton.innerHTML = uiLabel('✉ 의견 보내기'); $('.quest-card').append(feedbackButton); feedbackButton.onclick = openFeedback;
 const trailOpen = document.createElement('button'); trailOpen.id = 'forest-trail-open'; trailOpen.hidden = true; root.append(trailOpen);
 trailOpen.onclick = openForestExploration;
 function openForestExploration() {
@@ -293,7 +295,7 @@ function renderCurrentFocus() {
   $('#quest-list').innerHTML=`<div class="quest"><span>${escape(label)}</span><button class="quest-guide" id="focus-action">${button}</button></div>`;
   $('#focus-action').onclick=action;
   const ongoing = !!(s.expedition.active || s.story.active || s.adventure.active || stage);
-  todayButton.textContent = ongoing ? '▶ 모험 이어하기' : '🧭 오늘의 모험';
+  todayButton.innerHTML = uiIcon('compass') + (ongoing ? '모험 이어하기' : '오늘의 모험');
   todayButton.title = ongoing ? label : '추천 모험 하나와 오늘의 미션 보기';
   todayButton.onclick = ongoing ? resumeAdventure : openTodayAdventure;
 }
@@ -320,7 +322,7 @@ function openReturnChoice() {
 }
 let storyActivityOpen = false;
 const plazaReturn=document.createElement('button');plazaReturn.id='plaza-return';plazaReturn.className='secondary';plazaReturn.textContent='← 중앙 광장';plazaReturn.hidden=true;$('#stage-map').after(plazaReturn);plazaReturn.onclick=()=>{if(world.inHunting){career.exitHunting();return;}if(world.trainingStatus){career.exitTraining();return;}if(world.inMarket&&state){world.exitMarket(state);syncAvatar();refresh();persist();return;}persist();switchStage(0);};
-const petCareButton = document.createElement('button'); petCareButton.id = 'pet-care-open'; petCareButton.className = 'text-button'; petCareButton.textContent = '🐾 내 펫과 놀기'; petCareButton.hidden = true; $('#codex-open').before(petCareButton); petCareButton.onclick = () => { if (state && state.pet >= 0) openPetCare(state.pet); };
+const petCareButton = document.createElement('button'); petCareButton.id = 'pet-care-open'; petCareButton.className = 'text-button'; petCareButton.innerHTML = uiLabel('🐾 내 펫과 놀기'); petCareButton.hidden = true; $('#codex-open').before(petCareButton); petCareButton.onclick = () => { if (state && state.pet >= 0) openPetCare(state.pet); };
 const storyPanel = document.createElement('section'); storyPanel.id = 'story-activity'; storyPanel.hidden = true;
 storyPanel.setAttribute('aria-label', '숲속 수학 놀이'); root.append(storyPanel);
 let world: World, AvatarPreviewRuntime: typeof AvatarPreview;
@@ -342,7 +344,7 @@ const refreshAmbience = (change = false) => {
   if (world) world.setWeather(ambienceEnabled() ? applied : null);
   audio.setMood(ambienceEnabled() ? applied.mood : 'day');
   const location = document.querySelector<HTMLElement>('.location-pill');
-  if (location) location.dataset.ambience = ambienceEnabled() ? ambienceLabel(applied) + (real ? ` · ${realWeatherText(real)}` : '') : '';
+  if (location) location.dataset.ambience = ambienceEnabled() ? ambienceLabel(applied).replace(/\p{Extended_Pictographic}|\uFE0F/gu, '').trim() + (real ? ` · ${realWeatherText(real)}` : '') : '';
 };
 const scheduleAmbience = () => {
   if (ambienceTimer) clearTimeout(ambienceTimer);
@@ -351,7 +353,7 @@ const scheduleAmbience = () => {
 const startAmbienceCycle = () => { randomizeAmbience(); refreshAmbience(); scheduleAmbience(); };
 const stopAmbienceCycle = () => { if (ambienceTimer) clearTimeout(ambienceTimer); ambienceTimer = undefined; };
 const expeditionButton = document.createElement('button');
-expeditionButton.id = 'expedition'; expeditionButton.className = 'secondary garden-entry'; expeditionButton.textContent = '✦ 별빛 원정';
+expeditionButton.id = 'expedition'; expeditionButton.className = 'secondary garden-entry'; expeditionButton.innerHTML = uiLabel('✦ 별빛 원정');
 $('#quest-list').after(expeditionButton); expeditionButton.onclick = () => openExpeditionBoard();
 const questCard = $('.quest-card');
 function setQuestCollapsed(collapsed: boolean) {
@@ -454,7 +456,7 @@ function rideEffectBadges(id: number) { const item = RIDES[id]; return `<div cla
 function petEffectBadges(id: number) { const item = PETS[id]; if(id===PPOJJAK_PET_ID)return '<div class="stat-chips"><span class="stat-chip pet-hero">[전설] 귀염둥이 뽀짝이</span><span class="stat-chip">🍓 탐색 22칸</span><span class="stat-chip">⚔ 사냥 공격 +45%</span><span class="stat-chip">♥ 체력 +35% · 피해 20% 감소</span><span class="stat-chip">🍓 사냥 베리 +50% · 경험치 +40%</span><span class="stat-chip">👑 뽀짝이의 수호자 · 황금 발자국 후광</span></div>'; return `<div class="stat-chips"><span class="stat-chip pet-range">🍓 ${item.radius}칸 안의 베리 발견</span><span class="stat-chip pet-move">🐾 직접 가서 한 번만 수집</span>${item.flying ? '<span class="stat-chip pet-fly">🪽 땅 위를 둥실 날아서 따라와요</span>' : ''}${id === HERO_BREAD_PET_ID ? '<span class="stat-chip pet-hero">✨ 캐릭터 주위에 황금빛 광채</span><span class="stat-chip pet-hero">👑 황금빛 영웅 펫</span>' : ''}</div>`; }
 function decorateCatalogUI(root:HTMLElement){const entries:CatalogEntry[]=[];const add=(kind:CatalogEntry['kind'],items:readonly {name:string;price:number}[])=>items.forEach((item,id)=>entries.push({kind,id,name:item.name,price:item.price}));add('weapon',WEAPONS);add('outfit',OUTFITS);add('ride',RIDES);add('pet',PETS);add('potion',POTIONS);add('hairstyle',HAIRSTYLES);add('face',FACES);add('garden',HOME_ITEMS);FURNITURE.forEach((_,id)=>entries.push({kind:'furniture',id,name:furnitureName(id),price:0}));decorateItemCatalog(root,entries);}
 function itemColor(color: number) { return `#${color.toString(16).padStart(6, '0')}`; }
-function toast(message: string) { $('#toast').textContent = message; $('#toast').classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => $('#toast').classList.remove('show'), 2400); }
+function toast(message: string) { $('#toast').innerHTML = uiLabel(escape(message)); $('#toast').classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => $('#toast').classList.remove('show'), 2400); }
 function persist() {
   if (!state) return;
   if (world.inHomestead) { const p = world.player.position; state.homestead.position = savedGardenPosition(p.x, p.z); }
@@ -481,7 +483,7 @@ function refresh() {
   $('#weapon-name').textContent = `${WEAPONS[s.weapon].icon} ${WEAPONS[s.weapon].name} +${s.weapons[s.weapon]} · ${OUTFITS[s.outfit].name}`;decorateCatalogUI($('#weapon-name'));
   $('#weapon-effect').textContent = equipmentEffectText(s);
   const expedition = s.forest === 'division' ? s.expedition.active : null;
-  $('.location-pill').innerHTML = world?.inAstralStudy ? '📚 '+ASTRAL_FORESTS[world.inAstralStudy.forest].name+' <span>'+s.grade+'학년 심화 · '+(world.inAstralStudy.stage+1)+'/10단계</span>' : world?.trainingStatus ? '🎯 수련 마당 <span>실제 스킬 연습 · 보상 없음</span>' : world?.inWorldTwo ? '🌌 '+(world.inWorldTwo.region>=10?WORLD_THREE_NAME:WORLD_TWO_NAME)+' <span>'+WORLD_TWO_REGIONS[world.inWorldTwo.region].name+(world.inWorldTwo.boss?' · 수호자의 성소':'')+'</span>' : world?.inHunting ? '⚔ 가시덩굴 숲 <span>몬스터 사냥 · '+career.jobName()+'</span>' : world?.inAcademy ? '🏛 모험학교 <span>배움의 홀 · 스킬과 수련</span>' : world?.inMarket ? '🛍️ 상점거리 <span>여섯 가게 · 몬스터 없는 쉼터</span>' : world?.inHomestead ? '🏡 나의 집 <span>직접 만든 정원 · 주민과 펫의 쉼터</span>' : world?.inRoom ? '⌂ 나의 집 <span>의자에 앉고 책을 읽어요</span>' : journey.stage ? `${s.forest === 'division' ? '❋' : FOREST_INFO[s.forest].icon} ${journey.stage}단계 숲 <span>${expedition?.stage === journey.stage ? '✦ 별빛 원정' : `${forestName} · ${STAGES[journey.stage - 1].name}`}</span>` : '🌿 중앙 광장 <span>선생님과 만나는 모험의 출발점</span>';
+  $('.location-pill').innerHTML = uiLabel(world?.inAstralStudy ? '📚 '+ASTRAL_FORESTS[world.inAstralStudy.forest].name+' <span>'+s.grade+'학년 심화 · '+(world.inAstralStudy.stage+1)+'/10단계</span>' : world?.trainingStatus ? '🎯 수련 마당 <span>실제 스킬 연습 · 보상 없음</span>' : world?.inWorldTwo ? '🌌 '+(world.inWorldTwo.region>=10?WORLD_THREE_NAME:WORLD_TWO_NAME)+' <span>'+WORLD_TWO_REGIONS[world.inWorldTwo.region].name+(world.inWorldTwo.boss?' · 수호자의 성소':'')+'</span>' : world?.inHunting ? '⚔ 가시덩굴 숲 <span>몬스터 사냥 · '+career.jobName()+'</span>' : world?.inAcademy ? '🏛 모험학교 <span>배움의 홀 · 스킬과 수련</span>' : world?.inMarket ? '🛍️ 상점거리 <span>여섯 가게 · 몬스터 없는 쉼터</span>' : world?.inHomestead ? '🏡 나의 집 <span>직접 만든 정원 · 주민과 펫의 쉼터</span>' : world?.inRoom ? '⌂ 나의 집 <span>의자에 앉고 책을 읽어요</span>' : journey.stage ? `${s.forest === 'division' ? '❋' : FOREST_INFO[s.forest].icon} ${journey.stage}단계 숲 <span>${expedition?.stage === journey.stage ? '✦ 별빛 원정' : `${forestName} · ${STAGES[journey.stage - 1].name}`}</span>` : '🌿 중앙 광장 <span>선생님과 만나는 모험의 출발점</span>');
   expeditionButton.hidden = true;
   renderCurrentFocus();renderAcademyBar();
   audio.music = s.settings.music; audio.effects = s.settings.sound;display.apply();
@@ -537,6 +539,7 @@ function openModal(html: string, cls = '') {
   const tracked = menuPending, parent = tracked ? (menuHistory.hasParent ? previousMenu : null) : menuHistory.current;
   menuPending = false;
   dialog.className = cls; $('#modal-content').innerHTML = `<div class="modal-navigation"><button id="modal-back" type="button" class="secondary" ${!battle && !parent ? 'hidden' : ''}>${battle ? '게임으로 돌아가기' : '← 이전 메뉴'}</button></div>`+html; if (!dialog.open) dialog.showModal();
+  decorateUiIcons($('#modal-content'));
   if(/shop|inventory|salon|room|home/.test(cls)||/data-room|home-editor|data-home/.test(html))decorateCatalogUI($('#modal-content'));
   dialog.scrollTop = 0;
   $('#modal-back').onclick=()=>{if(battle){exitBattle();return;}if(parent)parent();else closeModal();};
@@ -586,9 +589,31 @@ async function showStartPreview(index: number) {
 }
 function showStart() {
   stopAmbienceCycle(); if (world!) { world.setActive(false); } startPreviewRequest++; startPreview?.dispose(); startPreview = null; $('#hud').hidden = true; $('#start-screen').hidden = false;
-  $('#start-screen').innerHTML = `<section class="welcome-card"><div class="logo-mark">✿</div><span class="eyebrow">작은 모험, 자라는 생각</span><h1>베리숲<br><span>모험학교</span></h1><p class="intro">숲에서 발견하고, 나만의 마을을 꾸며요.<br>수학으로 숲의 작은 약속을 풀어 보세요.</p><label class="name-label grade-label">몇 학년 모험을 떠날까요?</label><div class="grade-picker" role="radiogroup" aria-label="학년 선택">${([1,2,3,4,5,6] as SchoolGrade[]).map(grade => `<button type="button" data-grade="${grade}" role="radio" aria-checked="${selectedGrade === grade}" class="${selectedGrade === grade ? 'selected' : ''}">${grade}<small>학년</small></button>`).join('')}</div><div id="start-avatar" class="start-avatar"></div><div class="character-picker" role="group" aria-label="캐릭터 선택">${CHARACTERS.map((c, i) => `<button class="character-choice ${i === selected ? 'selected' : ''}" data-character="${i}" aria-pressed="${i === selected}"><span class="character-dot" style="--hair:#${c.hair.toString(16)};--skin:#${c.skin.toString(16)}">${['✿', '●', '☾', '✦'][i]}</span>${c.name}</button>`).join('')}</div><p id="character-desc" class="subtle">${CHARACTERS[selected].desc} · 능력은 모두 같아요</p><label class="name-label" for="nickname-input">모험가의 이름</label><input id="nickname-input" maxlength="10" placeholder="닉네임을 적어 주세요" autocomplete="off"><p id="start-error" class="error" role="alert"></p><button class="primary start-button" id="new-game">${saved ? '새 모험 시작' : '숲으로 출발하기'} <span>→</span></button>${saved ? `<button class="secondary wide" id="continue">${escape(saved.nickname)} · ${saved.grade}학년 · Lv.${saved.level} 이어하기</button>` : ''}<button class="secondary wide main-feedback" id="start-feedback">✉ 의견 보내기</button><button class="secondary wide" id="start-account">다른 기기에서도 이어하기 · 내 모험 보관</button><button class="text-button" id="start-import">저장 파일 불러오기</button><small class="save-note">이 기기와 브라우저에 모험이 저장돼요</small><button class="legal-link" id="start-legal">© ${COPYRIGHT_YEAR} ${COPYRIGHT_OWNER} · 저작권과 이용 안내</button></section><div class="start-world-caption" id="start-weather" aria-live="polite"><span>❋</span> 오늘도, 새로운 모험이 기다려요</div>`;
-  // 기상청 실시간 날씨를 첫 화면에 보여 줘요. 서버가 없거나 실패하면 원래 문구 그대로예요.
-  if (weatherRegion()) void fetchRealWeather().then(real => { const el = document.getElementById('start-weather'); if (real && el && !$('#start-screen').hidden) el.innerHTML = `<span>❋</span> ${escape(realWeatherText(real))} <small>· 숲에도 같은 날씨가 찾아와요</small>`; });
+  $('#start-screen').innerHTML = `<section class="welcome-card">
+    <div class="start-story"><div class="start-wordmark"><span class="logo-mark" aria-hidden="true">${uiIcon('leaf')}</span> BERRY FOREST · 모험 수첩</div>
+      <span class="eyebrow">작은 모험, 자라는 생각</span><h1>베리숲<br><span>모험학교</span></h1>
+      <p class="intro">숲에서 발견하고,<br>나만의 마을을 꾸며요.<br>수학으로 작은 약속을 풀어 보세요.</p>
+      <div class="start-trail" aria-hidden="true">${uiIcon('compass')}<span></span>${uiIcon('book')}<span></span>${uiIcon('home')}</div>
+      <p class="start-story-note">발견하고 · 생각하고 · 함께 자라는 숲<br>1~6학년, 나의 속도로 걸어요.</p>
+      <div class="start-world-caption" id="start-weather" aria-live="polite">${uiIcon('cloud')} 기상청 날씨를 확인하고 있어요…</div>
+    </div>
+    <div class="start-departure"><p class="departure-kicker">모험가 등록 <span>01 / 출발 준비</span></p>
+      <label class="name-label grade-label">몇 학년 모험을 떠날까요?</label><div class="grade-picker" role="radiogroup" aria-label="학년 선택">${([1,2,3,4,5,6] as SchoolGrade[]).map(grade => `<button type="button" data-grade="${grade}" role="radio" aria-checked="${selectedGrade === grade}" class="${selectedGrade === grade ? 'selected' : ''}">${grade}<small>학년</small></button>`).join('')}</div>
+      <div class="start-character"><div id="start-avatar" class="start-avatar"></div><div class="start-character-options"><div class="character-picker" role="group" aria-label="캐릭터 선택">${CHARACTERS.map((c, i) => `<button class="character-choice ${i === selected ? 'selected' : ''}" data-character="${i}" aria-pressed="${i === selected}"><span class="character-dot" style="--hair:#${c.hair.toString(16)};--skin:#${c.skin.toString(16)}">${['✿', '●', '☾', '✦'][i]}</span>${c.name}</button>`).join('')}</div><p id="character-desc" class="subtle">${CHARACTERS[selected].desc} · 능력은 모두 같아요</p></div></div>
+      <label class="name-label" for="nickname-input">모험가의 이름</label><input id="nickname-input" maxlength="10" placeholder="닉네임을 적어 주세요" autocomplete="off"><p id="start-error" class="error" role="alert"></p>
+      <button class="primary start-button" id="new-game">${saved ? '새 모험 시작' : '숲으로 출발하기'} <span>→</span></button>
+      ${saved ? `<button class="secondary wide" id="continue">${escape(saved.nickname)} · ${saved.grade}학년 · Lv.${saved.level} 이어하기</button>` : ''}
+      <small class="save-note">이 기기와 브라우저에 모험이 저장돼요</small>
+      <div class="start-utilities"><button class="secondary wide" id="start-account">다른 기기에서도 이어하기 · 내 모험 보관</button><button class="text-button" id="start-import">저장 파일 불러오기</button><button class="secondary wide main-feedback" id="start-feedback">${uiIcon('mail')} 의견 보내기</button></div>
+      <button class="legal-link" id="start-legal">© ${COPYRIGHT_YEAR} ${COPYRIGHT_OWNER} · 저작권과 이용 안내</button>
+    </div></section>`;
+  if (weatherRegion()) void fetchRealWeather().then(real => {
+    const el = document.getElementById('start-weather');
+    if (el && !$('#start-screen').hidden) el.innerHTML = real
+      ? `${uiIcon(real.weather === 'snow' ? 'snow' : real.weather === 'rain' ? 'cloud' : 'leaf')} ${escape(realWeatherText(real))}<small>숲에도 같은 날씨가 찾아와요</small>`
+      : `${uiIcon('cloud')} 날씨를 받지 못했어요. 인터넷 확인 후 새로고침해 주세요.<small>모험은 바로 시작할 수 있어요.</small>`;
+  });
+  else $('#start-weather').innerHTML = `${uiIcon('leaf')} 숲의 날씨로 모험해요.<small>실제 날씨는 설정에서 켤 수 있어요.</small>`;
   void showStartPreview(selected);
   document.querySelectorAll<HTMLButtonElement>('[data-grade]').forEach(button => button.onclick = () => { selectedGrade = Number(button.dataset.grade) as SchoolGrade; document.querySelectorAll<HTMLButtonElement>('[data-grade]').forEach(item => { const on = item === button; item.classList.toggle('selected', on); item.setAttribute('aria-checked', String(on)); }); });
   document.querySelectorAll<HTMLButtonElement>('[data-character]').forEach(b => b.onclick = () => { selected = Number(b.dataset.character); document.querySelectorAll<HTMLButtonElement>('[data-character]').forEach(x => { x.classList.toggle('selected', x === b); x.setAttribute('aria-pressed', String(x === b)); }); $('#character-desc').textContent = `${CHARACTERS[selected].desc} · 능력은 모두 같아요`; void showStartPreview(selected); });
@@ -1278,7 +1303,7 @@ async function finishCurriculumQuestion() {
   $('#mission-return').onclick = () => void openCurriculumUnit(run.unit as NewCurriculumUnitId);
 }
 function rankList(ranks: GlobalRank[]) {
-  if (!ranks.length) return '<p class="note">아직 등록된 원정 기록이 없어요. 첫 번째 별빛 탐험가가 되어 보세요!</p>';
+  if (!ranks.length) return '<p class="note">아직 원정 기록이 없어요. 새 원정을 완수해 첫 기록을 남겨 보세요.</p>';
   return `<ol class="local-ranking">${ranks.map(rank => `<li class="${rank.isMine ? 'mine' : ''}"><b>${rank.rank}</b><span>${escape(rank.nickname)}${rank.isMine ? ' <small>나</small>' : ''}</span><strong>✦ ${rank.completed}회</strong></li>`).join('')}</ol>`;
 }
 async function loadGlobalRankingPanel(s: Save) {
@@ -1289,7 +1314,7 @@ async function loadGlobalRankingPanel(s: Save) {
     const current = document.querySelector<HTMLElement>('#global-ranking-panel'); if (current) current.innerHTML = rankList(ranks);
   } catch {
     const current = document.querySelector<HTMLElement>('#global-ranking-panel');
-    if (current) current.innerHTML = '<p class="ranking-unavailable">🌧️ 전체 랭킹을 불러오지 못했어요.<br>인터넷을 확인하고 게시판을 다시 열어 주세요.</p>';
+    if (current) current.innerHTML = `<p class="ranking-unavailable" role="status">${uiIcon('cloud')} 전체 랭킹에 연결하지 못했어요. 인터넷 확인 후 게시판을 다시 열어 주세요.</p>`;
   }
 }
 function openExpeditionBoard() {
@@ -1298,7 +1323,7 @@ function openExpeditionBoard() {
   if (!state) return;
   if (!expeditionUnlocked(state)) { openModal(title('별빛 원정', '입장 준비')+'<p>3학년 이상에서 나눗셈숲 1~10단계를 모두 마치면 열려요. 사냥 레벨과 수학숲 진도는 서로 달라요.</p><button id="expedition-unlock-map" class="primary wide">수학숲 진도 확인하기</button><button class="secondary wide" data-close>돌아가기</button>'); $('#expedition-unlock-map').onclick=openAdventureMap; return; }
   const s = state, mission = s.expedition.active, next = expeditionLayout(s.expedition.completed);
-  const localRanks = parseLocalRanks(localStorage.getItem(RANKING_STORAGE)), ranking = localRanks.length ? `<ol class="local-ranking">${localRanks.map((rank, id) => `<li class="${rank.nickname === s.nickname ? 'mine' : ''}"><b>${id + 1}</b><span>${escape(rank.nickname)}</span><strong>✦ ${rank.completed}회</strong></li>`).join('')}</ol>` : '<p class="note">첫 원정을 완수하면 이곳에 기록돼요.</p>';
+  const localRanks = parseLocalRanks(localStorage.getItem(RANKING_STORAGE)), ranking = localRanks.length ? `<ol class="local-ranking">${localRanks.map((rank, id) => `<li class="${rank.nickname === s.nickname ? 'mine' : ''}"><b>${id + 1}</b><span>${escape(rank.nickname)}</span><strong>✦ ${rank.completed}회</strong></li>`).join('')}</ol>` : '<p class="note">이 기기에 원정 기록이 없어요. 새 원정을 완수해 기록을 남겨 보세요.</p>';
   const rewardStage = mission?.stage ?? next.stage;
   openModal(title('연태쌤의 별빛 게시판', '별빛 원정') + `<p>10개의 숲을 새로운 목표로 다시 걸어요. 언제든 다시 도전할 수 있고, 틀려도 손해가 없어요.</p><p class="expedition-note">이번 원정: <b>${mission ? `${mission.stage}단계 · ${STAGES[mission.stage - 1].name}` : `${next.stage}단계 · ${STAGES[next.stage - 1].name}`}</b><br>별빛 표식 3개 · 몬스터 시합 2번 · 출구의 이야기 문제 1개<br><small>완주하면 🍓 ${expeditionBerryReward(rewardStage)}베리!</small></p>${mission ? `<p>지금까지 표식 ${mission.stars.length}/3 · 시합 ${mission.monsters.length}/2</p>` : ''}<button id="expedition-start" class="primary wide">${mission ? '진행 중인 원정 이어가기' : '새 원정 떠나기'} →</button><h3 class="title-heading">🏅 나의 칭호 · 원정 ${s.expedition.completed}번 완수</h3><div class="title-list">${EXPEDITION_TITLES.map((item, id) => `<button data-title="${id}" class="secondary ${s.selectedTitleId === 'expedition-'+id ? 'selected' : ''}" ${s.expedition.completed < item.need ? 'disabled' : ''}>${s.expedition.completed < item.need ? '🔒' : '✦'} ${item.name}<small>${item.need}번 완수${s.selectedTitleId === 'expedition-'+id ? ' · 표시 중' : ''}</small></button>`).join('')}</div><h3 class="title-heading">🏆 별빛 원정 랭킹</h3><div class="ranking-tabs" role="tablist"><button class="active" data-rank-tab="global" role="tab" aria-selected="true">🌍 전체 랭킹</button><button data-rank-tab="local" role="tab" aria-selected="false">📱 이 기기</button></div><section id="global-ranking-panel" role="tabpanel"><p class="ranking-loading">✨ 전체 탐험가 기록을 불러오는 중…</p></section><section id="local-ranking-panel" role="tabpanel" hidden><p class="ranking-note">같은 브라우저에서 플레이한 닉네임별 최고 기록이에요.</p>${ranking}</section><p class="ranking-note">전체 랭킹에는 닉네임과 별빛 원정 완료 횟수만 올라가요. 선생님 모드 기록은 제외돼요.</p>`);
   $('#expedition-start').onclick = beginExpedition;
@@ -1937,7 +1962,7 @@ function bossBody(summary: BossSummary | null, unavailable = false) {
   const local = readBoss(localStorage), boss = bossOfWeek(local.week);
   if (!local.classCode) return `<div class="boss-card"><div class="boss-icon">${boss.icon}</div><h3>이번 주 보스 · ${boss.name}</h3><p>같은 반 친구들과 같은 <b>반 코드</b>를 쓰면 정답 하나하나가 보스의 체력을 함께 깎아요. 선생님이 알려 준 반 코드를 적어 보세요.</p></div>`;
   const hp = summary ? Math.max(0, summary.maxHp - summary.damage) : null, percent = summary ? Math.round(Math.min(1, summary.damage / summary.maxHp) * 100) : 0;
-  const status = summary ? (summary.defeated ? `<p class="boss-win">🎉 우리 반이 ${boss.name}을 물리쳤어요!</p>` : `<p>친구 ${summary.members}명이 함께하고 있어요 · 남은 체력 <b>${hp}</b></p>`) : `<p class="note">${unavailable ? '협동 보스 서버가 아직 준비되지 않았어요. 정답 수는 이 기기에 모아 두고 있어요.' : '반 현황을 불러오는 중이에요…'}</p>`;
+  const status = summary ? (summary.defeated ? `<p class="boss-win">🎉 우리 반이 ${boss.name}을 물리쳤어요!</p>` : `<p>친구 ${summary.members}명이 함께하고 있어요 · 남은 체력 <b>${hp}</b></p>`) : `<p class="note">${unavailable ? '협동 보스 서버가 준비 중이에요. 정답 수는 보관되니 잠시 후 새로고침해 주세요.' : '반 현황을 불러오는 중이에요…'}</p>`;
   return `<div class="boss-card"><div class="boss-icon">${boss.icon}</div><h3>이번 주 보스 · ${boss.name}</h3><div class="boss-hp" role="progressbar" aria-label="보스 체력" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${100 - percent}"><i style="width:${100 - percent}%"></i></div>${status}<p class="boss-mine">나의 이번 주 정답 <b>${local.damage}</b>개 · 반 코드 <b>${escape(local.classCode)}</b></p></div>`;
 }
 async function openBoss() {

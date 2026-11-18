@@ -1,0 +1,3482 @@
+{
+  "phase": "before",
+  "browserChannel": "chrome",
+  "browserVersion": "157.0.8103.79",
+  "viewportNotes": "Viewport captures; ranking is scrolled into view. All online responses are fixtures; no real records are submitted.",
+  "results": [
+    {
+      "device": "pc",
+      "screen": "start",
+      "file": "pc-start.png",
+      "mode": "normal",
+      "audit": {
+        "styles": [
+          {
+            "selector": "#character-desc",
+            "fontSize": "12px",
+            "color": "rgb(133, 144, 120)",
+            "background": "rgba(0, 0, 0, 0)",
+            "top": 497,
+            "bottom": 518
+          },
+          {
+            "selector": "#new-game",
+            "fontSize": "16px",
+            "color": "rgb(255, 254, 240)",
+            "background": "rgba(0, 0, 0, 0)",
+            "top": 609,
+            "bottom": 663
+          },
+          {
+            "selector": ".save-note",
+            "fontSize": "12px",
+            "color": "rgb(138, 149, 126)",
+            "background": "rgba(0, 0, 0, 0)",
+            "top": 822,
+            "bottom": 839
+          }
+        ],
+        "remainingUiEmoji": [],
+        "fonts": [],
+        "horizontalOverflow": false
+      }
+    },
+    {
+      "device": "pc",
+      "screen": "hud",
+      "file": "pc-hud.png",
+      "mode": "normal",
+      "audit": {
+        "styles": [
+          {
+            "selector": "#save-status",
+            "fontSize": "11px",
+            "color": "rgb(32, 92, 61)",
+            "background": "rgba(0, 0, 0, 0)",
+            "top": 118,
+            "bottom": 133
+          },
+          {
+            "selector": "#today-adventure",
+            "fontSize": "12px",
+            "color": "rgb(74, 104, 76)",
+            "background": "rgb(237, 243, 227)",
+            "top": 174,
+            "bottom": 222
+          }
+        ],
+        "remainingUiEmoji": [
+          {
+            "selector": "#inventory",
+            "marks": [
+              "🎒"
+            ]
+          },
+          {
+            "selector": "#stage-map",
+            "marks": [
+              "🗺"
+            ]
+          },
+          {
+            "selector": "#settings",
+            "marks": [
+              "⚙"
+            ]
+          },
+          {
+            "selector": "#today-adventure",
+            "marks": [
+              "🧭"
+            ]
+          },
+          {
+            "selector": "#quest-toggle",
+            "marks": [
+              "🌿"
+            ]
+          },
+          {
+            "selector": "#adventure-menu",
+            "marks": [
+              "🧭"
+            ]
+          },
+          {
+            "selector": "#feedback-open",
+            "marks": [
+              "✉"
+            ]
+          },
+          {
+            "selector": "#plaza-status",
+            "marks": [
+              "🌐"
+            ]
+          },
+          {
+            "selector": "#plaza-chat-toggle",
+            "marks": [
+              "💬"
+            ]
+          },
+          {
+            "selector": "#party-open",
+            "marks": [
+              "🤝"
+            ]
+          }
+        ],
+        "fonts": [],
+        "horizontalOverflow": false
+      }
+    },
+    {
+      "device": "pc",
+      "screen": "offline",
+      "file": "pc-offline.png",
+      "mode": "normal",
+      "audit": {
+        "styles": [
+          {
+            "selector": "#save-status",
+            "fontSize": "11px",
+            "color": "rgb(32, 92, 61)",
+            "background": "rgba(0, 0, 0, 0)",
+            "top": 118,
+            "bottom": 133
+          },
+          {
+            "selector": "#today-adventure",
+            "fontSize": "12px",
+            "color": "rgb(74, 104, 76)",
+            "background": "rgb(237, 243, 227)",
+            "top": 174,
+            "bottom": 222
+          }
+        ],
+        "remainingUiEmoji": [
+          {
+            "selector": "#inventory",
+            "marks": [
+              "🎒"
+            ]
+          },
+          {
+            "selector": "#stage-map",
+            "marks": [
+              "🗺"
+            ]
+          },
+          {
+            "selector": "#settings",
+            "marks": [
+              "⚙"
+            ]
+          },
+          {
+            "selector": "#today-adventure",
+            "marks": [
+              "🧭"
+            ]
+          },
+          {
+            "selector": "#quest-toggle",
+            "marks": [
+              "🌿"
+            ]
+          },
+          {
+            "selector": "#adventure-menu",
+            "marks": [
+              "🧭"
+            ]
+          },
+          {
+            "selector": "#feedback-open",
+            "marks": [
+              "✉"
+            ]
+          },
+          {
+            "selector": "#plaza-status",
+            "marks": [
+              "🌐"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "👋"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "💛"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "✨"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🌿"
+            ]
+          },
+          {
+            "selector": "#plaza-chat-toggle",
+            "marks": [
+              "💬"
+            ]
+          },
+          {
+            "selector": "#party-open",
+            "marks": [
+              "🤝"
+            ]
+          }
+        ],
+        "fonts": [],
+        "horizontalOverflow": false
+      }
+    },
+    {
+      "device": "pc",
+      "screen": "question",
+      "file": "pc-question.png",
+      "mode": "normal",
+      "audit": {
+        "styles": [
+          {
+            "selector": "#save-status",
+            "fontSize": "11px",
+            "color": "rgb(32, 92, 61)",
+            "background": "rgba(0, 0, 0, 0)",
+            "top": 118,
+            "bottom": 133
+          },
+          {
+            "selector": "#today-adventure",
+            "fontSize": "12px",
+            "color": "rgb(74, 104, 76)",
+            "background": "rgb(237, 243, 227)",
+            "top": 174,
+            "bottom": 222
+          }
+        ],
+        "remainingUiEmoji": [
+          {
+            "selector": "#inventory",
+            "marks": [
+              "🎒"
+            ]
+          },
+          {
+            "selector": "#stage-map",
+            "marks": [
+              "🗺"
+            ]
+          },
+          {
+            "selector": "#settings",
+            "marks": [
+              "⚙"
+            ]
+          },
+          {
+            "selector": "#today-adventure",
+            "marks": [
+              "🧭"
+            ]
+          },
+          {
+            "selector": "#quest-toggle",
+            "marks": [
+              "🌿"
+            ]
+          },
+          {
+            "selector": "#adventure-menu",
+            "marks": [
+              "🧭"
+            ]
+          },
+          {
+            "selector": "#feedback-open",
+            "marks": [
+              "✉"
+            ]
+          },
+          {
+            "selector": "#plaza-status",
+            "marks": [
+              "🌐"
+            ]
+          },
+          {
+            "selector": "#plaza-chat-toggle",
+            "marks": [
+              "💬"
+            ]
+          },
+          {
+            "selector": "#party-open",
+            "marks": [
+              "🤝"
+            ]
+          },
+          {
+            "selector": "#show-hint",
+            "marks": [
+              "💡"
+            ]
+          }
+        ],
+        "fonts": [],
+        "horizontalOverflow": false
+      }
+    },
+    {
+      "device": "pc",
+      "screen": "bag",
+      "file": "pc-bag.png",
+      "mode": "normal",
+      "audit": {
+        "styles": [
+          {
+            "selector": "#save-status",
+            "fontSize": "11px",
+            "color": "rgb(32, 92, 61)",
+            "background": "rgba(0, 0, 0, 0)",
+            "top": 118,
+            "bottom": 133
+          },
+          {
+            "selector": "#today-adventure",
+            "fontSize": "12px",
+            "color": "rgb(74, 104, 76)",
+            "background": "rgb(237, 243, 227)",
+            "top": 174,
+            "bottom": 222
+          }
+        ],
+        "remainingUiEmoji": [
+          {
+            "selector": "#inventory",
+            "marks": [
+              "🎒"
+            ]
+          },
+          {
+            "selector": "#stage-map",
+            "marks": [
+              "🗺"
+            ]
+          },
+          {
+            "selector": "#settings",
+            "marks": [
+              "⚙"
+            ]
+          },
+          {
+            "selector": "#today-adventure",
+            "marks": [
+              "🧭"
+            ]
+          },
+          {
+            "selector": "#quest-toggle",
+            "marks": [
+              "🌿"
+            ]
+          },
+          {
+            "selector": "#adventure-menu",
+            "marks": [
+              "🧭"
+            ]
+          },
+          {
+            "selector": "#feedback-open",
+            "marks": [
+              "✉"
+            ]
+          },
+          {
+            "selector": "#plaza-status",
+            "marks": [
+              "🌐"
+            ]
+          },
+          {
+            "selector": "#plaza-chat-toggle",
+            "marks": [
+              "💬"
+            ]
+          },
+          {
+            "selector": "#party-open",
+            "marks": [
+              "🤝"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "⚔"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "👗"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🪽"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🐾"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🍪"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "📊"
+            ]
+          }
+        ],
+        "fonts": [],
+        "horizontalOverflow": false
+      }
+    },
+    {
+      "device": "pc",
+      "screen": "shop",
+      "file": "pc-shop.png",
+      "mode": "normal",
+      "audit": {
+        "styles": [
+          {
+            "selector": "#save-status",
+            "fontSize": "11px",
+            "color": "rgb(32, 92, 61)",
+            "background": "rgba(0, 0, 0, 0)",
+            "top": 118,
+            "bottom": 133
+          },
+          {
+            "selector": "#today-adventure",
+            "fontSize": "12px",
+            "color": "rgb(74, 104, 76)",
+            "background": "rgb(237, 243, 227)",
+            "top": 174,
+            "bottom": 222
+          }
+        ],
+        "remainingUiEmoji": [
+          {
+            "selector": "#inventory",
+            "marks": [
+              "🎒"
+            ]
+          },
+          {
+            "selector": "#stage-map",
+            "marks": [
+              "🗺"
+            ]
+          },
+          {
+            "selector": "#settings",
+            "marks": [
+              "⚙"
+            ]
+          },
+          {
+            "selector": "#today-adventure",
+            "marks": [
+              "🧭"
+            ]
+          },
+          {
+            "selector": "#quest-toggle",
+            "marks": [
+              "🌿"
+            ]
+          },
+          {
+            "selector": "#adventure-menu",
+            "marks": [
+              "🧭"
+            ]
+          },
+          {
+            "selector": "#feedback-open",
+            "marks": [
+              "✉"
+            ]
+          },
+          {
+            "selector": "#plaza-status",
+            "marks": [
+              "🌐"
+            ]
+          },
+          {
+            "selector": "#plaza-chat-toggle",
+            "marks": [
+              "💬"
+            ]
+          },
+          {
+            "selector": "#party-open",
+            "marks": [
+              "🤝"
+            ]
+          },
+          {
+            "selector": "#dawn-featured",
+            "marks": [
+              "↗"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🍓"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🍓"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🍓"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🍓"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🍓"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🍓"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🍓"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🍓"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🍓"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🍓"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🍓"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🍓"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🍓"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🍓"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🍓"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🍓"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🍓"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🍓"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🍓"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🍓"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🍓"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🍓"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🍓"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🍓"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🍓"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🍓"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🍓"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🍓"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🍓"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🍓"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🍓"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🍓"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🍓"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🍓"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🍓"
+            ]
+          }
+        ],
+        "fonts": [],
+        "horizontalOverflow": false
+      }
+    },
+    {
+      "device": "pc",
+      "screen": "salon",
+      "file": "pc-salon.png",
+      "mode": "normal",
+      "audit": {
+        "styles": [
+          {
+            "selector": "#save-status",
+            "fontSize": "11px",
+            "color": "rgb(32, 92, 61)",
+            "background": "rgba(0, 0, 0, 0)",
+            "top": 118,
+            "bottom": 133
+          },
+          {
+            "selector": "#today-adventure",
+            "fontSize": "12px",
+            "color": "rgb(74, 104, 76)",
+            "background": "rgb(237, 243, 227)",
+            "top": 174,
+            "bottom": 222
+          },
+          {
+            "selector": ".salon-ribbon",
+            "fontSize": "16px",
+            "color": "rgb(255, 255, 255)",
+            "background": "rgb(220, 140, 168)",
+            "top": 432,
+            "bottom": 480
+          },
+          {
+            "selector": ".salon-description",
+            "fontSize": "14.08px",
+            "color": "rgb(128, 92, 112)",
+            "background": "rgba(0, 0, 0, 0)",
+            "top": 680,
+            "bottom": 728
+          },
+          {
+            "selector": ".salon-note",
+            "fontSize": "12.8px",
+            "color": "rgb(128, 92, 112)",
+            "background": "rgba(0, 0, 0, 0)",
+            "top": 820,
+            "bottom": 864
+          }
+        ],
+        "remainingUiEmoji": [
+          {
+            "selector": "#inventory",
+            "marks": [
+              "🎒"
+            ]
+          },
+          {
+            "selector": "#stage-map",
+            "marks": [
+              "🗺"
+            ]
+          },
+          {
+            "selector": "#settings",
+            "marks": [
+              "⚙"
+            ]
+          },
+          {
+            "selector": "#today-adventure",
+            "marks": [
+              "🧭"
+            ]
+          },
+          {
+            "selector": "#quest-toggle",
+            "marks": [
+              "🌿"
+            ]
+          },
+          {
+            "selector": "#adventure-menu",
+            "marks": [
+              "🧭"
+            ]
+          },
+          {
+            "selector": "#feedback-open",
+            "marks": [
+              "✉"
+            ]
+          },
+          {
+            "selector": "#plaza-status",
+            "marks": [
+              "🌐"
+            ]
+          },
+          {
+            "selector": "#plaza-chat-toggle",
+            "marks": [
+              "💬"
+            ]
+          },
+          {
+            "selector": "#party-open",
+            "marks": [
+              "🤝"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "💇"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "✨"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🍓"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🍓"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🍓"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🍓"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🍓"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🍓"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🍓"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🍓"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🍓"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🍓"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🍓"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🍓"
+            ]
+          }
+        ],
+        "fonts": [],
+        "horizontalOverflow": false
+      }
+    },
+    {
+      "device": "pc",
+      "screen": "career",
+      "file": "pc-career.png",
+      "mode": "normal",
+      "audit": {
+        "styles": [
+          {
+            "selector": "#save-status",
+            "fontSize": "11px",
+            "color": "rgb(32, 92, 61)",
+            "background": "rgba(0, 0, 0, 0)",
+            "top": 118,
+            "bottom": 133
+          },
+          {
+            "selector": "#today-adventure",
+            "fontSize": "12px",
+            "color": "rgb(74, 104, 76)",
+            "background": "rgb(237, 243, 227)",
+            "top": 174,
+            "bottom": 222
+          }
+        ],
+        "remainingUiEmoji": [
+          {
+            "selector": "#inventory",
+            "marks": [
+              "🎒"
+            ]
+          },
+          {
+            "selector": "#stage-map",
+            "marks": [
+              "🗺"
+            ]
+          },
+          {
+            "selector": "#settings",
+            "marks": [
+              "⚙"
+            ]
+          },
+          {
+            "selector": "#today-adventure",
+            "marks": [
+              "🧭"
+            ]
+          },
+          {
+            "selector": "#quest-toggle",
+            "marks": [
+              "🌿"
+            ]
+          },
+          {
+            "selector": "#adventure-menu",
+            "marks": [
+              "🧭"
+            ]
+          },
+          {
+            "selector": "#feedback-open",
+            "marks": [
+              "✉"
+            ]
+          },
+          {
+            "selector": "#plaza-status",
+            "marks": [
+              "🌐"
+            ]
+          },
+          {
+            "selector": "#plaza-chat-toggle",
+            "marks": [
+              "💬"
+            ]
+          },
+          {
+            "selector": "#party-open",
+            "marks": [
+              "🤝"
+            ]
+          }
+        ],
+        "fonts": [],
+        "horizontalOverflow": false
+      }
+    },
+    {
+      "device": "pc",
+      "screen": "expedition",
+      "file": "pc-expedition.png",
+      "mode": "normal",
+      "audit": {
+        "styles": [
+          {
+            "selector": "#save-status",
+            "fontSize": "11px",
+            "color": "rgb(32, 92, 61)",
+            "background": "rgba(0, 0, 0, 0)",
+            "top": 118,
+            "bottom": 133
+          },
+          {
+            "selector": "#today-adventure",
+            "fontSize": "12px",
+            "color": "rgb(74, 104, 76)",
+            "background": "rgb(237, 243, 227)",
+            "top": 174,
+            "bottom": 222
+          },
+          {
+            "selector": ".ranking-note",
+            "fontSize": "12.48px",
+            "color": "rgb(125, 135, 109)",
+            "background": "rgba(0, 0, 0, 0)",
+            "top": 1136,
+            "bottom": 1157
+          }
+        ],
+        "remainingUiEmoji": [
+          {
+            "selector": "#inventory",
+            "marks": [
+              "🎒"
+            ]
+          },
+          {
+            "selector": "#stage-map",
+            "marks": [
+              "🗺"
+            ]
+          },
+          {
+            "selector": "#settings",
+            "marks": [
+              "⚙"
+            ]
+          },
+          {
+            "selector": "#today-adventure",
+            "marks": [
+              "🧭"
+            ]
+          },
+          {
+            "selector": "#quest-toggle",
+            "marks": [
+              "🌿"
+            ]
+          },
+          {
+            "selector": "#adventure-menu",
+            "marks": [
+              "🧭"
+            ]
+          },
+          {
+            "selector": "#feedback-open",
+            "marks": [
+              "✉"
+            ]
+          },
+          {
+            "selector": "#plaza-status",
+            "marks": [
+              "🌐"
+            ]
+          },
+          {
+            "selector": "#plaza-chat-toggle",
+            "marks": [
+              "💬"
+            ]
+          },
+          {
+            "selector": "#party-open",
+            "marks": [
+              "🤝"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🔒"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🔒"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🔒"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🔒"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🔒"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🔒"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🔒"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🔒"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🔒"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🔒"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🌍"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "📱"
+            ]
+          }
+        ],
+        "fonts": [],
+        "horizontalOverflow": false
+      }
+    },
+    {
+      "device": "pc",
+      "screen": "ranking",
+      "file": "pc-ranking.png",
+      "mode": "normal",
+      "audit": {
+        "styles": [
+          {
+            "selector": "#save-status",
+            "fontSize": "11px",
+            "color": "rgb(32, 92, 61)",
+            "background": "rgba(0, 0, 0, 0)",
+            "top": 118,
+            "bottom": 133
+          },
+          {
+            "selector": "#today-adventure",
+            "fontSize": "12px",
+            "color": "rgb(74, 104, 76)",
+            "background": "rgb(237, 243, 227)",
+            "top": 174,
+            "bottom": 222
+          },
+          {
+            "selector": ".ranking-note",
+            "fontSize": "12.48px",
+            "color": "rgb(125, 135, 109)",
+            "background": "rgba(0, 0, 0, 0)",
+            "top": 722,
+            "bottom": 743
+          }
+        ],
+        "remainingUiEmoji": [
+          {
+            "selector": "#inventory",
+            "marks": [
+              "🎒"
+            ]
+          },
+          {
+            "selector": "#stage-map",
+            "marks": [
+              "🗺"
+            ]
+          },
+          {
+            "selector": "#settings",
+            "marks": [
+              "⚙"
+            ]
+          },
+          {
+            "selector": "#today-adventure",
+            "marks": [
+              "🧭"
+            ]
+          },
+          {
+            "selector": "#quest-toggle",
+            "marks": [
+              "🌿"
+            ]
+          },
+          {
+            "selector": "#adventure-menu",
+            "marks": [
+              "🧭"
+            ]
+          },
+          {
+            "selector": "#feedback-open",
+            "marks": [
+              "✉"
+            ]
+          },
+          {
+            "selector": "#plaza-status",
+            "marks": [
+              "🌐"
+            ]
+          },
+          {
+            "selector": "#plaza-chat-toggle",
+            "marks": [
+              "💬"
+            ]
+          },
+          {
+            "selector": "#party-open",
+            "marks": [
+              "🤝"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🔒"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🔒"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🔒"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🔒"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🔒"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🔒"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🔒"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🔒"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🔒"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🔒"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🌍"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "📱"
+            ]
+          }
+        ],
+        "fonts": [],
+        "horizontalOverflow": false
+      }
+    },
+    {
+      "device": "pc",
+      "screen": "ranking-empty",
+      "file": "pc-ranking-empty.png",
+      "mode": "empty",
+      "audit": {
+        "styles": [
+          {
+            "selector": "#save-status",
+            "fontSize": "11px",
+            "color": "rgb(32, 92, 61)",
+            "background": "rgba(0, 0, 0, 0)",
+            "top": 118,
+            "bottom": 133
+          },
+          {
+            "selector": "#today-adventure",
+            "fontSize": "12px",
+            "color": "rgb(74, 104, 76)",
+            "background": "rgb(237, 243, 227)",
+            "top": 174,
+            "bottom": 222
+          },
+          {
+            "selector": ".note",
+            "fontSize": "13.6px",
+            "color": "rgb(138, 120, 99)",
+            "background": "rgb(255, 240, 207)",
+            "top": 661,
+            "bottom": 708
+          },
+          {
+            "selector": ".ranking-note",
+            "fontSize": "12.48px",
+            "color": "rgb(125, 135, 109)",
+            "background": "rgba(0, 0, 0, 0)",
+            "top": 722,
+            "bottom": 743
+          }
+        ],
+        "remainingUiEmoji": [
+          {
+            "selector": "#inventory",
+            "marks": [
+              "🎒"
+            ]
+          },
+          {
+            "selector": "#stage-map",
+            "marks": [
+              "🗺"
+            ]
+          },
+          {
+            "selector": "#settings",
+            "marks": [
+              "⚙"
+            ]
+          },
+          {
+            "selector": "#today-adventure",
+            "marks": [
+              "🧭"
+            ]
+          },
+          {
+            "selector": "#quest-toggle",
+            "marks": [
+              "🌿"
+            ]
+          },
+          {
+            "selector": "#adventure-menu",
+            "marks": [
+              "🧭"
+            ]
+          },
+          {
+            "selector": "#feedback-open",
+            "marks": [
+              "✉"
+            ]
+          },
+          {
+            "selector": "#plaza-status",
+            "marks": [
+              "🌐"
+            ]
+          },
+          {
+            "selector": "#plaza-chat-toggle",
+            "marks": [
+              "💬"
+            ]
+          },
+          {
+            "selector": "#party-open",
+            "marks": [
+              "🤝"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🔒"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🔒"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🔒"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🔒"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🔒"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🔒"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🔒"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🔒"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🔒"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🔒"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🌍"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "📱"
+            ]
+          }
+        ],
+        "fonts": [],
+        "horizontalOverflow": false
+      }
+    },
+    {
+      "device": "pc",
+      "screen": "ranking-error",
+      "file": "pc-ranking-error.png",
+      "mode": "error",
+      "audit": {
+        "styles": [
+          {
+            "selector": "#save-status",
+            "fontSize": "11px",
+            "color": "rgb(32, 92, 61)",
+            "background": "rgba(0, 0, 0, 0)",
+            "top": 118,
+            "bottom": 133
+          },
+          {
+            "selector": "#today-adventure",
+            "fontSize": "12px",
+            "color": "rgb(74, 104, 76)",
+            "background": "rgb(237, 243, 227)",
+            "top": 174,
+            "bottom": 222
+          },
+          {
+            "selector": ".ranking-unavailable",
+            "fontSize": "16px",
+            "color": "rgb(133, 102, 64)",
+            "background": "rgb(255, 245, 231)",
+            "top": 617,
+            "bottom": 706
+          },
+          {
+            "selector": ".ranking-note",
+            "fontSize": "12.48px",
+            "color": "rgb(125, 135, 109)",
+            "background": "rgba(0, 0, 0, 0)",
+            "top": 722,
+            "bottom": 743
+          }
+        ],
+        "remainingUiEmoji": [
+          {
+            "selector": "#inventory",
+            "marks": [
+              "🎒"
+            ]
+          },
+          {
+            "selector": "#stage-map",
+            "marks": [
+              "🗺"
+            ]
+          },
+          {
+            "selector": "#settings",
+            "marks": [
+              "⚙"
+            ]
+          },
+          {
+            "selector": "#today-adventure",
+            "marks": [
+              "🧭"
+            ]
+          },
+          {
+            "selector": "#quest-toggle",
+            "marks": [
+              "🌿"
+            ]
+          },
+          {
+            "selector": "#adventure-menu",
+            "marks": [
+              "🧭"
+            ]
+          },
+          {
+            "selector": "#feedback-open",
+            "marks": [
+              "✉"
+            ]
+          },
+          {
+            "selector": "#plaza-status",
+            "marks": [
+              "🌐"
+            ]
+          },
+          {
+            "selector": "#plaza-chat-toggle",
+            "marks": [
+              "💬"
+            ]
+          },
+          {
+            "selector": "#party-open",
+            "marks": [
+              "🤝"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🔒"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🔒"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🔒"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🔒"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🔒"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🔒"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🔒"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🔒"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🔒"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🔒"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🌍"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "📱"
+            ]
+          }
+        ],
+        "fonts": [],
+        "horizontalOverflow": false
+      }
+    },
+    {
+      "device": "pc",
+      "screen": "server-unavailable",
+      "file": "pc-server-unavailable.png",
+      "mode": "error",
+      "audit": {
+        "styles": [
+          {
+            "selector": "#save-status",
+            "fontSize": "11px",
+            "color": "rgb(32, 92, 61)",
+            "background": "rgba(0, 0, 0, 0)",
+            "top": 118,
+            "bottom": 133
+          },
+          {
+            "selector": "#today-adventure",
+            "fontSize": "12px",
+            "color": "rgb(74, 104, 76)",
+            "background": "rgb(237, 243, 227)",
+            "top": 174,
+            "bottom": 222
+          },
+          {
+            "selector": ".note",
+            "fontSize": "13.6px",
+            "color": "rgb(138, 120, 99)",
+            "background": "rgb(255, 240, 207)",
+            "top": 360,
+            "bottom": 430
+          }
+        ],
+        "remainingUiEmoji": [
+          {
+            "selector": "#inventory",
+            "marks": [
+              "🎒"
+            ]
+          },
+          {
+            "selector": "#stage-map",
+            "marks": [
+              "🗺"
+            ]
+          },
+          {
+            "selector": "#settings",
+            "marks": [
+              "⚙"
+            ]
+          },
+          {
+            "selector": "#today-adventure",
+            "marks": [
+              "🧭"
+            ]
+          },
+          {
+            "selector": "#quest-toggle",
+            "marks": [
+              "🌿"
+            ]
+          },
+          {
+            "selector": "#adventure-menu",
+            "marks": [
+              "🧭"
+            ]
+          },
+          {
+            "selector": "#feedback-open",
+            "marks": [
+              "✉"
+            ]
+          },
+          {
+            "selector": "#plaza-status",
+            "marks": [
+              "🌐"
+            ]
+          },
+          {
+            "selector": "#plaza-chat-toggle",
+            "marks": [
+              "💬"
+            ]
+          },
+          {
+            "selector": "#party-open",
+            "marks": [
+              "🤝"
+            ]
+          }
+        ],
+        "fonts": [],
+        "horizontalOverflow": false
+      }
+    },
+    {
+      "device": "pc",
+      "screen": "weather-error",
+      "file": "pc-weather-error.png",
+      "mode": "weather-error"
+    },
+    {
+      "device": "mobile",
+      "screen": "start",
+      "file": "mobile-start.png",
+      "mode": "normal",
+      "audit": {
+        "styles": [
+          {
+            "selector": "#character-desc",
+            "fontSize": "12px",
+            "color": "rgb(133, 144, 120)",
+            "background": "rgba(0, 0, 0, 0)",
+            "top": 509,
+            "bottom": 530
+          },
+          {
+            "selector": "#new-game",
+            "fontSize": "16px",
+            "color": "rgb(255, 254, 240)",
+            "background": "rgba(0, 0, 0, 0)",
+            "top": 621,
+            "bottom": 675
+          },
+          {
+            "selector": ".save-note",
+            "fontSize": "12px",
+            "color": "rgb(138, 149, 126)",
+            "background": "rgba(0, 0, 0, 0)",
+            "top": 834,
+            "bottom": 851
+          }
+        ],
+        "remainingUiEmoji": [],
+        "fonts": [],
+        "horizontalOverflow": false
+      }
+    },
+    {
+      "device": "mobile",
+      "screen": "hud",
+      "file": "mobile-hud.png",
+      "mode": "normal",
+      "audit": {
+        "styles": [
+          {
+            "selector": "#save-status",
+            "fontSize": "10px",
+            "color": "rgb(32, 92, 61)",
+            "background": "rgba(0, 0, 0, 0)",
+            "top": 99,
+            "bottom": 113
+          }
+        ],
+        "remainingUiEmoji": [
+          {
+            "selector": "#inventory",
+            "marks": [
+              "🎒"
+            ]
+          },
+          {
+            "selector": "#stage-map",
+            "marks": [
+              "🗺"
+            ]
+          },
+          {
+            "selector": "#settings",
+            "marks": [
+              "⚙"
+            ]
+          },
+          {
+            "selector": "#quest-toggle",
+            "marks": [
+              "🌿"
+            ]
+          },
+          {
+            "selector": "#feedback-open",
+            "marks": [
+              "✉"
+            ]
+          },
+          {
+            "selector": "#plaza-status",
+            "marks": [
+              "🌐"
+            ]
+          },
+          {
+            "selector": "#plaza-chat-toggle",
+            "marks": [
+              "💬"
+            ]
+          },
+          {
+            "selector": "#party-open",
+            "marks": [
+              "🤝"
+            ]
+          }
+        ],
+        "fonts": [],
+        "horizontalOverflow": false
+      }
+    },
+    {
+      "device": "mobile",
+      "screen": "offline",
+      "file": "mobile-offline.png",
+      "mode": "normal",
+      "audit": {
+        "styles": [
+          {
+            "selector": "#save-status",
+            "fontSize": "10px",
+            "color": "rgb(32, 92, 61)",
+            "background": "rgba(0, 0, 0, 0)",
+            "top": 99,
+            "bottom": 113
+          }
+        ],
+        "remainingUiEmoji": [
+          {
+            "selector": "#inventory",
+            "marks": [
+              "🎒"
+            ]
+          },
+          {
+            "selector": "#stage-map",
+            "marks": [
+              "🗺"
+            ]
+          },
+          {
+            "selector": "#settings",
+            "marks": [
+              "⚙"
+            ]
+          },
+          {
+            "selector": "#quest-toggle",
+            "marks": [
+              "🌿"
+            ]
+          },
+          {
+            "selector": "#feedback-open",
+            "marks": [
+              "✉"
+            ]
+          },
+          {
+            "selector": "#plaza-status",
+            "marks": [
+              "🌐"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "👋"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "💛"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "✨"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🌿"
+            ]
+          },
+          {
+            "selector": "#plaza-chat-toggle",
+            "marks": [
+              "💬"
+            ]
+          },
+          {
+            "selector": "#party-open",
+            "marks": [
+              "🤝"
+            ]
+          }
+        ],
+        "fonts": [],
+        "horizontalOverflow": false
+      }
+    },
+    {
+      "device": "mobile",
+      "screen": "question",
+      "file": "mobile-question.png",
+      "mode": "normal",
+      "audit": {
+        "styles": [
+          {
+            "selector": "#save-status",
+            "fontSize": "10px",
+            "color": "rgb(32, 92, 61)",
+            "background": "rgba(0, 0, 0, 0)",
+            "top": 99,
+            "bottom": 113
+          }
+        ],
+        "remainingUiEmoji": [
+          {
+            "selector": "#inventory",
+            "marks": [
+              "🎒"
+            ]
+          },
+          {
+            "selector": "#stage-map",
+            "marks": [
+              "🗺"
+            ]
+          },
+          {
+            "selector": "#settings",
+            "marks": [
+              "⚙"
+            ]
+          },
+          {
+            "selector": "#quest-toggle",
+            "marks": [
+              "🌿"
+            ]
+          },
+          {
+            "selector": "#feedback-open",
+            "marks": [
+              "✉"
+            ]
+          },
+          {
+            "selector": "#plaza-status",
+            "marks": [
+              "🌐"
+            ]
+          },
+          {
+            "selector": "#plaza-chat-toggle",
+            "marks": [
+              "💬"
+            ]
+          },
+          {
+            "selector": "#party-open",
+            "marks": [
+              "🤝"
+            ]
+          },
+          {
+            "selector": "#show-hint",
+            "marks": [
+              "💡"
+            ]
+          }
+        ],
+        "fonts": [],
+        "horizontalOverflow": false
+      }
+    },
+    {
+      "device": "mobile",
+      "screen": "bag",
+      "file": "mobile-bag.png",
+      "mode": "normal",
+      "audit": {
+        "styles": [
+          {
+            "selector": "#save-status",
+            "fontSize": "10px",
+            "color": "rgb(32, 92, 61)",
+            "background": "rgba(0, 0, 0, 0)",
+            "top": 99,
+            "bottom": 113
+          }
+        ],
+        "remainingUiEmoji": [
+          {
+            "selector": "#inventory",
+            "marks": [
+              "🎒"
+            ]
+          },
+          {
+            "selector": "#stage-map",
+            "marks": [
+              "🗺"
+            ]
+          },
+          {
+            "selector": "#settings",
+            "marks": [
+              "⚙"
+            ]
+          },
+          {
+            "selector": "#quest-toggle",
+            "marks": [
+              "🌿"
+            ]
+          },
+          {
+            "selector": "#feedback-open",
+            "marks": [
+              "✉"
+            ]
+          },
+          {
+            "selector": "#plaza-status",
+            "marks": [
+              "🌐"
+            ]
+          },
+          {
+            "selector": "#plaza-chat-toggle",
+            "marks": [
+              "💬"
+            ]
+          },
+          {
+            "selector": "#party-open",
+            "marks": [
+              "🤝"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "⚔"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "👗"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🪽"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🐾"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🍪"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "📊"
+            ]
+          }
+        ],
+        "fonts": [],
+        "horizontalOverflow": false
+      }
+    },
+    {
+      "device": "mobile",
+      "screen": "shop",
+      "file": "mobile-shop.png",
+      "mode": "normal",
+      "audit": {
+        "styles": [
+          {
+            "selector": "#save-status",
+            "fontSize": "10px",
+            "color": "rgb(32, 92, 61)",
+            "background": "rgba(0, 0, 0, 0)",
+            "top": 99,
+            "bottom": 113
+          }
+        ],
+        "remainingUiEmoji": [
+          {
+            "selector": "#inventory",
+            "marks": [
+              "🎒"
+            ]
+          },
+          {
+            "selector": "#stage-map",
+            "marks": [
+              "🗺"
+            ]
+          },
+          {
+            "selector": "#settings",
+            "marks": [
+              "⚙"
+            ]
+          },
+          {
+            "selector": "#quest-toggle",
+            "marks": [
+              "🌿"
+            ]
+          },
+          {
+            "selector": "#feedback-open",
+            "marks": [
+              "✉"
+            ]
+          },
+          {
+            "selector": "#plaza-status",
+            "marks": [
+              "🌐"
+            ]
+          },
+          {
+            "selector": "#plaza-chat-toggle",
+            "marks": [
+              "💬"
+            ]
+          },
+          {
+            "selector": "#party-open",
+            "marks": [
+              "🤝"
+            ]
+          },
+          {
+            "selector": "#dawn-featured",
+            "marks": [
+              "↗"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🍓"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🍓"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🍓"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🍓"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🍓"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🍓"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🍓"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🍓"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🍓"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🍓"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🍓"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🍓"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🍓"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🍓"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🍓"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🍓"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🍓"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🍓"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🍓"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🍓"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🍓"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🍓"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🍓"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🍓"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🍓"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🍓"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🍓"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🍓"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🍓"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🍓"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🍓"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🍓"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🍓"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🍓"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🍓"
+            ]
+          }
+        ],
+        "fonts": [],
+        "horizontalOverflow": false
+      }
+    },
+    {
+      "device": "mobile",
+      "screen": "salon",
+      "file": "mobile-salon.png",
+      "mode": "normal",
+      "audit": {
+        "styles": [
+          {
+            "selector": "#save-status",
+            "fontSize": "10px",
+            "color": "rgb(32, 92, 61)",
+            "background": "rgba(0, 0, 0, 0)",
+            "top": 99,
+            "bottom": 113
+          },
+          {
+            "selector": ".salon-ribbon",
+            "fontSize": "16px",
+            "color": "rgb(255, 255, 255)",
+            "background": "rgb(220, 140, 168)",
+            "top": 695,
+            "bottom": 743
+          },
+          {
+            "selector": ".salon-description",
+            "fontSize": "12.8px",
+            "color": "rgb(128, 92, 112)",
+            "background": "rgba(0, 0, 0, 0)",
+            "top": 493,
+            "bottom": 537
+          },
+          {
+            "selector": ".salon-note",
+            "fontSize": "11.52px",
+            "color": "rgb(128, 92, 112)",
+            "background": "rgba(0, 0, 0, 0)",
+            "top": 604,
+            "bottom": 663
+          }
+        ],
+        "remainingUiEmoji": [
+          {
+            "selector": "#inventory",
+            "marks": [
+              "🎒"
+            ]
+          },
+          {
+            "selector": "#stage-map",
+            "marks": [
+              "🗺"
+            ]
+          },
+          {
+            "selector": "#settings",
+            "marks": [
+              "⚙"
+            ]
+          },
+          {
+            "selector": "#quest-toggle",
+            "marks": [
+              "🌿"
+            ]
+          },
+          {
+            "selector": "#feedback-open",
+            "marks": [
+              "✉"
+            ]
+          },
+          {
+            "selector": "#plaza-status",
+            "marks": [
+              "🌐"
+            ]
+          },
+          {
+            "selector": "#plaza-chat-toggle",
+            "marks": [
+              "💬"
+            ]
+          },
+          {
+            "selector": "#party-open",
+            "marks": [
+              "🤝"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "💇"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "✨"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🍓"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🍓"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🍓"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🍓"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🍓"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🍓"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🍓"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🍓"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🍓"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🍓"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🍓"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🍓"
+            ]
+          }
+        ],
+        "fonts": [],
+        "horizontalOverflow": false
+      }
+    },
+    {
+      "device": "mobile",
+      "screen": "career",
+      "file": "mobile-career.png",
+      "mode": "normal",
+      "audit": {
+        "styles": [
+          {
+            "selector": "#save-status",
+            "fontSize": "10px",
+            "color": "rgb(32, 92, 61)",
+            "background": "rgba(0, 0, 0, 0)",
+            "top": 99,
+            "bottom": 113
+          }
+        ],
+        "remainingUiEmoji": [
+          {
+            "selector": "#inventory",
+            "marks": [
+              "🎒"
+            ]
+          },
+          {
+            "selector": "#stage-map",
+            "marks": [
+              "🗺"
+            ]
+          },
+          {
+            "selector": "#settings",
+            "marks": [
+              "⚙"
+            ]
+          },
+          {
+            "selector": "#quest-toggle",
+            "marks": [
+              "🌿"
+            ]
+          },
+          {
+            "selector": "#feedback-open",
+            "marks": [
+              "✉"
+            ]
+          },
+          {
+            "selector": "#plaza-status",
+            "marks": [
+              "🌐"
+            ]
+          },
+          {
+            "selector": "#plaza-chat-toggle",
+            "marks": [
+              "💬"
+            ]
+          },
+          {
+            "selector": "#party-open",
+            "marks": [
+              "🤝"
+            ]
+          }
+        ],
+        "fonts": [],
+        "horizontalOverflow": false
+      }
+    },
+    {
+      "device": "mobile",
+      "screen": "expedition",
+      "file": "mobile-expedition.png",
+      "mode": "normal",
+      "audit": {
+        "styles": [
+          {
+            "selector": "#save-status",
+            "fontSize": "10px",
+            "color": "rgb(32, 92, 61)",
+            "background": "rgba(0, 0, 0, 0)",
+            "top": 99,
+            "bottom": 113
+          },
+          {
+            "selector": ".ranking-note",
+            "fontSize": "12.48px",
+            "color": "rgb(125, 135, 109)",
+            "background": "rgba(0, 0, 0, 0)",
+            "top": 1538,
+            "bottom": 1580
+          }
+        ],
+        "remainingUiEmoji": [
+          {
+            "selector": "#inventory",
+            "marks": [
+              "🎒"
+            ]
+          },
+          {
+            "selector": "#stage-map",
+            "marks": [
+              "🗺"
+            ]
+          },
+          {
+            "selector": "#settings",
+            "marks": [
+              "⚙"
+            ]
+          },
+          {
+            "selector": "#quest-toggle",
+            "marks": [
+              "🌿"
+            ]
+          },
+          {
+            "selector": "#feedback-open",
+            "marks": [
+              "✉"
+            ]
+          },
+          {
+            "selector": "#plaza-status",
+            "marks": [
+              "🌐"
+            ]
+          },
+          {
+            "selector": "#plaza-chat-toggle",
+            "marks": [
+              "💬"
+            ]
+          },
+          {
+            "selector": "#party-open",
+            "marks": [
+              "🤝"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🔒"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🔒"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🔒"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🔒"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🔒"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🔒"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🔒"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🔒"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🔒"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🔒"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🌍"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "📱"
+            ]
+          }
+        ],
+        "fonts": [],
+        "horizontalOverflow": false
+      }
+    },
+    {
+      "device": "mobile",
+      "screen": "ranking",
+      "file": "mobile-ranking.png",
+      "mode": "normal",
+      "audit": {
+        "styles": [
+          {
+            "selector": "#save-status",
+            "fontSize": "10px",
+            "color": "rgb(32, 92, 61)",
+            "background": "rgba(0, 0, 0, 0)",
+            "top": 99,
+            "bottom": 113
+          },
+          {
+            "selector": ".ranking-note",
+            "fontSize": "12.48px",
+            "color": "rgb(125, 135, 109)",
+            "background": "rgba(0, 0, 0, 0)",
+            "top": 759,
+            "bottom": 801
+          }
+        ],
+        "remainingUiEmoji": [
+          {
+            "selector": "#inventory",
+            "marks": [
+              "🎒"
+            ]
+          },
+          {
+            "selector": "#stage-map",
+            "marks": [
+              "🗺"
+            ]
+          },
+          {
+            "selector": "#settings",
+            "marks": [
+              "⚙"
+            ]
+          },
+          {
+            "selector": "#quest-toggle",
+            "marks": [
+              "🌿"
+            ]
+          },
+          {
+            "selector": "#feedback-open",
+            "marks": [
+              "✉"
+            ]
+          },
+          {
+            "selector": "#plaza-status",
+            "marks": [
+              "🌐"
+            ]
+          },
+          {
+            "selector": "#plaza-chat-toggle",
+            "marks": [
+              "💬"
+            ]
+          },
+          {
+            "selector": "#party-open",
+            "marks": [
+              "🤝"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🔒"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🔒"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🔒"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🔒"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🔒"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🔒"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🔒"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🔒"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🔒"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🔒"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🌍"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "📱"
+            ]
+          }
+        ],
+        "fonts": [],
+        "horizontalOverflow": false
+      }
+    },
+    {
+      "device": "mobile",
+      "screen": "ranking-empty",
+      "file": "mobile-ranking-empty.png",
+      "mode": "empty",
+      "audit": {
+        "styles": [
+          {
+            "selector": "#save-status",
+            "fontSize": "10px",
+            "color": "rgb(32, 92, 61)",
+            "background": "rgba(0, 0, 0, 0)",
+            "top": 99,
+            "bottom": 113
+          },
+          {
+            "selector": ".note",
+            "fontSize": "13.6px",
+            "color": "rgb(138, 120, 99)",
+            "background": "rgb(255, 240, 207)",
+            "top": 675,
+            "bottom": 745
+          },
+          {
+            "selector": ".ranking-note",
+            "fontSize": "12.48px",
+            "color": "rgb(125, 135, 109)",
+            "background": "rgba(0, 0, 0, 0)",
+            "top": 759,
+            "bottom": 801
+          }
+        ],
+        "remainingUiEmoji": [
+          {
+            "selector": "#inventory",
+            "marks": [
+              "🎒"
+            ]
+          },
+          {
+            "selector": "#stage-map",
+            "marks": [
+              "🗺"
+            ]
+          },
+          {
+            "selector": "#settings",
+            "marks": [
+              "⚙"
+            ]
+          },
+          {
+            "selector": "#quest-toggle",
+            "marks": [
+              "🌿"
+            ]
+          },
+          {
+            "selector": "#feedback-open",
+            "marks": [
+              "✉"
+            ]
+          },
+          {
+            "selector": "#plaza-status",
+            "marks": [
+              "🌐"
+            ]
+          },
+          {
+            "selector": "#plaza-chat-toggle",
+            "marks": [
+              "💬"
+            ]
+          },
+          {
+            "selector": "#party-open",
+            "marks": [
+              "🤝"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🔒"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🔒"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🔒"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🔒"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🔒"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🔒"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🔒"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🔒"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🔒"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🔒"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🌍"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "📱"
+            ]
+          }
+        ],
+        "fonts": [],
+        "horizontalOverflow": false
+      }
+    },
+    {
+      "device": "mobile",
+      "screen": "ranking-error",
+      "file": "mobile-ranking-error.png",
+      "mode": "error",
+      "audit": {
+        "styles": [
+          {
+            "selector": "#save-status",
+            "fontSize": "10px",
+            "color": "rgb(32, 92, 61)",
+            "background": "rgba(0, 0, 0, 0)",
+            "top": 99,
+            "bottom": 113
+          },
+          {
+            "selector": ".ranking-unavailable",
+            "fontSize": "16px",
+            "color": "rgb(133, 102, 64)",
+            "background": "rgb(255, 245, 231)",
+            "top": 628,
+            "bottom": 743
+          },
+          {
+            "selector": ".ranking-note",
+            "fontSize": "12.48px",
+            "color": "rgb(125, 135, 109)",
+            "background": "rgba(0, 0, 0, 0)",
+            "top": 759,
+            "bottom": 801
+          }
+        ],
+        "remainingUiEmoji": [
+          {
+            "selector": "#inventory",
+            "marks": [
+              "🎒"
+            ]
+          },
+          {
+            "selector": "#stage-map",
+            "marks": [
+              "🗺"
+            ]
+          },
+          {
+            "selector": "#settings",
+            "marks": [
+              "⚙"
+            ]
+          },
+          {
+            "selector": "#quest-toggle",
+            "marks": [
+              "🌿"
+            ]
+          },
+          {
+            "selector": "#feedback-open",
+            "marks": [
+              "✉"
+            ]
+          },
+          {
+            "selector": "#plaza-status",
+            "marks": [
+              "🌐"
+            ]
+          },
+          {
+            "selector": "#plaza-chat-toggle",
+            "marks": [
+              "💬"
+            ]
+          },
+          {
+            "selector": "#party-open",
+            "marks": [
+              "🤝"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🔒"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🔒"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🔒"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🔒"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🔒"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🔒"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🔒"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🔒"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🔒"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🔒"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "🌍"
+            ]
+          },
+          {
+            "selector": "button",
+            "marks": [
+              "📱"
+            ]
+          }
+        ],
+        "fonts": [],
+        "horizontalOverflow": false
+      }
+    },
+    {
+      "device": "mobile",
+      "screen": "server-unavailable",
+      "file": "mobile-server-unavailable.png",
+      "mode": "error",
+      "audit": {
+        "styles": [
+          {
+            "selector": "#save-status",
+            "fontSize": "10px",
+            "color": "rgb(32, 92, 61)",
+            "background": "rgba(0, 0, 0, 0)",
+            "top": 99,
+            "bottom": 113
+          },
+          {
+            "selector": ".note",
+            "fontSize": "13.6px",
+            "color": "rgb(138, 120, 99)",
+            "background": "rgb(255, 240, 207)",
+            "top": 378,
+            "bottom": 449
+          }
+        ],
+        "remainingUiEmoji": [
+          {
+            "selector": "#inventory",
+            "marks": [
+              "🎒"
+            ]
+          },
+          {
+            "selector": "#stage-map",
+            "marks": [
+              "🗺"
+            ]
+          },
+          {
+            "selector": "#settings",
+            "marks": [
+              "⚙"
+            ]
+          },
+          {
+            "selector": "#quest-toggle",
+            "marks": [
+              "🌿"
+            ]
+          },
+          {
+            "selector": "#feedback-open",
+            "marks": [
+              "✉"
+            ]
+          },
+          {
+            "selector": "#plaza-status",
+            "marks": [
+              "🌐"
+            ]
+          },
+          {
+            "selector": "#plaza-chat-toggle",
+            "marks": [
+              "💬"
+            ]
+          },
+          {
+            "selector": "#party-open",
+            "marks": [
+              "🤝"
+            ]
+          }
+        ],
+        "fonts": [],
+        "horizontalOverflow": false
+      }
+    },
+    {
+      "device": "mobile",
+      "screen": "weather-error",
+      "file": "mobile-weather-error.png",
+      "mode": "weather-error"
+    }
+  ]
+}

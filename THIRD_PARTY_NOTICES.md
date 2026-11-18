@@ -1,6 +1,16 @@
 # Third-party notices
 
-Berry Forest Adventure School includes the following third-party component.
+## Local notebook typography (OFL 1.1)
+
+- `public/fonts/berry-forest-sans.woff2` is a renamed Korean/Latin subset of Noto Sans KR, retaining its variable weight axis.
+- `public/fonts/berry-notebook-serif.woff2` is a renamed, static 700-weight title subset of Noto Serif KR.
+- Noto Sans KR: Copyright 2014-2021 Adobe (http://www.adobe.com/), with Reserved Font Name 'Source'. Noto Serif KR: Copyright 2017-2023 Adobe (http://www.adobe.com/). Both derivatives remain under the SIL Open Font License 1.1.
+- Complete licenses accompany the fonts: `public/fonts/LICENSE-NotoSansKR.txt` and `public/fonts/LICENSE-NotoSerifKR.txt`.
+- Upstream: https://github.com/google/fonts/tree/main/ofl/notosanskr and https://github.com/google/fonts/tree/main/ofl/notoserifkr.
+- `scripts/generate-design-fonts.py` builds these subsets from legally installed source fonts. Original copyright and license name records are preserved; derivative family names are Berry Forest Sans and Berry Notebook Serif.
+- These files are bundled with the game, so viewing the interface does not request fonts from a third-party server.
+
+Berry Forest Adventure School includes the following third-party components.
 It is not covered by the project's proprietary license.
 
 ## three.js
