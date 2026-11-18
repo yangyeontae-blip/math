@@ -2,3 +2,5 @@
 RESEND_API_KEY=
 FEEDBACK_FROM=
 # Recipient is already stored as a private Sites runtime setting.
+# 공공데이터포털 기상청 단기예보 일반 인증키(Decoding)
+KMA_SERVICE_KEY=

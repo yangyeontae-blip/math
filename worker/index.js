@@ -1,6 +1,7 @@
 import { handleAccounts } from './accounts.js';
 import { handleCommunity } from './community.js';
 import { handleFeedback } from './feedback.js';
+import { handleWeather } from './weather.js';
 const embeddedAssets = /*__EMBEDDED_ASSETS__*/{};
 
 const allowedOrigins = new Set([
@@ -187,6 +188,7 @@ export default {
     if (url.pathname.startsWith('/api/account/')) return handleAccounts(request, env);
     if (url.pathname === '/api/community/guild' || url.pathname === '/api/community/duel') return handleCommunity(request, env);
     if (url.pathname === '/api/feedback') return handleFeedback(request, env);
+    if (url.pathname === '/api/weather') return handleWeather(request, env, { json, corsHeaders });
     if (url.pathname === '/promo.mp4') {
       return Response.redirect('https://yangyeontae-blip.github.io/math/promo.mp4', 302);
     }

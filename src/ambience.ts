@@ -46,6 +46,12 @@ export function applyAmbience(_host: HTMLElement, _before: Element | null, scene
   return currentAmbience();
 }
 
+/** 기상청 실제 날씨를 고른 경우 날씨만 바꿔요. 낮·밤은 계속 무작위라 화면이 어두워지지 않아요. 눈이 오면 겨울 숲이 돼요. */
+export function withRealWeather(scene: AmbienceScene, real: { weather: Weather } | null): AmbienceScene {
+  if (!real) return { ...scene };
+  return { ...scene, weather: real.weather, season: real.weather === 'snow' ? 'winter' : scene.season === 'winter' && real.weather === 'rain' ? 'autumn' : scene.season };
+}
+
 export function ambienceLabel(scene = current): string {
   const season = { green: '🌿 초록빛', autumn: '🍂 가을', winter: '❄️ 겨울' }[scene.season];
   const mood = { day: '포근한 낮', night: '별빛 밤' }[scene.mood];
