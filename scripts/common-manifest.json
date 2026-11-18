@@ -224,7 +224,7 @@
     "tests/forest-party-presence.test.ts": "2f043cef28ecd4b3ca5caad8041ad0a6454ece4de84c2bf37bff27029bfb5115",
     "scripts/generate-item-icons.mjs": "b7b3a74ecca34522218ef9152f050076332f4cf47932f18f7cf053d7c0bf9f83",
     "src/item-icons.ts": "d4b0adf2e861be5f4584c302c7ef4371c8569c2293740aeaa69a3b6fda2cd169",
-    "src/item-icons.css": "32ba6ad8433c553cf391f053bb72925741e24f268ae95959f1bb77650aa3dbe4",
+    "src/item-icons.css": "65b1cdb333ae12b2937b437a6582c3e6eb8d03ca05a4c1d413b02d8278c5010f",
     "src/item-icon-paths.ts": "8b6ceb007dd7f92224277b6fa2506bfce1c28241ec54fa86391683883f750b5d",
     "public/art/berry-items-v1/dawn-outfit-32.svg": "05ecdff705aeb88206eea1e23883ebac95bc23aae67ee42ade96e26990ffbcf2",
     "public/art/berry-items-v1/dawn-outfit-33.svg": "c3d6571f6343b3bfd4b4399986d314de0998155ee86444f071eaf3aa2ef262f2",
@@ -369,5 +369,5 @@
     "public/art/berry-items-v1/weapon-8.svg": "e0ff61f6ebf6747f5af8484e58f460f8bc8906ec60b55ef7422a356f3ac958ea",
     "public/art/berry-items-v1/weapon-9.svg": "f8a6c5fd10d7dd5073bc00d3690a85c2097ff1ea27b0633891d98ece61d0c5d5"
   },
-  "generation": "f34c3157858bd6dbac764d1d4fc1c46bd5bec10585d690c9cc931b312572be77"
+  "generation": "8fc8a5d86ca0aa4db3e77ac679a2878a68c60e45748dd9b719840953c8af8474"
 }
