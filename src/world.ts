@@ -808,6 +808,13 @@ export class World {
     const arena=VILLAGE_SPOTS.arena;
     cylinder(this.scene,0xf1deb4,arena.x,.08,arena.z,2.4,2.4,.1,32);
     this.addEntity('arena','신비 · 수학 시합',arena.x,arena.z,makeCharacter(3,8,4));
+    // 광장 연못 서쪽 선착장 옆 낚시터: 낚싯대 거치대, 미끼 바구니, 작은 간판. 수학자 카드를 다 모으면 황금 낚싯대와 명패가 생겨요.
+    {const dock=new T.Group();box(dock,0x9a7650,0,.08,0,1.5,.16,1.1);cylinder(dock,0x7b5a3e,-.55,.6,-.35,.06,.07,1.1,8);cylinder(dock,0x7b5a3e,.55,.6,-.35,.06,.07,1.1,8);box(dock,0x8a6448,0,1.12,-.35,1.3,.08,.1);
+     const rod=new T.Group();rod.position.set(.15,.55,.1);rod.rotation.z=-.9;cylinder(rod,0x6b4a2f,0,0,0,.025,.035,1.9,6);rod.userData.fishingRod=true;dock.add(rod);
+     const gold=new T.Group();gold.position.set(-.35,.55,.1);gold.rotation.z=.9;cylinder(gold,0xf2c14e,0,0,0,.03,.045,1.9,6);ball(gold,0xffe08a,0,.95,0,.07);box(gold,0xe0a832,0,-.95,0,.12,.12,.12);gold.visible=this.fishingTrophyOn;gold.userData.goldenRod=true;dock.add(gold);
+     const plaque=box(dock,0xe8b84a,.55,.42,.42,.5,.3,.05);plaque.visible=this.fishingTrophyOn;plaque.userData.goldenRod=true;
+     cylinder(dock,0xc9a26b,-.45,.28,.3,.2,.16,.3,10);ball(dock,0x8fbf7a,-.45,.46,.3,.14,.08,.14);
+     dock.rotation.y=Math.PI/2;dock.scale.setScalar(1.6);this.fishingDock=dock;this.addEntity('fishingDock','연못 낚시터 · 수학자 카드',14.4,8,dock);this.sign(dock,'연못 낚시터',0,2.2,-.35,2.8,'#2f6f8f',true);}
     this.sign(this.scene,'시합장',arena.x,5.2,arena.z,5.4,'#675282');
     const school=academyBuilding();school.position.set(0,0,-12);this.scene.add(school);this.colliders.push({x:0,z:-12,r:4});this.sign(this.scene,'베리숲 모험학교',0,7.4,-9.4,5.4,'#173f30',true);this.addEntity('academyGate','🏛 모험학교 · 스킬 배우러 들어가기',0,-7,new T.Group());for(const x of [-4.8,4.8])this.colliders.push({x,z:-12,r:2.1});
     const exit=(id:string,name:string,x:number,z:number,color:number)=>{const g=this.gate(color);this.addEntity(id,name,x,z,g);this.sign(g,name.split(' · ')[0],0,4.8,0,6);};
@@ -1749,6 +1756,10 @@ export class World {
   forestPresenceOnline=false;
   get isPublicForest(){return this.active&&this.stage>0&&!this.inRoom&&!this.inHomestead&&!this.inMarket&&!this.inAcademy&&!this.inHunting&&!this.inTraining&&!this.inAstralStudy;}
   partyScene=false;
+  private fishingDock: T.Group | null = null;
+  /** 수학자 카드를 다 모으면 낚시터에 황금 낚싯대와 명패를 보여 줘요. */
+  private fishingTrophyOn = false;
+  setFishingTrophy(on: boolean) { this.fishingTrophyOn = on; this.fishingDock?.traverse(o => { if (o.userData.goldenRod) o.visible = on; }); }
   get isPublicMarket(){return this.active&&this.inMarket&&!this.inRoom&&!this.inHomestead&&!this.inAcademy&&!this.inHunting&&!this.inTraining&&!this.inAstralStudy;}
   get isPublicPlaza(){return this.active&&this.stage===0&&!this.inRoom&&!this.inHomestead&&!this.inMarket&&!this.inAcademy&&!this.inHunting&&!this.inTraining&&!this.inAstralStudy;}
   setPlazaIdentity(profile:PlazaProfile|null,role='player'){this.plazaVisual.setSelf(profile,this.player,role);}

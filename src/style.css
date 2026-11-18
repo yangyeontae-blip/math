@@ -467,3 +467,27 @@ input:not([type=checkbox]):not([type=radio]),select,textarea{min-height:44px}
 #academy-skills:has(#exploration-skill-slots):not(:has([data-cast-skill])){display:none!important}
 .world-three-banner{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:12px 0;padding:12px 16px;border-radius:16px;background:#f3eedf;border:2px solid #d9c9a0;color:#4a3f2c}.world-three-banner.is-open{background:linear-gradient(120deg,#fff3c8,#e6f4dc);border-color:#c9a94c}.world-three-banner strong{display:block;font-size:1rem}.world-three-banner small{display:block;font-size:.875rem;color:#6d624f}.world-three-banner button{flex:none;min-height:48px}@media(max-width:600px){.world-three-banner{flex-direction:column;align-items:stretch}}
 .trade-sheet header small{color:#6d624f}.trade-sheet h2{margin:4px 0}.trade-columns{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:12px 0}.trade-columns section{padding:12px;border-radius:16px;background:#fffaee;border:2px solid #e3d6b6}.trade-columns h3{margin:0 0 8px;font-size:1rem}.trade-berries{display:flex;align-items:center;gap:8px;font-weight:700}.trade-berries input{flex:1;min-height:44px;font-size:1rem;padding:4px 8px}.trade-items{display:grid;gap:6px;max-height:260px;overflow:auto;margin-top:8px}.trade-items label{display:flex;align-items:center;gap:8px;min-height:44px;padding:4px 8px;border-radius:12px;background:#f5f1e5}.trade-items label span{font-size:.8rem;padding:2px 8px;border-radius:999px;background:#dff0d6;color:#2c653f}.trade-theirs{margin:0;padding-left:18px;line-height:1.8}.trade-fee,.trade-locks{font-size:.875rem;color:#5a4a3a}.trade-actions{display:flex;gap:8px}.trade-actions button{flex:1;min-height:48px}.trade-empty{font-size:.875rem;color:#6d624f}@media(max-width:600px){.trade-columns{grid-template-columns:1fr}}
+/* 연못 낚시 · 수학자 카드 */
+.fishing-head small{color:#2f6f8f;font-weight:700}.fishing-head h2{margin:4px 0}.fishing-head p,.fishing-status{font-size:.9rem;color:#5a4a3a;line-height:1.6}
+.fishing-tabs{margin:8px 0}.fishing-cast{min-height:56px;font-size:1.1rem;margin:8px 0}
+.fishing-odds{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px;padding:0;list-style:none;margin:12px 0}.fishing-odds li{padding:8px 12px;border-radius:12px;background:#fffaee;border-left:6px solid var(--tier);font-size:.875rem}
+.fishing-catch{display:grid;justify-items:center;gap:6px;margin:8px 0 12px;animation:cardIn .55s cubic-bezier(.2,1.4,.4,1)}
+@keyframes cardIn{from{transform:rotateY(90deg) scale(.8);opacity:0}to{transform:none;opacity:1}}
+@media (prefers-reduced-motion: reduce){.fishing-catch{animation:none}}
+.math-card{position:relative;width:min(260px,100%);padding:14px 14px 16px;border-radius:20px;background:linear-gradient(180deg,#fffdf6,#f7efdb);border:4px solid var(--tier);box-shadow:0 8px 0 color-mix(in srgb,var(--tier) 35%,transparent),0 16px 30px #0002;text-align:center}
+.math-card.tier-legend{background:linear-gradient(160deg,#fff6d8,#ffe7a3 55%,#fff6d8);box-shadow:0 0 0 3px #ffe9a8,0 8px 0 #b07a1255,0 0 40px #f2c14e88}
+.math-card.tier-hero{background:linear-gradient(160deg,#fbf3ff,#efdcfb)}
+.math-card-tier{position:absolute;top:10px;left:10px;padding:2px 10px;border-radius:999px;background:var(--tier);color:#fff;font-size:.8rem;font-weight:800}
+.math-card-photo{display:block;margin:0 auto 8px;border-radius:14px;object-fit:cover;background:#efe6cf;color:var(--tier)}
+.math-card-photo.big{width:180px;height:225px}.math-card-photo.small{width:72px;height:90px;border-radius:10px}
+.math-card-photo.is-emblem{padding:18px;box-sizing:border-box;background:radial-gradient(circle at 50% 40%,#fffaf0,#efe2c2)}
+.math-card h3{margin:2px 0;font-size:1.25rem}.math-card small{color:#6d624f}.math-card-deed{margin:6px 0 0;font-weight:700;line-height:1.5}
+.math-card-story{max-width:520px;line-height:1.7;margin:8px auto 0}.math-card-credit{font-size:.75rem;color:#6d624f;margin:0}
+.math-card-new{font-size:1.1rem;font-weight:800;color:#2c653f;margin:0}.math-card-dup{font-weight:700;color:#805815;margin:0}
+.math-card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:10px;margin:12px 0}
+.math-card-slot{display:grid;justify-items:center;gap:2px;padding:10px 6px;border-radius:14px;background:#fffaee;border:3px solid var(--tier);min-height:150px}
+.math-card-slot b{font-size:.9rem}.math-card-slot small{font-size:.75rem;color:#6d624f}
+.math-card-slot.is-missing{border-style:dashed;background:#f3eedf;color:#8a7d66}.math-card-slot[aria-disabled=true]{opacity:.75}
+.math-card-unknown{display:grid;place-items:center;width:72px;height:90px;border-radius:10px;background:#e6dcc4;font-size:2rem;font-weight:800;color:#a3967c}
+.fishing-complete{padding:10px 14px;border-radius:14px;background:#fff3c8;border:2px solid #e0b040;font-weight:700}
+

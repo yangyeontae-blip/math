@@ -156,7 +156,7 @@
     "public/art/skyward-weapon-36.svg": "f5a25d53ad070cf4a44a8697450ee5ef91193ba5bd8f728770c24b29b7b7bf07",
     "public/art/skyward-weapon-37.svg": "0b79582b7349629dfba6c34f03f729c971a4659f043f880fb27a8d098e660de6",
     "public/art/skyward-weapon-38.svg": "46ae0f4ff502186fbd37fed4613fe3d0f3d9cb4d28ffd810389d1374e97aec34",
-    "src/titles.ts": "123ded0072e20a0fe9f508e15d3c7df40dd5277a5b70fbee65c59e4288f69507",
+    "src/titles.ts": "bfd19e131c74a8bf0d529d9e19ecbc1dbb4cddd4156f04ed51e17c27795e88ea",
     "src/title-view.ts": "2b031f25c05ce6b1a46263d16d955d3cc65da1a63aabb8ad9aebac90b6108492",
     "src/safe-landing.ts": "c3bb10a850a4946528cf1dfc9086a40af18c84e6743175526dd990a13cf83991",
     "src/display-controls.ts": "8fefe62bc87a8545a65b26dabf2977a84024d2dc38dad184f6e187cfea2cdfcb",
@@ -369,5 +369,5 @@
     "public/art/berry-items-v1/weapon-8.svg": "e0ff61f6ebf6747f5af8484e58f460f8bc8906ec60b55ef7422a356f3ac958ea",
     "public/art/berry-items-v1/weapon-9.svg": "f8a6c5fd10d7dd5073bc00d3690a85c2097ff1ea27b0633891d98ece61d0c5d5"
   },
-  "generation": "a56a031eaf3e566d1f1e9e3ba96aa4b2db17495d0d842ed20f433cb862d425af"
+  "generation": "f7a8a79a297d75e777c2734c12a83c951443ff1fd343017bdef699ffcc796f48"
 }

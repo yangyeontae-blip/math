@@ -16,7 +16,7 @@ export const EXPEDITION_TITLES = [
 ] as const;
 
 
-export type TitleId = 'level-50'|'level-100'|'level-300'|'level-500'|'level-1000'|'ppojjaki'|'multiplication'|`grade-${number}`|`expedition-${number}`;
+export type TitleId = 'math-friend'|'level-50'|'level-100'|'level-300'|'level-500'|'level-1000'|'ppojjaki'|'multiplication'|`grade-${number}`|`expedition-${number}`;
 export type TitleStyle = 'leaf'|'star'|'divine'|'pet'|'study'|'explorer';
 export type TitleDefinition = {id:TitleId;name:string;style:TitleStyle;icon:string;requirement:string;level?:number;grade?:number;expeditions?:number};
 export const TITLES:readonly TitleDefinition[] = [
@@ -29,6 +29,7 @@ export const TITLES:readonly TitleDefinition[] = [
  ...EXPEDITION_TITLES.map((t,i)=>({id:('expedition-'+i) as TitleId,name:t.name,style:'explorer' as const,icon:'🌿',requirement:'원정 '+t.need+'회 완수',expeditions:t.need})),
  ...Array.from({length:6},(_,i)=>({id:('grade-'+(i+1)) as TitleId,name:(i+1)+'학년 수학 탐험가',style:'study' as const,icon:'📚',requirement:(i+1)+'학년 학습 졸업 보상 받기',grade:i+1})),
  {id:'multiplication',name:'곱셈숲 탐험가',style:'study',icon:'✖',requirement:'곱셈숲 완수'},
+ {id:'math-friend',name:'수학자의 벗',style:'study',icon:'✦',requirement:'수학자 카드 24장 모두 모으기'},
 ];
 export function titleDefinition(id:unknown){return typeof id==='string'?TITLES.find(t=>t.id===id):undefined;}
 export function titleAvailable(s:Save,t:TitleDefinition){
@@ -36,6 +37,7 @@ export function titleAvailable(s:Save,t:TitleDefinition){
  if(t.level)return s.level>=t.level;
  if(t.grade)return s.grade===t.grade&&!!s.curriculum?.graduationClaimed;
  if(t.expeditions!==undefined)return (s.expedition?.completed??-1)>=t.expeditions;
+ if(t.id==='math-friend')return !!s.fishing?.completed;
  return t.id==='ppojjaki'?s.pet===20:!!s.multiplicationCompleted;
 }
 export function migratedTitle(s:Save):TitleId|null{
