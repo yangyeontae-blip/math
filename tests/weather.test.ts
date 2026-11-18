@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { withRealWeather } from '../src/ambience.ts';
-import { parseRealWeather } from '../src/weather-client.ts';
+import { parseRealWeather, realWeatherText, weatherRegion } from '../src/weather-client.ts';
 // @ts-expect-error 서버 코드는 JS예요.
 import { handleWeather, kmaBaseTime, parseKma, weatherFromKma } from '../worker/weather.js';
 
@@ -47,6 +47,12 @@ test('weather endpoint keeps the key on the server and degrades safely', async (
   assert.match(asked, /nx=98&ny=76/);
   const broken = await handleWeather(req('jeju'), { KMA_SERVICE_KEY: 'k' }, helpers, async () => { throw new Error('down'); }, Date.UTC(2026, 10, 18, 3, 50));
   assert.equal(broken.status, 502);
+});
+
+test('weather follows Cheongju by default and reads as a visible KMA label', () => {
+  assert.equal(weatherRegion(), 'cheongju');
+  assert.equal(realWeatherText({ region: 'cheongju', regionName: '청주', weather: 'clear', temp: 8 }), '기상청 실시간 · 청주 맑음 8°C');
+  assert.equal(realWeatherText({ region: 'jeju', regionName: '제주', weather: 'snow', temp: null }), '기상청 실시간 · 제주 눈');
 });
 
 test('client accepts only well-formed weather from the server', () => {

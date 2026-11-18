@@ -6,20 +6,31 @@ import type { Weather } from './ambience';
 export type RealWeather = { region: string; regionName: string; weather: Weather; temp: number | null };
 
 export const WEATHER_REGION_NAMES: Record<string, string> = {
-  seoul: '서울', busan: '부산', daegu: '대구', incheon: '인천', gwangju: '광주', daejeon: '대전', ulsan: '울산', sejong: '세종',
+  cheongju: '청주', seoul: '서울', busan: '부산', daegu: '대구', incheon: '인천', gwangju: '광주', daejeon: '대전', ulsan: '울산', sejong: '세종',
   gyeonggi: '경기', gangwon: '강원', chungbuk: '충북', chungnam: '충남', jeonbuk: '전북', jeonnam: '전남', gyeongbuk: '경북', gyeongnam: '경남', jeju: '제주',
 };
 
 const KEY = 'berry-forest-weather-region-v1';
 const FRESH_MS = 20 * 60_000;
 
-/** 빈 문자열이면 실제 날씨를 쓰지 않아요(기본값). */
+/** 기본은 청주 기상청 날씨예요. 설정에서 "끄기"를 고르면 'off'로 기억하고 빈 문자열을 돌려줘요. */
+export const DEFAULT_WEATHER_REGION = 'cheongju';
 export function weatherRegion(): string {
-  try { const v = localStorage.getItem(KEY) || ''; return v in WEATHER_REGION_NAMES ? v : ''; } catch { return ''; }
+  try {
+    const v = localStorage.getItem(KEY);
+    if (v === 'off') return '';
+    return v && v in WEATHER_REGION_NAMES ? v : DEFAULT_WEATHER_REGION;
+  } catch { return DEFAULT_WEATHER_REGION; }
 }
 export function setWeatherRegion(region: string) {
-  try { if (region in WEATHER_REGION_NAMES) localStorage.setItem(KEY, region); else localStorage.removeItem(KEY); } catch { /* 저장이 막혀 있어도 괜찮아요 */ }
+  try { localStorage.setItem(KEY, region in WEATHER_REGION_NAMES ? region : 'off'); } catch { /* 저장이 막혀 있어도 괜찮아요 */ }
   cached = null;
+}
+
+const WEATHER_WORDS = { clear: '맑음', rain: '비', snow: '눈' } as const;
+/** 화면에 늘 보이는 기상청 표시 문구예요. 예: "기상청 실시간 · 청주 맑음 8°C" */
+export function realWeatherText(real: RealWeather): string {
+  return `기상청 실시간 · ${real.regionName} ${WEATHER_WORDS[real.weather]}${real.temp === null ? '' : ` ${real.temp}°C`}`;
 }
 
 export function parseRealWeather(value: unknown): RealWeather | null {

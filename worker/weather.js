@@ -3,6 +3,7 @@
 // 위치는 시·도 단위 대표 격자만 써서 학교를 알 수 없어요.
 
 export const WEATHER_REGIONS = {
+  cheongju: { name: '청주', nx: 69, ny: 106 },
   seoul: { name: '서울', nx: 60, ny: 127 },
   busan: { name: '부산', nx: 98, ny: 76 },
   daegu: { name: '대구', nx: 89, ny: 90 },
@@ -59,7 +60,7 @@ export function parseKma(body) {
 export async function handleWeather(request, env, { json, corsHeaders }, fetcher = fetch, now = Date.now()) {
   if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: corsHeaders(request) });
   if (request.method !== 'GET') return json(request, { error: '지원하지 않는 요청이에요.' }, 405);
-  const regionId = new URL(request.url).searchParams.get('region') || 'seoul';
+  const regionId = new URL(request.url).searchParams.get('region') || 'cheongju';
   const region = WEATHER_REGIONS[regionId];
   if (!region) return json(request, { error: '지역을 다시 골라 주세요.' }, 400);
   if (!env.KMA_SERVICE_KEY) return json(request, { error: '실제 날씨 서버를 준비하는 중이에요.' }, 503);
