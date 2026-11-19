@@ -4,4 +4,19 @@ import {huntingMaxHp,type HuntSnapshot} from './hunting';
 import {JOB_TITLES} from './plaza-protocol';
 export function characterStats(s:Save,current?:HuntSnapshot|null){const stats=huntingCompanionStats(s);return {attack:Math.round(huntingPower(s)),maxHp:current?.maxHp??huntingMaxHp(s.level,stats.maxHpMultiplier),hp:current?Math.ceil(current.playerHp):null,reduction:Math.round(stats.damageReduction*100),job:JOB_TITLES[s.career.job??'novice'][s.career.job?s.career.ranks[s.career.job]:0],weapon:WEAPONS[s.weapon].name,outfit:OUTFITS[s.outfit].name};}
 const esc=(s:string)=>s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]!));
-export function renderCharacterStats(s:Save,current?:HuntSnapshot|null){const v=characterStats(s,current);return '<section class="character-stats"><p class="eyebrow">나의 가방 · 상태</p><h2>Lv. '+s.level+' '+esc(s.nickname)+'</h2><p>'+v.job+'</p><dl class="character-stat-grid"><div><dt>⚔ 사냥 공격력</dt><dd>'+v.attack.toLocaleString()+'</dd></div><div><dt>♥ '+(v.hp===null?'최대 체력':'현재 / 최대 체력')+'</dt><dd>'+(v.hp===null?'':v.hp+' / ')+v.maxHp.toLocaleString()+'</dd></div><div><dt>🛡 장비·펫 피해 감소</dt><dd>'+v.reduction+'%</dd></div><div><dt>📈 다음 레벨 경험치</dt><dd>'+s.xp.toLocaleString()+' / '+(s.level*40).toLocaleString()+'</dd></div></dl><p>무기: '+v.weapon+' +'+(s.weapons[s.weapon]??0)+'<br>의상: '+v.outfit+'</p><p class="note">공격력에는 레벨·무기·강화·펫이, 최대 체력에는 레벨·의상·펫이 반영돼요. 스킬의 일시적인 공격·방어 효과는 제외한 기본 능력치예요. 전투 밖에서는 현재 체력을 표시하지 않아요.</p><button class="secondary wide" data-inventory-back>가방으로 돌아가기</button></section>';}
+export function renderCharacterStats(s:Save,current?:HuntSnapshot|null){
+ const v=characterStats(s,current);
+ return `<section class="character-stats" aria-label="나의 모험가 상태">
+  <button class="close status-close" data-close aria-label="상태창 닫기">×</button>
+  <header class="status-header"><div class="status-emblem" aria-hidden="true"><img src="${import.meta.env.BASE_URL}art/berry-watercolor.png" alt="" width="46" height="46"><span>Lv. ${s.level}</span></div><div><p class="eyebrow">나의 모험가 수첩</p><h2>${esc(s.nickname)}</h2><p class="status-job">${esc(v.job)}</p></div></header>
+  <dl class="character-stat-grid">
+   <div><dt>⚔ 사냥 공격력</dt><dd>${v.attack.toLocaleString()}</dd></div>
+   <div><dt>♥ ${v.hp===null?'최대 체력':'현재 / 최대 체력'}</dt><dd>${v.hp===null?'':v.hp.toLocaleString()+' / '}${v.maxHp.toLocaleString()}</dd></div>
+   <div><dt>🛡 장비·펫 피해 감소</dt><dd>${v.reduction}%</dd></div>
+   <div><dt>✦ 다음 레벨 경험치</dt><dd>${s.xp.toLocaleString()} / ${(s.level*40).toLocaleString()}</dd></div>
+  </dl>
+  <dl class="status-equipment"><div><dt>무기</dt><dd>${esc(v.weapon)} +${s.weapons[s.weapon]??0}</dd></div><div><dt>의상</dt><dd>${esc(v.outfit)}</dd></div></dl>
+  <p class="note">공격력에는 레벨·무기·강화·펫이, 최대 체력에는 레벨·의상·펫이 반영돼요. 스킬의 일시적인 공격·방어 효과는 제외한 기본 능력치예요. 전투 밖에서는 현재 체력을 표시하지 않아요.</p>
+  <button class="secondary wide" data-inventory-back>가방으로 돌아가기</button>
+ </section>`;
+}

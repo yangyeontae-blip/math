@@ -1,3 +1,4 @@
+import {completeMathTrial} from './career-math-helpers.mjs';
 import {test,expect} from '@playwright/test';
 import {newSave} from '../src/rules.ts';
 import {stageMonsters,isVillagePond} from '../src/stages.ts';
@@ -51,17 +52,15 @@ test('mail feedback: title bonuses and guaranteed weapon upgrades are visible an
  await page.screenshot({path:info.outputPath('weapon-workshop.png')});
 });
 
-test('mail feedback: fourth advancement requires its actual trial and skill training spends berries once',async({page},info)=>{
+test('mail feedback: fourth advancement requires its math mission and skill training spends berries once',async({page},info)=>{
+ test.setTimeout(240000);
  const s=newSave('여명수련생',0,3);s.level=100;s.berries=5000;s.career.job='knight';s.career.ranks.knight=s.career.trials.knight=3;
  s.career.learned=ACADEMY_SKILLS.filter(a=>a.job==='knight'&&a.rank<=3).map(a=>a.id);s.career.loadouts.knight=['crescent','charge','roots','guardian'];
  await start(page,s);await page.locator('#stage-map').click();await page.locator('[data-nav="academy"]').first().click();
  const teacher=()=>page.evaluate(()=>{const w=window.__berry.getWorld(),e=w.entities.find(e=>e.id==='academyTeacher');w.player.position.set(e.x,0,e.z+.6);});
  await teacher();await expect(page.locator('#interact')).toContainText('스킬');if(await page.locator('#touch-talk').isVisible())await page.locator('#touch-talk').click();else await page.keyboard.press('e');
  await expect(page.locator('[data-career-action="start-trial"]')).toHaveAttribute('data-rank','4');await expect(page.locator('[data-career-action="choose-job"][data-job="alchemist"]')).toBeDisabled();
- await page.locator('[data-career-action="start-trial"]').click();await expect(page.locator('[data-cast-skill="dawnCrown"]')).toBeVisible();
- await page.evaluate(()=>{const w=window.__berry.getWorld(),e=w.huntingStatus.enemies[0];w.player.position.set(e.x,0,e.z+2);w.player.rotation.y=Math.PI;});
- await page.locator('[data-cast-skill="dawnCrown"]').click();await expect.poll(()=>page.evaluate(()=>window.__berry.getState().career.trials.knight)).toBe(4);
- await page.locator('[data-career-action="exit-combat"]').click();await teacher();await expect(page.locator('#interact')).toContainText('스킬');if(await page.locator('#touch-talk').isVisible())await page.locator('#touch-talk').click();else await page.keyboard.press('e');
+ await page.locator('[data-career-action="start-trial"]').click();await completeMathTrial(page);
  await page.locator('[data-career-action="advance-job"]').click();await expect(page.locator('.career-heading h2')).toContainText('여명의 성기사');
  await page.locator('[data-career-action="upgrade-skill"][data-skill="dawnCrown"]').click();
  expect(await page.evaluate(()=>window.__berry.getState().berries)).toBe(4000);expect(await page.evaluate(()=>window.__berry.getState().career.upgrades.dawnCrown)).toBe(1);

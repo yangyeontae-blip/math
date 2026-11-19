@@ -30,17 +30,9 @@ test('tone A: HUD uses line icons and retains folding, navigation and profile cl
     localStorage.setItem('berry-display-v1',JSON.stringify({clean:false,view:'normal'}));
     localStorage.setItem('berry-forest-ambience-v1','off');
   },s);await page.reload();await page.locator('#continue').click();await expect(page.locator('#hud')).toBeVisible();
-  for(const id of ['today-adventure','quest-toggle','adventure-menu','feedback-open','plaza-chat-toggle','party-open']){
-    await expect(page.locator('#'+id+' svg.ui-icon')).toHaveCount(1);
-  }
-  await expect(page.locator('#today-adventure')).toHaveText('오늘의 모험');
-  await expect.poll(()=>page.locator('#hud').evaluate(el=>{
-    const profile=el.querySelector('.player-card').getBoundingClientRect(),quest=el.querySelector('.quest-card').getBoundingClientRect();
-    return quest.top>=profile.bottom;
-  })).toBe(true);
-  const initiallyExpanded=await page.locator('#quest-toggle').getAttribute('aria-expanded');
-  await page.locator('#quest-toggle').click();await expect(page.locator('#quest-toggle')).toHaveAttribute('aria-expanded',initiallyExpanded==='true'?'false':'true');
-  await page.locator('#quest-toggle').click();await expect(page.locator('#quest-toggle')).toHaveAttribute('aria-expanded',initiallyExpanded);
+  await expect(page.locator('.quest-card')).toBeHidden();
+  for(const id of ['plaza-chat-toggle','party-open'])await expect(page.locator('#'+id+' svg.ui-icon')).toHaveCount(1);
+  await expect(page.locator('.wallet-berry')).toBeVisible();
   await page.locator('#stage-map').click();await expect(page.locator('[data-nav="explore"]')).toBeVisible();
   await expect(page.locator('[data-nav="explore"] svg.ui-icon')).toHaveCount(1);
 });

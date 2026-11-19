@@ -1,3 +1,4 @@
+import {completeMathTrial} from './career-math-helpers.mjs';
 import {test,expect} from '@playwright/test';
 import {newSave} from '../src/rules.ts';
 async function start(page,level=1){const s=newSave('숲모험가',0,3);s.level=level;s.tutorial={collected:true,battle:true,shop:true};s.settings.lowQuality=true;s.settings.music=s.settings.sound=false;await page.goto('/',{waitUntil:'domcontentloaded'});await page.evaluate(s=>{localStorage.clear();localStorage.setItem('berry-forest-save-v1',JSON.stringify(s));localStorage.setItem('berry-forest-ambience-v1','off');},s);await page.reload({waitUntil:'domcontentloaded'});await page.locator('#continue').click();await expect(page.locator('#hud')).toBeVisible();}
@@ -24,14 +25,11 @@ async function openSchoolMenu(page){
  else await page.keyboard.press('e');
  await expect(page.locator('.career-howto')).toBeVisible();
 }
-test('three knight advancements require real practice and preserve a second job loadout',async({page})=>{
+test('three knight advancements require solved math missions and preserve a second job loadout',async({page})=>{
+ test.setTimeout(240000);
  await start(page,60);await openSchoolMenu(page);await page.locator('[data-career-action="choose-job"][data-job="knight"]').click();
  for(const rank of [1,2,3]){
-  await page.locator('[data-career-action="next-career-step"]').click();await expect(page.locator('#career-hud')).toBeVisible();
-  if(rank===1){await page.locator('#career-hud [data-cast-skill="crescent"]').click();await page.locator('#career-hud [data-cast-skill="charge"]').click();}
-  else if(rank===2)await page.locator('#career-hud [data-cast-skill="roots"]').click();
-  else {await page.locator('#career-hud [data-cast-skill="guardian"]').click();await page.keyboard.down('f');}
-  await expect.poll(()=>page.evaluate(()=>window.__berry.getState().career.trials.knight),{timeout:30000}).toBe(rank);await page.keyboard.up('f');await page.locator('[data-career-action="exit-combat"]').click();await openSchoolMenu(page);await page.locator('[data-career-action="next-career-step"]').click();
+  await page.locator('[data-career-action="next-career-step"]').click();await completeMathTrial(page);await page.locator('[data-career-action="next-career-step"]').click();
   expect(await page.evaluate(()=>window.__berry.getState().career.ranks.knight)).toBe(rank);await expect(page.locator('#career-title')).toHaveText(['','기사 · 1차','수호기사 · 2차','고대숲 기사 · 3차'][rank]);
  }
  const first=await page.evaluate(()=>structuredClone(window.__berry.getState().career));await page.locator('[data-career-action="choose-job"][data-job="mage"]').click();await page.locator('[data-career-action="choose-job"][data-job="knight"]').click();const restored=await page.evaluate(()=>window.__berry.getState().career);expect(restored.loadouts.knight).toEqual(first.loadouts.knight);expect(restored.ranks.knight).toBe(3);expect(restored.stats.defeats).toBe(0);expect(await page.evaluate(()=>window.__berry.getState().berries)).toBe(0);

@@ -4,7 +4,7 @@ import {WORLD_TWO_NAME,WORLD_TWO_REGIONS,WORLD_TWO_CORE_REGIONS,worldTwoBoss,can
 import {renderWorldTwo,renderWorldThree,worldTwoTask} from './world-two-ui';
 import {grantWorldTwoReward,activateWorldTwoBeacon} from './world-two-rules';
 import {HUNT_RECOVERY_ITEMS,LEGACY_POTION_COUNT,huntingSupply,type SupplyKind} from './hunt-supplies';
-import { ACADEMY_SKILLS, hiddenCareerUnlocked, upgradeCareerSkill, SKILL_UPGRADE_COSTS, skillInfo, isSkill, emptyAcademy, saveAcademy, migrateAcademy, syncCareerRankSkills, selectJob, advanceJob, recordCareerTrial, careerSkills, equipCareerSkill, type SkillId, type JobId } from './academy';
+import { ACADEMY_SKILLS, hiddenCareerUnlocked, upgradeCareerSkill, SKILL_UPGRADE_COSTS, skillInfo, isSkill, emptyAcademy, saveAcademy, migrateAcademy, syncCareerRankSkills, selectJob, advanceJob, startCareerMathTrial, careerMathTrialView, recordCareerMathAnswer, careerSkills, equipCareerSkill, type SkillId, type JobId } from './academy';
 import { HUNTING_ZONES } from './hunting';
 import { grantHuntingReward, huntingPower, huntingRewardFor, useHuntingSupply } from './rules';
 import { renderCareerSchool, renderCareerJournal, renderCombatHud, renderSkillIcon, renderTrainingSettings, type CareerSupplyView, type CareerSchoolView, type CareerSkillView, type CareerJournalTab, type CareerTrainingMode, type CareerCombatView } from './career-ui';
@@ -12,7 +12,7 @@ import './career.css';
 import type { Save } from './rules';
 import type { World } from './world';
 
-type Hooks={state:()=>Save|null;world:()=>World;persist:()=>void;stored:()=>boolean;refresh:()=>void;open:(html:string,cls?:string)=>void;close:()=>void;toast:(s:string)=>void;enterSchool:()=>void;learning:()=>void;plaza:()=>void;supplyShop:()=>void;equipmentShop:(kind:'weapon'|'outfit',id:number)=>void;openWorldTwo:(html:string)=>void};
+type Hooks={state:()=>Save|null;world:()=>World;persist:()=>void;stored:()=>boolean;refresh:()=>void;open:(html:string,cls?:string)=>void;close:()=>void;toast:(s:string)=>void;enterSchool:()=>void;learning:()=>void;mathForest:()=>void;mathArena:()=>void;plaza:()=>void;supplyShop:()=>void;equipmentShop:(kind:'weapon'|'outfit',id:number)=>void;openWorldTwo:(html:string)=>void};
 const JOBS=[
  {id:'knight' as const,name:'숲의 기사',subtitle:'검과 방패 · 가까운 적 함께 공격',description:'든든한 방패와 금빛 검무로 숲을 지켜요.'},
  {id:'mage' as const,name:'별빛 마법사',subtitle:'별빛 마법 · 넓은 범위 공격',description:'별과 서리의 힘으로 멀리 있는 여러 적을 다뤄요.'},
@@ -49,7 +49,7 @@ export function mountCareer(h:Hooks){
  function vm():CareerSchoolView{
   const s=h.state()!,c=s.career,job=c.job,rank=job?c.ranks[job]:0,next=Math.min(5,rank+1),canTrial=!!job&&rank<5&&s.level>=LEVELS[rank];
   const list=ACADEMY_SKILLS.filter(a=>!a.job||!job||a.job===job);
-  return {level:s.level,job,rank,jobs:JOBS.map(j=>({...j,rankName:j.names[c.ranks[j.id]],locked:j.id==='alchemist'&&!hiddenCareerUnlocked(c)})),skills:list.map(a=>skillVM(a.id)),slots:c.loadouts[job??'novice'],selectedSlot,canChooseJob:s.level>=10,canAdvance:canTrial&&c.trials[job!]>=next,nextRankName:job&&rank<5?JOBS.find(j=>j.id===job)!.names[next]:undefined,advanceRequirement:!job?'레벨 10부터 직업을 골라 수련할 수 있어요.':rank===5?'모든 전직을 마쳤어요!':s.level<LEVELS[rank]?`레벨 ${LEVELS[rank]}에 다음 수련이 열려요.`:'수련 마당에서 다음 전직 실습을 마쳐요.',trialAvailable:canTrial,trialJob:job??undefined,trialRank:next,trainingMode:mode,notice};
+  return {level:s.level,job,rank,jobs:JOBS.map(j=>({...j,rankName:j.names[c.ranks[j.id]],locked:j.id==='alchemist'&&!hiddenCareerUnlocked(c)})),skills:list.map(a=>skillVM(a.id)),slots:c.loadouts[job??'novice'],selectedSlot,canChooseJob:s.level>=10,canAdvance:canTrial&&c.trials[job!]>=next,nextRankName:job&&rank<5?JOBS.find(j=>j.id===job)!.names[next]:undefined,advanceRequirement:!job?'레벨 10부터 직업을 골라 수련할 수 있어요.':rank===5?'모든 전직을 마쳤어요!':s.level<LEVELS[rank]?`레벨 ${LEVELS[rank]}에 다음 수련이 열려요.`:'수학숲이나 대련장에서 수학 문제를 풀고 돌아와요.',mathTrial:careerMathTrialView(c,s.level),trialAvailable:canTrial&&c.trials[job!]<next,trialJob:job??undefined,trialRank:next,trainingMode:mode,notice};
  }
  // Event delegation stays attached to the dialog even when its content changes.
  document.querySelector('#modal-content')!.addEventListener('click',onAction);
@@ -103,7 +103,9 @@ export function mountCareer(h:Hooks){
   else if(action==='upgrade-skill'&&isSkill(b.dataset.skill)){try{notice=upgradeCareerSkill(s,b.dataset.skill);store();showSchool();}catch(error){h.toast((error as Error).message);}}
   else if(action==='choose-job'&&validJob(job)){if(!h.world().inAcademy)h.enterSchool();if(!h.world().inAcademy)return;selectJob(s.career,job,s.level);notice='전직 수련을 마치면 직업 스킬을 사용할 수 있어요.';store();showSchool();}
   else if(action==='next-career-step'){const next=vm();const target=next.canAdvance?'advance-job':next.trialAvailable?'start-trial':null;if(target)document.querySelector<HTMLButtonElement>('#modal [data-career-action="'+target+'"]')?.click();else document.querySelector('.career-job-grid')?.scrollIntoView({block:'start',behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});}
-  else if(action==='start-trial'&&validJob(job)){const rank=Number(b.dataset.rank);if(rank>=1&&rank<=5&&s.level>=LEVELS[rank-1])startTraining(job,rank as 1|2|3|4|5);}
+  else if(action==='start-trial'&&validJob(job)){if(startCareerMathTrial(s.career,job,s.level)){notice='수학 수련을 시작했어요. 수학숲이나 대련장 중 편한 곳에서 문제를 풀어요.';store();}showSchool();}
+  else if(action==='trial-forest')h.mathForest();
+  else if(action==='trial-arena')h.mathArena();
   else if(action==='advance-job'&&s.career.job){if(!h.world().inAcademy)h.enterSchool();if(advanceJob(s.career,s.career.job,s.level)){for(const id of JOB_SKILLS[s.career.job].filter(x=>s.career.learned.includes(x)))if(!s.career.practiced.includes(id))s.career.practiced.push(id);}notice=jobName()+'로 전직했어요!';mirror();store();showSchool();}
   else if(action==='select-slot'){selectedSlot=Math.max(0,Math.min(3,Number(b.dataset.slot)));reopen();}
   else if(action==='equip-skill'&&isSkill(id)){equipCareerSkill(s.career,selectedSlot,id,s.level);store();reopen();}
@@ -162,12 +164,13 @@ export function mountCareer(h:Hooks){
   if(snap){const slots=training?trainingSlots():s.career.loadouts[s.career.job??'novice'];const target=snap.enemies.find(e=>e.id===snap.targetId);const world2=w.inWorldTwo;const text=world2?worldTwoTask(s)+(world2.boss?' · '+(snap.enemies.every(e=>e.hp<=0)?'✓ 수호자 승리!':(snap.bossPhase===2?'2단계 · ':'1단계 · ')+({ring:'고리 안쪽으로 피하기',slam:'붉은 원 밖으로 피하기',charge:'돌진 표시에서 벗어나기'}[snap.enemies[0]?.telegraph?.kind??'slam'])):''):training?`${completed?'✦ 수련 성공! · ':''}맞힌 횟수 ${training.hits} · 피해 ${Math.round(training.damage)}`:saveBlocked?'저장 실패 · 다시 저장해 주세요.':snap.safe?'야영지 · 체력을 회복해요.':'적을 누르면 공격 대상을 바꿀 수 있어요.';
    const supplies=training?undefined:supplyViews();
    updateHud({supplies,hp:snap.playerHp,maxHp:snap.maxHp,target:target?{name:world2?(world2.boss?worldTwoBoss(world2.region)!.name:WORLD_TWO_REGIONS[world2.region].enemyNames[target.type]):({melee:'덩굴 통통이',charge:'가시 돌진이',ranged:'씨앗 마법이'}[target.type]),hp:target.hp,maxHp:target.maxHp}:null,skills:slots.map(id=>id?{...skillVM(id),unlocked:true,remaining:w.skillState(id).cooldown,active:w.skillState(id).active}:null),status:text+(!training&&snap.enemies.every(e=>e.hp<=0)?(world2?.boss?' · 지역 목표 완료 · 군도 지도에서 다음 모험을 골라요.':' · 몬스터 재등장까지 '+Math.ceil(Math.min(...snap.enemies.map(e=>e.respawnIn)))+'초 · 생성 위치에서 세 걸음 떨어져요.'):'')+(snap.supplies.mealRemaining>0?' · 음식 회복 '+Math.ceil(snap.supplies.mealRemaining)+'초':''),training:!!training},slots.join('|')+'|'+target?.id+'|'+!!training+'|'+saveBlocked+'|'+supplies?.map(item=>item.id).join('|'),`<div class="career-combat-menu"><button data-career-action="exit-combat">${training?'수련 마치기':'광장으로 돌아가기'}</button>${!training?'<button data-career-action="show-supplies">음식·물약 가방</button>':''}${world2?'<button data-career-action="open-world2">'+(world2.region>=10?'세계 3 지도':'군도 지도')+' · 진행</button>':''}${training?'<button data-career-action="reset-training">처음부터 연습</button>':''}${saveBlocked?'<button data-career-action="retry-save">다시 저장</button>':''}</div>`);
-   if(training?.complete&&!completed){completed=true;if(trial)recordCareerTrial(s.career,trial.job,trial.rank);if(practiceSkill&&s.career.learned.includes(practiceSkill)&&!s.career.practiced.includes(practiceSkill))s.career.practiced.push(practiceSkill);mirror();h.persist();h.toast(trial?'전직 수련을 마쳤어요! 학교에서 전직하세요.':'✦ 수련 완료! 모험 기록에 남겼어요.');}
+   if(training?.complete&&!completed){completed=true;if(practiceSkill&&s.career.learned.includes(practiceSkill)&&!s.career.practiced.includes(practiceSkill))s.career.practiced.push(practiceSkill);mirror();h.persist();h.toast('✦ 스킬 연습 완료! 전직 수련은 수학 문제로 진행해요.');}
   }else{
    const slots=s.career.loadouts[s.career.job??'novice'];const key=slots.join('|')+s.career.learned.join('|');if(skillKey!==key){skillKey=key;bar.innerHTML='<div id="exploration-skill-slots" class="academy-slots">'+slots.map((id,i)=>`<button ${id?`data-cast-skill="${id}"`:''} ${!id?'disabled':''}><kbd>${i+1}</kbd>${id?renderSkillIcon(id,ACADEMY_SKILLS.findIndex(a=>a.id===id)):'<span>＋</span>'}<small>${id?skillInfo(id).name:'빈 칸'}</small><span class="academy-cooldown"></span></button>`).join('')+'</div><button type="button" id="skill-bar-toggle" class="academy-toggle-button" aria-controls="exploration-skill-slots"><span aria-hidden="true"></span><small></small></button>';updateSkillBarToggle();}
    for(const b of bar.querySelectorAll<HTMLButtonElement>('[data-cast-skill]')){const id=b.dataset.castSkill as SkillId,st=w.skillState(id);b.disabled=st.cooldown>0||w.paused;b.classList.toggle('is-active',st.active);b.querySelector('.academy-cooldown')!.textContent=st.active?'사용 중':st.cooldown?st.cooldown+'초':'준비됨';}
   }status.textContent='';
  }
  setInterval(()=>{if(held&&h.state()&&!document.hidden&&!h.world().paused)h.world().huntAttack();},90);setInterval(render,300);
- return {begin,render,showSchool,showRecords,showPractice,showLesson,showHunting,showWorldTwo,showWorldThree,enterWorldTwo,lightWorldTwoBeacon,enterHunting,exitHunting,exitTraining,cast,configure,jobName,selectSupply,showSupplies};
+ function recordMathAnswer(source:'forest'|'arena'){const s=h.state();if(!s)return;const progress=recordCareerMathAnswer(s.career,s.level,source);if(progress){h.persist();h.toast(progress.complete?'✦ 전직 수련 완료! 모험학교에서 전직을 마쳐요.':`전직 수학 수련 ${progress.correct} / ${progress.target}문제`);}}
+ return {recordMathAnswer,begin,render,showSchool,showRecords,showPractice,showLesson,showHunting,showWorldTwo,showWorldThree,enterWorldTwo,lightWorldTwoBeacon,enterHunting,exitHunting,exitTraining,cast,configure,jobName,selectSupply,showSupplies};
 }
