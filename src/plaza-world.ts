@@ -38,6 +38,7 @@ export function placePlazaLabel(x:number,y:number,width:number,height:number,vie
  return null;
 }
 export class PlazaWorld {
+ private labelSizes=new WeakMap<HTMLElement,{width:number;height:number;viewport:number;fonts:string;speech:string;emote:boolean}>();
  private peers=new Map<string,Actor>();private speeches=new Map<HTMLElement,Speech>();private self:T.Group|null=null;private own:ReturnType<PlazaWorld['label']>;private selfProfile:PlazaProfile|null=null;private selfSignature='';
  private farRoot=new T.Group();private far:{mesh:T.InstancedMesh;offset:T.Vector3;scale:T.Vector3;color:(p:PlazaProfile)=>number}[]=[];private matrix=new T.Matrix4();private quaternion=new T.Quaternion();private projected=new T.Vector3();private targetPosition=new T.Vector3();private partPosition=new T.Vector3();private partColor=new T.Color();private clock=0;
  constructor(private scene:T.Scene,private layer:HTMLElement,private factory:(p:PlazaProfile)=>Model,private colors:(p:PlazaProfile)=>{body:number;hair:number;skin:number}){
@@ -53,7 +54,7 @@ export class PlazaWorld {
   this.farRoot.name='plaza-distant-avatars';
  }
  private label(self=false){const root=document.createElement('div');root.className='plaza-nameplate'+(self?' is-self':'');root.hidden=true;const name=document.createElement('strong'),title=document.createElement('span'),bubble=document.createElement('b');bubble.className='plaza-emote';bubble.hidden=true;const speech=document.createElement('div'),text=document.createElement('span');speech.className='plaza-speech';speech.hidden=true;speech.setAttribute('aria-hidden','true');speech.append(text);root.append(speech,name,title,bubble);this.layer.append(root);return {root,name,title,bubble};}
- private identity(label:ReturnType<PlazaWorld['label']>,p:PlazaProfile,role='player'){const text=profileTitles(p);label.name.textContent='Lv. '+p.level+' '+text.nickname;if(role==='operator'){const badge=document.createElement('small');badge.className='operator-mark';badge.textContent='운영자';label.name.append(badge);}label.title.innerHTML=text.definition?renderTitle(text.definition):'';label.root.classList.toggle('is-legendary',text.legendary);label.root.dataset.nameLength=String(text.nickname.length+String(p.level).length+5+(role==='operator'?4:0));label.root.dataset.titleLength=String(text.title.length);label.root.dataset.plateWidth=String(Math.min(210,Math.max((text.nickname.length+String(p.level).length+7)*14,(text.title.length+2)*11)));}
+ private identity(label:ReturnType<PlazaWorld['label']>,p:PlazaProfile,role='player'){this.labelSizes.delete(label.root);const text=profileTitles(p);label.name.textContent='Lv. '+p.level+' '+text.nickname;if(role==='operator'){const badge=document.createElement('small');badge.className='operator-mark';badge.textContent='운영자';label.name.append(badge);}label.title.innerHTML=text.definition?renderTitle(text.definition):'';label.root.classList.toggle('is-legendary',text.legendary);label.root.dataset.nameLength=String(text.nickname.length+String(p.level).length+5+(role==='operator'?4:0));label.root.dataset.titleLength=String(text.title.length);label.root.dataset.plateWidth=String(Math.min(210,Math.max((text.nickname.length+String(p.level).length+7)*14,(text.title.length+2)*11)));}
  setSelf(profile:PlazaProfile|null,player:T.Group,role='player'){this.self=player;this.selfProfile=profile;const signature=JSON.stringify([profile,role]);if(profile&&signature!==this.selfSignature)this.identity(this.own,profile,role);if(!profile)this.own.root.hidden=true;this.selfSignature=signature;}
  upsert(player:PlazaPlayer){let actor=this.peers.get(player.id);const signature=JSON.stringify([player.profile,player.role]);const p=player.profile,appearance=JSON.stringify([p.character,p.outfit,p.weapon,p.outfitLevel,p.weaponLevel,p.hairstyle,p.face,p.pet,p.ride]);
   if(!actor){const label=this.label();actor={state:player,position:new T.Vector3(player.pose.x,player.pose.y,player.pose.z),angle:player.pose.angle,label:label.root,name:label.name,title:label.title,bubble:label.bubble,emoteUntil:0,phase:0,signature,appearance,model:null};this.peers.set(player.id,actor);label.root.dataset.playerId=player.id;this.identity(label,player.profile,player.role);}
@@ -82,8 +83,19 @@ export class PlazaWorld {
   // Only read layout after a new message or a viewport resize, never on every frame.
   if(speech&&!label.hidden&&(speech.viewport!==width||!speech.height)){const bubble=label.firstElementChild as HTMLElement;speech.width=bubble.offsetWidth;speech.height=bubble.offsetHeight;speech.viewport=width;}
   const x=(this.projected.x*.5+.5)*width,y=(-this.projected.y*.5+.5)*heightPx;const compact=width<650,identityWidth=Math.min(compact?165:210,Number(label.dataset.plateWidth??160)),plateWidth=speech?Math.max(identityWidth,speech.width||(compact?165:210)):identityWidth,titleRows=Math.max(1,Math.ceil(Number(label.dataset.titleLength??0)*(compact?10:11)/(identityWidth-16))),nameRows=Math.max(1,Math.ceil(Number(label.dataset.nameLength??0)*(compact?11:12)/(Math.min(identityWidth,compact?150:190)-16))),plateHeight=(compact?28:31)*nameRows+titleRows*(compact?22:24)+13+(speech?(speech.height?speech.height+11:compact?70:76):(label.lastElementChild as HTMLElement)?.hidden===false?46:0);
-  const placed=hidden?null:placePlazaLabel(x,y,plateWidth,plateHeight,width,heightPx,occupied);hidden=!placed;
-  if(label.hidden!==hidden)label.hidden=hidden;if(placed){const transform='translate(-50%,-100%) translate('+Math.round(placed.x)+'px,'+Math.round(placed.y)+'px)';if(label.style.transform!==transform)label.style.transform=transform;occupied.push({x:placed.x,top:placed.y-plateHeight,bottom:placed.y,width:plateWidth});}
+  let actualWidth=plateWidth,actualHeight=plateHeight;
+  if(!hidden){
+   const fonts=document.fonts?.status??'loaded',speechId=speech?.id??'',emote=(label.lastElementChild as HTMLElement)?.hidden===false;
+   let size=this.labelSizes.get(label);
+   if(!size||size.viewport!==width||size.fonts!==fonts||size.speech!==speechId||size.emote!==emote){
+    // Measure only after identity, message, font or viewport changes. Fonts differ between web and app.
+    label.hidden=false;const bubble=label.lastElementChild as HTMLElement;
+    size={width:label.offsetWidth,height:label.offsetHeight+(emote?bubble.offsetHeight+5:0),viewport:width,fonts,speech:speechId,emote};this.labelSizes.set(label,size);
+   }
+   actualWidth=Math.max(plateWidth,size.width);actualHeight=Math.max(plateHeight,size.height);
+  }
+  const placed=hidden?null:placePlazaLabel(x,y,actualWidth,actualHeight,width,heightPx,occupied);hidden=!placed;
+  if(label.hidden!==hidden)label.hidden=hidden;if(placed){const transform='translate(-50%,-100%) translate('+Math.round(placed.x)+'px,'+Math.round(placed.y)+'px)';if(label.style.transform!==transform)label.style.transform=transform;occupied.push({x:placed.x,top:placed.y-actualHeight,bottom:placed.y,width:actualWidth});}
  }
 
  update(dt:number,camera:T.Camera,player:T.Group,showPeers:boolean,active:boolean,low:boolean,reduced:boolean){
