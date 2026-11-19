@@ -69,7 +69,8 @@ export function worldTwoRegionReady(p:WorldTwoProgress,id:number) {
 }
 export function canEnterWorldTwo(p:WorldTwoProgress,level:number,id:number,boss=false,operator=false) {
   const region=WORLD_TWO_REGIONS[id];
-  if (!Number.isInteger(id) || !region || !operator&&(!(level>=region.level) || id>0&&!p.regions[id-1]?.claimed)) return false;
+  // 세계 3 첫 지역은 레벨만 맞으면 바로 들어가요(2026-11-19 선생님 결정: 세계 2를 다 깨지 않아도 세계 3에 갈 수 있게). 나머지 지역은 앞 지역을 마쳐야 열려요.
+  if (!Number.isInteger(id) || !region || !operator&&(!(level>=region.level) || id>0&&id!==WORLD_THREE_START&&!p.regions[id-1]?.claimed)) return false;
   if (!boss) return true;
   const encounter=worldTwoBoss(id);
   return !!encounter && (operator || level>=encounter.level && p.regions[id].claimed);

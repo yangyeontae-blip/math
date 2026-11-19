@@ -11,7 +11,8 @@ test('World 3 opens after the existing worlds, preserves old saves, and grants e
  const s=newSave('새벽친구',0,3);s.level=1000;
  const legacy=JSON.parse(JSON.stringify(s));legacy.world2.regions.length=10;legacy.world2.daily.counts=Array(12).fill(2);delete legacy.world2.thirdBoss;
  const restored=validateSave(legacy);assert.equal(restored.world2.regions.length,13);assert.deepEqual(restored.world2.daily.counts.slice(0,12),Array(12).fill(2));assert.deepEqual(restored.world2.daily.counts.slice(12),[0,0,0,0]);assert.deepEqual(restored.world2.thirdBoss,{wins:0,bestSeconds:null});
- assert.equal(canEnterWorldTwo(s.world2,s.level,10),false);
+ // 세계 3 첫 지역은 레벨 조건만 봐요(세계 2 완수 없이도 입장). 다음 지역은 여전히 앞 지역 완수가 필요해요.
+ assert.equal(canEnterWorldTwo(s.world2,599,10),false);assert.equal(canEnterWorldTwo(s.world2,s.level,10),true);assert.equal(canEnterWorldTwo(s.world2,s.level,11),false);
  for(const r of WORLD_TWO_REGIONS.slice(0,10))Object.assign(s.world2.regions[r.id],{kills:r.killGoal,beacons:[0,1,2],claimed:true});
  for(const r of WORLD_TWO_REGIONS.slice(10)){
   assert.equal(canEnterWorldTwo(s.world2,r.level-1,r.id),false);assert.equal(canEnterWorldTwo(s.world2,r.level,r.id),true);s.world2.location={region:r.id,boss:false};
