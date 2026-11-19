@@ -1,0 +1,20 @@
+import {test,expect} from '@playwright/test';
+import {newSave} from '../src/rules.ts';
+const KEY='berry-forest-save-v1';
+test('saved character preview keeps the equipped look and leaves the adventure unchanged',async({page,context},info)=>{
+ test.setTimeout(180000);
+ await context.route('**/*',r=>new URL(r.request().url()).origin===new URL(info.project.use.baseURL).origin&&['GET','HEAD'].includes(r.request().method())?r.continue():r.abort());await context.routeWebSocket('**',s=>s.close());
+ const s=newSave('옷차림친구',2,3);s.level=60;s.outfit=8;s.outfits[8]=2;s.outfits[17]=0;s.hairstyle=4;s.hairstyles[4]=true;s.face=1;s.faces[1]=true;s.settings.lowQuality=true;s.settings.music=s.settings.sound=false;s.tutorial={collected:true,battle:true,shop:true};
+ await page.addInitScript(({KEY,s})=>{localStorage.setItem(KEY,JSON.stringify(s));localStorage.setItem('berry-plaza-enabled-v1','off');localStorage.setItem('berry-forest-ambience-v1','off');localStorage.setItem('berry-display-v1',JSON.stringify({clean:false,view:'normal'}));},{KEY,s});
+ const errors=[];page.on('pageerror',e=>errors.push(e.message));await page.goto('/',{waitUntil:'domcontentloaded'});
+ await expect(page.locator('#returning-avatar canvas')).toHaveCount(1);await expect(page.locator('#returning-avatar')).toHaveAttribute('aria-label','옷차림친구의 현재 옷차림');await expect(page.locator('#continue')).toBeInViewport({ratio:1});
+ const before=await page.evaluate(KEY=>localStorage.getItem(KEY),KEY);await page.evaluate(()=>document.fonts.ready);await page.screenshot({path:info.outputPath('saved-current-appearance.png')});
+ await page.evaluate(()=>window.savedCanvasForTest=document.querySelector('#returning-avatar canvas'));
+ await page.locator('#start-new-adventure>summary').click();await page.locator('[data-character="3"]').click();await expect(page.locator('#start-avatar canvas')).toHaveCount(1);
+ expect(await page.evaluate(()=>window.savedCanvasForTest===document.querySelector('#returning-avatar canvas'))).toBe(true);expect(await page.evaluate(KEY=>localStorage.getItem(KEY),KEY)).toBe(before);
+ await page.locator('#start-new-adventure>summary').click();await expect(page.locator('#start-avatar canvas')).toHaveCount(0);await expect(page.locator('#returning-avatar canvas')).toHaveCount(1);
+ await page.locator('#continue').click();await expect(page.locator('#hud')).toBeVisible({timeout:45000});await expect(page.locator('#returning-avatar canvas')).toHaveCount(0);
+ await page.locator('#inventory').click();await page.locator('[data-inventory-tab="outfit"]').click();await page.locator('[data-collection-item="17"]').click();await page.locator('#collection-action').click();await page.keyboard.press('Escape');
+ await page.locator('#settings').click();await page.locator('#return-title').click();await expect(page.locator('#returning-avatar canvas')).toHaveCount(1);await expect(page.locator('.returning-player')).toContainText('옷차림친구');
+ const after=await page.evaluate(KEY=>JSON.parse(localStorage.getItem(KEY)),KEY);expect([after.character,after.outfit,after.hairstyle,after.face,after.outfits[8]]).toEqual([2,17,4,1,2]);await page.evaluate(()=>document.fonts.ready);await page.screenshot({path:info.outputPath('saved-updated-outfit.png')});expect(errors).toEqual([]);
+});

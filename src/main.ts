@@ -99,7 +99,7 @@ import './navigation.css';
 import './cozy-ui.css';
 import { toolSpec, toolHtml, adjustTool } from './learning-tools';
 
-const CLIENT_BUILD = '2026-11-19.cozy-fonts.1';
+const CLIENT_BUILD = '2026-11-19.saved-character.1';
 document.documentElement.dataset.clientBuild = CLIENT_BUILD;
 
 const $ = <T extends HTMLElement = HTMLElement>(selector: string) => document.querySelector<T>(selector)!;
@@ -387,8 +387,8 @@ function setQuestCollapsed(collapsed: boolean) {
 }
 setQuestCollapsed(true); // 첫 화면이 복잡하지 않게 처음에는 접어 두고 목표 한 줄만 보여요. 누르면 펼쳐져요.
 $('#quest-toggle').onclick = () => setQuestCollapsed(!questCard.classList.contains('is-collapsed'));
-let state: Save | null = null, saved: Save | null = null, preview: AvatarPreview | null = null, startPreview: AvatarPreview | null = null;
-let startPreviewRequest = 0, startPortraits: string[] | null = null;
+let state: Save | null = null, saved: Save | null = null, preview: AvatarPreview | null = null, startPreview: AvatarPreview | null = null, returningPreview: AvatarPreview | null = null;
+let startPreviewRequest = 0, returningPreviewRequest = 0, startPortraits: string[] | null = null;
 let selected = 0, selectedGrade: SchoolGrade = 3, pendingImport: Save | null = null, toastTimer: ReturnType<typeof setTimeout>, modalOpener: HTMLElement | null = null;
 let battle: { encounter: Encounter; id: string; kind: 'normal' | 'expMonster' | 'expGate' | 'multiplicationGate'; round: number; goalRounds?: number; score: number; result: ReturnType<typeof grantReward> | null; newTitle?: number; story?: boolean; missedCurrent?: boolean; hintUsed?: boolean; hint?: HintProgress; hintQuestion?: unknown; adaptiveTier?: PracticeTier; practice?: { operation: Operation; tier: PracticeTier } } | null = null;
 type CurriculumModule = typeof import('./curriculum');
@@ -619,8 +619,28 @@ async function showStartPreview(index: number) {
     if (request === startPreviewRequest) target.innerHTML = '<span class="start-preview-loading">3D 미리보기를 표시할 수 없어요. 그래픽 가속을 켜고 새로고침해 주세요.</span>';
   }
 }
+function disposeStartPreviews(){
+  startPreviewRequest++;startPreview?.dispose();startPreview=null;
+  returningPreviewRequest++;returningPreview?.dispose();returningPreview=null;
+}
+async function showReturningPreview(s:Save){
+  const target=document.getElementById('returning-avatar'),request=++returningPreviewRequest;
+  if(!target)return;
+  try{
+    const module=await import('./world');
+    if(request!==returningPreviewRequest||$('#start-screen').hidden||target!==document.getElementById('returning-avatar'))return;
+    AvatarPreviewRuntime=module.AvatarPreview;target.textContent='';
+    returningPreview=new module.AvatarPreview(target,true);
+    returningPreview.show(s.character,s.outfit,-1,s.outfits[s.outfit]??0,0,s.hairstyle,s.face);
+    target.setAttribute('aria-label',s.nickname+'의 현재 옷차림');
+  }catch{
+    if(request!==returningPreviewRequest)return;
+    returningPreview?.dispose();returningPreview=null;
+    target.innerHTML='<span class="start-preview-loading">모습을 불러오지 못했어요.<br>이어서 모험하기는 사용할 수 있어요.</span>';
+  }
+}
 function showStart() {
-  stopAmbienceCycle(); if (world!) { world.setActive(false); } startPreviewRequest++; startPreview?.dispose(); startPreview = null; $('#hud').hidden = true; $('#start-screen').hidden = false;
+  stopAmbienceCycle(); if (world!) { world.setActive(false); } disposeStartPreviews(); $('#hud').hidden = true; $('#start-screen').hidden = false;
   $('#start-screen').innerHTML = `<section class="welcome-card">
     <div class="start-story"><div class="start-wordmark"><span class="logo-mark" aria-hidden="true">${uiIcon('leaf')}</span> BERRY FOREST · 모험 수첩</div>
       <span class="eyebrow">작은 모험, 자라는 생각</span><h1>베리숲<br><span>모험학교</span></h1>
@@ -630,7 +650,7 @@ function showStart() {
       <div class="start-world-caption" id="start-weather" aria-live="polite">${uiIcon('cloud')} 기상청 날씨를 확인하고 있어요…</div>
     </div>
     <div class="start-actions">
-      ${saved ? `<section class="returning-adventure" aria-label="저장된 모험"><div class="returning-heading">${uiIcon('book')} 이 기기에 저장된 모험</div><div class="returning-player"><strong>${escape(saved.nickname)}</strong><span>${saved.grade}학년 · Lv.${saved.level}</span></div><button class="primary wide" id="continue">이어서 모험하기</button></section>` : ''}
+      ${saved ? `<section class="returning-adventure" aria-label="저장된 모험"><div class="returning-heading">${uiIcon('book')} 이 기기에 저장된 모험</div><div class="returning-character-stage"><div id="returning-avatar" role="img" aria-label="저장된 캐릭터의 현재 옷차림"><span class="start-preview-loading">내 캐릭터를 불러오는 중…</span></div></div><div class="returning-player"><strong>${escape(saved.nickname)}</strong><span>${saved.grade}학년 · Lv.${saved.level}</span></div><button class="primary wide" id="continue">이어서 모험하기</button></section>` : ''}
       <p id="start-save-warning" class="start-save-warning" role="alert"></p>
       <details class="start-new-adventure" id="start-new-adventure" data-has-save="${!!saved}" ${saved ? '' : 'open'}><summary>${uiIcon('leaf')} 새로운 모험 만들기 <span>＋</span></summary>
       <div class="start-departure"><div class="departure-kicker"><h2>함께 떠날 친구</h2><span>마음에 드는 모습을 골라요</span></div>
@@ -653,6 +673,7 @@ function showStart() {
   });
   else $('#start-weather').innerHTML = `${uiIcon('leaf')} 숲의 날씨로 모험해요.<small>실제 날씨는 설정에서 켤 수 있어요.</small>`;
   const creation=$<HTMLDetailsElement>('#start-new-adventure');
+  if(saved)void showReturningPreview(saved);
   if(creation.open)void showStartPreview(selected);
   creation.addEventListener('toggle',()=>{startScreenError($('#start-error').textContent??'');if(creation.open)void showStartPreview(selected);else{startPreviewRequest++;startPreview?.dispose();startPreview=null;}});
   document.querySelectorAll<HTMLButtonElement>('[data-grade]').forEach(button => button.onclick = () => { selectedGrade = Number(button.dataset.grade) as SchoolGrade; document.querySelectorAll<HTMLButtonElement>('[data-grade]').forEach(item => { const on = item === button; item.classList.toggle('selected', on); item.setAttribute('aria-checked', String(on)); }); });
@@ -679,7 +700,7 @@ async function begin(s: Save, fresh: boolean, imported = false) {
   if (fresh || imported || saveStore.status === 'recovered') { try { resetLearningRecords(localStorage); } catch { /* optional history */ } }
   adaptiveLevels.clear();
   sessionExpired = false; sessionElapsed = 0; sessionCorrect = 0; sessionWrong = 0;
-  closeModal(); startPreviewRequest++; startPreview?.dispose(); startPreview = null; state = s; preview?.dispose(); preview = null; $('#start-screen').hidden = true; $('#hud').hidden = false;
+  closeModal(); disposeStartPreviews(); state = s; preview?.dispose(); preview = null; $('#start-screen').hidden = true; $('#hud').hidden = false;
   world.resetSkills();career.begin(fresh);
   world.setFishingTrophy(!!s.fishing?.completed);world.restore(s);display.apply(); if(saveStore.status==='recovered')toast('직전 정상 사본에서 모험 기록을 복구했어요.'); world.dressPet(s.pet >= 0 && !!s.petFriends[s.pet]?.accessory); world.setActive(true);if(s.world2.location){const l={...s.world2.location};career.enterWorldTwo(l.region,l.boss);}else if(s.career.location?.kind==='hunting')career.enterHunting(s.career.location.zone); audio.music = s.settings.music; audio.effects = s.settings.sound; startAmbienceCycle(); audio.start(); refresh(); persist();
   if (fresh) {

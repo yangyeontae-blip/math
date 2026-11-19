@@ -160,6 +160,14 @@ dialog::backdrop{background:#315a4140;backdrop-filter:blur(3px)}
 .returning-player strong{font-family:var(--font-brand);font-size:24px;line-height:1.4;color:#547857;overflow-wrap:anywhere}
 .returning-player span{font-family:var(--font-body);font-size:14px;color:#829372;flex:none}
 .returning-adventure #continue{width:100%;min-height:49px;font-family:var(--font-control);font-size:18px}
+.returning-character-stage{position:relative;height:235px;margin:15px 0 0;border:1px solid #dde8d1;border-radius:24px;background:radial-gradient(ellipse at 50% 30%,#fffff4,#edf5df 70%,#e5efd7);overflow:hidden}
+.returning-character-stage:before{content:'';position:absolute;left:50%;bottom:18px;transform:translateX(-50%);width:140px;height:26px;border-radius:50%;background:#bfd5ab55}
+.returning-character-stage:after{content:'✧';position:absolute;left:24px;top:25px;color:#d4bd80;font-size:26px}
+#returning-avatar{position:relative;z-index:1;width:100%;height:100%;display:grid;place-items:center}
+#returning-avatar canvas{width:100%;height:100%}
+#returning-avatar .start-preview-loading{text-align:center;padding:20px;font-family:var(--font-body);font-size:14px;line-height:1.6}
+.returning-player{flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:15px 0 18px}
+.returning-player strong{font-size:26px}
 .start-support{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px 18px;padding:12px 8px 0;border-top:1px solid #dce6d3}
 .start-tools{display:flex;align-items:center;gap:8px 14px;flex-wrap:wrap}
 .start-tools button{display:flex;align-items:center;gap:4px;min-height:32px;padding:4px 0;background:none;box-shadow:none;border:0;font-family:var(--font-body);font-size:12px;color:#8b9b7b;text-decoration:none}
@@ -172,7 +180,7 @@ dialog::backdrop{background:#315a4140;backdrop-filter:blur(3px)}
  .character-picker{gap:7px}.character-choice{grid-template-rows:48px auto;min-height:74px;border-radius:15px;padding:4px 2px 6px}.character-choice .character-thumb{width:49px;height:49px}.character-choice-name{font-size:14px}.character-selection{margin-bottom:13px}
  .start-personalize{padding-top:11px}.start-personalize .name-label{font-size:13px;margin-bottom:6px}.start-personalize .grade-picker{margin-bottom:10px}.start-personalize .grade-picker button{min-height:38px;font-size:16px}.start-personalize .grade-picker small{font-size:10px}.start-personalize #nickname-input{min-height:42px;font-size:14px}
  #start-screen .start-button{min-height:48px;margin-top:10px;font-size:18px}.start-departure .save-note{font-size:11px;margin-top:8px}.start-support{padding:9px 2px 0;gap:5px;justify-content:center}.start-tools{justify-content:center;gap:5px 12px}.start-tools button{font-size:11px;min-height:30px}.welcome-card .start-support .legal-link{font-size:10px}
- .returning-adventure{padding:18px}.returning-player{flex-wrap:wrap;padding:15px 0;gap:7px}.returning-player strong{font-size:23px}
+ .returning-adventure{padding:18px}.returning-character-stage{height:205px;margin-top:13px}.returning-player{flex-wrap:wrap;padding:12px 0 15px;gap:5px}.returning-player strong{font-size:24px}
 }
 .start-tools button{font-size:13px;min-height:40px}.welcome-card .start-support .legal-link{font-size:12px}
 .selected-character-info>small{font-size:12px}.character-stage-label{font-size:12px}
