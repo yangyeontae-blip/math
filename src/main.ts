@@ -1,5 +1,5 @@
 import './design-tokens.css';
-// 제목·버튼·간판용 귀여운 글꼴(주아, OFL). 필요한 글자 조각만 내려받아요.
+// 버튼·탭용 주아체(OFL). 제목·본문·손글씨는 cozy-ui.css에서 역할별로 적용해요.
 import '@fontsource/jua/400.css';
 import {uiIcon, uiLabel, decorateUiIcons} from './ui-icons';
 import {mathLearningNotice} from './learning-reward-view';
@@ -96,9 +96,10 @@ import { j as josa } from './grade-helpers';
 import { rematchHunt } from './rules';
 import './adventure.css';
 import './navigation.css';
+import './cozy-ui.css';
 import { toolSpec, toolHtml, adjustTool } from './learning-tools';
 
-const CLIENT_BUILD = '2026-11-18.icons.1';
+const CLIENT_BUILD = '2026-11-19.cozy-fonts.1';
 document.documentElement.dataset.clientBuild = CLIENT_BUILD;
 
 const $ = <T extends HTMLElement = HTMLElement>(selector: string) => document.querySelector<T>(selector)!;
@@ -584,11 +585,18 @@ function openCopyrightNotice() {
     <section><span aria-hidden="true">🏫</span><div><strong>이렇게 이용해도 돼요</strong><p>공식 게임 링크를 학생·보호자·다른 선생님에게 공유하고, 비영리 수업과 가정에서 직접 플레이할 수 있어요.</p></div></section>
     <section><span aria-hidden="true">☁</span><div><strong>온라인 모험 보관은 선택이에요</strong><p>아이디와 게임 기록을 서버에 보관해 다른 기기에서 이어할 수 있어요. 별도 상세 학습 리포트는 기기에만 남아요. 비밀번호나 복구코드를 친구에게 알려주지 마세요.</p></div></section><section><span aria-hidden="true">🚫</span><div><strong>무단 복제는 안 돼요</strong><p>소스 코드, 문제와 글, 그래픽과 음악을 허락 없이 복사·수정·재배포·재호스팅하거나 상업적으로 이용할 수 없어요. 저작권 표시를 삭제해서도 안 돼요.</p></div></section>
     <section><span aria-hidden="true">🧩</span><div><strong>외부 기술은 각각의 조건을 따라요</strong><p>Three.js 등 외부 오픈소스 구성 요소는 각 제작자의 라이선스가 적용됩니다. 이 안내는 법률이 보장하는 정당한 이용을 제한하지 않습니다.</p></div></section>
+    <section><span aria-hidden="true">✎</span><div><strong>베리숲의 글꼴</strong><p>제목에는 메이플스토리체, 버튼에는 주아체, 본문에는 롯데마트 드림체, 짧은 메모에는 나눔손글씨 펜체를 사용합니다. 각 글꼴의 권리는 원저작자에게 있으며, <a href="./fonts/cozy/LICENSES.txt" target="_blank" rel="noopener">글꼴 저작권과 이용 조건</a>을 함께 제공합니다.</p></div></section>
     <p class="note">다른 사이트에 게임을 복사해 올리거나 자료를 활용하고 싶다면 제작자의 서면 허락을 먼저 받아 주세요.</p>
     <button class="primary wide" data-close>확인했어요</button>
   </div>`, 'legal-modal');
 }
 
+function startScreenError(message:string){
+  $('#start-error').textContent=message;
+  const creation=document.querySelector<HTMLDetailsElement>('#start-new-adventure');
+  const warning=document.querySelector<HTMLElement>('#start-save-warning');
+  if(warning)warning.textContent=creation&&!creation.open?message:'';
+}
 async function showStartPreview(index: number) {
   const request = ++startPreviewRequest, target = $('#start-avatar');
   if (!startPreview) target.innerHTML = '<span class="start-preview-loading">3D 캐릭터를 불러오는 중…</span>';
@@ -597,10 +605,11 @@ async function showStartPreview(index: number) {
     if (request !== startPreviewRequest || $('#start-screen').hidden) return;
     AvatarPreviewRuntime = module.AvatarPreview;
     if (!startPreview) { target.textContent = ''; startPreview = new module.AvatarPreview(target); }
-    startPreview.show(index, 0, 0, 0, 0, CHARACTERS[index].style);
+    startPreview.showCharacter(index);
+    target.dataset.previewCharacter=String(index);target.setAttribute('aria-label',CHARACTERS[index].name+'의 3D 모습');
     try {
       startPortraits ??= module.characterPortraits();
-      document.querySelectorAll<HTMLButtonElement>('[data-character]').forEach((button, i) => {
+      document.querySelectorAll<HTMLButtonElement>('.character-choice[data-character]').forEach((button, i) => {
         if (button.querySelector('.character-thumb')) return;
         const portrait = document.createElement('img'); portrait.className = 'character-thumb'; portrait.alt = '';
         portrait.src = startPortraits![i]; button.prepend(portrait);
@@ -615,21 +624,27 @@ function showStart() {
   $('#start-screen').innerHTML = `<section class="welcome-card">
     <div class="start-story"><div class="start-wordmark"><span class="logo-mark" aria-hidden="true">${uiIcon('leaf')}</span> BERRY FOREST · 모험 수첩</div>
       <span class="eyebrow">작은 모험, 자라는 생각</span><h1>베리숲<br><span>모험학교</span></h1>
-      <p class="intro">숲에서 발견하고,<br>나만의 마을을 꾸며요.<br>수학으로 작은 약속을 풀어 보세요.</p>
+      <p class="intro">숲에서 발견하고,<br> 나만의 마을을 꾸며요.<br> 수학으로 작은 약속을 풀어 보세요.</p>
       <div class="start-trail" aria-hidden="true">${uiIcon('compass')}<span></span>${uiIcon('book')}<span></span>${uiIcon('home')}</div>
       <p class="start-story-note">발견하고 · 생각하고 · 함께 자라는 숲<br>1~6학년, 나의 속도로 걸어요.</p>
       <div class="start-world-caption" id="start-weather" aria-live="polite">${uiIcon('cloud')} 기상청 날씨를 확인하고 있어요…</div>
     </div>
-    <div class="start-departure"><p class="departure-kicker">모험가 등록 <span>01 / 출발 준비</span></p>
-      <label class="name-label grade-label">몇 학년 모험을 떠날까요?</label><div class="grade-picker" role="radiogroup" aria-label="학년 선택">${([1,2,3,4,5,6] as SchoolGrade[]).map(grade => `<button type="button" data-grade="${grade}" role="radio" aria-checked="${selectedGrade === grade}" class="${selectedGrade === grade ? 'selected' : ''}">${grade}<small>학년</small></button>`).join('')}</div>
-      <div class="start-character"><div id="start-avatar" class="start-avatar"></div><div class="start-character-options"><div class="character-picker" role="group" aria-label="캐릭터 선택">${CHARACTERS.map((c, i) => `<button class="character-choice ${i === selected ? 'selected' : ''}" data-character="${i}" aria-pressed="${i === selected}"><span class="character-dot" style="--hair:#${c.hair.toString(16)};--skin:#${c.skin.toString(16)}">${['✿', '●', '☾', '✦'][i]}</span>${c.name}</button>`).join('')}</div><p id="character-desc" class="subtle">${CHARACTERS[selected].desc} · 능력은 모두 같아요</p></div></div>
-      <label class="name-label" for="nickname-input">모험가의 이름</label><input id="nickname-input" maxlength="10" placeholder="닉네임을 적어 주세요" autocomplete="off"><p id="start-error" class="error" role="alert"></p>
-      <button class="primary start-button" id="new-game">${saved ? '새 모험 시작' : '숲으로 출발하기'} <span>→</span></button>
-      ${saved ? `<button class="secondary wide" id="continue">${escape(saved.nickname)} · ${saved.grade}학년 · Lv.${saved.level} 이어하기</button>` : ''}
-      <small class="save-note">이 기기와 브라우저에 모험이 저장돼요</small>
-      <div class="start-utilities"><button class="secondary wide" id="start-account">다른 기기에서도 이어하기 · 내 모험 보관</button><button class="text-button" id="start-import">저장 파일 불러오기</button><button class="secondary wide main-feedback" id="start-feedback">${uiIcon('mail')} 의견 보내기</button></div>
-      <button class="legal-link" id="start-legal">© ${COPYRIGHT_YEAR} ${COPYRIGHT_OWNER} · 저작권과 이용 안내</button>
-    </div></section>`;
+    <div class="start-actions">
+      ${saved ? `<section class="returning-adventure" aria-label="저장된 모험"><div class="returning-heading">${uiIcon('book')} 이 기기에 저장된 모험</div><div class="returning-player"><strong>${escape(saved.nickname)}</strong><span>${saved.grade}학년 · Lv.${saved.level}</span></div><button class="primary wide" id="continue">이어서 모험하기</button></section>` : ''}
+      <p id="start-save-warning" class="start-save-warning" role="alert"></p>
+      <details class="start-new-adventure" id="start-new-adventure" data-has-save="${!!saved}" ${saved ? '' : 'open'}><summary>${uiIcon('leaf')} 새로운 모험 만들기 <span>＋</span></summary>
+      <div class="start-departure"><div class="departure-kicker"><h2>함께 떠날 친구</h2><span>마음에 드는 모습을 골라요</span></div>
+        <section class="character-selection" aria-label="모험 친구 선택">
+          <div class="character-stage"><div id="start-avatar" class="start-avatar" data-preview-character="${selected}"></div><div class="selected-character-info"><span class="character-stage-label">나의 모험 친구</span><strong id="start-character-name">${CHARACTERS[selected].name}</strong><p id="character-desc">${CHARACTERS[selected].desc}</p><small>모습만 달라요<br>능력은 모두 같아요</small></div></div>
+          <div class="character-picker" role="group" aria-label="캐릭터 선택">${CHARACTERS.map((c,i)=>`<button type="button" class="character-choice ${i===selected?'selected':''}" data-character="${i}" aria-pressed="${i===selected}"><span class="character-dot" style="--hair:#${c.hair.toString(16)};--skin:#${c.skin.toString(16)}"></span><span class="character-choice-name">${c.name}</span><span class="character-choice-check" aria-hidden="true">✓</span></button>`).join('')}</div>
+        </section>
+        <div class="start-personalize"><label class="name-label grade-label">몇 학년인가요?</label><div class="grade-picker" role="radiogroup" aria-label="학년 선택">${([1,2,3,4,5,6] as SchoolGrade[]).map(grade=>`<button type="button" data-grade="${grade}" role="radio" aria-checked="${selectedGrade===grade}" class="${selectedGrade===grade?'selected':''}">${grade}<small>학년</small></button>`).join('')}</div>
+          <label class="name-label" for="nickname-input">어떤 이름으로 떠날까요?</label><input id="nickname-input" maxlength="10" placeholder="모험가 이름을 적어 주세요" autocomplete="off"><p id="start-error" class="error" role="alert"></p>
+        </div><button class="primary start-button" id="new-game">이 친구와 모험 시작</button><small class="save-note">모험은 이 기기에 자동으로 저장돼요</small>
+      </div></details>
+    </div>
+    <footer class="start-support"><nav class="start-tools" aria-label="모험 보관과 도움"><button type="button" id="start-account">${uiIcon('cloud')} 다른 기기에서 이어하기</button><button type="button" id="start-import">${uiIcon('book')} 저장 파일 불러오기</button><button type="button" id="start-feedback">${uiIcon('mail')} 의견 보내기</button></nav><button class="legal-link" id="start-legal">© ${COPYRIGHT_YEAR} ${COPYRIGHT_OWNER} · 저작권과 이용 안내</button></footer>
+  </section>`;
   if (weatherRegion()) void fetchRealWeather().then(real => {
     const el = document.getElementById('start-weather');
     if (el && !$('#start-screen').hidden) el.innerHTML = real
@@ -637,12 +652,14 @@ function showStart() {
       : `${uiIcon('cloud')} 날씨를 받지 못했어요. 인터넷 확인 후 새로고침해 주세요.<small>모험은 바로 시작할 수 있어요.</small>`;
   });
   else $('#start-weather').innerHTML = `${uiIcon('leaf')} 숲의 날씨로 모험해요.<small>실제 날씨는 설정에서 켤 수 있어요.</small>`;
-  void showStartPreview(selected);
+  const creation=$<HTMLDetailsElement>('#start-new-adventure');
+  if(creation.open)void showStartPreview(selected);
+  creation.addEventListener('toggle',()=>{startScreenError($('#start-error').textContent??'');if(creation.open)void showStartPreview(selected);else{startPreviewRequest++;startPreview?.dispose();startPreview=null;}});
   document.querySelectorAll<HTMLButtonElement>('[data-grade]').forEach(button => button.onclick = () => { selectedGrade = Number(button.dataset.grade) as SchoolGrade; document.querySelectorAll<HTMLButtonElement>('[data-grade]').forEach(item => { const on = item === button; item.classList.toggle('selected', on); item.setAttribute('aria-checked', String(on)); }); });
-  document.querySelectorAll<HTMLButtonElement>('[data-character]').forEach(b => b.onclick = () => { selected = Number(b.dataset.character); document.querySelectorAll<HTMLButtonElement>('[data-character]').forEach(x => { x.classList.toggle('selected', x === b); x.setAttribute('aria-pressed', String(x === b)); }); $('#character-desc').textContent = `${CHARACTERS[selected].desc} · 능력은 모두 같아요`; void showStartPreview(selected); });
+  document.querySelectorAll<HTMLButtonElement>('.character-choice[data-character]').forEach(b => b.onclick = () => { selected = Number(b.dataset.character); document.querySelectorAll<HTMLButtonElement>('.character-choice[data-character]').forEach(x => { x.classList.toggle('selected', x === b); x.setAttribute('aria-pressed', String(x === b)); }); $('#character-desc').textContent=CHARACTERS[selected].desc;$('#start-character-name').textContent=CHARACTERS[selected].name; void showStartPreview(selected); });
   $('#new-game').onclick = () => {
     const nickname = $('#nickname-input') as HTMLInputElement; let next: Save;
-    try { next = newSave(nickname.value, selected, selectedGrade); } catch (e) { $('#start-error').textContent = (e as Error).message; nickname.focus(); return; }
+    try { next = newSave(nickname.value, selected, selectedGrade); } catch (e) { startScreenError((e as Error).message); nickname.focus(); return; }
     if (saved) confirmAction('새 모험을 시작할까요?', '현재 저장된 모험이 새 모험으로 바뀌어요. 먼저 저장 파일을 내려받을 수도 있어요.', () => begin(next, true), true); else begin(next, true);
   };
   $('#nickname-input').onkeydown = e => { if (e.key === 'Enter') $('#new-game').click(); };
@@ -652,13 +669,13 @@ function showStart() {
   $('#start-account').onclick=account.show;
   $('#start-import').onclick = () => ($('#import-file') as HTMLInputElement).click();
   $('#start-legal').onclick = openCopyrightNotice; $('#start-feedback').onclick = openFeedback;
-  if (saveStore.status === 'recovered') $('#start-error').textContent = '이전 저장이 손상되어 직전 정상 기록을 찾았어요. 이어하기로 복구할 수 있어요.';
-  if (storageError) $('#start-error').textContent = '이전 저장을 읽지 못했어요. 저장 파일을 불러오거나 새 모험을 시작할 수 있어요.';
+  if (saveStore.status === 'recovered') startScreenError('이전 저장이 손상되어 직전 정상 기록을 찾았어요. 이어하기로 복구할 수 있어요.');
+  if (storageError) startScreenError('이전 저장을 읽지 못했어요. 저장 파일을 불러오거나 새 모험을 시작할 수 있어요.');
 }
 async function begin(s: Save, fresh: boolean, imported = false) {
   if(fresh||imported)account.detach();
-  const launch = document.querySelector<HTMLButtonElement>('#new-game, #continue'); if (launch) { launch.disabled = true; launch.textContent = '숲을 준비하고 있어요…'; }
-  try { await loadWorld(); } catch { $('#start-error').textContent = '3D 숲을 열지 못했어요. 최신 Chrome 또는 Edge에서 다시 시도해 주세요.'; if (launch) launch.disabled = false; return; }
+  const launch = document.querySelector<HTMLButtonElement>(fresh?'#new-game':'#continue')??document.querySelector<HTMLButtonElement>('#new-game, #continue'); if (launch) { launch.disabled = true; launch.textContent = '숲을 준비하고 있어요…'; }
+  try { await loadWorld(); } catch { startScreenError('3D 숲을 열지 못했어요. 최신 Chrome 또는 Edge에서 다시 시도해 주세요.'); if (launch) launch.disabled = false; return; }
   if (fresh || imported || saveStore.status === 'recovered') { try { resetLearningRecords(localStorage); } catch { /* optional history */ } }
   adaptiveLevels.clear();
   sessionExpired = false; sessionElapsed = 0; sessionCorrect = 0; sessionWrong = 0;

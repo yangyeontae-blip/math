@@ -1,5 +1,14 @@
 # Third-party notices
 
+## Role-based game typography
+
+- Titles and world signs: Maplestory Bold, copyright Nexon Korea Corporation. Official terms: https://maplestory.nexon.com/Media/Font. Unmodified font distribution and software embedding are permitted with the original copyright notice; selling or altering the font is prohibited.
+- Body copy and numerals: Lotte Mart Dream Medium / Bold, copyright LOTTE Mart. Terms and embedding permission: https://www.sandollcloud.com/free-font/16813/LotteMartDream. Unmodified fonts are free for personal and commercial use; font modification, sale and CI/BI use are prohibited. Used for interface copy, not the game's logo.
+- Buttons and tabs: Jua by Woowa Brothers, distributed through `@fontsource/jua` under SIL OFL 1.1.
+- Short notes and NPC dialogue: Nanum Pen Script by NHN Corporation, under SIL OFL 1.1.
+- Original TTF files remain unchanged. Complete notices and upstream/distribution links accompany them in `public/fonts/cozy/LICENSES.txt`, `Jua-OFL.txt` and `NanumPenScript-OFL.txt`. The in-game copyright dialog links to these notices.
+- Previously bundled notebook fonts below remain available as fallbacks.
+
 ## Local notebook typography (OFL 1.1)
 
 - `public/fonts/berry-forest-sans.woff2` is a renamed Korean/Latin subset of Noto Sans KR, retaining its variable weight axis.

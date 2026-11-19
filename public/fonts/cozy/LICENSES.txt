@@ -1,0 +1,36 @@
+Fonts used by Berry Forest's role-based interface
+================================================
+The font binaries are distributed unchanged. Each font remains owned by its respective copyright holder.
+
+1. Maplestory Bold — Nexon Korea Corporation
+Official source and conditions: https://maplestory.nexon.com/Media/Font
+Original TTF distribution mirror: https://github.com/fonts-archive/Maplestory
+
+메이플스토리 서체의 지적 재산권을 포함한 모든 권리는 ㈜넥슨코리아에 있습니다.
+메이플스토리 서체는 개인 및 기업 사용자를 포함한 모든 사용자에게 무료로 제공되며 자유롭게 사용 및 배포하실 수 있습니다.
+단, 임의로 수정, 편집 등을 할 수 없으며 배포되는 형태 그대로 사용해야 합니다.
+글꼴 자체를 유료로 판매하는 것은 금지되며, 메이플스토리 서체의 본 저작권 안내를 포함해서 다른 소프트웨어와 번들하거나 임베디드 폰트로 사용하실 수 있습니다.
+메이플스토리 서체의 출처 표기를 권장합니다.
+예) 이 페이지에는 메이플스토리가 제공한 메이플스토리 서체가 적용되어 있습니다.
+메이플스토리 서체를 사용한 인쇄물, 광고물(온라인 포함)은 넥슨의 프로모션을 위해 활용될 수 있습니다.
+이를 원치 않는 사용자는 언제든지 넥슨에 요청하실 수 있습니다.
+
+2. Lotte Mart Dream Medium / Bold — LOTTE Mart
+Publisher: https://company.lottemart.com/
+Font and conditions: https://www.sandollcloud.com/free-font/16813/LotteMartDream
+Original TTF distribution mirror and reproduced notice: https://github.com/fonts-archive/LotteMartDream
+
+개인 및 기업 사용자를 포함한 모든 사용자에게 무료 제공되며, 누구나 자유롭게 사용하실 수 있습니다.
+통큰서체의 지적재산권은 롯데마트에 있습니다.
+개인, 기업사용자 모두 상업적인 용도로 무료 사용이 가능합니다.
+어떤 이유로도 지적 재산권자 이외의 사용자가 수정, 판매할 수 없으며, 배포되는 형태 그대로 사용해야 합니다.
+CI, BI 제작은 불가합니다.
+Berry Forest uses this typeface for ordinary interface copy, descriptions and numerals, not as its logo.
+
+3. Jua — Woowa Brothers
+Distributed through @fontsource/jua. SIL Open Font License 1.1.
+See Jua-OFL.txt and https://github.com/google/fonts/tree/main/ofl/jua
+
+4. Nanum Pen Script — NHN Corporation
+SIL Open Font License 1.1. See NanumPenScript-OFL.txt.
+https://github.com/google/fonts/tree/main/ofl/nanumpenscript

@@ -733,7 +733,7 @@ export class World {
         const cx=512+side*445;ctx.fillStyle='#8daa75';ctx.beginPath();ctx.ellipse(cx-7,134,10,21,-.55,0,Math.PI*2);ctx.ellipse(cx+10,145,9,18,.65,0,Math.PI*2);ctx.fill();
         ctx.fillStyle='#e7bd6d';ctx.beginPath();ctx.arc(cx,101,6,0,Math.PI*2);ctx.fill();
       }
-      let size=116;const font=()=>`${size}px "Jua", "Malgun Gothic", sans-serif`;ctx.font=font();
+      let size=116;const font=()=>`700 ${size}px "Maplestory", "Malgun Gothic", sans-serif`;ctx.font=font();
       while(size>52&&ctx.measureText(text).width>834){size-=2;ctx.font=font();}
       ctx.fillStyle=color;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(text,512,143);
     };
@@ -748,7 +748,7 @@ export class World {
     plaque.onBeforeRender=()=>{parent.getWorldQuaternion(parentRotation);plaque.quaternion.copy(parentRotation.invert().multiply(this.camera.quaternion));plaque.updateMatrixWorld(true);plaque.getWorldPosition(signAt);const far=Math.hypot(signAt.x-this.player.position.x,signAt.z-this.player.position.z);material.opacity=far<13?1:Math.max(.16,1-(far-13)/7);};
     if(document.fonts){
       // 주아 글꼴은 글자 묶음별로 나눠 받아요. 이 간판에 쓰인 글자 묶음을 모두 받은 뒤 다시 그려야 글꼴이 섞이지 않아요.
-      void document.fonts.load('116px "Jua"',text).catch(()=>null).then(()=>{if(!this.signResources.some(r=>r.texture===texture))return;paint();texture.needsUpdate=true;this.renderOnce();});
+      void document.fonts.load('700 116px "Maplestory"',text).catch(()=>null).then(()=>{if(!this.signResources.some(r=>r.texture===texture))return;paint();texture.needsUpdate=true;this.renderOnce();});
     }
   }
   private buildVillage(theme: VillageTheme = VILLAGE_THEMES.division) {
@@ -2032,6 +2032,8 @@ export class AvatarPreview {
     this.camera.position.copy(center).addScaledVector(direction, distance); this.camera.lookAt(center);
   }
   show(c: number, o: number, w: number, ol = 0, wl = 0, hairstyle = 0, face = 0) { const model = makeCharacter(c, o, w, ol, wl, hairstyle, face); model.userData.previewKind = 'avatar'; this.replaceModel(model, [2.2, 1.9, 5.8], 1.1, true); }
+  /** Character creation shows appearance only, with no equipment obscuring the face or silhouette. */
+  showCharacter(c: number) { const model=makeCharacter(c,0,-1,0,0,CHARACTERS[c].style);model.userData.previewKind='avatar';this.replaceModel(model,[.65,1.6,5.4],1.05,true); }
   showSalon(c: number, o: number, hairstyle: number, face: number) {
     const model = makeCharacter(c, o, 0, 0, 0, hairstyle, face);
     // A salon mirror redraws on selection and resize; idle GPU work delays input on small devices.
@@ -2057,17 +2059,17 @@ export function characterPortraits(): string[] {
   const renderer = new T.WebGLRenderer({ alpha: true, antialias: true, preserveDrawingBuffer: true });
   try {
     renderer.setPixelRatio(1);
-    renderer.setSize(100, 112, false);
+    renderer.setSize(144, 144, false);
     renderer.setClearColor(0x000000, 0);
     renderer.toneMapping = T.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.4;
     const scene = new T.Scene();
     scene.add(new T.HemisphereLight(0xffffff, 0xa6ba93, 3));
     const light = new T.DirectionalLight(0xffedcd, 3); light.position.set(-3, 4, 5); scene.add(light);
-    const camera = new T.PerspectiveCamera(30, 100 / 112, .1, 20);
-    camera.position.set(1.25, 1.75, 4.35); camera.lookAt(0, 1.13, 0);
+    const camera = new T.PerspectiveCamera(30, 1, .1, 20);
+    camera.position.set(.08,1.59,2.25);camera.lookAt(0,1.52,0);
     return CHARACTERS.map((character, index) => {
-      const model = makeCharacter(index, 0, 0, 0, 0, character.style);
+      const model = makeCharacter(index, 0, -1, 0, 0, character.style);
       model.rotation.y = -.2;
       scene.add(model); renderer.render(scene, camera);
       const image = renderer.domElement.toDataURL('image/png');

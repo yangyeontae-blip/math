@@ -1,0 +1,22 @@
+import {test,expect} from '@playwright/test';
+const KEY='berry-forest-save-v1';
+test('character creation has four correct portraits, preserves the chosen friend and keeps existing journeys safe',async({page,context},info)=>{
+ test.setTimeout(180000);
+ await context.route('**/*',route=>['GET','HEAD'].includes(route.request().method())&&new URL(route.request().url()).origin===new URL(info.project.use.baseURL).origin?route.continue():route.abort());
+ await context.routeWebSocket('**',ws=>ws.close());
+ await page.addInitScript(()=>{localStorage.setItem('berry-plaza-enabled-v1','off');localStorage.setItem('berry-forest-ambience-v1','off');});
+ await page.goto('/',{waitUntil:'domcontentloaded'});
+ await expect(page.locator('.character-choice')).toHaveCount(4);
+ await expect(page.locator('#start-avatar .character-thumb')).toHaveCount(0);
+ await expect.poll(()=>page.locator('.character-choice .character-thumb').evaluateAll(imgs=>imgs.length===4&&imgs.every(i=>i.complete&&i.naturalWidth===144))).toBe(true);
+ await page.locator('[data-character="3"]').click();await expect(page.locator('[data-character="3"]')).toHaveAttribute('aria-pressed','true');await expect(page.locator('#start-character-name')).toHaveText('나루');
+ await page.locator('[data-grade="6"]').click();await expect(page.locator('[data-grade="6"]')).toHaveAttribute('aria-checked','true');
+ await page.locator('#nickname-input').fill('숲길친구');await page.locator('#new-game').click();await expect(page.locator('#hud')).toBeVisible({timeout:45000});
+ const original=await page.evaluate(KEY=>JSON.parse(localStorage.getItem(KEY)),KEY);expect([original.character,original.grade,original.nickname,original.weapon]).toEqual([3,6,'숲길친구',0]);
+ await page.reload({waitUntil:'domcontentloaded'});await expect(page.locator('#continue')).toBeVisible();await expect(page.locator('.returning-player')).toContainText('숲길친구');await expect(page.locator('#start-new-adventure')).not.toHaveAttribute('open','');
+ await page.locator('#start-new-adventure>summary').click();await expect(page.locator('#new-game')).toBeVisible();await page.locator('#nickname-input').fill('새로운친구');
+ const before=await page.evaluate(KEY=>localStorage.getItem(KEY),KEY);await page.locator('#new-game').click();await expect(page.locator('#modal')).toContainText('새 모험을 시작할까요?');await page.keyboard.press('Escape');expect(await page.evaluate(KEY=>localStorage.getItem(KEY),KEY)).toBe(before);
+ await page.evaluate(({KEY,original})=>{localStorage.setItem(KEY+'-checkpoint',JSON.stringify(original));localStorage.setItem(KEY,'{broken');},{KEY,original});
+ await page.reload({waitUntil:'domcontentloaded'});await expect(page.locator('#start-save-warning')).toBeVisible();await expect(page.locator('#start-save-warning')).toContainText('정상 기록');await expect(page.locator('#start-error')).toContainText('정상 기록');
+ await page.locator('#continue').click();await expect(page.locator('#hud')).toBeVisible({timeout:45000});const recovered=await page.evaluate(KEY=>JSON.parse(localStorage.getItem(KEY)),KEY);expect([recovered.character,recovered.grade,recovered.nickname]).toEqual([3,6,'숲길친구']);
+});
