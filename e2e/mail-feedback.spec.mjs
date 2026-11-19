@@ -87,19 +87,11 @@ test('mail feedback: World 3 has its own map, real combat, saved rewards and ret
  await page.locator('[data-career-action="exit-combat"]').click();await expect(page.locator('.location-pill')).toContainText('중앙 광장');
 });
 
-test('mail feedback: the berry machine can be built, charged by real hunting and harvested once',async({page},info)=>{
- const s=newSave('풍차모험가',0,3);s.level=60;s.berries=50000;s.weapons[22]=3;s.weapon=22;
- await start(page,s);await page.locator('#stage-map').click();await page.locator('[data-nav="shops"]').first().click();await page.locator('[data-nav="machine"]').click();
- await page.locator('#machine-upgrade').click();await expect(page.locator('.berry-machine-sheet')).toContainText('현재 1 / 3단계');expect(await page.evaluate(()=>window.__berry.getState().berries)).toBe(48000);
- await page.keyboard.press('Escape');await page.locator('#stage-map').click();await page.locator('[data-nav="hunting"]').first().click();await page.locator('[data-zone="0"]').click();
- await page.evaluate(()=>{const w=window.__berry.getWorld(),e=w.huntingStatus.enemies[0];w.player.position.set(e.x,0,e.z+1);});
- const attack=await page.locator('[data-career-action="attack"]').boundingBox();await page.mouse.move(attack.x+attack.width/2,attack.y+attack.height/2);await page.mouse.down();
- await expect.poll(()=>page.evaluate(()=>window.__berry.getState().career.machine.charge),{timeout:30000}).toBeGreaterThan(0);await page.mouse.up();
- await page.locator('[data-career-action="exit-combat"]').click();
- // Resume a legitimate previously charged machine to verify the claim and reload boundaries.
- await page.evaluate(()=>{const s=window.__berry.getState();s.career.machine.charge=10;localStorage.setItem('berry-forest-save-v1',JSON.stringify(s));});
- await page.reload({waitUntil:'domcontentloaded'});await page.locator('#continue').click();await expect(page.locator('#hud')).toBeVisible();await page.locator('#stage-map').click();await page.locator('[data-nav="shops"]').first().click();await page.locator('[data-nav="machine"]').click();
- const before=await page.evaluate(()=>window.__berry.getState().berries);await page.locator('#machine-harvest').click();await expect(page.locator('#machine-harvest')).toBeDisabled();expect(await page.evaluate(()=>window.__berry.getState().berries)).toBe(before+400);
- await page.screenshot({path:info.outputPath('berry-windmill.png')});
- await page.reload({waitUntil:'domcontentloaded'});await page.locator('#continue').click();await expect(page.locator('#hud')).toBeVisible();const machine=await page.evaluate(()=>window.__berry.getState().career.machine);expect(machine.level).toBe(1);expect(machine.charge).toBe(0);expect(machine.produced).toBe(400);
+// 2026-11-18 선생님 결정으로 베리 풍차를 광장과 상점 메뉴에서 뺐어요. 이미 올린 단계의 보상 배율은 그대로이고, 계산은 tests/berry-machine.test.ts가 지켜요.
+test('mail feedback: the removed berry machine no longer appears, and an existing machine keeps its saved level',async({page},info)=>{
+ const s=newSave('풍차모험가',0,3);s.level=60;s.berries=50000;s.weapons[22]=3;s.weapon=22;s.career.machine={...s.career.machine,level:2};
+ await start(page,s);await page.locator('#stage-map').click();await page.locator('[data-nav="shops"]').first().click();
+ await expect(page.locator('#modal')).toBeVisible();await expect(page.locator('[data-nav="machine"]')).toHaveCount(0);
+ expect(await page.evaluate(()=>window.__berry.getWorld().entities.some(e=>e.id==='berryMachine'))).toBe(false);
+ expect(await page.evaluate(()=>window.__berry.getState().career.machine.level)).toBe(2);
 });
