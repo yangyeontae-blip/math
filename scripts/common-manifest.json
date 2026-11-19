@@ -115,7 +115,7 @@
     "src/plaza-endpoint.ts": "8209e54c95cbd78b65a44eefd6bfd658759567b7d8af6af4a2e87a102249e790",
     "src/plaza.css": "1841405ff2c88a4de5f3e59e1a1eb73e0dce300b3c66488ecf442c70af65dd20",
     "tests/plaza.test.ts": "68beb576f59a4c04c65a92294eefbcd8293bd6e9e512171e9aae12bbba6a47e1",
-    "e2e/plaza.spec.mjs": "4f77e9bc0ecbb676b66bebac10ec4d69107bdd8e6bae9ffa2175bc26f599882c",
+    "e2e/plaza.spec.mjs": "cfdeff4dbcb9212f9d2904e9e9e9f4ec77de1bc5125581bed97c6b20e2f2af11",
     "e2e/plaza-server.mjs": "cd016309ab2ef4b00c50c706f47a120efd73e6ad09e25646404a2aeb90f5d16b",
     "scripts/build-plaza.mjs": "cd9262c9c77bdb2ed4bb6589c14f3d211405f5b8f9a37b815832200d7c15538d",
     "realtime/index.mjs": "0876b5a742422ae50360c7b46d2991eae1d1168146871be96eb8352f449c0cc2",
@@ -534,7 +534,9 @@
     "public/art/berry-watercolor.png": "4555f4ada8bc913b32bcfc1b5ec16d2b59264bbe87f087dffbd6296f64286e03",
     "tests/career-math.test.ts": "3f131c15d7bfd159ee3056501265aea3f211a64ed1bf3d829b94e6663a494192",
     "e2e/career-math.spec.mjs": "bc1e9f2038c37d9799e8608f88b5fd3fb75eda9cc5745fb7d5a8b28c9bba1980",
-    "e2e/career-math-helpers.mjs": "038d2b9e440992d9738a06f3a667a6a02714acfd59e84b041c457fbdf355b45d"
+    "e2e/career-math-helpers.mjs": "038d2b9e440992d9738a06f3a667a6a02714acfd59e84b041c457fbdf355b45d",
+    "realtime/trade.mjs": "ed28f827078e34177e856205e33fcf54fdf275d8e710d94d238a41467a1f1faa",
+    "src/trade.ts": "ca97f6fe629a0b68cc94c20fe28898b5cf8ab0db04142437ecbbef89418c8c8c"
   },
-  "generation": "38509ed3094155fa016bad453abe009bc43af00651c74206e53f0d079676d7e9"
+  "generation": "320dfeafe807f52be25de46911f82f7f949b4f4cb006299666d565544eeba47a"
 }
