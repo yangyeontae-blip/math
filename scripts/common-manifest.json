@@ -185,7 +185,7 @@
     "realtime/party.test.mjs": "e40f16c26968df4a142076f51263891a4e4e9cdb9a3e995d941f6488fa40170f",
     "tests/mail-feedback.test.ts": "beba37eb1192dbee56f56362aa14d87b1f2eb5b065b87d35c8249504bdb0e179",
     "tests/career-expansion.test.ts": "d27a3dbf461ff1a68e9be5d2e529452b84ae6dd1ce67c624a2249014dd1fb52b",
-    "e2e/mail-feedback.spec.mjs": "146ff942b3fec6d680b5657bda5ff668a0620d7ae96fbf76d80601362fc40127",
+    "e2e/mail-feedback.spec.mjs": "e6bb815ac4e2f81297b7638f9f7e0ebdb46f5439b111d2bbc24c2cb69be09052",
     "server/community.js": "9367dbf4520e48b539952d83d3eb0bd1f2775ded6917196874bfb64afc4c8f28",
     "server/community-migration.sql": "a3837add61612288f1c31cd02a4f84091911c7a39f7a8bcf19770d4d3b8e9823",
     "src/community.ts": "9a133ddd7886537c938777d1d5fcde32b05e728709dfa9077828d4fe9db042f7",
@@ -528,5 +528,5 @@
     "public/art/berry-items-v2/weapon-8.svg": "dd0ec7246a7ae43afc5cfac50fd41a3af68a0e20255a8be2695286d3d20089f1",
     "public/art/berry-items-v2/weapon-9.svg": "a3cd041f678e48e8a6d8bea11e0a3d49e9216bd5c9f74042b67845b92d549a46"
   },
-  "generation": "3857d41cff86a5a8618b68a54135ead8d7e072938138213ec4243bbfbabbafd9"
+  "generation": "76a1fb6e8bb8457f99202bfafefbc26ad4077fdeb426222849015f0636836648"
 }
