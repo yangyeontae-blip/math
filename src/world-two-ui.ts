@@ -48,10 +48,10 @@ export function renderWorldTwo(s:Save) {
 // 세계 3으로 가는 길을 맨 위에서 바로 보여 줘요. 열렸으면 첫 지역으로 바로 들어가는 버튼, 아직이면 남은 조건을 알려 줘요.
 function worldThreeBanner(s:Save){
   const first=WORLD_TWO_REGIONS[WORLD_THREE_START],open=canEnterWorldTwo(s.world2,s.level,first.id,false,operatorAccess());
-  return open?`<div class="world-three-banner is-open"><div><strong>세계 3 · 새벽의 세계수가 열렸어요</strong><small>${first.name}부터 이어서 탐험해요.</small></div><button class="career-primary" data-career-action="open-world3">세계 3으로 가기</button></div>`
-    :`<div class="world-three-banner"><div><strong>세계 3 · 새벽의 세계수</strong><small>정령왕의 빛숲 완수와 레벨 ${first.level} 달성 후 열려요. 지금 레벨 ${s.level}</small></div><button class="secondary" data-career-action="open-world3">미리 보기</button></div>`;
+  return open?`<div class="world-three-banner is-open"><div><strong>세계 3 · 새벽의 세계수가 열렸어요</strong><small>${first.name}부터 이어서 탐험해요.</small></div><div class="world-three-banner-actions"><button class="career-primary" data-career-action="enter-world2" data-region="${first.id}">세계 3으로 바로 출발</button><button class="secondary" data-career-action="open-world3">세계 3 지도</button></div></div>`
+    :`<div class="world-three-banner"><div><strong>세계 3 · 새벽의 세계수</strong><small>레벨 ${first.level}이 되면 바로 들어갈 수 있어요. 지금 레벨 ${s.level}</small></div><button class="secondary" data-career-action="open-world3">미리 보기</button></div>`;
 }
-export function renderWorldThree(s:Save){return `<section class="career-sheet world-three-sheet"><header class="career-heading"><small>WORLD 03 · 새벽의 세계수</small><h2>${WORLD_THREE_NAME}</h2><p>정령왕의 빛숲 완수·레벨 600부터 이어지는 새 세계예요. 지역마다 등불 3개와 정령 8마리를 찾아 다음 길을 열어요. 마지막 성소에서는 세계수 수호자에게 도전해요.</p></header><div class="world-two-regions">${regionCards(s,WORLD_THREE_START,WORLD_TWO_REGIONS.length)}</div>${bossCard(s,12)}<button class="secondary wide" data-career-action="open-world2-map">세계 2 지도</button><button class="career-return" data-career-action="close">게임으로 돌아가기</button></section>`;}
+export function renderWorldThree(s:Save){return `<section class="career-sheet world-three-sheet"><header class="career-heading"><small>WORLD 03 · 새벽의 세계수</small><h2>${WORLD_THREE_NAME}</h2><p>레벨 600이 되면 바로 들어갈 수 있는 새 세계예요. 지역마다 등불 3개와 정령 8마리를 찾아 다음 길을 열어요. 마지막 성소에서는 세계수 수호자에게 도전해요.</p></header><div class="world-two-regions">${regionCards(s,WORLD_THREE_START,WORLD_TWO_REGIONS.length)}</div>${bossCard(s,12)}<button class="secondary wide" data-career-action="open-world2-map">세계 2 지도</button><button class="career-return" data-career-action="close">게임으로 돌아가기</button></section>`;}
 export function worldTwoTask(s:Save) {
   const location=s.world2.location;
   if (!location) return '';

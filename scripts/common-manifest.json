@@ -101,9 +101,9 @@
     "tests/hunt-supplies.test.ts": "1bf9c79547327f1d0f3c8146fec5ea8ebea5fd78ba0090502ee93b488f180fb8",
     "src/room-life.ts": "b2643232cc11704590d3968e72e2377e25ac4870a5ca121abcf3b7ff2d4575b1",
     "tests/room-life.test.ts": "82da63ebe7d5cd2e9e9d4ee9fa5717834bd2a2a2bb521d1926ca2abf55d1ef94",
-    "src/world-two.ts": "67947f061174e31c165e2ab571aed6a55141cbc449605e4cb50bd7c0aa56dc49",
+    "src/world-two.ts": "257192e8216c33e8e0e4bddbe0ba2f91aba127688d9b8bd3c670748014128400",
     "src/world-two-rules.ts": "7219f637f5efb059df6c5659a0295408bbb709d4ad66048dbcfabf79f53bd057",
-    "src/world-two-ui.ts": "afb583f2e43dc91c80920f1220d5f0cf25c0755e7338adf6d82f83de12cca480",
+    "src/world-two-ui.ts": "f78d344306bc70deb476c2697d1974b74bc14cb2a23754b8eb0a0804d992d444",
     "src/world-two-models.ts": "1556cdc00a679e8e4565fb1f351db4037f00be9c0084544e1d7a69bea282e5cf",
     "tests/world-two.test.ts": "a4e056d8c9f8f265106837ed26e3dcb4660d2784769b270631b0558c01b68c9d",
     "e2e/world-two.spec.mjs": "8e8337437a09397031bd1b3f09d00d9aedc64683916efe696bed2a91e5b01e00",
@@ -193,7 +193,7 @@
     "src/berry-machine.ts": "62bc876f2751e0f243849a387f2ba3cb1d472792c58c55d9d831e0d158f0d415",
     "tests/community-server.test.mjs": "858f77e8232ba54ffb3de561ba374a8cbdb8ed3f9584683af9b9a9e162ce3b58",
     "tests/berry-machine.test.ts": "81007146e56989ee16c959601e1e7c811a8f7d7e9419441deeaabc0d59c2cfa6",
-    "tests/world-three.test.ts": "ea49e35e54f207eb90158437e5d4b119b781cf844d072cf487c516d71e880f96",
+    "tests/world-three.test.ts": "081b8110972b8b3489b8363c9235cf25fcd6f85f3d46bd2705518957145748af",
     "e2e/community-server.mjs": "78d3fc2437502282789d93f8bac1293ca9843423a3a9b0c1345cc276f9feeafe",
     "e2e/community.spec.mjs": "5282fe7e4bab69409a1d15c5eefc29d8e1e5f38426d2e2deebf337598869a8ce",
     "src/graphics-recovery.ts": "55315957165d5c1d6f77d11f9c131ad1721d43860bda43646be1d7121de19bcb",
@@ -528,5 +528,5 @@
     "public/art/berry-items-v2/weapon-8.svg": "dd0ec7246a7ae43afc5cfac50fd41a3af68a0e20255a8be2695286d3d20089f1",
     "public/art/berry-items-v2/weapon-9.svg": "a3cd041f678e48e8a6d8bea11e0a3d49e9216bd5c9f74042b67845b92d549a46"
   },
-  "generation": "76a1fb6e8bb8457f99202bfafefbc26ad4077fdeb426222849015f0636836648"
+  "generation": "55b9bec7f7cb209e7a62d371fdcdf5198ecd6020aee9dfc888c831ab99402a09"
 }
