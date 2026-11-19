@@ -1,0 +1,74 @@
+[
+  {
+    "viewport": "desktop",
+    "name": "shop-weapons",
+    "overflow": false,
+    "errors": []
+  },
+  {
+    "viewport": "desktop",
+    "name": "shop-outfits",
+    "overflow": false,
+    "errors": []
+  },
+  {
+    "viewport": "desktop",
+    "name": "bag-weapons",
+    "overflow": false,
+    "errors": []
+  },
+  {
+    "viewport": "desktop",
+    "name": "bag-outfits",
+    "overflow": false,
+    "errors": []
+  },
+  {
+    "viewport": "desktop",
+    "name": "shop-pets",
+    "overflow": false,
+    "errors": []
+  },
+  {
+    "viewport": "desktop",
+    "name": "bag-rides",
+    "overflow": false,
+    "errors": []
+  },
+  {
+    "viewport": "mobile",
+    "name": "shop-weapons",
+    "overflow": false,
+    "errors": []
+  },
+  {
+    "viewport": "mobile",
+    "name": "shop-outfits",
+    "overflow": false,
+    "errors": []
+  },
+  {
+    "viewport": "mobile",
+    "name": "bag-weapons",
+    "overflow": false,
+    "errors": []
+  },
+  {
+    "viewport": "mobile",
+    "name": "bag-outfits",
+    "overflow": false,
+    "errors": []
+  },
+  {
+    "viewport": "mobile",
+    "name": "shop-pets",
+    "overflow": false,
+    "errors": []
+  },
+  {
+    "viewport": "mobile",
+    "name": "bag-rides",
+    "overflow": false,
+    "errors": []
+  }
+]

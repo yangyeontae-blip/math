@@ -1,5 +1,6 @@
 /** Navigation marks: 24px, rounded 1.75px strokes, inherited ink. Learning artwork is separate. */
 const paths = {
+  shield: '<path d="m12 3 8 3v6c0 5-8 9-8 9s-8-4-8-9V6l8-3Z"/><path d="m8 12 3 3 5-6"/>',
   leaf: '<path d="M20 4C10 3 4 7 4 13a7 7 0 0 0 7 7c6 0 10-6 9-16Z"/><path d="m4 21 11-11M9 16v-5m0 5h5"/>',
   compass: '<circle cx="12" cy="12" r="9"/><path d="m16 8-2 6-6 2 2-6 6-2Z"/>',
   map: '<path d="m3 5 6-2 6 2 6-2v16l-6 2-6-2-6 2V5Zm6-2v16m6-14v16"/>',

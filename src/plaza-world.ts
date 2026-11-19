@@ -13,7 +13,9 @@ export function mergePlazaAvatar(root:T.Group){
  root.traverse(o=>{for(const part of o.userData.skywardMotion??[])keep.add(part.object);});
  const groups=new Map<T.Object3D,{geometry:T.BufferGeometry;mesh:T.Mesh}[]>();
  root.traverse(o=>{if(!(o instanceof T.Mesh)||o instanceof T.InstancedMesh||Array.isArray(o.material)||!o.visible)return;let at:T.Object3D|null=o,anchor:T.Object3D=root;while(at&&at!==root){if(!at.visible||keep.has(at))return;if(at===body)anchor=body;at=at.parent;}
-  const material=o.material as T.MeshStandardMaterial;if(!material.color||material.map||material.transparent||material.emissive?.getHex())return;
+  // Toon ramps and back-face ink shells must retain their own shading and culling.
+  // Flattening an ink shell into a double-sided batch hides the coloured equipment.
+  const material=o.material as T.MeshStandardMaterial;if(o.material instanceof T.MeshToonMaterial||material.side===T.BackSide||!material.color||material.map||material.transparent||material.emissive?.getHex())return;
   let geo=o.geometry.clone();if(geo.index){const next=geo.toNonIndexed();geo.dispose();geo=next;}geo.applyMatrix4(new T.Matrix4().copy(anchor.matrixWorld).invert().multiply(o.matrixWorld));if(!geo.getAttribute('normal'))geo.computeVertexNormals();for(const key of Object.keys(geo.attributes))if(!['position','normal'].includes(key))geo.deleteAttribute(key);
   const colors=new Float32Array(geo.getAttribute('position').count*3);for(let i=0;i<colors.length;i+=3){colors[i]=material.color.r;colors[i+1]=material.color.g;colors[i+2]=material.color.b;}geo.setAttribute('color',new T.BufferAttribute(colors,3));const parts=groups.get(anchor)??[];parts.push({geometry:geo,mesh:o});groups.set(anchor,parts);
  });

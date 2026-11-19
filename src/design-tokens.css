@@ -23,6 +23,12 @@
   --color-backdrop: rgba(32,55,42,.48);
   --color-night-surface: #294e43;
   --color-night-text: #fff5dc;
+  --equipment-ink: #30263e;
+  --equipment-common: #78867b;
+  --equipment-rare: #358457;
+  --equipment-epic: #4a7dbc;
+  --equipment-unique: #985cbb;
+  --equipment-legendary: #ba8a32;
   --radius-button: 14px;
   --radius-card: 16px;
   --radius-dialog: 24px;

@@ -1,0 +1,37 @@
+/* Inventory slots: the warm notebook palette, with RPG metal rims and readable status. */
+[data-slot-rarity]{--slot-edge:var(--equipment-common);--slot-soft:#e8ede6}
+[data-slot-rarity=rare]{--slot-edge:var(--equipment-rare);--slot-soft:#ddf2df}
+[data-slot-rarity=epic]{--slot-edge:var(--equipment-epic);--slot-soft:#e0edff}
+[data-slot-rarity=unique]{--slot-edge:var(--equipment-unique);--slot-soft:#f0e1fa}
+[data-slot-rarity=legendary]{--slot-edge:var(--equipment-legendary);--slot-soft:#fff0ba}
+.item-card[data-slot-rarity],.collection-card[data-slot-rarity]{position:relative;display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:88px auto 1fr;gap:8px;align-items:start;justify-items:center;min-width:0;min-height:224px;padding:12px 10px;text-align:center;border:2px solid var(--slot-edge);border-radius:var(--radius-card);background:linear-gradient(145deg,var(--color-surface),var(--slot-soft));box-shadow:inset 0 0 0 2px var(--color-surface),0 3px 0 var(--equipment-ink);color:var(--color-text);overflow:visible}
+.item-card[data-slot-rarity]::after,.collection-card[data-slot-rarity]::after{display:none}
+.item-card[data-slot-rarity].selected,.collection-card[data-slot-rarity].selected{outline:3px solid var(--equipment-ink);outline-offset:2px;background:linear-gradient(145deg,#fffef5,var(--slot-soft));box-shadow:inset 0 0 0 2px #fff,0 4px 0 var(--equipment-ink)}
+.item-card[data-slot-rarity]>strong,.collection-card[data-slot-rarity]>strong{grid-column:1;grid-row:2;align-self:center;padding:0;font-size:14px;line-height:1.5;overflow-wrap:anywhere}
+.item-card[data-slot-rarity]>small,.collection-card[data-slot-rarity]>small{display:flex;grid-column:1;grid-row:3;flex-wrap:wrap;justify-content:center;gap:4px;margin:0;line-height:1.5;align-self:start}
+.item-card[data-slot-rarity] .item-swatch,.collection-card[data-slot-rarity] .collection-icon{position:relative;grid-column:1;grid-row:1;display:grid;place-items:center;transform:none;width:88px;height:88px;margin:0;border:0;border-radius:16px;background:transparent;box-shadow:none;overflow:visible}
+[data-slot-rarity] .catalog-item-icon.catalog-item-icon{width:88px;height:88px}
+.equipment-upgrade{position:absolute;top:-4px;right:-8px;min-width:30px;padding:2px 6px;border:2px solid var(--equipment-ink);border-radius:7px;background:var(--color-reward);color:var(--equipment-ink);font-size:14px;font-weight:900;line-height:20px;box-shadow:0 2px 0 #fff6}
+.equipment-worn{position:absolute;bottom:-3px;left:-7px;display:grid;place-items:center;width:27px;height:27px;border:2px solid #fff7db;border-radius:50%;background:var(--color-primary);color:var(--color-on-primary)}
+.equipment-worn .ui-icon{width:18px;height:18px;flex-basis:18px;margin:0}
+.equipment-status,.equipment-price{display:inline-flex;align-items:center;justify-content:center;padding:2px 7px;border:1px solid var(--color-border);border-radius:6px;background:var(--color-surface);color:var(--color-text);font-size:12px;font-weight:750}
+.equipment-status.equipped{background:var(--color-primary);border-color:var(--color-primary);color:var(--color-on-primary)}
+.equipment-price{background:var(--color-surface-muted);color:var(--color-warning)}
+.equipment-price .ui-icon,.equipment-status .ui-icon{width:14px;height:14px;flex-basis:14px;margin-right:3px}
+.equipment-comparison{display:flex;flex-wrap:wrap;justify-content:center;gap:3px 8px;width:100%;font-size:12px;line-height:1.6}
+.equipment-delta{white-space:nowrap;font-weight:800}.equipment-delta.up{color:var(--color-success)}.equipment-delta.down{color:var(--color-danger)}.equipment-delta.same,.equipment-current{color:var(--color-text-muted);font-size:12px}
+.item-detail>.equipment-comparison,.collection-detail>.equipment-comparison{justify-content:flex-start;padding:10px;border:1px solid var(--color-border);border-radius:8px;background:var(--color-surface-muted);font-size:14px}
+.shop-modal .item-grid,.collection-modal .collection-picker{padding:6px;gap:12px;align-content:start}
+.shop-modal .item-grid{max-height:570px;overflow-y:auto;scrollbar-gutter:stable}
+.shop-modal .item-detail{position:sticky;top:0;align-self:start}
+.shop-modal .dawn-banner{min-height:0;padding:16px 20px;margin-bottom:12px}
+.shop-modal .dawn-banner h3{font-size:24px;margin:0 0 4px}.shop-modal .dawn-banner p{margin:0 0 8px}.shop-modal .skyward-banner{margin-bottom:12px}
+.weapon-detail .preview-stage,.outfit-detail .preview-stage{min-height:245px}
+@media(max-width:650px){
+ .item-card[data-slot-rarity],.collection-card[data-slot-rarity]{min-height:221px;padding:10px 7px;gap:6px}
+ .shop-modal .item-grid{max-height:370px;overflow-y:auto}
+ .shop-modal .item-detail{position:static}
+ .shop-modal .dawn-banner{padding:12px}.shop-modal .dawn-banner h3{font-size:20px}
+ .equipment-price{max-width:100%;overflow-wrap:anywhere;font-size:11px}.equipment-comparison{gap:2px 6px;font-size:11px}
+}
+@media(prefers-reduced-motion:reduce){[data-slot-rarity]{transition:none}}

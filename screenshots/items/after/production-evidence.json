@@ -1,0 +1,16 @@
+[
+  {
+    "viewport": "desktop",
+    "lowQuality": false,
+    "productionHooksAbsent": true,
+    "overflow": false,
+    "errors": []
+  },
+  {
+    "viewport": "mobile",
+    "lowQuality": true,
+    "productionHooksAbsent": true,
+    "overflow": false,
+    "errors": []
+  }
+]
