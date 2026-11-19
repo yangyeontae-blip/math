@@ -19,3 +19,6 @@ test-results-*/
 
 # Isolated combat validation servers, browser profiles and temporary builds.
 .work/combat/
+
+# Worktree-local validation logs, caches and isolated browser profiles.
+.tmp/

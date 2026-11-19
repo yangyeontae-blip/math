@@ -1,3 +1,6 @@
+import {createInventoryWeapon,addInventoryOutfit,styleEquipment,updateEquipmentEffects} from './equipment-models';
+import {OUTFIT_ART} from './equipment-art';
+import {itemRarity,ITEM_RARITIES} from './item-rarity';
 import { COMBAT_ART, attackStyle, attackPose, type AttackStyle } from './combat-art';
 import { CombatVfx } from './combat-vfx';
 import { monsterModel, animateMonster } from './combat-monsters';
@@ -96,7 +99,9 @@ export function makeCharacter(character: number, outfit: number, weapon: number,
   // Short, rounded chibi proportions. All costumes are visible 3D geometry.
   const left = ball(body, 0x574840, -.19, .18, .05, .19, .2, .28), right = ball(body, 0x574840, .19, .18, .05, .19, .2, .28);
   g.userData.feet = [left, right];g.userData.arms=[];g.userData.hands=[];
-  cylinder(body, o.color, 0, .67, 0, .31, outfit > 2 ? .53 : .42, .88);
+  const longCoat=['robe','wizard','dress','hanbok','queen','bard','cloak'].includes(OUTFIT_ART[outfit]);
+  cylinder(body, o.color, 0, longCoat?.67:.79, 0, .31, longCoat?.53:.36, longCoat?.88:.61);
+  if(!longCoat)for(const side of [-1,1])cylinder(body,0x514058,side*.18,.33,0,.17,.16,.32,8);
   box(body, o.accent, 0, .81, .32, .63, .12, .1);
   const collar = box(body, o.accent, -.06, 1, .27, .12, .45, .07); collar.rotation.z = -.45;
   ball(body, o.accent, .19, .8, .4, .1, .12, .05);
@@ -120,31 +125,7 @@ export function makeCharacter(character: number, outfit: number, weapon: number,
   }
   const w = new T.Group(); w.position.set(.62, .63, .12); w.rotation.z = -.28; body.add(w);
   g.userData.weapon = w; g.userData.weaponId = weapon;
-  cylinder(w, 0x8a6044, 0, .26, 0, .055, .065, .8, 8);
-  if (weapon === 0) { const blade = box(w, WEAPONS[weapon].color, 0, .63, 0, .15, .52, .09); blade.rotation.z = -.08; box(w, o.accent, 0, .36, 0, .34, .07, .13); }
-  if (weapon === 1) { cylinder(w, 0x89552f, 0, .74, 0, .3, .33, .36); ball(w, 0xc7985c, 0, .68, 0, .35, .3, .3); }
-  if (weapon === 2) { const fan = mesh(new T.CircleGeometry(.43, 12, 0, Math.PI), 0xb8cbff, 0, .63, .05, w); (fan.material as T.Material).side = T.DoubleSide; for (let i = 0; i < 5; i++) { const rib = box(w, 0xffe3a2, 0, .69, .07, .024, .55, .02); rib.rotation.z = (i - 2) * .5; } }
-  if (weapon === 3) { mesh(new T.OctahedronGeometry(.28), 0xffdd72, 0, .94, 0, w); ball(w, 0xf4a4d3, 0, .94, 0, .14); }
-  if (weapon === 4) { const blade = mesh(new T.ConeGeometry(.16, .58, 6), WEAPONS[weapon].color, 0, .75, 0, w); blade.rotation.z = Math.PI; ball(w, 0xffd0d8, 0, 1.02, 0, .17); }
-  if (weapon === 5) { const head = box(w, WEAPONS[weapon].color, 0, .82, 0, .62, .28, .18); head.rotation.z = -.12; for (const side of [-1, 1]) ball(w, 0x403629, side * .2, .87, .12, .045); }
-  if (weapon === 6) { const can = ball(w, WEAPONS[weapon].color, 0, .73, 0, .3, .25, .22); can.rotation.z = .3; cylinder(w, 0xf4d56e, .25, .86, 0, .06, .09, .48, 8).rotation.z = -1.15; }
-  if (weapon === 7) { mesh(new T.OctahedronGeometry(.34), WEAPONS[weapon].color, 0, .97, 0, w); for (let i = 0; i < 5; i++) ball(w, 0xfff0a4, Math.cos(i * 1.26) * .28, .97 + Math.sin(i * 1.26) * .28, 0, .08); }
-  if (weapon === 8) { ball(w, 0xf6b3bd, 0, .95, 0, .29, .2, .12); cylinder(w, 0xfff0da, 0, 1.12, 0, .1, .12, .22, 8); for (let i = 0; i < 4; i++) ball(w, 0xe94e6b, -.18 + i * .12, 1.21 + (i % 2) * .06, .02, .065); }
-  if (weapon === 9) { const blade = box(w, 0xeaf4ff, 0, .78, 0, .28, .72, .1); blade.rotation.z = -.12; for (const side of [-1, 1]) ball(w, 0xffffff, side * .2, 1.08, 0, .16); box(w, 0x9dc6df, 0, .4, 0, .48, .1, .16); }
-  if (weapon === 10) { const leaf = mesh(new T.CircleGeometry(.34, 14), 0x78c780, 0, .98, .02, w); (leaf.material as T.Material).side = T.DoubleSide; cylinder(w, 0x97d081, 0, .7, 0, .04, .07, .78, 8); ball(w, 0xffef8e, 0, 1.02, .08, .08); }
-  if (weapon === 11) { ball(w, 0xc99be8, 0, .98, 0, .3, .3, .18); for (let i = 0; i < 6; i++) ball(w, [0xff91ad, 0x8ed9e8, 0xffdc76][i % 3], Math.cos(i * 1.05) * .31, .98 + Math.sin(i * 1.05) * .31, 0, .095); }
-  if (weapon >= 12 && weapon <= 15) { ball(w, WEAPONS[weapon].color, 0, .96, 0, .3, .27, .16); for (let i = 0; i < 8; i++) ball(w, i % 2 ? 0x7cad55 : 0xffdf65, Math.cos(i * Math.PI / 4) * .34, .96 + Math.sin(i * Math.PI / 4) * .34, 0, .095, .13, .07); }
-  if (weapon === 16) { // 강지후의 젤리 발바닥: 폭신한 큰 발바닥과 네 발가락
-    ball(w, 0xf18fa5, 0, .92, .03, .28, .25, .13); ball(w, 0xffc3cf, 0, .9, .16, .15, .13, .04);
-    for (let i = 0; i < 4; i++) { const x = -.24 + i * .16; ball(w, 0xf18fa5, x, 1.19 + Math.abs(i - 1.5) * .025, .02, .105, .14, .09); ball(w, 0xffdbe2, x, 1.2, .11, .05, .065, .025); }
-    box(w, 0xffd66f, 0, .49, 0, .4, .075, .13);
-  }
-  if (weapon === 17) { // 나현이의 황금별 칼: 가장 긴 금빛 칼날과 별 보석
-    const blade = mesh(new T.ConeGeometry(.21, 1.02, 4), 0xffd34f, 0, .98, 0, w); blade.rotation.z = Math.PI; blade.scale.z = .42;
-    const shine = box(w, 0xfff2a8, -.055, .96, .075, .05, .7, .025); shine.rotation.z = -.02;
-    box(w, 0xf3a944, 0, .47, 0, .62, .1, .16); ball(w, 0x8fdcf1, 0, .48, .12, .105, .105, .04);
-    for (let i = 0; i < 5; i++) ball(w, i % 2 ? 0xffffff : 0xffe16d, Math.cos(i * 1.257) * .22, .48 + Math.sin(i * 1.257) * .22, .12, .05);
-  }
+  if(weapon>=0&&weapon<=26)w.add(createInventoryWeapon(weapon,skywardKit));
   if (weapon >= 27 && weapon < 36) w.add(worldTwoEquipmentModel('weapon',weapon,WEAPONS[weapon].color));
   if(weapon>=36&&weapon<39){w.clear();w.add(createSkywardWeapon(weapon,skywardKit));}
   if(weapon>=39&&weapon<42){w.clear();const c=WEAPONS[weapon].color;cylinder(w,0x775c44,0,.55,0,.05,.06,.85,8);
@@ -156,34 +137,6 @@ export function makeCharacter(character: number, outfit: number, weapon: number,
   if(outfit>=32)body.add(createDawnOutfit(outfit,skywardKit,o.color,o.accent));
   if (outfit >= 26 && outfit < 29) body.add(worldTwoEquipmentModel('outfit',outfit,o.color,o.accent));
   if(outfit>=29&&outfit<32)body.add(createSkywardOutfit(outfit,skywardKit,o.color,o.accent));
-  if (weapon >= 18 && weapon <= 26) { // 새 상점 무기: 각자 색이 다른 반짝이는 모험 지팡이
-    cylinder(w, WEAPONS[weapon].color, 0, .86, 0, .07, .09, .95, 8);
-    if (weapon === 18) { mesh(new T.OctahedronGeometry(.24), 0xffed91, 0, 1.38, .02, w); box(w, 0xfff7cf, 0, 1.02, .1, .13, .42, .035); }
-    if (weapon === 19) { const harp = mesh(new T.TorusGeometry(.29, .055, 7, 18, Math.PI * 1.35), 0xffe19a, 0, 1.18, .02, w); harp.rotation.z = -.45; for (let i = 0; i < 3; i++) box(w, 0xffffff, -.1 + i * .1, 1.15, .08, .018, .35, .02); }
-    if (weapon === 20) { ball(w, 0xeaf7ff, 0, 1.18, .02, .3, .3, .2); mesh(new T.TorusGeometry(.16, .035, 6, 18), 0xffdb73, 0, 1.18, .25, w); }
-    if (weapon === 21) { for (let i = 0; i < 10; i++) ball(w, i % 2 ? 0xffdc55 : 0xf0a635, Math.cos(i * Math.PI / 5) * .25, 1.25 + Math.sin(i * Math.PI / 5) * .25, .03, .09, .13, .06); ball(w, 0x855b35, 0, 1.25, .08, .14); }
-    if (weapon === 22) { const comet = mesh(new T.ConeGeometry(.2, .72, 5), 0xff9cab, 0, 1.28, .02, w); comet.rotation.z = Math.PI; for (let i = 0; i < 3; i++) ball(w, i % 2 ? 0xffe690 : 0xffffff, -.2 - i * .1, 1.0 - i * .1, .03, .08 - i * .015); }
-    if (weapon === 23) { // 천둥 도토리 해머: 큰 도토리 머리, 모자, 번개 무늬
-      ball(w, 0xb9783f, 0, 1.3, .02, .34, .3, .3); const cap = ball(w, 0x6e4a2b, 0, 1.5, .02, .38, .16, .34); cap.rotation.z = .1; cylinder(w, 0x6e4a2b, 0, 1.68, .02, .03, .04, .14, 6);
-      for (let i = 0; i < 3; i++) { const bolt = box(w, 0xffe14d, -.12 + i * .12, 1.28, .3, .05, .2, .03); bolt.rotation.z = i % 2 ? .6 : -.6; }
-    }
-    if (weapon === 24) { // 서리꽃 쌍검: 엇갈린 얼음 칼날 두 개와 눈꽃 보석
-      for (const side of [-1, 1]) { const blade = mesh(new T.ConeGeometry(.12, .9, 4), 0xbfe8fb, side * .12, 1.5, .02, w); blade.rotation.z = Math.PI + side * .28; blade.scale.z = .45; }
-      for (let i = 0; i < 6; i++) { const ray = box(w, 0xffffff, 0, 1.14, .1, .04, .3, .02); ray.rotation.z = i * Math.PI / 3; }
-      mesh(new T.OctahedronGeometry(.08), 0x7fd0f2, 0, 1.14, .13, w);
-    }
-    if (weapon === 25) { // 불꽃 깃털 활: 주황 활대, 시위, 불꽃 깃털
-      const bow = mesh(new T.TorusGeometry(.42, .045, 6, 20, Math.PI), 0xf07a3c, .05, 1.3, .02, w); bow.rotation.z = -Math.PI / 2;
-      box(w, 0xfff1d6, .05, 1.3, .02, .015, .84, .015);
-      for (let i = 0; i < 3; i++) { const flame = mesh(new T.ConeGeometry(.07, .26, 6), [0xffd23d, 0xff8a3c, 0xff5a4a][i], .48, 1.08 + i * .22, .02, w); flame.rotation.z = -.4; }
-    }
-    if (weapon === 26) { // 은하수 왕관검: 보랏빛 긴 칼날, 별 왕관, 반짝이는 은하수 점
-      const blade = mesh(new T.ConeGeometry(.2, 1.1, 4), 0x8f7ff0, 0, 1.75, .02, w); blade.rotation.z = Math.PI; blade.scale.z = .4;
-      box(w, 0xffd76a, 0, 1.2, .02, .62, .1, .16);
-      for (let i = 0; i < 5; i++) mesh(new T.OctahedronGeometry(.07), 0xffe98a, -.24 + i * .12, 1.3 + (i % 2) * .06, .06, w);
-      for (let i = 0; i < 6; i++) ball(w, 0xffffff, Math.sin(i * 2.1) * .09, 1.5 + i * .14, .1, .03);
-    }
-  }
   if (outfit === 8) { box(body, 0xf55f74, 0, .82, .39, .3, .34, .08); for (const side of [-1, 1]) box(body, 0xf8d9a0, side * .18, .98, .36, .06, .42, .04); }
   if (outfit === 9) { const brim = cylinder(body, o.accent, 0, 1.98, 0, .57, .57, .08); ball(body, o.color, 0, 2.12, 0, .38, .25, .34); }
   if (outfit === 10) { for (const side of [-1, 1]) { const ear = ball(body, o.accent, side * .27, 2.26, 0, .17, .55, .15); ear.rotation.z = side * -.16; } ball(body, 0xffffff, 0, .77, -.38, .22); }
@@ -221,7 +174,7 @@ export function makeCharacter(character: number, outfit: number, weapon: number,
     for (let i = 0; i < 8; i++) ball(body, i % 2 ? 0xffe89b : 0xffffff, Math.cos(i * Math.PI / 4) * .27, .83 + Math.sin(i * Math.PI / 4) * .25, .46, .045, .07, .025);
     ball(body, 0xf4d460, 0, .83, .48, .12); ball(body, 0x7b5a34, 0, .83, .53, .055);
   }
-  if (outfit >= 21) { // 새 의상: 꽃·별·리본 장식으로 실루엣도 구분해요.
+  if (outfit >= 21 && outfit <= 25) { // 새 의상: 꽃·별·리본 장식으로 실루엣도 구분해요.
     const crownColor = [0xb58aca, 0x9bcdf2, 0xef8399, 0xdfefff, 0x78b8a8][outfit - 21];
     for (let i = 0; i < 5; i++) ball(body, i % 2 ? o.accent : crownColor, -.24 + i * .12, 2.1 + Math.sin(i) * .07, .03, .08);
     const cape = mesh(new T.CircleGeometry(.56, 14), o.color, 0, .86, -.32, body); cape.rotation.x = -.16;
@@ -230,6 +183,15 @@ export function makeCharacter(character: number, outfit: number, weapon: number,
     if (outfit === 25) for (const side of [-1, 1]) { const wing = mesh(new T.CircleGeometry(.32, 10), side < 0 ? 0xa9e0dd : 0xd5b6ef, side * .42, 1.04, -.25, body); wing.scale.y = 1.45; }
   }
   if (weaponLevel) for (let i = 0; i < weaponLevel; i++) ball(w, 0xffe891, 0, .3 + i * .16, .08, .06);
+  const outfitRank=ITEM_RARITIES.indexOf(itemRarity('outfit',outfit,o.price));
+  const outfitDetails=addInventoryOutfit(body,outfit,skywardKit);
+  styleEquipment(outfitDetails,outfitRank,o.accent);
+  // Colour-selected cloth parts keep skin, hair, face and animation anchors intact.
+  for(const part of [...body.children])if(part instanceof T.Mesh&&part.material instanceof T.MeshStandardMaterial&&(part.material.color.getHex()===o.color||part.material.color.getHex()===o.accent))styleEquipment(part,0,o.accent);
+  if(weapon>=0&&WEAPONS[weapon]){
+    const rank=ITEM_RARITIES.indexOf(itemRarity('weapon',weapon,WEAPONS[weapon].price));
+    w.scale.setScalar(weapon<27?1.08:1.02);styleEquipment(w,rank,0xffe59c);
+  }else w.visible=false;
   return g;
 }
 
@@ -741,6 +703,7 @@ export class World {
       const root=new T.Group(),avatar=makeCharacter(p.character,p.outfit,p.weapon,p.outfitLevel,p.weaponLevel,p.hairstyle,p.face);root.add(avatar);
       const body=avatar.userData.body as T.Group;
       if(p.ride>=0){const height=riderHeight(p.ride);body.position.y=height;body.userData.plazaRideHeight=height;avatar.add(makeRide(p.ride));}
+      updateEquipmentEffects(avatar,0,this.lowQuality,matchMedia('(prefers-reduced-motion: reduce)').matches);
       const compact=mergePlazaAvatar(avatar);const pet=p.pet>=0?makePet(p.pet):null;if(pet)root.add(pet);
       return {root,avatar,pet,dispose:()=>{compact();this.disposeModel(root);}};
     },p=>({body:OUTFITS[p.outfit].color,hair:CHARACTERS[p.character].hair,skin:CHARACTERS[p.character].skin}));
@@ -1643,7 +1606,7 @@ export class World {
     this.stopRoomActivity();
     if (this.inHunting || this.inTraining) ride = -1;
     const wasFlying=this.rideIndex>=0&&!!RIDES[this.rideIndex]?.flying; const position = this.player.position.clone(), rotation = this.player.rotation.y;
-    this.scene.remove(this.player); this.disposeModel(this.player); this.player = makeCharacter(character, outfit, weapon, outfitLevel, weaponLevel, hairstyle, face); this.player.position.copy(position); this.player.rotation.y = rotation; this.player.scale.setScalar(matchMedia('(max-width: 600px)').matches ? 1.08 : 1); this.scene.add(this.player); this.addXray();
+    this.scene.remove(this.player); this.disposeModel(this.player); this.player = makeCharacter(character, outfit, weapon, outfitLevel, weaponLevel, hairstyle, face); this.player.position.copy(position); this.player.rotation.y = rotation; this.player.scale.setScalar(matchMedia('(max-width: 600px)').matches ? 1.08 : 1); this.scene.add(this.player); updateEquipmentEffects(this.player,this.time,this.lowQuality,matchMedia('(prefers-reduced-motion: reduce)').matches); this.addXray();
     if (this.petModel) { this.scene.remove(this.petModel); this.disposeModel(this.petModel); }
     this.rideIndex = ride; if(wasFlying&&!(ride>=0&&RIDES[ride]?.flying))this.landSafely(); this.petIndex = pet; this.petModel = null; this.petTargetId = null; this.rideAnimated = []; this.petAnimated = []; this.petIdle = 0; this.petReaction = null; this.petCharm = null;
     if (ride >= 0 && RIDES[ride]) { const body = this.player.userData.body as T.Group; body.position.y = riderHeight(ride); const rideModel = makeRide(ride); rideModel.traverse(o => { if (o.userData.rideWing || o.userData.ridePropeller || o.userData.rideGlow) this.rideAnimated.push(o); }); this.player.add(rideModel); }
@@ -2013,6 +1976,7 @@ export class World {
     const reducedSkyward=matchMedia('(prefers-reduced-motion: reduce)').matches;
     animateSkywardTree(this.player,this.time,this.walkBlend>.05,reducedSkyward);
     if(this.petModel&&this.petIndex>=21)animateSkywardTree(this.petModel,this.time,this.petMotion,reducedSkyward);
+    updateEquipmentEffects(this.player,this.time,this.lowQuality,matchMedia('(prefers-reduced-motion: reduce)').matches);
     const ppoAura=this.player.userData.ppoAura as T.Group|undefined;if(ppoAura)animatePpojjakiAura(ppoAura,this.time,this.lowQuality,matchMedia('(prefers-reduced-motion: reduce)').matches);
     const heroAura = this.player.userData.heroPetAura as T.Group | undefined;
     if (heroAura) {
@@ -2049,12 +2013,12 @@ export class AvatarPreview {
   private static salonCache=new Map<string,string>();
   private portraitMode=false;
   private scene = new T.Scene(); private camera = new T.PerspectiveCamera(30, 1, .1, 20); private renderer: T.WebGLRenderer; private model = new T.Group(); private resizeObserver: ResizeObserver; private animationFrame = 0; private lastFrame = 0; private drawWidth = 0; private drawHeight = 0;
-  constructor(private element: HTMLElement) {
-    this.renderer = new T.WebGLRenderer({ alpha: true, antialias: true }); this.renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5)); this.renderer.setClearColor(0x000000, 0); this.renderer.toneMapping = T.ACESFilmicToneMapping; this.renderer.toneMappingExposure = 1.4; element.append(this.renderer.domElement); this.scene.add(new T.HemisphereLight(0xffffff, 0xa6ba93, 3)); const light = new T.DirectionalLight(0xffedcd, 3); light.position.set(-3, 4, 5); this.scene.add(light); this.camera.position.set(2.2, 1.9, 5.8); this.camera.lookAt(0, 1.1, 0);
+  constructor(private element: HTMLElement,private lowQuality=false) {
+    this.renderer = new T.WebGLRenderer({ alpha: true, antialias: true }); this.renderer.setPixelRatio(Math.min(devicePixelRatio, this.lowQuality?1:1.5)); this.renderer.setClearColor(0x000000, 0); this.renderer.toneMapping = T.ACESFilmicToneMapping; this.renderer.toneMappingExposure = 1.4; element.append(this.renderer.domElement); this.scene.add(new T.HemisphereLight(0xffffff, 0xa6ba93, 3)); const light = new T.DirectionalLight(0xffedcd, 3); light.position.set(-3, 4, 5); this.scene.add(light); this.camera.position.set(2.2, 1.9, 5.8); this.camera.lookAt(0, 1.1, 0);
     this.resizeObserver = new ResizeObserver(() => this.draw()); this.resizeObserver.observe(element); this.animate(performance.now());
   }
   private replaceModel(model: T.Group, camera: [number, number, number], lookY: number, fit = false) {
-    this.scene.remove(this.model); disposeSalonMaterials(this.model);disposePpojjakiAssets(this.model);this.model.traverse(x => { if (x instanceof T.Mesh && !sharedGeometries.has(x.geometry)&&!x.geometry.userData.sharedSalonAsset&&!x.geometry.userData.ppoDisposed) x.geometry.dispose(); }); this.model = model; this.model.rotation.y = -.18;
+    this.scene.remove(this.model); disposeSalonMaterials(this.model);disposePpojjakiAssets(this.model);this.model.traverse(x => { if (x instanceof T.Mesh && !sharedGeometries.has(x.geometry)&&!x.geometry.userData.sharedSalonAsset&&!x.geometry.userData.ppoDisposed) x.geometry.dispose(); }); this.model = model; updateEquipmentEffects(model,0,this.lowQuality,matchMedia('(prefers-reduced-motion: reduce)').matches); this.model.rotation.y = -.18;
     this.camera.position.set(...camera); this.camera.lookAt(0, lookY, 0);
     if (fit) this.fitCamera(new T.Vector3(...camera).sub(new T.Vector3(0, lookY, 0)).normalize());
     this.scene.add(this.model); this.draw();
@@ -2067,7 +2031,7 @@ export class AvatarPreview {
     const across = Math.max(size.x, size.z), distance = Math.max(size.y / 2 / Math.tan(vertical), across / 2 / Math.tan(horizontal)) * 1.12 + across / 2;
     this.camera.position.copy(center).addScaledVector(direction, distance); this.camera.lookAt(center);
   }
-  show(c: number, o: number, w: number, ol = 0, wl = 0, hairstyle = 0, face = 0) { const model = makeCharacter(c, o, w, ol, wl, hairstyle, face); model.userData.previewKind = 'avatar'; this.replaceModel(model, [2.2, 1.9, 5.8], 1.1); }
+  show(c: number, o: number, w: number, ol = 0, wl = 0, hairstyle = 0, face = 0) { const model = makeCharacter(c, o, w, ol, wl, hairstyle, face); model.userData.previewKind = 'avatar'; this.replaceModel(model, [2.2, 1.9, 5.8], 1.1, true); }
   showSalon(c: number, o: number, hairstyle: number, face: number) {
     const model = makeCharacter(c, o, 0, 0, 0, hairstyle, face);
     // A salon mirror redraws on selection and resize; idle GPU work delays input on small devices.
@@ -2084,7 +2048,7 @@ export class AvatarPreview {
   showPet(id: number) { const model = makePet(id); model.position.set(0, PETS[id].flying ? -.18 : .08, 0); model.scale.setScalar(id === 10 ? 1.48 : id === HERO_BREAD_PET_ID ? 1.6 : id >= 12 ? 1.55 : 1.72); model.userData.previewKind = 'pet'; model.userData.previewPetId=id; this.replaceModel(model, [2.1, 1.35, 4.15], id === 10 ? .68 : .62, true); }
   showRide(id: number, c: number, o: number, w: number, ol = 0, wl = 0, hairstyle = 0, face = 0) { const model = makeCharacter(c, o, w, ol, wl, hairstyle, face), body = model.userData.body as T.Group; body.position.y = riderHeight(id); model.add(makeRide(id)); model.userData.previewKind = 'ride'; this.replaceModel(model, [3.4, 2.35, 7.7], 1.15, true); }
   private draw() { const w = this.portraitMode?144:this.element.clientWidth, h = this.portraitMode?160:this.element.clientHeight; if (!w || !h) return; if (w !== this.drawWidth || h !== this.drawHeight) { this.drawWidth = w; this.drawHeight = h; this.renderer.setSize(w, h,!this.portraitMode); this.camera.aspect = w / h; this.camera.updateProjectionMatrix(); } this.renderer.render(this.scene, this.camera); }
-  private animate = (time: number) => { this.animationFrame = requestAnimationFrame(this.animate); if (time - this.lastFrame < 33 || document.hidden || !this.element.isConnected || this.model.userData.staticSalonPreview) return; this.lastFrame = time; animateSkywardTree(this.model,time*.001,this.model.userData.previewKind==='ride'||this.model.userData.previewPetId>=21,matchMedia('(prefers-reduced-motion: reduce)').matches); if(this.model.userData.previewPetId===PPOJJAK_PET_ID)animatePpojjakiPet(this.model,time*.001,false,false,matchMedia('(prefers-reduced-motion: reduce)').matches); this.model.rotation.y = -.18 + Math.sin(time * .0007) * .16; const body = this.model.userData.body as T.Group | undefined; if (body) { body.userData.baseY ??= body.position.y; body.position.y = (body.userData.baseY as number) + Math.sin(time * .003) * .035; } const sparkles = this.model.userData.sparkles as T.Group | undefined; if (sparkles) sparkles.rotation.y += .025; this.model.traverse(o => { if (o.userData.petCharm) { o.rotation.y += .06; o.userData.baseScale ??= o.scale.clone(); o.scale.copy(o.userData.baseScale as T.Vector3).multiplyScalar(1 + Math.sin(time * .006) * .12); } if (o.userData.petWing) o.rotation.z = Number(o.userData.petWing) * (.4 + Math.sin(time * .011) * .14); if (o.userData.rideWing) o.rotation.z = Number(o.userData.rideWing) * (-.72 + Math.sin(time * .009) * .14); if (o.userData.ridePropeller) o.rotation.z += .18; if (o.userData.rideGlow) o.rotation.z += .025; }); this.draw(); };
+  private animate = (time: number) => { this.animationFrame = requestAnimationFrame(this.animate); if (time - this.lastFrame < 33 || document.hidden || !this.element.isConnected || this.model.userData.staticSalonPreview) return; this.lastFrame = time; updateEquipmentEffects(this.model,time*.001,this.lowQuality,matchMedia('(prefers-reduced-motion: reduce)').matches); animateSkywardTree(this.model,time*.001,this.model.userData.previewKind==='ride'||this.model.userData.previewPetId>=21,matchMedia('(prefers-reduced-motion: reduce)').matches); if(this.model.userData.previewPetId===PPOJJAK_PET_ID)animatePpojjakiPet(this.model,time*.001,false,false,matchMedia('(prefers-reduced-motion: reduce)').matches); this.model.rotation.y = -.18 + Math.sin(time * .0007) * .16; const body = this.model.userData.body as T.Group | undefined; if (body) { body.userData.baseY ??= body.position.y; body.position.y = (body.userData.baseY as number) + Math.sin(time * .003) * .035; } const sparkles = this.model.userData.sparkles as T.Group | undefined; if (sparkles) sparkles.rotation.y += .025; this.model.traverse(o => { if (o.userData.petCharm) { o.rotation.y += .06; o.userData.baseScale ??= o.scale.clone(); o.scale.copy(o.userData.baseScale as T.Vector3).multiplyScalar(1 + Math.sin(time * .006) * .12); } if (o.userData.petWing) o.rotation.z = Number(o.userData.petWing) * (.4 + Math.sin(time * .011) * .14); if (o.userData.rideWing) o.rotation.z = Number(o.userData.rideWing) * (-.72 + Math.sin(time * .009) * .14); if (o.userData.ridePropeller) o.rotation.z += .18; if (o.userData.rideGlow) o.rotation.z += .025; }); this.draw(); };
   dispose() { cancelAnimationFrame(this.animationFrame); this.resizeObserver.disconnect(); disposeSalonMaterials(this.model);disposePpojjakiAssets(this.model);this.model.traverse(x => { if (x instanceof T.Mesh && !sharedGeometries.has(x.geometry)&&!x.geometry.userData.sharedSalonAsset&&!x.geometry.userData.ppoDisposed) x.geometry.dispose(); }); this.renderer.dispose(); this.renderer.forceContextLoss(); this.renderer.domElement.remove(); } // 미리보기를 자주 바꿔도 WebGL 창이 쌓여 게임 화면이 꺼지지 않도록 바로 돌려줘요.
 }
 

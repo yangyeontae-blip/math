@@ -1,8 +1,10 @@
 /** Original, crisp storybook RPG inventory illustrations. Rebuild: node --import tsx scripts/generate-item-icons.mjs */
 import {mkdirSync,writeFileSync} from 'node:fs';
 import {WEAPONS,OUTFITS,PETS,RIDES,POTIONS} from '../src/rules.ts';
-const out='public/art/berry-items-v1';mkdirSync(out,{recursive:true});
-const ink='#543648',cream='#fff5d9',gold='#ffcc56',pink='#ff9ab5';
+import {itemRarity,ITEM_RARITIES} from '../src/item-rarity.ts';
+import {WEAPON_ART,OUTFIT_ART,OUTFIT_MOTIFS,weaponMaterial} from '../src/equipment-art.ts';
+const out='public/art/berry-items-v2';mkdirSync(out,{recursive:true});
+const ink='#30263e',cream='#fff5d9',gold='#ffcc56',pink='#ff9ab5';
 const P=(d,fill='url(#body)',extra='')=>`<path d="${d}" fill="${fill}" ${extra}/>`;
 const E=(x,y,rx,ry,fill='url(#body)',extra='')=>`<ellipse cx="${x}" cy="${y}" rx="${rx}" ry="${ry}" fill="${fill}" ${extra}/>`;
 const C=(x,y,r,fill='url(#body)',extra='')=>E(x,y,r,r,fill,extra);
@@ -27,12 +29,13 @@ function staff(mark='star',orbit=false){return G(R(59,39,11,70,5,'#b486b7')+R(56
 function hammer(mark='star',acorn=false){return G(R(59,53,12,57,5,'#b77d64')+R(56,94,18,9,3,gold)+(acorn?E(64,43,31,24)+P('M29 35Q35 17 64 20Q93 17 99 35L95 45Q65 36 32 45Z','#b78259')+R(61,14,7,10,3,'#a0714c'):R(29,25,70,35,11)+R(28,25,10,35,5,gold)+R(90,25,10,35,5,gold))+motif(mark,64,43,12)+L('M42 30H82','#fff',3),`rotate(30 64 64)`);}
 function archery(mark='star',feather=false){return G(P('M54 14Q106 64 54 112L43 100Q81 63 43 27Z','url(#gold)')+L('M48 21L38 64L48 105',cream,2.5)+R(51,53,13,24,4,'#986c98')+L('M22 62H105','#875b58',3)+P('M107 62L95 53V71Z',cream)+(feather?[-1,1].map(s=>G(P('M63 30Q81 11 95 24L81 29L89 34L72 40Z','#d9f6ff'),`translate(0 ${s===1?61:0})`)).join(''):'')+motif(mark,68,37,8),`rotate(15 64 64)`);}
 function book(open=false,mark='star'){return G((open?P('M16 31Q40 24 64 38Q88 24 112 31V96Q87 86 64 100Q41 86 16 96Z','url(#body)')+P('M24 32Q45 29 64 41Q83 29 104 32V84Q85 79 64 93Q43 79 24 84Z',cream)+L('M64 42V92','#b58ab0',2)+L('M32 47L52 52M32 59L52 63M77 50L97 45M77 62L96 57','#b493a4',2):R(29,20,72,88,9)+R(29,22,12,83,4,'url(#gold)')+R(45,28,48,69,5,'none','stroke="#fff0b4" stroke-width="2"')+P('M68 95L68 115L76 109L84 115V95Z',pink))+motif(mark,open?85:68,open?68:59,15),`rotate(-12 64 64)`);}
-const weaponSpecs=[['sword','leaf',1],['hammer','leaf',1],['fan'],['staff','flower'],['sword','berry'],['axe'],['water'],['staff','star'],['ladle'],['sword','cloud'],['spear','leaf'],['staff','candy'],['umbrella'],['flail'],['book','star'],['staff','sun'],['paw'],['sword','star'],['pencil'],['harp'],['bell'],['spear','sun'],['staff','berry'],['hammer','star',1],['twin'],['bow','sun',1],['sword','star'],['sword','leaf'],['staff','sun'],['bow','leaf',1],['sword','gem'],['staff','gem'],['bow','gem'],['sword','star'],['staff','star',1],['bow','moon',1],['sword','moon',1],['staff','gem',1],['bow','star',1],['hammer','leaf'],['scythe'],['book','snow',1],['sword','sun'],['harp'],['bow','star',1]];
+const weaponSpecs=WEAPON_ART;
 function weaponArt(id){const [shape,mark,v]=weaponSpecs[id];
  if(shape==='sword'){
   let art=id===36?G(R(58,77,12,31,4,'#ac7588')+P('M51 72Q30 36 77 10Q52 37 77 64L71 74Z')+L('M64 23Q45 44 61 65',cream,3)+P('M39 72Q64 61 89 72L84 80H44Z','url(#gold)')+moon(64,74,9)+C(64,109,7,gold),'rotate(31 64 64)'):sword(mark,v);
   if([26,33,42].includes(id))art+=G(P('M46 69Q25 49 24 63L34 76L30 83L51 80Z','url(#gold)')+P('M82 69Q103 49 104 63L94 76L98 83L77 80Z','url(#gold)')+gem(64,74,9,id===42?'#ffb1ad':'#b6c3ff')+(id===33?E(64,29,21,8,'none','stroke="#ffd46d" stroke-width="3"'):'')+(id===26?P('M54 49L50 37L61 42L65 32L71 42L82 37L77 49Z',gold):''),'rotate(31 64 64)');
   if(id===27)art+=G(leaf(45,75,10,'#b9e38f',-40)+leaf(84,75,10,'#b9e38f',40),'rotate(31 64 64)');
+  if(id===0)art+=G(L('M59 33L60 60M68 26L69 53','#704d37',2)+leaf(80,68,8,'#92d66a',50),'rotate(31 64 64)');
   return art;
  }
  if(shape==='staff')return staff(mark,v);if(shape==='hammer')return hammer(mark,v);if(shape==='bow')return archery(mark,v);if(shape==='book')return book(v,mark);
@@ -51,16 +54,16 @@ function weaponArt(id){const [shape,mark,v]=weaponSpecs[id];
  return G(R(59,40,12,71,5,'#ad7a85')+P('M39 60Q42 22 64 25Q86 23 90 60L96 70Q63 85 32 70Z')+C(64,75,8,gold)+motif('cloud',64,29,15)+L('M47 47Q52 34 58 35',cream,3),'rotate(25 64 64)');
 }
 
-const outfitTypes=['tunic','hanbok','cloak','robe','robe','wizard','samurai','hanbok','overall','duck','bunny','ranger','cat','sheep','frog','fairy','dress','bee','robe','suit','armor','dress','space','suit','armor','queen','armor','wizard','ranger','armor','queen','ranger','armor','bard','cloak'];
-const outfitMotifs=['leaf','flower','leaf','cloud','flower','star','moon','flower','berry','cloud','moon','leaf','paw','cloud','leaf','star','sun','sun','cloud','star','paw','flower','star','berry','moon','star','leaf','star','leaf','moon','gem','star','sun','note','leaf'];
+const outfitTypes=OUTFIT_ART;
+const outfitMotifs=OUTFIT_MOTIFS;
 function outfitArt(id){const type=outfitTypes[id],mark=outfitMotifs[id];let back='',body='',top='';
  const boots=R(41,94,18,16,5,'#a47a68')+R(69,94,18,16,5,'#a47a68')+L('M43 104H56M71 104H84',gold,2);
  const cape=P('M38 35Q61 24 88 35L107 100L80 107L64 98L46 108L22 98Z','url(#shade)');
- const torso=P('M44 37L32 44L20 69L34 78L42 63L42 98Q64 106 87 98L87 63L96 78L109 69L96 44L83 37Q64 46 44 37Z');
+ const torso=P('M44 37L32 44L20 69L34 78L42 63L42 83Q64 91 87 83L87 63L96 78L109 69L96 44L83 37Q64 46 44 37Z');
  const collar=P('M46 37L64 55L82 37L75 32Q64 40 53 32Z',cream);
  if(['cloak','queen','armor','wizard','ranger','bard','fairy'].includes(type))back=cape;
  if(type==='fairy'||type==='bee')back=wings(66,type==='bee'?'#e3fbff':'#f4d9ff');
- body=boots+torso+collar;
+ body=boots+P('M43 78H85L88 97H69L64 88L59 97H40Z','url(#shade)')+torso+collar;
  if(['robe','wizard','dress','hanbok','queen','bard'].includes(type))body=boots+P('M44 37L27 45L17 70L34 78L43 63L31 100Q65 119 99 100L85 63L96 78L111 70L99 45L82 37Z')+P('M45 65L64 70L85 65L93 99Q65 107 37 99Z','url(#shade)')+collar+L('M48 80L44 98M63 80V102M79 80L84 98',cream,2)+P('M36 98Q63 109 94 98L97 105Q64 119 32 105Z','url(#trim)');
  if(type==='overall')body=boots+torso+R(43,49,42,48,7,'url(#shade)')+R(42,36,9,41,3,'#90bee9')+R(77,36,9,41,3,'#90bee9')+R(53,68,23,18,4,cream)+C(47,59,3,gold)+C(82,59,3,gold);
  if(type==='suit'||type==='bard')body+=P('M44 40L58 61L64 51L70 61L85 40L79 76H49Z','url(#trim)')+bow(64,49,id===33?'#ef91c1':pink)+[70,83,95].map(y=>C(64,y,2.4,gold)).join('');
@@ -77,6 +80,8 @@ function outfitArt(id){const type=outfitTypes[id],mark=outfitMotifs[id];let back
  if(id===24)top=E(49,10,6,13,cream)+E(79,10,6,13,cream)+top;
  if(id===20)top=P('M41 17L37 2L54 11M75 11L92 2L88 19Z','url(#trim)')+top;
  if(type==='space'){body=boots+torso+R(40,57,49,39,12,cream)+R(49,70,13,13,3,'#9ee4ee')+C(77,76,4,pink);top=E(64,28,29,26,cream)+E(64,28,21,18,'#6d88b7')+L('M48 22Q53 13 66 14','#e7faff',4)+R(42,47,45,9,5,'url(#trim)');}
+ if(!['cloak','hanbok','space','overall'].includes(type))body+=R(42,79,45,7,2,'#514058')+R(58,77,13,11,2,'url(#gold)');
+ if(!top)top=P('M41 25Q43 11 65 12Q85 11 88 25L97 30H32Z','url(#shade)')+R(42,24,45,7,3,'url(#trim)')+motif(mark,76,23,7);
  body+=motif(mark,64,['armor','cloak'].includes(type)?65:76,9);
  if(['dress','fairy','bard'].includes(type))body+=bow(64,59,'url(#trim)');
  return back+body+top+L('M31 48L25 63M95 48L102 63','#fff',2.5);
@@ -151,10 +156,16 @@ const data={weapon:WEAPONS,outfit:OUTFITS,pet:PETS,ride:RIDES,potion:POTIONS};co
 const sky={weapon:[36,38],outfit:[29,31],pet:[21,23],ride:[19,23]},dawn={weapon:[42,44],outfit:[32,34],pet:[24,25],ride:[24,25]};
 const paths={};let total=0;
 for(const [kind,items]of Object.entries(data)){paths[kind]=[];for(const [id,item]of items.entries()){
- const base=hex(item.color??[0xef86aa,0xf3c25b,0x8cce92,0x9987c9,0x9da2df,0xe9bf69,0xd9a776,0xf2cc9b,0x80c8ab,0xb4a0dd][id]);const accent=hex(item.accent??0xffd882),dark=mix(base,'#7c507b',.35);
+ const material=kind==='weapon'?weaponMaterial(id):'steel';
+ const original=hex(item.color??[0xef86aa,0xf3c25b,0x8cce92,0x9987c9,0x9da2df,0xe9bf69,0xd9a776,0xf2cc9b,0x80c8ab,0xb4a0dd][id]);
+ const base=kind==='weapon'&&id===0?'#ba854d':original,accent=hex(item.accent??0xffd882),dark=mix(base,ink,.46),light=mix(base,'#fff9df',.53);
+ const rarity=itemRarity(kind,id,item.price),rank=ITEM_RARITIES.findIndex(r=>r.id===rarity.id),edge=['#7d8b87','#41a478','#5b9cde','#b778e0','#edb852'][rank];
  const file=(sky[kind]&&id>=sky[kind][0]&&id<=sky[kind][1]?'skyward-':dawn[kind]&&id>=dawn[kind][0]&&id<=dawn[kind][1]?'dawn-':'')+kind+'-'+id+'.svg';
- const svg=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128"><title>${kind} ${id} · Berry Forest storybook icon</title><defs><linearGradient id="body" x1="0" y1="0" x2=".2" y2="1"><stop stop-color="${mix(base,'#fff9df',.5)}"/><stop offset=".45" stop-color="${base}"/><stop offset="1" stop-color="${mix(base,'#9b6389',.25)}"/></linearGradient><linearGradient id="shade" x2=".5" y2="1"><stop stop-color="${base}"/><stop offset="1" stop-color="${dark}"/></linearGradient><linearGradient id="trim" x2=".3" y2="1"><stop stop-color="${mix(accent,'#fff',.35)}"/><stop offset="1" stop-color="${accent}"/></linearGradient><linearGradient id="gold" x2=".2" y2="1"><stop stop-color="#fff1ab"/><stop offset=".5" stop-color="#ffd566"/><stop offset="1" stop-color="#e9aa4f"/></linearGradient></defs><ellipse cx="64" cy="112" rx="36" ry="5" fill="#735773" opacity=".15"/><g transform="translate(5 6) scale(.91)" stroke="${ink}" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">${draw[kind](id)}</g><path d="M111 15v10m-5-5h10M16 88v6m-3-3h6" fill="none" stroke="${mix(base,'#fff',.2)}" stroke-width="2.5" stroke-linecap="round"/></svg>`;
- writeFileSync(out+'/'+file,svg+'\n');paths[kind].push('art/berry-items-v1/'+file);total++;
+ const stepped=(key,a,b,c)=>`<linearGradient id="${key}" x1="0" y1="0" x2=".65" y2="1"><stop offset="0" stop-color="${a}"/><stop offset=".36" stop-color="${a}"/><stop offset=".36" stop-color="${b}"/><stop offset=".72" stop-color="${b}"/><stop offset=".72" stop-color="${c}"/><stop offset="1" stop-color="${c}"/></linearGradient>`;
+ const spark=(x,y,r)=>P(`M${x} ${y-r}L${x+2} ${y-2}L${x+r} ${y}L${x+2} ${y+2}L${x} ${y+r}L${x-2} ${y+2}L${x-r} ${y}L${x-2} ${y-2}Z`,'#fff6cc',`stroke="${edge}" stroke-width="1"`);
+ const gems=Array.from({length:rank},(_,i)=>spark([104,22,102,28][i],[24,91,92,22][i],i%2?4:6)).join('');
+ const svg=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128" data-rarity="${rarity.id}" data-material="${material}"><title>Berry Forest original ${kind} ${id}</title><defs>${stepped('body',light,base,dark)}${stepped('shade',base,dark,mix(dark,ink,.2))}${stepped('trim',mix(accent,'#fff',.45),accent,mix(accent,ink,.28))}${stepped('gold','#fff3ad','#ffd05b','#c78836')}<radialGradient id="aura"><stop stop-color="${edge}" stop-opacity="${.1+rank*.07}"/><stop offset="1" stop-color="${edge}" stop-opacity="0"/></radialGradient></defs><rect x="4" y="4" width="120" height="120" rx="22" fill="#252239" stroke="${edge}" stroke-width="3"/><rect x="8" y="8" width="112" height="112" rx="18" fill="${mix(edge,'#fff9ea',.87)}" stroke="#fff9e7" stroke-width="1.5"/><circle cx="64" cy="62" r="54" fill="url(#aura)"/>${rank>=3?P('M64 13L77 43L111 54L83 75L92 109L64 92L35 109L44 75L17 54L51 43Z',edge,'opacity=".11"'):''}<ellipse cx="64" cy="110" rx="33" ry="5" fill="${ink}" opacity=".18"/><g transform="translate(10 9) scale(.84)" stroke="${ink}" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round">${draw[kind](id)}</g>${gems}<path d="M17 29V18h11M100 111h11v-11" fill="none" stroke="${edge}" stroke-width="2" stroke-linecap="round"/></svg>`;
+ writeFileSync(out+'/'+file,svg+'\n');paths[kind].push('art/berry-items-v2/'+file);total++;
 }}
 writeFileSync('src/item-icon-paths.ts','// Generated by scripts/generate-item-icons.mjs. Catalogue order preserves saved item IDs.\nexport const ITEM_ICON_PATHS = '+JSON.stringify(paths,null,2)+' as const;\n');
-console.log(`Prepared ${total} original storybook icons: ${Object.entries(paths).map(([k,v])=>k+' '+v.length).join(', ')}`);
+console.log(`Prepared ${total} original cel-shaded RPG icons: ${Object.entries(paths).map(([k,v])=>k+' '+v.length).join(', ')}`);
