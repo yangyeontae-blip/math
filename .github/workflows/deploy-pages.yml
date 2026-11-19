@@ -33,32 +33,94 @@ jobs:
       - run: pnpm exec tsc --noEmit
       - run: pnpm test
       - run: pnpm test:plaza
-      - run: pnpm exec playwright install --with-deps chromium
-      - name: Verify shared plaza with a fresh browser process
-        run: pnpm test:browser e2e/plaza.spec.mjs --output=test-results-plaza
-      - name: Verify World 2 exploration before the existing flows
-        run: pnpm test:browser e2e/world-two.spec.mjs --output=test-results-world2
-      - run: pnpm test:browser --grep-invert "World 2|shared plaza"
-      - name: Keep isolated browser screenshots and traces
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: browser-visuals-web
-          path: |
-            test-results/
-            test-results-world2/
-            test-results-plaza/
-          if-no-files-found: ignore
-          retention-days: 14
       - run: pnpm build
       - run: test -z "$(rg -l testBattleQuestion dist/assets/*.js || true)"
       - uses: actions/upload-pages-artifact@v5
         with:
           path: dist
 
+  browser:
+    name: Browser flows (${{ matrix.shard }}/8)
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4, 5, 6, 7, 8]
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 10
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install --with-deps chromium
+      # Every shard has its own game, community and plaza servers. Keep one worker
+      # per runner so browser tests never share server state concurrently.
+      - run: pnpm test:browser --grep-invert "World 2|shared plaza" --shard=${{ matrix.shard }}/8
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: browser-visuals-web-${{ matrix.shard }}
+          path: test-results/
+          if-no-files-found: ignore
+          retention-days: 14
+
+  world-two:
+    name: World 2 (${{ matrix.project }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        project: [desktop, mobile]
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 10
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm test:browser e2e/world-two.spec.mjs --project=${{ matrix.project }} --output=test-results-world2
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: browser-visuals-world2-${{ matrix.project }}
+          path: test-results-world2/
+          if-no-files-found: ignore
+          retention-days: 14
+
+  plaza:
+    name: Shared plaza
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 10
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm test:browser e2e/plaza.spec.mjs --output=test-results-plaza
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: browser-visuals-plaza
+          path: test-results-plaza/
+          if-no-files-found: ignore
+          retention-days: 14
+
   deploy:
     if: github.event_name != 'pull_request'
-    needs: build
+    needs: [build, browser, world-two, plaza]
     runs-on: ubuntu-latest
     environment:
       name: github-pages
