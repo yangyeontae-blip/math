@@ -109,9 +109,9 @@
     "e2e/world-two.spec.mjs": "8e8337437a09397031bd1b3f09d00d9aedc64683916efe696bed2a91e5b01e00",
     "src/plaza-protocol.ts": "78c97c84efe9f61c759fce06b85deb281d4d1c48640d2f84b9873fc04fea80b1",
     "src/plaza-identity.ts": "761b6765d77bb67fb641e11c211487c26bd95dab9d95d6bc751cdff33a32e880",
-    "src/plaza-client.ts": "9d47054e941124b73a03c2ee1a8a1ded1b32385c1792d889c54c17d442d82b5a",
+    "src/plaza-client.ts": "59cdec804517ac513c153d939febc4a31599a21bda051ceabf4b25ba492ac338",
     "src/plaza-controller.ts": "fd0b6b15cb95ba587753b3c49cb5f3a48790cc0e50eb67f4d09bb523ba142d9a",
-    "src/plaza-world.ts": "c14ec9abb4df4a1795b565d71461c5f7bfcc2ae4e8d0dc61c7691808c084ec1f",
+    "src/plaza-world.ts": "5ce68e66ce347b08a87bb21eea0752d1ee7c9e35b028b55b787ea2bb157cf564",
     "src/plaza-endpoint.ts": "8209e54c95cbd78b65a44eefd6bfd658759567b7d8af6af4a2e87a102249e790",
     "src/plaza.css": "1841405ff2c88a4de5f3e59e1a1eb73e0dce300b3c66488ecf442c70af65dd20",
     "tests/plaza.test.ts": "68beb576f59a4c04c65a92294eefbcd8293bd6e9e512171e9aae12bbba6a47e1",
@@ -169,15 +169,15 @@
     "tests/growth-status.test.ts": "ca04a3d16ee58838a6d7a76720a6adf4cd881f73b8043c1f2e6d37bfdcf03962",
     "src/forest-party.ts": "0339a0bd68ac7849f580009c7e79602dc51e363810b19c92245b2d9bd867bf92",
     "src/forest-party-rewards.ts": "61d382ab7338484da91f1c9a4c702a471d370beb20f22ce23c420a75c1669f93",
-    "src/forest-party-client.ts": "86e32322febdc61c2bc1802f705f4825c2deae923f82d1118bfeed7b5cf8ef44",
+    "src/forest-party-client.ts": "c7fc12f7841cb42866adb26ed1204f3da77eaf4931441c0cb000a4931365b24c",
     "src/forest-party-controller.ts": "1904ee5312455e376beeb2ccb7150c009671336b87c20639091456eef956e009",
     "src/forest-party.css": "88b8ccfc079c905fcbb055b71b9bb96a70fb12f7a46356a4d6074a933d369140",
     "tests/forest-party.test.ts": "7ba4b0075564ff725e865fc9ba8c10e87dbd9363cedce4b1bd618b8b17fea8ae",
     "e2e/forest-party.spec.mjs": "d5f25b34f8f03715d3618ee5635aaedd375d64cc3d5eba17ed369b8e05af3ee6",
     "src/forest-room.ts": "cf039d8ec262ef5a25c56f1dab49272803af9fc70b3b8d1e0505971b295d8e66",
-    "src/hall.ts": "3c191d7f1235aeb222d49d9fac3dd5c3a13e6f556dc89b771e031931e440dd0f",
+    "src/hall.ts": "9d350410e920db402fe14a57edac14ed3c54aa5f59aa221a950a494045093ace",
     "src/hall.css": "0ab566323258b867e12a63fccb02140ddfc45218818aaed01f795ed023b36c20",
-    "src/hall-controller.ts": "e36588c9e571cf4160c494737b010398a57febe3e03a00ac825f59672f7cbaac",
+    "src/hall-controller.ts": "f9c7d0a4219161a29282ff7754a0f3d0825a1e392cd889c552380fb301b60e2b",
     "tests/hall.test.mjs": "744fe39cd4419a2c507d9cbc691b82e36d19062038c9fe2dede693b78c3d2b4c",
     "e2e/hall.spec.mjs": "60f750ef21f472eb03cfa35e76c7aff48d168f6346113dc7a7dee29eca8bc875",
     "realtime/hall.mjs": "795c4724ba51fe72b3d2276e50cace464c16b548926c07d532a1edc794c3faad",
@@ -538,5 +538,5 @@
     "realtime/trade.mjs": "ed28f827078e34177e856205e33fcf54fdf275d8e710d94d238a41467a1f1faa",
     "src/trade.ts": "ca97f6fe629a0b68cc94c20fe28898b5cf8ab0db04142437ecbbef89418c8c8c"
   },
-  "generation": "5b234576997c2c72793240e9abefddd3e1b0dec3c12e5e63d726ed49de27ce9a"
+  "generation": "eed5a7542f969099a6a4bc7f48c6b603b0478c2281f81a987a4766faef8f906c"
 }

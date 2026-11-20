@@ -108,7 +108,7 @@ export class PlazaWorld {
   const sorted=[...this.peers.values()].sort((a,b)=>a.position.distanceToSquared(player.position)-b.position.distanceToSquared(player.position));let farCount=0,nearCount=0,effectCount=0;
   for(const actor of sorted){
    const target=actor.state.pose,p=actor.state.profile,beforeX=actor.position.x,beforeZ=actor.position.z;
-   actor.position.lerp(this.targetPosition.set(target.x,target.y,target.z),1-Math.exp(-dt*14));actor.angle+=Math.atan2(Math.sin(target.angle-actor.angle),Math.cos(target.angle-actor.angle))*(1-Math.exp(-dt*14));
+   actor.position.lerp(this.targetPosition.set(target.x,target.y,target.z),1-Math.exp(-dt*8));actor.angle+=Math.atan2(Math.sin(target.angle-actor.angle),Math.cos(target.angle-actor.angle))*(1-Math.exp(-dt*8));
    const moving=Math.hypot(actor.position.x-beforeX,actor.position.z-beforeZ)>.002;actor.phase+=dt*(moving?12:2);
    const detail=nearCount<(low?6:10)&&actor.position.distanceToSquared(player.position)<625;if(detail)nearCount++;
    if(detail&&!actor.model){actor.model=this.factory(p);this.scene.add(actor.model.root);}

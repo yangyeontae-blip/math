@@ -5,6 +5,14 @@ import {PLAZA_VERSION,PLAZA_ROOM,PLAZA_CAPACITY,PLAZA_AVATAR_CATALOG,PLAZA_TITLE
 export type PlazaConnection='offline'|'connecting'|'online'|'retrying'|'nickname'|'full';
 export type TradeMessage={type:'trade-invite'|'trade-pending'|'trade-state'|'trade-done'|'trade-closed';[key:string]:unknown};
 type Hooks={trade?:(message:TradeMessage)=>void;invitation?:(invite:PartyInvitation)=>void;inviteStatus?:(message:string)=>void;status:(status:PlazaConnection,count:number)=>void;player:(player:PlazaPlayer)=>void;leave:(id:string)=>void;clear:()=>void;emote:(id:string,emote:PlazaEmote)=>void;social?:(ready:boolean,role:PlazaRole,expiresAt:number,verified?:boolean)=>void;chat?:(messages:PlazaChatMessage[],replace:boolean)=>void;speech?:(playerId:string|null,message:PlazaChatMessage)=>void;removed?:(id:string)=>void;chatStatus?:(until:number)=>void;chatError?:(reason:string)=>void;mutes?:(mutes:PlazaChatMute[])=>void};
+// 위치 전송은 Cloudflare 무료 요청 한도를 가장 많이 써요.
+// 0.4초에 한 번까지만 보내고, 아주 조금 움직인 것은 1.5초 동안 모았다가 보내요.
+export const POSE_SEND_MS=380,POSE_SETTLE_MS=1500,POSE_MIN_STEP=.15,POSE_MIN_TURN=.08;
+export function shouldSendPose(last:PlazaPose|null,next:PlazaPose,lastAt:number,now:number){
+ if(!last)return true;const elapsed=now-lastAt;if(elapsed<POSE_SEND_MS)return false;
+ const step=Math.hypot(next.x-last.x,next.y-last.y,next.z-last.z),turn=Math.abs(Math.atan2(Math.sin(next.angle-last.angle),Math.cos(next.angle-last.angle)));
+ return step>=POSE_MIN_STEP||turn>=POSE_MIN_TURN||elapsed>=POSE_SETTLE_MS;
+}
 export class PlazaClient {
  private grade=0;private invitationsEnabled=false;
  setGrade(grade:number){this.grade=grade;}
@@ -17,7 +25,7 @@ export class PlazaClient {
  chat(text:string){if(!this.connected||!this.chatReady)return false;this.send({type:'chat',text});return true;}
  moderate(action:'chat-delete'|'chat-mute'|'chat-unmute'|'chat-mutes',data:Record<string,unknown>={}){if(!this.connected||this.role!=='operator')return false;this.send({type:action,...data});return true;}
  private socket:WebSocket|null=null;private active=false;private profile:PlazaProfile|null=null;private pose:PlazaPose={x:0,y:0,z:8,angle:0};
- private peers=new Map<string,PlazaPlayer>();private selfId='';private seq=0;private retryAt=0;private attempt=0;private lastSent='';private lastProfile='';private profileAt=0;private lastPing=0;private lastPong=0;private openedAt=0;
+ private peers=new Map<string,PlazaPlayer>();private selfId='';private seq=0;private retryAt=0;private attempt=0;private lastSent='';private lastPose:PlazaPose|null=null;private poseAt=0;private lastProfile='';private profileAt=0;private lastPing=0;private lastPong=0;private openedAt=0;
  constructor(private endpoint:string,private hooks:Hooks,private createSocket:(url:string)=>WebSocket=url=>new WebSocket(url)){}
  get players(){return [...this.peers.values()];}
  get connected(){return !!this.selfId&&this.socket?.readyState===1;}
@@ -34,7 +42,7 @@ export class PlazaClient {
   const signature=JSON.stringify([wireProfile,this.grade]);
   if(signature!==this.lastProfile&&now-this.profileAt>=1200){this.send({type:'profile',profile:wireProfile,grade:this.grade});this.lastProfile=signature;this.profileAt=now;}
   const position=JSON.stringify(pose);
-  if(position!==this.lastSent){this.send({type:'pose',seq:++this.seq,pose});this.lastSent=position;}
+  if(position!==this.lastSent&&shouldSendPose(this.lastPose,pose,this.poseAt,now)){this.send({type:'pose',seq:++this.seq,pose});this.lastSent=position;this.lastPose={...pose};this.poseAt=now;}
   if(now-this.lastPing>=10000){this.socket.send('ping');this.lastPing=now;}
   if(now-this.lastPong>30000)this.fail(this.socket);
  }
@@ -55,7 +63,7 @@ export class PlazaClient {
    this.invitationsEnabled=m.features?.partyInvites===true;this.titleCatalog=m.features?.titleCatalog===PLAZA_TITLE_CATALOG?PLAZA_TITLE_CATALOG:1;this.titleSelection=m.features?.titleSelection===true;this.serverCatalog=m.features?.avatarCatalog===PLAZA_AVATAR_CATALOG?PLAZA_AVATAR_CATALOG:2;this.chatReady=m.features?.chat===true;this.role=m.role==='operator'?'operator':'player';this.hooks.social?.(this.chatReady,this.role,Number(m.operatorUntil)||0,true);this.selfId=m.id;this.attempt=0;this.seq=0;this.lastPong=Date.now();this.peers.clear();this.hooks.clear();
    for(const item of m.players){const p=parsePlazaPlayer(item,!!this.scene);if(p&&p.id!==this.selfId){this.peers.set(p.id,p);this.hooks.player(p);}}this.report();return;
   }
-  if(m.type==='correction'){this.lastSent='';return;}
+  if(m.type==='correction'){this.lastSent='';this.lastPose=null;this.poseAt=0;return;}
   if(m.type==='error'&&(m.code==='full'||m.code==='profile')){this.retryAt=Date.now()+(m.code==='full'?15000:60000);this.disconnect();this.hooks.status(m.code==='full'?'full':'nickname',0);return;}
   if(!this.selfId)return;
   if(m.type==='party-invitation'){const invite=parsePartyInvitation(m.invitation);if(invite)this.hooks.invitation?.(invite);return;}

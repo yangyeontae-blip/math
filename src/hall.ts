@@ -18,3 +18,7 @@ export function hallMissingReason(nickname:string,excluded:boolean,problem:HallR
  return '아직 내 기록이 올라가지 않았어요. 숲이나 광장을 잠깐 돌아다닌 뒤 새로고침해 주세요.';
 }
 export function validHallReport(v:unknown):v is HallReport{const r=v as HallReport;return !!r&&typeof r.id==='string'&&/^[a-f0-9-]{36}$/.test(r.id)&&typeof r.nickname==='string'&&r.nickname===r.nickname.trim()&&[...r.nickname].length>=1&&[...r.nickname].length<=10&&!/[<>\u0000-\u001f\u007f]/.test(r.nickname)&&!isBlockedNickname(r.nickname)&&Number.isSafeInteger(r.level)&&r.level>=1&&r.level<=100000&&Number.isSafeInteger(r.berries)&&r.berries>=0&&r.berries<=1e9&&typeof r.eligible==='boolean';}
+// 명예의 전당 기록은 2분 30초에 한 번까지만 보내요(Cloudflare 무료 요청 한도 절약).
+// 서버가 막혔을 때는 30초, 1분, 2분 … 최대 10분까지 기다렸다가 다시 보내요.
+export const HALL_REPORT_MS=150000;
+export const hallRetryDelay=(failures:number)=>Math.min(600000,30000*2**Math.min(failures,5));
