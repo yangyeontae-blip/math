@@ -51,3 +51,8 @@ The bundled dependency retains its own copyright and license terms.
 ## 메이플스토리 서체
 
 오른쪽 위 UI와 상태창은 넥슨이 제공한 메이플스토리 서체를 사용합니다. 원본 Light·Bold TTF를 기기에 포함하며 외부 글꼴 서버에 접속하지 않습니다. 저작권 및 이용조건 전체는 [글꼴 이용조건](public/fonts/LICENSE-Maplestory.txt)에 포함되어 있습니다.
+
+
+## 여기어때 잘난체 2
+
+이름표와 칭호에 ㈜여기어때컴퍼니의 원본 Jalnan2 서체를 사용합니다. 글꼴 파일은 변환·서브셋·개작하지 않았습니다. 공식 배포처는 https://www.gccompany.co.kr/font 이며, 저작권 안내와 공식 라이선스 전문을 `public/fonts/identity/NOTICE.txt` 및 `public/fonts/identity/Jalnan-LICENSE.pdf`에 포함합니다.

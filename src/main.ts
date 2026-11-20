@@ -98,9 +98,10 @@ import './adventure.css';
 import './navigation.css';
 import './cozy-ui.css';
 import './storybook-ui.css';
+import './identity-ui.css';
 import { toolSpec, toolHtml, adjustTool } from './learning-tools';
 
-const CLIENT_BUILD = '2026-11-20.math-career.1';
+const CLIENT_BUILD = '2026-11-20.title-garden.1';
 document.documentElement.dataset.clientBuild = CLIENT_BUILD;
 
 const $ = <T extends HTMLElement = HTMLElement>(selector: string) => document.querySelector<T>(selector)!;
@@ -502,7 +503,7 @@ function refresh() {
   todayButton.textContent = world?.inHomestead ? '🏡 꾸미기' : '🧭 오늘의 모험'; todayButton.title = '오늘의 추천: '+suggested.title; todayButton.setAttribute('aria-label',world?.inHomestead?'나의 마을 꾸미기':'오늘의 모험 · '+suggested.title);
   petCareButton.hidden = s.pet < 0;plazaReturn.hidden=!world?.inMarket&&!world?.inAcademy&&!world?.inHomestead&&!world?.inHunting&&!world?.trainingStatus;
   const selected=selectedNameplate(s);if(s.selectedTitleId&&!selected){s.selectedTitleId=null;toast('칭호 착용 조건이 바뀌어 표시를 해제했어요. 가방에서 다른 칭호를 골라요.');}
-  const plate=$('#level-milestone');if(plate.dataset.selectedTitle!==(selected?.id??'')){plate.innerHTML=selected?renderTitle(selected):'';plate.dataset.selectedTitle=selected?.id??'';}plate.hidden=!selected;
+  const plate=$('#level-milestone');if(plate.dataset.selectedTitle!==(selected?.id??'')){plate.innerHTML=selected?renderTitle(selected):'';plate.dataset.selectedTitle=selected?.id??'';}plate.hidden=!selected;plate.classList.toggle('has-title-effects',!s.settings.lowQuality&&!matchMedia('(prefers-reduced-motion: reduce)').matches);
   $('#level').textContent=String(s.level);$('#nickname').textContent=s.nickname;$('#berries').textContent=s.berries.toLocaleString();const careerBadge=$('#career-title');const careerRank=s.career.job?s.career.ranks[s.career.job]:0;careerBadge.textContent=career.jobName()+(careerRank?' · '+careerRank+'차':'');careerBadge.dataset.job=s.career.job??'novice';$('#guardian-title').hidden=true;
   $('#xp-fill').style.width = `${s.xp / (s.level * 40) * 100}%`; $('#xp-text').textContent = `경험치 ${s.xp} / ${s.level * 40}`;
   $('#weapon-name').textContent = `${WEAPONS[s.weapon].icon} ${WEAPONS[s.weapon].name} +${s.weapons[s.weapon]} · ${OUTFITS[s.outfit].name}`;decorateCatalogUI($('#weapon-name'));
@@ -586,7 +587,7 @@ function openCopyrightNotice() {
     <section><span aria-hidden="true">🏫</span><div><strong>이렇게 이용해도 돼요</strong><p>공식 게임 링크를 학생·보호자·다른 선생님에게 공유하고, 비영리 수업과 가정에서 직접 플레이할 수 있어요.</p></div></section>
     <section><span aria-hidden="true">☁</span><div><strong>온라인 모험 보관은 선택이에요</strong><p>아이디와 게임 기록을 서버에 보관해 다른 기기에서 이어할 수 있어요. 별도 상세 학습 리포트는 기기에만 남아요. 비밀번호나 복구코드를 친구에게 알려주지 마세요.</p></div></section><section><span aria-hidden="true">🚫</span><div><strong>무단 복제는 안 돼요</strong><p>소스 코드, 문제와 글, 그래픽과 음악을 허락 없이 복사·수정·재배포·재호스팅하거나 상업적으로 이용할 수 없어요. 저작권 표시를 삭제해서도 안 돼요.</p></div></section>
     <section><span aria-hidden="true">🧩</span><div><strong>외부 기술은 각각의 조건을 따라요</strong><p>Three.js 등 외부 오픈소스 구성 요소는 각 제작자의 라이선스가 적용됩니다. 이 안내는 법률이 보장하는 정당한 이용을 제한하지 않습니다.</p></div></section>
-    <section><span aria-hidden="true">✎</span><div><strong>베리숲의 글꼴</strong><p>제목에는 메이플스토리체, 버튼에는 주아체, 본문에는 롯데마트 드림체, 짧은 메모에는 나눔손글씨 펜체를 사용합니다. 각 글꼴의 권리는 원저작자에게 있으며, <a href="./fonts/cozy/LICENSES.txt" target="_blank" rel="noopener">글꼴 저작권과 이용 조건</a>을 함께 제공합니다.</p></div></section>
+    <section><span aria-hidden="true">✎</span><div><strong>베리숲의 글꼴</strong><p>이름과 칭호에는 여기어때 잘난체 2, 제목에는 메이플스토리체, 버튼에는 주아체, 본문에는 롯데마트 드림체, 짧은 메모에는 나눔손글씨 펜체를 사용합니다. 각 글꼴의 권리는 원저작자에게 있으며, <a href="./fonts/cozy/LICENSES.txt" target="_blank" rel="noopener">글꼴 저작권과 이용 조건</a>과 <a href="./fonts/identity/Jalnan-LICENSE.pdf" target="_blank" rel="noopener">잘난체 2 공식 라이선스</a>를 함께 제공합니다.</p></div></section>
     <p class="note">다른 사이트에 게임을 복사해 올리거나 자료를 활용하고 싶다면 제작자의 서면 허락을 먼저 받아 주세요.</p>
     <button class="primary wide" data-close>확인했어요</button>
   </div>`, 'legal-modal');

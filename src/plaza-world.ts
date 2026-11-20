@@ -1,4 +1,6 @@
-import {renderTitle} from './titles';
+import {renderTitle,type TitleDefinition} from './titles';
+import {createTitleAura} from './title-aura';
+import {nameFontState} from './name-font';
 import {animateSkywardTree} from './skyward-art';
 import type {PlazaChatMessage} from './plaza-social';
 import * as T from 'three';
@@ -35,9 +37,46 @@ export function placePlazaLabel(x:number,y:number,width:number,height:number,vie
   for(let attempt=0;attempt<=occupied.length;attempt++){const overlap=occupied.filter(r=>Math.abs(r.x-candidate)<(r.width+width)/2+4&&bottom>r.top-4&&bottom-height<r.bottom+4);if(!overlap.length)break;bottom=Math.min(...overlap.map(r=>r.top))-5;}
   if(bottom-height>=25)return {x:candidate,y:bottom};
  }
+ // On short screens, stay beside the avatar below a toolbar that fills the space above it.
+ for(const candidate of columns){
+  if(Math.abs(candidate-x)<width/2+24)continue;
+  const bottoms=[Math.max(y,25+height),...occupied.map(r=>r.bottom+5+height)].sort((a,b)=>a-b);
+  for(const bottom of bottoms){
+   if(bottom-height<25||bottom>viewportHeight-8)continue;
+   if(occupied.some(r=>Math.abs(r.x-candidate)<(r.width+width)/2+4&&bottom>r.top-4&&bottom-height<r.bottom+4))continue;
+   return {x:candidate,y:bottom};
+  }
+ }
  return null;
 }
 export class PlazaWorld {
+ private titleAuras=new Map<string,{id:string;art:ReturnType<typeof createTitleAura>}>();
+ private ownAuraPosition=new T.Vector3();
+ private hudBoxes:LabelRect[]=[];private hudKey='';private hudDirty=true;
+ private hudObserver?:ResizeObserver;private observedHud=new WeakSet<Element>();
+ private hudObstacles(width:number,height:number){
+  if(typeof document==='undefined')return this.hudBoxes;
+  const key=width+':'+height+':'+(document.getElementById('hud')?.className??'')+':'+nameFontState();
+  if(!this.hudDirty&&key===this.hudKey)return this.hudBoxes;
+  this.hudDirty=false;this.hudKey=key;
+  if(!this.hudObserver&&typeof ResizeObserver!=='undefined')this.hudObserver=new ResizeObserver(()=>{this.hudDirty=true;});
+  this.hudBoxes=[];
+  for(const node of document.querySelectorAll<HTMLElement>('#hud .player-card,#hud .top-actions,#hud .brand-mini,#hud .display-controls,#hud .plaza-tools,#hud .plaza-chat')){
+   if(!this.observedHud.has(node)){this.hudObserver?.observe(node);this.observedHud.add(node);}
+   const r=node.getBoundingClientRect();if(r.width>0&&r.height>0)this.hudBoxes.push({x:r.x+r.width/2,top:r.top-6,bottom:r.bottom+6,width:r.width+12});
+  }
+  return this.hudBoxes;
+ }
+
+ private clearTitleAura(key:string){const item=this.titleAuras.get(key);if(item){item.art.dispose();this.titleAuras.delete(key);}}
+ private updateTitleAura(key:string,definition:TitleDefinition|null|undefined,position:T.Vector3,enabled:boolean,moving:boolean,riding:boolean){
+  if(!enabled||!definition){this.clearTitleAura(key);return;}
+  let item=this.titleAuras.get(key);
+  if(item?.id!==definition.id){this.clearTitleAura(key);item={id:definition.id,art:createTitleAura(definition)};this.titleAuras.set(key,item);this.scene.add(item.art.root);}
+  item.art.root.position.copy(position);if(riding)item.art.root.position.y+=.7;
+  item.art.update(this.clock,moving);
+ }
+
  private labelSizes=new WeakMap<HTMLElement,{width:number;height:number;viewport:number;fonts:string;speech:string;emote:boolean}>();
  private peers=new Map<string,Actor>();private speeches=new Map<HTMLElement,Speech>();private self:T.Group|null=null;private own:ReturnType<PlazaWorld['label']>;private selfProfile:PlazaProfile|null=null;private selfSignature='';
  private farRoot=new T.Group();private far:{mesh:T.InstancedMesh;offset:T.Vector3;scale:T.Vector3;color:(p:PlazaProfile)=>number}[]=[];private matrix=new T.Matrix4();private quaternion=new T.Quaternion();private projected=new T.Vector3();private targetPosition=new T.Vector3();private partPosition=new T.Vector3();private partColor=new T.Color();private clock=0;
@@ -54,15 +93,15 @@ export class PlazaWorld {
   this.farRoot.name='plaza-distant-avatars';
  }
  private label(self=false){const root=document.createElement('div');root.className='plaza-nameplate'+(self?' is-self':'');root.hidden=true;const name=document.createElement('strong'),title=document.createElement('span'),bubble=document.createElement('b');bubble.className='plaza-emote';bubble.hidden=true;const speech=document.createElement('div'),text=document.createElement('span');speech.className='plaza-speech';speech.hidden=true;speech.setAttribute('aria-hidden','true');speech.append(text);root.append(speech,name,title,bubble);this.layer.append(root);return {root,name,title,bubble};}
- private identity(label:ReturnType<PlazaWorld['label']>,p:PlazaProfile,role='player'){this.labelSizes.delete(label.root);const text=profileTitles(p);label.name.textContent='Lv. '+p.level+' '+text.nickname;if(role==='operator'){const badge=document.createElement('small');badge.className='operator-mark';badge.textContent='운영자';label.name.append(badge);}label.title.innerHTML=text.definition?renderTitle(text.definition):'';label.root.classList.toggle('is-legendary',text.legendary);label.root.dataset.nameLength=String(text.nickname.length+String(p.level).length+5+(role==='operator'?4:0));label.root.dataset.titleLength=String(text.title.length);label.root.dataset.plateWidth=String(Math.min(210,Math.max((text.nickname.length+String(p.level).length+7)*14,(text.title.length+2)*11)));}
+ private identity(label:ReturnType<PlazaWorld['label']>,p:PlazaProfile,role='player'){this.labelSizes.delete(label.root);const text=profileTitles(p);const level=document.createElement('small'),nickname=document.createElement('span');level.className='nameplate-level';level.textContent='Lv. '+p.level;nickname.className='nameplate-nickname';nickname.textContent=text.nickname;label.name.replaceChildren(level,document.createTextNode(' '),nickname);if(role==='operator'){const badge=document.createElement('small');badge.className='operator-mark';badge.textContent='운영자';label.name.append(badge);}label.title.innerHTML=text.definition?renderTitle(text.definition):'';label.root.classList.toggle('is-legendary',text.legendary);label.root.dataset.nameLength=String(text.nickname.length+String(p.level).length+5+(role==='operator'?4:0));label.root.dataset.titleLength=String(text.title.length);label.root.dataset.plateWidth=String(Math.min(210,Math.max((text.nickname.length+String(p.level).length+7)*14,(text.title.length+2)*11)));}
  setSelf(profile:PlazaProfile|null,player:T.Group,role='player'){this.self=player;this.selfProfile=profile;const signature=JSON.stringify([profile,role]);if(profile&&signature!==this.selfSignature)this.identity(this.own,profile,role);if(!profile)this.own.root.hidden=true;this.selfSignature=signature;}
  upsert(player:PlazaPlayer){let actor=this.peers.get(player.id);const signature=JSON.stringify([player.profile,player.role]);const p=player.profile,appearance=JSON.stringify([p.character,p.outfit,p.weapon,p.outfitLevel,p.weaponLevel,p.hairstyle,p.face,p.pet,p.ride]);
   if(!actor){const label=this.label();actor={state:player,position:new T.Vector3(player.pose.x,player.pose.y,player.pose.z),angle:player.pose.angle,label:label.root,name:label.name,title:label.title,bubble:label.bubble,emoteUntil:0,phase:0,signature,appearance,model:null};this.peers.set(player.id,actor);label.root.dataset.playerId=player.id;this.identity(label,player.profile,player.role);}
   else {actor.state=player;if(signature!==actor.signature){if(appearance!==actor.appearance){actor.model?.root.removeFromParent();actor.model?.dispose();actor.model=null;actor.appearance=appearance;}actor.signature=signature;this.identity({root:actor.label,name:actor.name,title:actor.title,bubble:actor.bubble},player.profile,player.role);}}
  }
- remove(id:string){const actor=this.peers.get(id);if(!actor)return;this.removeSpeech(actor.label);actor.label.remove();actor.model?.root.removeFromParent();actor.model?.dispose();this.peers.delete(id);}
+ remove(id:string){this.clearTitleAura('peer:'+id);const actor=this.peers.get(id);if(!actor)return;this.removeSpeech(actor.label);actor.label.remove();actor.model?.root.removeFromParent();actor.model?.dispose();this.peers.delete(id);}
  clearPeers(){this.clearSpeech();for(const id of [...this.peers.keys()])this.remove(id);for(const part of this.far)part.mesh.count=0;}
- detach(){this.clearPeers();this.farRoot.removeFromParent();}
+ detach(){this.clearPeers();for(const key of [...this.titleAuras.keys()])this.clearTitleAura(key);this.hudObserver?.disconnect();this.hudObserver=undefined;this.observedHud=new WeakSet<Element>();this.hudDirty=true;this.farRoot.removeFromParent();}
  emote(id:string,emote:PlazaEmote){const actor=this.peers.get(id);if(!actor)return;actor.bubble.textContent=PLAZA_EMOTES[emote];actor.bubble.hidden=true;actor.emoteUntil=this.clock+3;}
  selfEmote(emote:PlazaEmote){this.own.bubble.textContent=PLAZA_EMOTES[emote];this.own.bubble.hidden=true;this.own.bubble.dataset.until=String(this.clock+3);}
  speak(playerId:string|null,message:PlazaChatMessage){
@@ -85,7 +124,7 @@ export class PlazaWorld {
   const x=(this.projected.x*.5+.5)*width,y=(-this.projected.y*.5+.5)*heightPx;const compact=width<650,identityWidth=Math.min(compact?165:210,Number(label.dataset.plateWidth??160)),plateWidth=speech?Math.max(identityWidth,speech.width||(compact?165:210)):identityWidth,titleRows=Math.max(1,Math.ceil(Number(label.dataset.titleLength??0)*(compact?10:11)/(identityWidth-16))),nameRows=Math.max(1,Math.ceil(Number(label.dataset.nameLength??0)*(compact?11:12)/(Math.min(identityWidth,compact?150:190)-16))),plateHeight=(compact?28:31)*nameRows+titleRows*(compact?22:24)+13+(speech?(speech.height?speech.height+11:compact?70:76):(label.lastElementChild as HTMLElement)?.hidden===false?46:0);
   let actualWidth=plateWidth,actualHeight=plateHeight;
   if(!hidden){
-   const fonts=document.fonts?.status??'loaded',speechId=speech?.id??'',emote=(label.lastElementChild as HTMLElement)?.hidden===false;
+   const fonts=nameFontState(),speechId=speech?.id??'',emote=(label.lastElementChild as HTMLElement)?.hidden===false;
    let size=this.labelSizes.get(label);
    if(!size||size.viewport!==width||size.fonts!==fonts||size.speech!==speechId||size.emote!==emote){
     // Measure only after identity, message, font or viewport changes. Fonts differ between web and app.
@@ -99,8 +138,11 @@ export class PlazaWorld {
  }
 
  update(dt:number,camera:T.Camera,player:T.Group,showPeers:boolean,active:boolean,low:boolean,reduced:boolean){
-  this.clock+=dt;const now=performance.now();for(const [label,speech] of this.speeches)if(speech.expires<=now)this.removeSpeech(label);const width=this.layer.clientWidth,height=this.layer.clientHeight;const occupied:{x:number;top:number;bottom:number;width:number}[]=[];
-  const ownEffect=active&&!low&&!reduced;if(this.own.root.classList.contains('has-title-effects')!==ownEffect)this.own.root.classList.toggle('has-title-effects',ownEffect);
+  this.clock+=dt;const now=performance.now();for(const [label,speech] of this.speeches)if(speech.expires<=now)this.removeSpeech(label);const width=this.layer.clientWidth,height=this.layer.clientHeight;const occupied:LabelRect[]=[...this.hudObstacles(width,height)];
+  const ownEffect=active&&!low&&!reduced;
+  const ownMoving=this.ownAuraPosition.distanceToSquared(player.position)>.000004;this.ownAuraPosition.copy(player.position);
+  this.updateTitleAura('self',this.selfProfile?profileTitles(this.selfProfile).definition:null,player.position,ownEffect,ownMoving,(this.selfProfile?.ride??-1)>=0);
+  if(this.own.root.classList.contains('has-title-effects')!==ownEffect)this.own.root.classList.toggle('has-title-effects',ownEffect);
   this.own.bubble.hidden=Number(this.own.bubble.dataset.until??0)<=this.clock;
   if(this.selfProfile)this.place(this.own.root,player.position,this.selfProfile.ride>=0?4.4:3,camera,width,height,active,occupied);
   if(!showPeers){if(this.peers.size)this.clearPeers();this.farRoot.removeFromParent();return;}
@@ -121,7 +163,7 @@ export class PlazaWorld {
    }
    if(!detail){for(const part of this.far){const offset=this.partPosition.copy(part.offset);if(p.ride>=0)offset.y+=.7;offset.applyAxisAngle(T.Object3D.DEFAULT_UP,actor.angle).add(actor.position);this.quaternion.setFromAxisAngle(T.Object3D.DEFAULT_UP,actor.angle);this.matrix.compose(offset,this.quaternion,part.scale);part.mesh.setMatrixAt(farCount,this.matrix);part.mesh.setColorAt(farCount,this.partColor.setHex(part.color(p)));}farCount++;}
    actor.bubble.hidden=this.clock>actor.emoteUntil;
-   const effect=active&&!low&&!reduced&&effectCount<3&&actor.position.distanceToSquared(player.position)<225&&!!profileTitles(p).definition;if(effect)effectCount++;if(actor.label.classList.contains('has-title-effects')!==effect)actor.label.classList.toggle('has-title-effects',effect);
+   const effect=active&&!low&&!reduced&&effectCount<3&&actor.position.distanceToSquared(player.position)<225&&!!profileTitles(p).definition;if(effect)effectCount++;this.updateTitleAura('peer:'+actor.state.id,profileTitles(p).definition,actor.position,effect,moving,p.ride>=0);if(actor.label.classList.contains('has-title-effects')!==effect)actor.label.classList.toggle('has-title-effects',effect);
    this.place(actor.label,actor.position,p.ride>=0?4.4:3,camera,width,height,active,occupied);
   }
   const cached=sorted.filter(a=>a.model&&!a.model.root.visible).reverse();let total=sorted.filter(a=>a.model).length;for(const a of cached){if(total<=(low?8:14))break;a.model!.root.removeFromParent();a.model!.dispose();a.model=null;total--;}

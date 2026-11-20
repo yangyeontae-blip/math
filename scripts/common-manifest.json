@@ -111,10 +111,10 @@
     "src/plaza-identity.ts": "761b6765d77bb67fb641e11c211487c26bd95dab9d95d6bc751cdff33a32e880",
     "src/plaza-client.ts": "9d47054e941124b73a03c2ee1a8a1ded1b32385c1792d889c54c17d442d82b5a",
     "src/plaza-controller.ts": "fd0b6b15cb95ba587753b3c49cb5f3a48790cc0e50eb67f4d09bb523ba142d9a",
-    "src/plaza-world.ts": "c14ec9abb4df4a1795b565d71461c5f7bfcc2ae4e8d0dc61c7691808c084ec1f",
+    "src/plaza-world.ts": "ee698e570904fd12db7b7d647886ddc613e78c92d71e84def8b2141a8bd63f78",
     "src/plaza-endpoint.ts": "8209e54c95cbd78b65a44eefd6bfd658759567b7d8af6af4a2e87a102249e790",
     "src/plaza.css": "1841405ff2c88a4de5f3e59e1a1eb73e0dce300b3c66488ecf442c70af65dd20",
-    "tests/plaza.test.ts": "68beb576f59a4c04c65a92294eefbcd8293bd6e9e512171e9aae12bbba6a47e1",
+    "tests/plaza.test.ts": "74b2de7083bb102b2826909923d929e28d3865e478dc5846789a226bdeafe9a6",
     "e2e/plaza.spec.mjs": "cfdeff4dbcb9212f9d2904e9e9e9f4ec77de1bc5125581bed97c6b20e2f2af11",
     "e2e/plaza-server.mjs": "cd016309ab2ef4b00c50c706f47a120efd73e6ad09e25646404a2aeb90f5d16b",
     "scripts/build-plaza.mjs": "cd9262c9c77bdb2ed4bb6589c14f3d211405f5b8f9a37b815832200d7c15538d",
@@ -156,8 +156,8 @@
     "public/art/skyward-weapon-36.svg": "f5a25d53ad070cf4a44a8697450ee5ef91193ba5bd8f728770c24b29b7b7bf07",
     "public/art/skyward-weapon-37.svg": "0b79582b7349629dfba6c34f03f729c971a4659f043f880fb27a8d098e660de6",
     "public/art/skyward-weapon-38.svg": "46ae0f4ff502186fbd37fed4613fe3d0f3d9cb4d28ffd810389d1374e97aec34",
-    "src/titles.ts": "803a3e2b389e93c3e5772c174ceb67c65e136e79f483b221aa2d2e1f7eba13a1",
-    "src/title-view.ts": "2b031f25c05ce6b1a46263d16d955d3cc65da1a63aabb8ad9aebac90b6108492",
+    "src/titles.ts": "8e85d8ec8c6d0f12325a537e6e3e8771ba1e784f6303a7ab54064741a1687b60",
+    "src/title-view.ts": "3c30a66ef51ad2e5c208c9f918a2090db9a0cd9e3ff1fbc7c81cf7a2095f91f4",
     "src/safe-landing.ts": "c3bb10a850a4946528cf1dfc9086a40af18c84e6743175526dd990a13cf83991",
     "src/display-controls.ts": "e9ad98305414809c60a8dc5d41de3380a367d6c7b77d30867bbc095b8655f8bb",
     "src/feedback-ui.css": "44efc3db48b0d28985967e4579375d0259fa5157e4466f1667694062e47f4868",
@@ -536,7 +536,11 @@
     "e2e/career-math.spec.mjs": "bc1e9f2038c37d9799e8608f88b5fd3fb75eda9cc5745fb7d5a8b28c9bba1980",
     "e2e/career-math-helpers.mjs": "038d2b9e440992d9738a06f3a667a6a02714acfd59e84b041c457fbdf355b45d",
     "realtime/trade.mjs": "ed28f827078e34177e856205e33fcf54fdf275d8e710d94d238a41467a1f1faa",
-    "src/trade.ts": "ca97f6fe629a0b68cc94c20fe28898b5cf8ab0db04142437ecbbef89418c8c8c"
+    "src/trade.ts": "ca97f6fe629a0b68cc94c20fe28898b5cf8ab0db04142437ecbbef89418c8c8c",
+    "src/identity-ui.css": "001e9896ecfabc84670e4fbe309f5c84d57e4802ac26bee9c1bb0ac359e06e9b",
+    "src/name-font.ts": "40da51c291019b544c7affa8dbfbf40c49877c1e00f9433c26e62d2223162bf7",
+    "src/title-aura.ts": "dc047cd235eaf28d3cd349a82bace9420d106beec870f52060438fcd4461527e",
+    "tests/title-aura.test.ts": "b8028cfe82d561e849d98eafc2b988617a1446b05c70b62c327a85f816324a31"
   },
-  "generation": "5b234576997c2c72793240e9abefddd3e1b0dec3c12e5e63d726ed49de27ce9a"
+  "generation": "31db35002c25ffb41fbf65955b229a900b8a04d454726aafa960c469c92e7ee2"
 }

@@ -20,6 +20,7 @@ const types = {
   '.jpg': 'image/jpeg',
   '.ttf': 'font/ttf',
   '.otf': 'font/otf',
+  '.pdf': 'application/pdf',
   '.woff': 'font/woff',
   '.woff2': 'font/woff2',
 };
@@ -43,7 +44,7 @@ for (const file of await files(dist)) {
   // Keeping it out of the Worker bundle preserves room for the game APIs.
   if (pathname === '/promo.mp4') continue;
   // 게임 화면은 GitHub Pages가 보여 줘요. Cloudflare 무료 한도(압축 3MB)를 넘지 않도록 글꼴·그림 파일은 서버 묶음에 넣지 않아요.
-  if (/\.(ttf|otf|woff2?|webp|png|jpe?g|gif)$/i.test(pathname)) continue;
+  if (/\.(ttf|otf|woff2?|webp|png|jpe?g|gif|pdf)$/i.test(pathname)) continue;
   const extension = extname(file), text = textTypes.has(extension);
   manifest[pathname] = { body: await readFile(file, text ? 'utf8' : 'base64'), type: types[extension] ?? 'application/octet-stream', ...(text ? {} : { base64: true }) };
 }

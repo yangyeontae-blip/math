@@ -1,4 +1,3 @@
-import {uiLabel} from './ui-icons';
 import {operatorAccess} from './operator-access';
 import type {Save} from './rules';
 
@@ -63,6 +62,32 @@ export function selectTitle(s:Save,id:TitleId|null){
  if(id!==null&&(!t||!titleAvailable(s,t)))throw Error('아직 사용할 수 없는 칭호예요.');
  s.selectedTitleId=id;if(t?.id.startsWith('expedition-')&&s.expedition.completed>=(t.expeditions??0))s.expedition.selectedTitle=Number(t.id.slice(11));
 }
+export type TitleTheme = 'leaf'|'astral'|'divine'|'spirit'|'royal'|'pet'|'study'|'explorer'|'scholar';
+export function titleTheme(t:TitleDefinition):TitleTheme {
+ if(t.id==='level-1000')return 'royal';
+ if(t.id==='level-500')return 'spirit';
+ if(t.id==='math-friend')return 'scholar';
+ return t.style==='star'?'astral':t.style;
+}
+export function titleThemeLabel(t:TitleDefinition){return {
+ leaf:'생명의 잎사귀와 초록빛 수호진',astral:'보라·금빛 별자리와 유성',divine:'무지개빛 성환과 빛의 날개',
+ spirit:'민트빛 정령불과 달빛 고리',royal:'황금 왕관과 로열 별빛',pet:'살구빛 발자국과 꽃잎',
+ study:'푸른 지혜의 문양',explorer:'황금 나침반과 숲빛 궤적',scholar:'오로라 책갈피와 지혜의 별',
+ }[titleTheme(t)];}
+function titleCrest(t:TitleDefinition){
+ const shapes:Record<TitleTheme,string>={
+  leaf:'<path d="M19 4C8 3 3 9 6 16s14 3 13-12Z"/><path d="m6 20 9-11m-6 7-1-5m5 1 4 1"/>',
+  astral:'<path d="m12 3 2.4 6.6L21 12l-6.6 2.4L12 21l-2.4-6.6L3 12l6.6-2.4Z"/><path d="m20 3 .7 1.8L22 5.5l-1.3.7L20 8l-.7-1.8-1.3-.7 1.3-.7Z"/>',
+  divine:'<ellipse cx="12" cy="12" rx="9" ry="4" transform="rotate(-24 12 12)"/><path d="m12 3 3.3 9L12 21l-3.3-9Z"/><circle cx="12" cy="12" r="2"/>',
+  spirit:'<path d="M12 3c-1 5-6 7-6 12a6 6 0 0 0 12 0c0-3-1-5-3-7 0 4-2 5-3 3s-1-5 0-8Z"/><path d="M10 19c-2-3 1-5 2-6 0 3 3 3 2 6"/>',
+  royal:'<path d="m3 7 4 4 5-7 5 7 4-4-2 12H5Z"/><path d="M5 16h14M9 12v2m6-2v2"/><circle cx="3" cy="6" r="1"/><circle cx="12" cy="3" r="1"/><circle cx="21" cy="6" r="1"/>',
+  pet:'<ellipse cx="5" cy="9" rx="2" ry="3"/><ellipse cx="10" cy="5.5" rx="2" ry="3"/><ellipse cx="15.5" cy="6" rx="2" ry="3"/><ellipse cx="20" cy="10" rx="2" ry="3"/><path d="M7 15c2-5 7-5 10 0 5 6-1 7-5 5-4 2-10 0-5-5Z"/>',
+  study:'<path d="M12 6C8 3 5 4 3 5v14c4-2 6-1 9 1 3-2 5-3 9-1V5c-2-1-5-2-9 1Zm0 0v14M6 8l3 1M6 12l3 1m6-4 3-1m-3 5 3-1"/>',
+  explorer:'<circle cx="12" cy="12" r="9"/><path d="m16 7-2 7-7 3 3-7Z"/><path d="M12 1v2m0 18v2M1 12h2m18 0h2"/>',
+  scholar:'<path d="M12 9c-4-3-7-3-10-2v13c4-1 7 0 10 2 3-2 6-3 10-2V7c-3-1-6-1-10 2Zm0 0v13"/><path d="m12 1 1.2 3.2 3.3 1.3-3.3 1.2L12 10l-1.2-3.3-3.3-1.2 3.3-1.3Z"/>',
+ };
+ return '<svg class="title-crest" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" focusable="false" aria-hidden="true">'+shapes[titleTheme(t)]+'</svg>';
+}
 export function renderTitle(t:TitleDefinition|null){
- return t?'<span class="chosen-title title-'+t.style+'" data-title-id="'+t.id+'"><b aria-hidden="true">'+uiLabel(t.icon)+'</b><span>'+t.name+'</span><i class="title-sparks" aria-hidden="true">'+Array.from({length:6},(_,i)=>'<i style="--spark:'+i+'">✦</i>').join('')+'</i></span>':'<span class="title-empty">칭호 없음</span>';
+ return t?'<span class="chosen-title title-'+t.style+'" data-title-id="'+t.id+'" data-title-theme="'+titleTheme(t)+'"><b aria-hidden="true">'+titleCrest(t)+'</b><span class="title-word">'+t.name+'</span><i class="title-sparks" aria-hidden="true">'+Array.from({length:6},(_,i)=>'<i style="--spark:'+i+'">✦</i>').join('')+'</i></span>':'<span class="title-empty">칭호 없음</span>';
 }
