@@ -37,9 +37,9 @@ export function placePlazaLabel(x:number,y:number,width:number,height:number,vie
   for(let attempt=0;attempt<=occupied.length;attempt++){const overlap=occupied.filter(r=>Math.abs(r.x-candidate)<(r.width+width)/2+4&&bottom>r.top-4&&bottom-height<r.bottom+4);if(!overlap.length)break;bottom=Math.min(...overlap.map(r=>r.top))-5;}
   if(bottom-height>=25)return {x:candidate,y:bottom};
  }
- // On short screens, stay beside the avatar below a toolbar that fills the space above it.
- for(const candidate of columns){
-  if(Math.abs(candidate-x)<width/2+24)continue;
+ // Prefer a side column below the toolbar. On narrow phones, use the nearest free vertical slot.
+ const fallbackColumns=[...columns].sort((a,b)=>Number(Math.abs(a-x)<width/2+24)-Number(Math.abs(b-x)<width/2+24));
+ for(const candidate of fallbackColumns){
   const bottoms=[Math.max(y,25+height),...occupied.map(r=>r.bottom+5+height)].sort((a,b)=>a-b);
   for(const bottom of bottoms){
    if(bottom-height<25||bottom>viewportHeight-8)continue;
