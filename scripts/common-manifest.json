@@ -111,7 +111,7 @@
     "src/plaza-identity.ts": "761b6765d77bb67fb641e11c211487c26bd95dab9d95d6bc751cdff33a32e880",
     "src/plaza-client.ts": "59cdec804517ac513c153d939febc4a31599a21bda051ceabf4b25ba492ac338",
     "src/plaza-controller.ts": "fd0b6b15cb95ba587753b3c49cb5f3a48790cc0e50eb67f4d09bb523ba142d9a",
-    "src/plaza-world.ts": "265972b1131553a38007c289f00118ebca819e076ddf202dc5a0e234c2eb5339",
+    "src/plaza-world.ts": "5f04d1479b76fdc069282d7002e0285aec832d9dda21799dfa80713a3d8e4b0a",
     "src/plaza-endpoint.ts": "8209e54c95cbd78b65a44eefd6bfd658759567b7d8af6af4a2e87a102249e790",
     "src/plaza.css": "1841405ff2c88a4de5f3e59e1a1eb73e0dce300b3c66488ecf442c70af65dd20",
     "tests/plaza.test.ts": "4968b5c8ba81fd6d2f6295a53d03e03cb0d7380e5c2d90ec566fb5091e037c77",
@@ -561,5 +561,5 @@
     "public/art/math-forest/ribbon.webp": "a178523ee896e8f03d8e55c0ff75c55ce8ac3097baff133222b177edb456eef2",
     "public/art/math-forest/vine-corner.webp": "f55bf93a09b38a30bbff7eddf40df98e0dcb6f23cd7404f4f35521fe7063b33a"
   },
-  "generation": "bee85e33a2c7aecdb5f49f6f500c5274a987936e3408ff361c4a3b282c920b6a"
+  "generation": "cea0bb18e1363cd2ecc062792376ac9f88c8afc23de9937a2c4e1e2bb2387168"
 }

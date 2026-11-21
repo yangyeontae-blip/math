@@ -27,7 +27,8 @@ export function mergePlazaAvatar(root:T.Group){
 
 const SPEECH_MS=7000;
 type Speech={id:string;senderId:string;expires:number;width:number;height:number;viewport:number};
-type LabelRect={x:number;top:number;bottom:number;width:number};
+/** soft: 채팅창처럼 가능하면 피하지만, 빈자리가 없으면 말하는 친구 이름표가 위에 겹쳐도 되는 영역이에요. */
+type LabelRect={x:number;top:number;bottom:number;width:number;soft?:boolean};
 /** Prefer above the avatar; use a nearby free column when stacked greetings reach the top of a short screen. */
 export function placePlazaLabel(x:number,y:number,width:number,height:number,viewportWidth:number,viewportHeight:number,occupied:readonly LabelRect[]){
  const minX=8+width/2,maxX=viewportWidth-8-width/2;if(minX>maxX||height>viewportHeight-33)return null;
@@ -63,7 +64,7 @@ export class PlazaWorld {
   this.hudBoxes=[];
   for(const node of document.querySelectorAll<HTMLElement>('#hud .player-card,#hud .top-actions,#hud .brand-mini,#hud .display-controls,#hud .plaza-tools,#hud .plaza-chat')){
    if(!this.observedHud.has(node)){this.hudObserver?.observe(node);this.observedHud.add(node);}
-   const r=node.getBoundingClientRect();if(r.width>0&&r.height>0)this.hudBoxes.push({x:r.x+r.width/2,top:r.top-6,bottom:r.bottom+6,width:r.width+12});
+   const r=node.getBoundingClientRect();if(r.width>0&&r.height>0)this.hudBoxes.push({x:r.x+r.width/2,top:r.top-6,bottom:r.bottom+6,width:r.width+12,soft:node.classList.contains('plaza-chat')});
   }
   return this.hudBoxes;
  }
@@ -133,7 +134,8 @@ export class PlazaWorld {
    }
    actualWidth=Math.max(plateWidth,size.width);actualHeight=Math.max(plateHeight,size.height);
   }
-  const placed=hidden?null:placePlazaLabel(x,y,actualWidth,actualHeight,width,heightPx,occupied);hidden=!placed;
+  // 휴대폰에서 채팅창이 화면을 많이 덮으면 말하는 친구 이름표가 숨지 않도록, 빈자리가 없을 때만 채팅창 위에 겹쳐 보여 줘요.
+  const placed=hidden?null:placePlazaLabel(x,y,actualWidth,actualHeight,width,heightPx,occupied)??(occupied.some(r=>r.soft)?placePlazaLabel(x,y,actualWidth,actualHeight,width,heightPx,occupied.filter(r=>!r.soft)):null);hidden=!placed;
   if(label.hidden!==hidden)label.hidden=hidden;if(placed){const transform='translate(-50%,-100%) translate('+Math.round(placed.x)+'px,'+Math.round(placed.y)+'px)';if(label.style.transform!==transform)label.style.transform=transform;occupied.push({x:placed.x,top:placed.y-actualHeight,bottom:placed.y,width:actualWidth});}
  }
 
