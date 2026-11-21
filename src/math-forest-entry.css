@@ -1,48 +1,63 @@
-/* 수학숲 입구: 수채화 배너 + 따뜻한 종이 카드 (2026-11-21, Codex 그림·시안 기반). */
-.mf-entry{--mf-cream:#fbf5e6;--mf-paper:#f4e9cf;--mf-ink:#2f4a3a;--mf-leaf:#6a9a4f;--mf-leaf-deep:#4f7d3b;--mf-moss:#a9c27f;--mf-sun:#f3d58b;--mf-bark:#7a5b43;--mf-sky:#bfd9ea;color:var(--mf-ink)}
-.mf-hero{position:relative;min-height:230px;border-radius:24px;overflow:hidden;margin:0 0 -18px;background:var(--mf-sky);border:2px solid #d8c7a2;box-shadow:inset 0 0 0 3px #fffaf0}
-.mf-hero-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:right center}
-.mf-hero:before{content:'';position:absolute;inset:0;z-index:1;background:linear-gradient(90deg,#fbf5e6f0 0,#fbf5e6b8 36%,#fbf5e600 62%),linear-gradient(0deg,#fbf5e6 0,#fbf5e600 22%)}
-.mf-hero-text{position:relative;z-index:2;max-width:min(400px,60%);padding:22px 22px 34px}
-.mf-hero-text small{display:inline-block;padding:4px 12px;border-radius:999px;background:#ffffffd6;color:var(--mf-bark);font-weight:800;letter-spacing:.04em}
-.mf-hero-text h3{font-family:'Berry Notebook Serif','Berry Forest Sans',serif;font-size:1.8rem;line-height:1.28;margin:10px 0 8px;color:#24503c;text-shadow:0 2px 0 #fffaf0,0 0 14px #fffaf0}
-.mf-hero-text p{margin:0;font-size:.93rem;line-height:1.6;color:#35503f;text-shadow:0 1px 0 #fffaf0,0 0 8px #fffaf0}
-.mf-ribbon.math-reward-notice{position:relative;z-index:3;display:block;margin:0 6px 14px;padding:0;background:none;border:0;box-shadow:none}
-.mf-ribbon-band{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;padding:12px 16px;border-radius:16px;background:linear-gradient(180deg,#e9f1d2,#d9e7bb);border:2px solid #b9cf8f;box-shadow:0 3px 0 #9bb57455,inset 0 0 0 2px #f6fbe9}
-.mf-chip{display:inline-flex;align-items:center;gap:4px;padding:7px 14px;border-radius:999px;font-weight:900;font-size:.95rem;background:#fffbef;border:2px solid #e6d6b2;box-shadow:0 2px 0 #cdb88f66}
-.mf-chip.berry{color:#b0405e}
-.mf-chip.xp{color:#7a5a12}
-.mf-chip.orb{color:#2c6b5b}
-.mf-fine{margin:8px 6px 0;font-size:.8rem;line-height:1.5;color:#6d6350;text-align:center}
-.mf-entry .mf-forests.nav-list{display:grid;grid-template-columns:1fr;gap:12px}
-.mf-entry .mf-forests.nav-list .mf-forest{display:grid;grid-template-columns:76px minmax(0,1fr) 64px;align-items:center;gap:14px;text-align:left;min-height:96px;padding:12px 14px;border-radius:20px;
- background:radial-gradient(90% 120% at 100% 100%,#e8efd4 0,transparent 45%),linear-gradient(160deg,#fffdf5,var(--mf-cream) 55%,var(--mf-paper));border:2px solid #dccaa3;box-shadow:0 4px 0 #b49a7a55,inset 0 0 0 3px #fffdf6;color:var(--mf-ink)}
-.mf-entry .mf-forests.nav-list .mf-forest:hover:not(:disabled){border-color:var(--mf-moss)}
-.mf-emblem{display:grid;place-items:center;width:76px;height:76px;border-radius:50%;box-shadow:inset 0 0 0 3px #fffdf4,0 0 0 2px #b9cf9f,0 3px 0 #7a5b4333}
-.mf-emblem b{font-size:2.4rem;line-height:1;color:#fffdf2;text-shadow:0 2px 0 #4d6b3c88,0 0 6px #31502a66;font-family:'Berry Forest Sans',sans-serif}
-.mf-addition .mf-emblem{background:radial-gradient(circle at 35% 30%,#d9f0a8,#7fb35c 60%,#4c7f3b)}
-.mf-subtraction .mf-emblem{background:radial-gradient(circle at 35% 30%,#fbe7a2,#e0b354 60%,#a7792f)}
-.mf-multiplication .mf-emblem{background:radial-gradient(circle at 35% 30%,#dfe5cf,#98a98a 60%,#617257)}
-.mf-division .mf-emblem{background:radial-gradient(circle at 35% 30%,#d4f0f4,#76b6c4 60%,#3f7f91)}
-.mf-forest-body{display:flex;flex-direction:column;gap:7px;min-width:0}
-.mf-forest-body strong{font-size:1.15rem;color:#24503c}
-.mf-entry .mf-forest-body small{margin:0;font-size:.82rem;color:#6d6350}
-.mf-steps{display:grid;grid-template-columns:repeat(10,1fr);gap:3px;max-width:240px}
-.mf-steps i{height:9px;border-radius:4px;background:#efe5cc;border:1px solid #d9caa5}
-.mf-steps i.on{background:linear-gradient(180deg,#9fcb78,#6a9a4f);border-color:#5f8f45}
-.mf-play{display:grid;place-items:center;width:64px;height:44px;border-radius:999px;background:linear-gradient(180deg,#86b25e,var(--mf-leaf-deep));color:#fff8e2;font-size:1.1rem;box-shadow:0 3px 0 #3d6330,inset 0 1px 0 #c7e3a5}
-.mf-entry .mf-links.nav-links{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
-.mf-entry .mf-links.nav-links button{flex:1 1 150px;border-radius:999px;background:linear-gradient(180deg,#fffaf0,#f1e6c9);border:2px solid #e0d0ad;color:#3f5a48;box-shadow:0 3px 0 #cdb88f55}
+/* 수학숲 입구: Codex 시안을 따라 만든 양피지·리본·수채화 카드 (2026-11-21). 그림 파일은 public/art/math-forest. */
+.mf-entry{--mf-ink:#3b5a2a;--mf-ink-soft:#6b6248;--mf-olive:#7f9a3e;--mf-olive-deep:#5f7a2a;--mf-title:var(--font-brand,'Maplestory','Jua',sans-serif);
+ position:relative;color:var(--mf-ink);padding:0 0 18px;border-radius:26px;overflow:hidden;
+ background:var(--mf-art) center top/100% auto repeat-y,#f6e8c6;box-shadow:inset 0 0 0 2px #e6d3a6,inset 0 0 40px #d9bf8a66}
+.mf-vine{position:absolute;top:196px;width:110px;z-index:4;pointer-events:none;opacity:.95}
+.mf-vine.left{left:-6px}
+.mf-vine.right{right:-6px;transform:scaleX(-1)}
+.mf-hero{position:relative;height:230px;overflow:hidden}
+.mf-hero-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 40%}
+.mf-hero:after{content:'';position:absolute;inset:auto 0 0;height:70px;background:linear-gradient(0deg,#f6e8c6 0,#f6e8c600 100%)}
+.mf-hero-text{position:relative;z-index:2;padding:20px 22px;max-width:60%}
+.mf-hero-text small{display:inline-block;padding:4px 12px;border-radius:999px;background:#fffaf0e0;color:#7a5b43;font:700 .85rem var(--mf-title);letter-spacing:.02em}
+.mf-hero-text h3{font:700 1.85rem/1.3 var(--mf-title);margin:10px 0 0;color:#2f5a22;text-shadow:0 2px 0 #fffaf0,0 0 10px #fffaf0,0 0 18px #fffaf0}
+.mf-ribbon.math-reward-notice{position:relative;z-index:5;display:block;margin:-34px 10px 4px;padding:0;background:none;border:0;box-shadow:none}
+.mf-ribbon-band{position:relative;display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:8px;min-height:92px;padding:16px 70px 26px}
+.mf-ribbon-art{position:absolute;inset:0;width:100%;height:100%;object-fit:fill;z-index:-1;filter:drop-shadow(0 3px 2px #7a5b4333)}
+.mf-chip{display:inline-flex;align-items:center;gap:4px;padding:6px 14px;border-radius:999px;font:700 1rem var(--mf-title);background:#fffbeecc;border:2px solid #e7dcb3;box-shadow:0 2px 0 #c9b98455}
+.mf-chip.berry{color:#a63c4f}.mf-chip.xp{color:#7a5a12}.mf-chip.orb{color:#2c6b5b}
+.mf-fine{margin:2px 22px 0;font-size:.82rem;line-height:1.55;color:var(--mf-ink-soft);text-align:center}
+.mf-entry .mf-forests.nav-list{display:grid;grid-template-columns:1fr;gap:12px;padding:10px 16px 0}
+.mf-entry .mf-forests.nav-list .mf-forest{display:grid;grid-template-columns:96px minmax(0,1fr) 92px;align-items:center;gap:14px;text-align:left;min-height:116px;padding:12px 22px 12px 14px;border:0;border-radius:22px;
+ background:url('/art/math-forest/card.webp') center/100% 100% no-repeat;box-shadow:none;color:var(--mf-ink);filter:drop-shadow(0 3px 2px #7a5b4333)}
+.mf-entry .mf-forests.nav-list .mf-forest:hover:not(:disabled){transform:translateY(-2px);filter:drop-shadow(0 5px 3px #7a5b4344)}
+.mf-emblem{display:block;width:96px;height:96px;border-radius:50%;filter:drop-shadow(0 2px 2px #5a432f55)}
+.mf-emblem img{display:block;width:100%;height:100%}
+.mf-emblem b{display:grid;place-items:center;width:100%;height:100%;font-size:2.4rem}
+.mf-forest-body{display:flex;flex-direction:column;gap:6px;min-width:0}
+.mf-forest-body strong{font:700 1.3rem var(--mf-title);color:#2f5a22}
+.mf-steps-row{display:flex;align-items:center;gap:8px}
+.mf-steps-row em{font:700 .9rem var(--mf-title);font-style:normal;color:#6b7d3d}
+.mf-steps{flex:1;display:grid;grid-template-columns:repeat(10,1fr);gap:2px;max-width:230px;padding:3px;border-radius:99px;background:#fbf3dd;border:1.5px solid #d7c79c}
+.mf-steps i{height:10px;background:#f3e8c9}
+.mf-steps i:first-child{border-radius:99px 0 0 99px}.mf-steps i:last-child{border-radius:0 99px 99px 0}
+.mf-steps i.on{background:linear-gradient(180deg,#a8c06a,#7f9a3e)}
+.mf-entry .mf-forest-body small{display:flex;align-items:center;gap:6px;margin:0;font:700 .88rem var(--mf-title);color:#6b7d3d}
+.mf-forest-body small img{width:18px;height:auto}
+.mf-play{display:grid;place-items:center;width:92px;height:52px;border-radius:999px;background:linear-gradient(180deg,#9cb556,var(--mf-olive) 55%,var(--mf-olive-deep));box-shadow:0 3px 0 #4d6322,inset 0 2px 0 #c9dc8e,inset 0 -3px 6px #4d632255}
+.mf-play i{width:0;height:0;border-left:20px solid #fff6d8;border-top:13px solid transparent;border-bottom:13px solid transparent;margin-left:5px;border-radius:2px}
+.mf-entry .mf-links.nav-links{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:16px 16px 0}
+.mf-entry .mf-links.nav-links button{display:flex;align-items:center;justify-content:center;gap:8px;min-height:56px;border-radius:999px;font:700 1rem var(--mf-title);color:#3b5a2a;
+ background:linear-gradient(180deg,#eef3d6,#dbe6b4);border:2px solid #c3d091;box-shadow:0 3px 0 #a3b26c88}
+.mf-entry .mf-links.nav-links button[data-nav="expedition"],.mf-entry .mf-links.nav-links button[data-nav="back"]{background:linear-gradient(180deg,#fbf0d2,#f0dca9);border-color:#dcc28a;box-shadow:0 3px 0 #c4a66a88}
+.mf-entry .mf-links.nav-links button small{display:none}
+.mf-entry .mf-links.nav-links button:before{content:'';width:28px;height:28px;flex:none;background:center/contain no-repeat}
+.mf-entry .mf-links.nav-links button[data-nav="subjects"]:before{background-image:url('/art/math-forest/icon-leaf.webp')}
+.mf-entry .mf-links.nav-links button[data-nav="stories"]:before{background-image:url('/art/math-forest/icon-bag.webp')}
+.mf-entry .mf-links.nav-links button[data-nav="expedition"]:before{background-image:url('/art/math-forest/icon-compass.webp')}
+.mf-entry .mf-links.nav-links button[data-nav="back"]:before{display:none}
 @media(max-width:600px){
- .mf-hero{min-height:210px}
- .mf-hero:before{background:linear-gradient(180deg,#fbf5e6f2 0,#fbf5e6d9 55%,#fbf5e680 80%,#fbf5e6 100%)}
- .mf-hero-img{object-position:70% center}
- .mf-hero-text{max-width:100%;padding:16px 16px 30px}
- .mf-hero-text h3{font-size:1.4rem}
- .mf-entry .mf-forests.nav-list .mf-forest{grid-template-columns:58px minmax(0,1fr) 44px;gap:10px;padding:10px 12px;min-height:84px}
- .mf-emblem{width:58px;height:58px}.mf-emblem b{font-size:1.9rem}
- .mf-play{width:44px;height:40px}
- .mf-ribbon-band{gap:6px;padding:10px}
- .mf-chip{font-size:.85rem;padding:6px 10px}
- .mf-entry .mf-links.nav-links button{flex-basis:100%}
+ .mf-hero{height:190px}
+ .mf-hero-img{object-position:65% 40%}
+ .mf-hero-text{max-width:100%;padding:14px 16px}
+ .mf-hero-text h3{font-size:1.45rem}
+ .mf-vine{top:156px;width:80px}
+ .mf-ribbon-band{padding:14px 34px 24px;gap:6px;min-height:84px}
+ .mf-chip{font-size:.86rem;padding:5px 10px}
+ .mf-entry .mf-forests.nav-list{padding:8px 10px 0}
+ .mf-entry .mf-forests.nav-list .mf-forest{grid-template-columns:68px minmax(0,1fr) 54px;gap:10px;min-height:96px;padding:10px 14px 10px 10px}
+ .mf-emblem{width:68px;height:68px}
+ .mf-forest-body strong{font-size:1.12rem}
+ .mf-play{width:54px;height:44px}.mf-play i{border-left-width:15px;border-top-width:10px;border-bottom-width:10px}
+ .mf-entry .mf-links.nav-links{margin:14px 10px 0}
 }
