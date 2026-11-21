@@ -15,6 +15,7 @@ import './potion-workshop.css';
 import {showPotionWorkshop} from './potion-workshop-view';
 import './math-forest-entry.css';
 import {mathForestEntryHtml} from './math-forest-entry';
+import {plazaGuideHtml} from './plaza-guide-view';
 import {WORKSHOP_ONLY_POTIONS,SHOP_LIMITED_POTIONS,SHOP_BOOST_DAILY_LIMIT,shopBoostRemaining} from './potion-workshop';
 import {mountCommunity} from './community';
 import {mountAdventureAccount} from './account-view';
@@ -249,7 +250,7 @@ function enterShopStreet() {
 }
 function openPlazaWelcome() {
   if(!state)return;
-  navPage('연태쌤의 중앙광장 안내',mathLearningNotice(state.level)+'<div class="nav-intro"><h3>우리의 메인 모험은 수학숲이에요!</h3><p>아래쪽 책과 별이 빛나는 숲 아치로 가 보세요. '+state.grade+'학년 수학을 풀고 숲을 탐험하며 베리와 추억을 모아요.</p></div><div class="nav-list">'+navButton('explore','🌳 ↓ 수학숲으로 모험하기','내 학년에 맞는 숲·단원·열린 단계 고르기')+navButton('academy','🏛 모험학교 · 직업과 스킬','10·30·60·100·200레벨 전직 실습, 수련 마당과 모험 기록')+navButton('hunt','⚔ 왼쪽 위 · 가시덩굴 숲','무기와 스킬로 사냥하고 음식·물약으로 회복해요')+navButton('world2','🪐 오른쪽 위 · 별너머 군도','60~500레벨 지역을 탐험하고 두 수호자에게 도전해요')+navButton('friends','👋 친구들과 만나는 중앙광장','학년과 관계없이 같은 광장 · 최대 128명')+navButton('shops','🛍 왼쪽 아래 · 상점거리','의상·미용·펫·탈것·무기·물약과 음식')+navButton('home','🏡 오른쪽 · 나의 집','내가 꾸민 집과 정원, 마을 친구들의 방문')+navButton('hall','🏆 명예의 전당','레벨 랭킹과 베리 부자를 함께 봐요')+navButton('notice','📮 운영자 소식')+'</div><p>학습 문제와 진도는 각자 선택한 학년대로 유지돼요. 틀려도 손해는 없어요! 가까이 가서 PC E 또는 휴대폰 대화 버튼을 누르세요. 수학 시합은 분수 오른쪽 신비에게 부탁해요.</p>',{explore:()=>walkTo('journey','수학숲 입구',openAdventureMap),hall:()=>hall.show(),academy:()=>walkTo('academyGate','모험학교',enterAcademy),hunt:()=>walkTo('huntingGate','가시덩굴 숲 입구',()=>career.showHunting()),world2:()=>walkTo('world2Gate','별너머 군도 문',()=>career.showWorldTwo()),friends:()=>{closeModal();$('#plaza-status').click();},shops:()=>walkTo('shopStreet','상점거리 입구',enterShopStreet),home:()=>walkTo('homesteadGate','나의 집 문',()=>{if(enterHomeGarden())closeModal();}),notice:()=>walkTo('noticeBoard','운영자 소식 게시판',openNoticeBoard)});
+  navPage('연태쌤의 중앙광장 안내',plazaGuideHtml({base:import.meta.env.BASE_URL,level:state.level,grade:state.grade,teacher:'연태쌤',foot:'학습 문제와 진도는 각자 선택한 학년대로 유지돼요. 틀려도 손해는 없어요! 가까이 가서 PC <b>E</b> 또는 휴대폰 <b>대화</b> 버튼을 누르세요. 수학 시합은 분수 오른쪽 신비에게 부탁해요.'}),{explore:()=>walkTo('journey','수학숲 입구',openAdventureMap),hall:()=>hall.show(),academy:()=>walkTo('academyGate','모험학교',enterAcademy),hunt:()=>walkTo('huntingGate','가시덩굴 숲 입구',()=>career.showHunting()),world2:()=>walkTo('world2Gate','별너머 군도 문',()=>career.showWorldTwo()),friends:()=>{closeModal();$('#plaza-status').click();},shops:()=>walkTo('shopStreet','상점거리 입구',enterShopStreet),home:()=>walkTo('homesteadGate','나의 집 문',()=>{if(enterHomeGarden())closeModal();}),notice:()=>walkTo('noticeBoard','운영자 소식 게시판',openNoticeBoard)});
 }
 function openShopStreet() {
   rememberMenu('shops', openShopStreet);
