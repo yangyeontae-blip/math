@@ -1574,9 +1574,15 @@ export class World {
     if(this.forest==='division'&&!pink){
       for(let i=0;i<3;i++){const cone=mesh(cachedCylinder(.12,1.55-i*.33,1.65,9),base,0,2.2+i*.75,0,g);cone.material=leafMaterial(shades[i]);cone.rotation.y=phase*.17+i*.4;}
     } else {
+      // 2026-11-21 Codex 나무 시안: 뭉게뭉게 겹친 둥근 수관(아래는 진하게, 위는 밝게), 꽃나무는 크림빛 꽃송이.
       const wide=this.forest==='subtraction'?1.12:this.forest==='multiplication'?.92:1;
-      for(let i=0;i<4;i++){const a=i*2.4+phase*.3,leaf=ball(g,shades[i%3],i?Math.cos(a)*.65:0,2.55+(i===2?.9:i*.15),i?Math.sin(a)*.5:0,i?1.03:1.38,i?1.02:1.26,i?1.03:1.24);leaf.scale.x*=wide;leaf.material=leafMaterial(shades[i%3]);}
+      const puffs:[number,number,number,number][]=[[0,2.5,0,1.32],[.72,2.35,.25,.95],[-.7,2.4,-.2,.98],[.15,2.45,-.68,.9],[-.2,2.35,.7,.9],[.1,3.35,.05,1.02],[-.45,3.1,.4,.72]];
+      puffs.forEach(([px,py,pz,r],i)=>{const a=phase*.3,c=Math.cos(a),s=Math.sin(a),shade=py>3?shades[1]:i===0?shades[0]:shades[(i%2)?2:0];const leaf=ball(g,shade,px*c-pz*s,py,px*s+pz*c,r*wide,r*.92,r);leaf.material=leafMaterial(shade);});
+      if(pink)for(let i=0;i<7;i++){const a=i*0.9+phase,y=2.4+(i%3)*.45;ball(g,0xfde2c7,Math.cos(a)*1.05,y,Math.sin(a)*1.05,.16,.12,.16);}
     }
+    // 뿌리와 이끼 받침
+    for(let i=0;i<3;i++){const a=i*2.1+phase,root=cylinder(g,0x8a6743,Math.cos(a)*.3,.12,Math.sin(a)*.3,.06,.13,.45,6);root.rotation.z=Math.cos(a)*.9;root.rotation.x=-Math.sin(a)*.9;}
+    ball(g,0xa9b04a,.25,.1,.2,.32,.12,.26);
     return g;
   }
   private addChoppableTree(id: number, x: number, z: number, scale: number, pink: boolean, foliage?: number) {
