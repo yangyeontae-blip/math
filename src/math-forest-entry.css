@@ -1,0 +1,48 @@
+/* 수학숲 입구: 수채화 배너 + 따뜻한 종이 카드 (2026-11-21, Codex 그림·시안 기반). */
+.mf-entry{--mf-cream:#fbf5e6;--mf-paper:#f4e9cf;--mf-ink:#2f4a3a;--mf-leaf:#6a9a4f;--mf-leaf-deep:#4f7d3b;--mf-moss:#a9c27f;--mf-sun:#f3d58b;--mf-bark:#7a5b43;--mf-sky:#bfd9ea;color:var(--mf-ink)}
+.mf-hero{position:relative;min-height:230px;border-radius:24px;overflow:hidden;margin:0 0 -18px;background:var(--mf-sky);border:2px solid #d8c7a2;box-shadow:inset 0 0 0 3px #fffaf0}
+.mf-hero-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:right center}
+.mf-hero:before{content:'';position:absolute;inset:0;z-index:1;background:linear-gradient(90deg,#fbf5e6f0 0,#fbf5e6b8 36%,#fbf5e600 62%),linear-gradient(0deg,#fbf5e6 0,#fbf5e600 22%)}
+.mf-hero-text{position:relative;z-index:2;max-width:min(400px,60%);padding:22px 22px 34px}
+.mf-hero-text small{display:inline-block;padding:4px 12px;border-radius:999px;background:#ffffffd6;color:var(--mf-bark);font-weight:800;letter-spacing:.04em}
+.mf-hero-text h3{font-family:'Berry Notebook Serif','Berry Forest Sans',serif;font-size:1.8rem;line-height:1.28;margin:10px 0 8px;color:#24503c;text-shadow:0 2px 0 #fffaf0,0 0 14px #fffaf0}
+.mf-hero-text p{margin:0;font-size:.93rem;line-height:1.6;color:#35503f;text-shadow:0 1px 0 #fffaf0,0 0 8px #fffaf0}
+.mf-ribbon.math-reward-notice{position:relative;z-index:3;display:block;margin:0 6px 14px;padding:0;background:none;border:0;box-shadow:none}
+.mf-ribbon-band{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;padding:12px 16px;border-radius:16px;background:linear-gradient(180deg,#e9f1d2,#d9e7bb);border:2px solid #b9cf8f;box-shadow:0 3px 0 #9bb57455,inset 0 0 0 2px #f6fbe9}
+.mf-chip{display:inline-flex;align-items:center;gap:4px;padding:7px 14px;border-radius:999px;font-weight:900;font-size:.95rem;background:#fffbef;border:2px solid #e6d6b2;box-shadow:0 2px 0 #cdb88f66}
+.mf-chip.berry{color:#b0405e}
+.mf-chip.xp{color:#7a5a12}
+.mf-chip.orb{color:#2c6b5b}
+.mf-fine{margin:8px 6px 0;font-size:.8rem;line-height:1.5;color:#6d6350;text-align:center}
+.mf-entry .mf-forests.nav-list{display:grid;grid-template-columns:1fr;gap:12px}
+.mf-entry .mf-forests.nav-list .mf-forest{display:grid;grid-template-columns:76px minmax(0,1fr) 64px;align-items:center;gap:14px;text-align:left;min-height:96px;padding:12px 14px;border-radius:20px;
+ background:radial-gradient(90% 120% at 100% 100%,#e8efd4 0,transparent 45%),linear-gradient(160deg,#fffdf5,var(--mf-cream) 55%,var(--mf-paper));border:2px solid #dccaa3;box-shadow:0 4px 0 #b49a7a55,inset 0 0 0 3px #fffdf6;color:var(--mf-ink)}
+.mf-entry .mf-forests.nav-list .mf-forest:hover:not(:disabled){border-color:var(--mf-moss)}
+.mf-emblem{display:grid;place-items:center;width:76px;height:76px;border-radius:50%;box-shadow:inset 0 0 0 3px #fffdf4,0 0 0 2px #b9cf9f,0 3px 0 #7a5b4333}
+.mf-emblem b{font-size:2.4rem;line-height:1;color:#fffdf2;text-shadow:0 2px 0 #4d6b3c88,0 0 6px #31502a66;font-family:'Berry Forest Sans',sans-serif}
+.mf-addition .mf-emblem{background:radial-gradient(circle at 35% 30%,#d9f0a8,#7fb35c 60%,#4c7f3b)}
+.mf-subtraction .mf-emblem{background:radial-gradient(circle at 35% 30%,#fbe7a2,#e0b354 60%,#a7792f)}
+.mf-multiplication .mf-emblem{background:radial-gradient(circle at 35% 30%,#dfe5cf,#98a98a 60%,#617257)}
+.mf-division .mf-emblem{background:radial-gradient(circle at 35% 30%,#d4f0f4,#76b6c4 60%,#3f7f91)}
+.mf-forest-body{display:flex;flex-direction:column;gap:7px;min-width:0}
+.mf-forest-body strong{font-size:1.15rem;color:#24503c}
+.mf-entry .mf-forest-body small{margin:0;font-size:.82rem;color:#6d6350}
+.mf-steps{display:grid;grid-template-columns:repeat(10,1fr);gap:3px;max-width:240px}
+.mf-steps i{height:9px;border-radius:4px;background:#efe5cc;border:1px solid #d9caa5}
+.mf-steps i.on{background:linear-gradient(180deg,#9fcb78,#6a9a4f);border-color:#5f8f45}
+.mf-play{display:grid;place-items:center;width:64px;height:44px;border-radius:999px;background:linear-gradient(180deg,#86b25e,var(--mf-leaf-deep));color:#fff8e2;font-size:1.1rem;box-shadow:0 3px 0 #3d6330,inset 0 1px 0 #c7e3a5}
+.mf-entry .mf-links.nav-links{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.mf-entry .mf-links.nav-links button{flex:1 1 150px;border-radius:999px;background:linear-gradient(180deg,#fffaf0,#f1e6c9);border:2px solid #e0d0ad;color:#3f5a48;box-shadow:0 3px 0 #cdb88f55}
+@media(max-width:600px){
+ .mf-hero{min-height:210px}
+ .mf-hero:before{background:linear-gradient(180deg,#fbf5e6f2 0,#fbf5e6d9 55%,#fbf5e680 80%,#fbf5e6 100%)}
+ .mf-hero-img{object-position:70% center}
+ .mf-hero-text{max-width:100%;padding:16px 16px 30px}
+ .mf-hero-text h3{font-size:1.4rem}
+ .mf-entry .mf-forests.nav-list .mf-forest{grid-template-columns:58px minmax(0,1fr) 44px;gap:10px;padding:10px 12px;min-height:84px}
+ .mf-emblem{width:58px;height:58px}.mf-emblem b{font-size:1.9rem}
+ .mf-play{width:44px;height:40px}
+ .mf-ribbon-band{gap:6px;padding:10px}
+ .mf-chip{font-size:.85rem;padding:6px 10px}
+ .mf-entry .mf-links.nav-links button{flex-basis:100%}
+}

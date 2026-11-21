@@ -13,6 +13,8 @@ import {mountGraphicsRecovery} from './graphics-recovery';
 import {showBerryMachine} from './berry-machine';
 import './potion-workshop.css';
 import {showPotionWorkshop} from './potion-workshop-view';
+import './math-forest-entry.css';
+import {mathForestEntryHtml} from './math-forest-entry';
 import {WORKSHOP_ONLY_POTIONS,SHOP_LIMITED_POTIONS,SHOP_BOOST_DAILY_LIMIT,shopBoostRemaining} from './potion-workshop';
 import {mountCommunity} from './community';
 import {mountAdventureAccount} from './account-view';
@@ -210,7 +212,7 @@ function openNavigation() {
 function openAdventureMap() {
   if (!state) return;
   rememberMenu('adventure', openAdventureMap);
-  navPage('수학숲으로 모험하기', mathLearningNotice(state.level)+'<p class="nav-breadcrumb">지도 / 수학숲으로 모험하기</p><div class="nav-intro"><h3>발견한 만큼, 나의 집도 자라요</h3><p>숲을 고르고 열린 단계를 탐험해요. 발자국 끝의 장소를 되살리면 추억과 도안이 쌓여요.</p></div><div class="nav-list">' + operationsForGrade(state.grade).map(f => navButton(f,`${FOREST_INFO[f].icon} ${FOREST_INFO[f].name}`,`열린 단계 ${Array.from({length:10},(_,i)=>i+1).filter(n=>canEnter(state!,n,f)).length} · 발견 ${state!.exploration.solved.filter(id=>id.startsWith(f+':')).length}/10`)).join('') + '</div><div class="nav-links">' + navButton('subjects',`📚 ${state.grade}학년 단원 지도`) + navButton('stories','✉️ 이야기 의뢰') + navButton('expedition','🌟 별빛 원정','입장 조건 확인 · 진행 중인 원정 이어가기') + navButton('back','← 전체 지도') + '</div>', {...Object.fromEntries(operationsForGrade(state.grade).map(f=>[f,()=>openStageMap(f)])), subjects:()=>openStageMap(), stories:openStoryBoard, expedition:openExpeditionBoard, back:openNavigation});
+  navPage('수학숲으로 모험하기', mathForestEntryHtml({level:state.level,grade:state.grade,base:import.meta.env.BASE_URL,links:navButton('subjects',`📚 ${state.grade}학년 단원 지도`) + navButton('stories','✉️ 이야기 의뢰') + navButton('expedition','🌟 별빛 원정','입장 조건 확인 · 진행 중인 원정 이어가기') + navButton('back','← 전체 지도'),forests:operationsForGrade(state.grade).map(f=>({id:f,icon:FOREST_INFO[f].icon,name:FOREST_INFO[f].name,open:Array.from({length:10},(_,i)=>i+1).filter(n=>canEnter(state!,n,f)).length,found:state!.exploration.solved.filter(id=>id.startsWith(f+':')).length}))}), {...Object.fromEntries(operationsForGrade(state.grade).map(f=>[f,()=>openStageMap(f)])), subjects:()=>openStageMap(), stories:openStoryBoard, expedition:openExpeditionBoard, back:openNavigation});
 }
 function enterHomeGarden() {
   if (!state) return false;
