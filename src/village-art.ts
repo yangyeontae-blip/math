@@ -32,23 +32,32 @@ export function berryTreeModel(variant=0){
  for(let i=0;i<7;i++){const angle=i*2.4,x=Math.cos(angle)*.98,z=Math.sin(angle)*.95,y=2.25+(i%3)*.42;for(const side of [-1,1])orb(g,side<0?a.berry:0xd54d73,x+side*.1,y,z,.18,1.15);const leaf=orb(g,0x447e57,x,y+.22,z,.15,.35);leaf.rotation.z=.4;}
  return g;
 }
+/** 2026-11-21 Codex 시안: 나무 화단 상자에 크림 · 분홍 · 라벤더 꽃과 둥근 잎. */
 export function flowerBed(g:T.Object3D,x:number,z:number,length=2.4,rotation=0){
  const bed=new T.Group();bed.position.set(x,0,z);bed.rotation.y=rotation;g.add(bed);
- block(bed,0xb6c68c,0,.07,0,length+.35,.14,1.15);
- for(let i=0;i<Math.ceil(length/.55);i++){const px=-length/2+.28+i*.55;orb(bed,0x8eae6b,px,.28,0,.35,.7);const y=.45+(i%2)*.12;for(let k=0;k<5;k++){const angle=k*Math.PI*2/5;orb(bed,i%3===0?0xf0b5bd:0xfff4d9,px+Math.cos(angle)*.14,y,.08+Math.sin(angle)*.14,.1,.65);}orb(bed,0xe9bc69,px,y+.025,.08,.065);}
- for(const side of [-1,1])block(bed,VILLAGE_ART.edge,0,.12,side*.56,length+.5,.23,.12);
+ block(bed,0xe09b57,0,.2,0,length+.3,.4,1.05);block(bed,0x8a5a33,0,.42,0,length+.36,.06,1.11);block(bed,0x6f5a3a,0,.4,0,length+.1,.05,.85);
+ for(const side of [-1,1])block(bed,0xc27d42,side*(length/2+.12),.2,0,.08,.42,1.08);
+ const colors=[0xfee4b4,0xfca5a2,0xb987c2];
+ for(let i=0;i<Math.ceil(length/.5);i++){const px=-length/2+.25+i*.5;orb(bed,0x9dbb5a,px,.55,(i%2?.18:-.18),.24,.6);
+  const c=colors[i%3];if(c===0xb987c2){for(let k=0;k<3;k++)orb(bed,c,px+(k-1)*.07,.7+k*.07,.0,.07,1.6);}else{for(let k=0;k<5;k++){const a=k*Math.PI*2/5;orb(bed,c,px+Math.cos(a)*.11,.7,Math.sin(a)*.11,.08,.6);}orb(bed,0xf4a420,px,.72,0,.05);}}
 }
+/** 2026-11-21 Codex 시안: 둥근 팔걸이와 등받이의 나무 벤치 · 쇠띠 · 이끼. */
 export function gardenBench(g:T.Object3D,x:number,z:number,rotation=0){
  const b=new T.Group();b.position.set(x,0,z);b.rotation.y=rotation;g.add(b);
- for(const px of [-1,1])for(const pz of [-.3,.3])block(b,0x667d6a,px,.33,pz,.12,.65,.12);
- for(let i=0;i<3;i++)block(b,VILLAGE_ART.wood,0,.67,-.28+i*.28,2.65,.12,.24);
- for(let i=0;i<2;i++)block(b,0xb68b61,0,1+i*.25,-.45,2.65,.18,.12);
- for(const side of [-1,1])block(b,0x667d6a,side*1.18,.88,0,.12,.14,.85);
+ for(const px of [-1.1,1.1])for(const pz of [-.3,.3])block(b,0x8a5a33,px,.33,pz,.16,.66,.16);
+ for(let i=0;i<3;i++)block(b,0xb5713d,0,.68,-.28+i*.28,2.6,.13,.25);
+ for(let i=0;i<3;i++)block(b,0xc88550,0,.98+i*.2,-.44,2.5,.15,.1);
+ const back=block(b,0xb5713d,0,1.62,-.44,2.7,.16,.14);back.scale.y=1.2;
+ for(const side of [-1,1]){const arm=piece(b,0xb5713d,new T.CylinderGeometry(.13,.13,.8,8),side*1.26,.9,0);arm.rotation.x=Math.PI/2;block(b,0x84654f,side*1.1,.68,0,.18,.16,.8);}
+ orb(b,0xaeb042,-.9,1.74,-.44,.2,.4);orb(b,0xaeb042,1.05,.78,.25,.16,.4);
 }
+/** 2026-11-21 Codex 시안: 돌 받침 · 덩굴 감긴 나무 기둥 · 검은 쇠 등갓의 따뜻한 등불 · 잎사귀 꼭지. */
 export function gardenLamp(g:T.Object3D,x:number,z:number){
- const a=VILLAGE_ART;post(g,a.edge,x,.16,z,.32,.32);post(g,a.wood,x,1.25,z,.09,2.5);
- block(g,0xffe7ac,x,2.55,z,.42,.6,.42);for(const side of [-1,1])block(g,a.wood,x+side*.23,2.55,z,.06,.68,.48);
- const cap=piece(g,new T.Color(a.mint).getHex(),new T.ConeGeometry(.45,.3,4),x,3,z);cap.rotation.y=Math.PI/4;
+ orb(g,0xb89478,x,.14,z,.36,.45);post(g,0xa86537,x,1.25,z,.1,2.3);
+ for(let i=0;i<3;i++)orb(g,0x9fae4a,x+Math.cos(i*2.1)*.1,.6+i*.42,z+Math.sin(i*2.1)*.1,.1,.6);
+ block(g,0x5a4131,x,2.3,z,.5,.08,.5);block(g,0xffe08a,x,2.58,z,.38,.48,.38);
+ for(const sx of [-1,1])for(const sz of [-1,1])block(g,0x5a4131,x+sx*.2,2.58,z+sz*.2,.05,.52,.05);
+ const cap=piece(g,0x6f7377,new T.ConeGeometry(.42,.32,4),x,3,z);cap.rotation.y=Math.PI/4;orb(g,0xaeb042,x,3.22,z,.12,1.3);
 }
 export function stoneLane(g:T.Object3D,x:number,z:number,width:number,length:number){
  const a=VILLAGE_ART;block(g,a.edge,x,.035,z,width+.24,.07,length+.24);block(g,a.cream,x,.08,z,width,.08,length);
@@ -151,10 +160,13 @@ export function cottageModel(roof=VILLAGE_ART.mint,wall=0xf4e3bf,school=false){
  }else{block(g,a.edge,1.3,h+1.4,-.9,.6,1.8,.65);block(g,a.trim,1.3,h+2.3,-.9,.8,.16,.8);}
  return g;
 }
+/** 2026-11-21 Codex 시안: 이끼 낀 통나무 울타리(둥근 기둥머리 · 밧줄 매듭 · 이끼 얹은 가로대). */
+const FENCE={post:0xc07e4f,cap:0xd99a5f,rail:0xb8774a,moss:0xa9b04a,rope:0xf3dcae};
+function fencePost(g:T.Object3D,x:number,z:number){const p=piece(g,FENCE.post,new T.CylinderGeometry(.15,.17,1.3,8),x,.65,z);p.rotation.y=.3;orb(g,FENCE.cap,x,1.36,z,.17,.7);piece(g,FENCE.rope,new T.CylinderGeometry(.19,.19,.1,8),x,.95,z);}
+function fenceRail(g:T.Object3D,x:number,z:number,length:number,alongX:boolean){for(const [i,y] of [.48,.9].entries()){const r=piece(g,FENCE.rail,new T.CylinderGeometry(.075,.085,length,7),x,y,z);if(alongX)r.rotation.z=Math.PI/2;else r.rotation.x=Math.PI/2;if(i===1){const m=orb(g,FENCE.moss,x+(alongX?.4:0),y+.07,z+(alongX?0:.4),.2,.35);m.scale.x=alongX?2.2:1;m.scale.z=alongX?1:2.2;}}}
 export function districtBorder(g:T.Object3D,width:number,depth:number,offsetZ=0){
- const a=VILLAGE_ART;
- for(let x=-width/2+1;x<width/2;x+=3){for(const z of [-depth/2,depth/2]){if(z>0&&Math.abs(x)<4)continue;const at=z+offsetZ;post(g,a.trim,x,.65,at,.1,1.25);orb(g,a.edge,x,1.31,at,.14);if(x+3<width/2)for(const y of [.5,.92])block(g,a.wood,x+1.5,y,at,3,.08,.08);}}
- for(const side of [-1,1])for(let z=-depth/2+1;z<depth/2;z+=3){post(g,a.trim,side*width/2,.65,z+offsetZ,.1,1.25);if(z+3<depth/2)for(const y of [.5,.92])block(g,a.wood,side*width/2,y,z+1.5+offsetZ,.08,.08,3);}
+ for(let x=-width/2+1;x<width/2;x+=3){for(const z of [-depth/2,depth/2]){if(z>0&&Math.abs(x)<4)continue;const at=z+offsetZ;fencePost(g,x,at);if(x+3<width/2)fenceRail(g,x+1.5,at,3,true);}}
+ for(const side of [-1,1])for(let z=-depth/2+1;z<depth/2;z+=3){fencePost(g,side*width/2,z+offsetZ);if(z+3<depth/2)fenceRail(g,side*width/2,z+1.5+offsetZ,3,false);}
 }
 export function marketGarden(){
  const g=new T.Group();districtBorder(g,48,37);

@@ -69,7 +69,7 @@
     "src/vite-env.d.ts": "65996936fbb042915f7b74a200fcdde7e410f32a669b1ab9597cfaa4b0faddb5",
     "src/world-map.css": "31b7708b738c91d0de2ad31f932fedcf0b50743272d347817204f93e01afb6b4",
     "tests/common-improvements.test.ts": "b2f51e8cde08db2ec17e4680af25511f739b209e53b298e09e34795c8317a441",
-    "src/village-art.ts": "8a701cd21d249788a1b6833254c3f6c63102b205677c68a49cee039f1636e3dd",
+    "src/village-art.ts": "128c06787db95c13ceaa751ffe92b944d99da98f680aa2ea4f0ef3b34dfdcc10",
     "tests/village-art.test.ts": "91e520c6457801ea865a7b8118d56da22ed9d6d6ed24477087ba05982897ea87",
     "src/academy.ts": "5206e1a2afd48d78115fc02a350d5d31feba2f854fa809fb6ce2169aa30f4c43",
     "src/academy.css": "3f836bd201252c287ca5dc6b9704e4cad306da5fe65ad7b10029412f5df6ca43",
@@ -617,5 +617,5 @@
     "public/art/market/slot-owned.webp": "743a724ec878441981bc9f21647f78f22ff972d2af693373e6982457d3ee2ffe",
     "public/art/market/slot.webp": "34b9f47569da769eb4809b5512e7cb9d4e2f0c92acac23e94cf113ec7e987500"
   },
-  "generation": "e2dd1e798780b1aadb1fcb0d7adba6279719af03736601ae1f04ecef7f3fe1be"
+  "generation": "ff01e5f64bf6b4ae63a6f742f276279c17347acbbc2ec67577facf34ef3a9732"
 }
