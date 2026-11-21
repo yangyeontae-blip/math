@@ -9,7 +9,7 @@ function regionCards(s:Save,from:number,to:number) {
     const {id,level,icon,name,description,killGoal,bonus}=region;
     const progress=s.world2.regions[id],open=canEnterWorldTwo(s.world2,s.level,id,false,operatorAccess()),reward=worldTwoRewardFor(s,id);
     return `<article class="world-two-region theme-${id}">
-      <span class="world-two-icon">${icon}</span><small>지역 ${id+1} · Lv.${level}</small>
+      <span class="world-two-icon"><img class="isle-art" src="${import.meta.env?.BASE_URL??"./"}art/archipelago/${id>=10?'isle-dawn-'+(id-10):'isle-'+id}.webp" alt="" aria-hidden="true" decoding="async"><b class="isle-emoji">${icon}</b></span><small>지역 ${id+1} · Lv.${level}</small>
       <h3>${name}</h3><p>${description}</p>
       <strong>${progress.claimed?'✓ 탐험 완수':'등불 '+progress.beacons.length+'/3 · 정령 '+Math.min(killGoal,progress.kills)+'/'+killGoal}</strong>
       <p class="career-note">${open?'처치 보상: 베리 '+reward.berries+' · 경험치 '+reward.xp+(reward.multiplier<1?' · 오늘 100마리 이후 25%':''):'🔒 '+worldTwoLockReason(s.world2,s.level,id)}</p>

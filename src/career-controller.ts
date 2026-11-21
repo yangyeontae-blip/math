@@ -12,6 +12,7 @@ import './career.css';
 import type { Save } from './rules';
 import {huntingEntryHtml} from './hunting-entry-view';
 import './storybook-paper.css';
+import './village-boards.css';
 import type { World } from './world';
 
 type Hooks={state:()=>Save|null;world:()=>World;persist:()=>void;stored:()=>boolean;refresh:()=>void;open:(html:string,cls?:string)=>void;close:()=>void;toast:(s:string)=>void;enterSchool:()=>void;learning:()=>void;mathForest:()=>void;mathArena:()=>void;plaza:()=>void;supplyShop:()=>void;equipmentShop:(kind:'weapon'|'outfit',id:number)=>void;openWorldTwo:(html:string)=>void};

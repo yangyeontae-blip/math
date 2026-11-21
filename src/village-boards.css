@@ -1,0 +1,64 @@
+/* 2026-11-21 Codex 시안: 모험학교 · 별너머 군도 · 운영자 소식 · 명예의 전당 (양피지 · 수채화 배너 · 그림 문장). */
+.academy-modal .career-sheet:not(.sb-paper):not(.world-two-sheet):not(.world-three-sheet),.world-two-sheet,.world-three-sheet,.hall-sheet,#modal.notice-modal #modal-content{
+ --vb-title:var(--font-brand,'Maplestory','Jua',sans-serif);
+ background:url('/art/math-forest/parchment.webp') center top/100% auto repeat-y,#f6e8c6!important;border-radius:24px;box-shadow:inset 0 0 0 2px #e6d3a6,inset 0 0 36px #d9bf8a66;padding-bottom:16px}
+:is(.academy-modal .career-sheet:not(.sb-paper):not(.world-two-sheet):not(.world-three-sheet),.world-two-sheet,.world-three-sheet,.hall-sheet) :is(h2,h3,strong){font-family:var(--vb-title)}
+
+/* 모험학교 */
+.academy-modal .career-sheet:not(.sb-paper):not(.world-two-sheet):not(.world-three-sheet) .career-heading{position:relative;min-height:190px;display:flex;flex-direction:column;justify-content:flex-end;padding:18px;border-radius:20px;overflow:hidden;
+ background:linear-gradient(0deg,#fbf3dcf5 0,#fbf3dcc0 45%,#fbf3dc10 85%),url('/art/academy/hero.webp') center 35%/cover no-repeat!important;border:3px solid #e2c18a!important;box-shadow:0 3px 0 #c9a46a88}
+.academy-modal .career-sheet:not(.sb-paper):not(.world-two-sheet):not(.world-three-sheet) .career-job-card{position:relative;background:url('/art/academy/card.webp') center/100% 100% no-repeat!important;border:0!important;box-shadow:none!important;padding-top:24px;filter:drop-shadow(0 3px 2px #7a5b4333)}
+.academy-modal .career-sheet:not(.sb-paper):not(.world-two-sheet):not(.world-three-sheet) .career-job-card.is-selected{filter:drop-shadow(0 0 10px #ffe38a) drop-shadow(0 3px 2px #7a5b4344)}
+.academy-modal .career-job-card[data-job-card]>.career-sigil{width:84px;height:84px;border:0;border-radius:50%;background:center/contain no-repeat;box-shadow:none}
+.academy-modal .career-job-card[data-job-card]>.career-sigil>*{display:none}
+.academy-modal .career-job-card[data-job-card="knight"]>.career-sigil{background-image:url('/art/academy/job-knight.webp')}
+.academy-modal .career-job-card[data-job-card="mage"]>.career-sigil{background-image:url('/art/academy/job-mage.webp')}
+.academy-modal .career-job-card[data-job-card="ranger"]>.career-sigil{background-image:url('/art/academy/job-ranger.webp')}
+.academy-modal .career-job-card[data-job-card="druid"]>.career-sigil{background-image:url('/art/academy/job-druid.webp')}
+.academy-modal .career-job-card[data-job-card="alchemist"]>.career-sigil{background-image:url('/art/academy/job-alchemist.webp')}
+.academy-modal .career-job-card[data-job-card="bard"]>.career-sigil{background-image:url('/art/academy/job-bard.webp')}
+.academy-modal .career-advancement li{border:0!important;background:url('/art/academy/rank-stone.webp') center 6px/54px auto no-repeat!important;padding-top:62px!important}
+.academy-modal .career-advancement li.is-complete{background-image:url('/art/academy/rank-stone-on.webp')!important}
+.academy-modal .career-advancement li b{display:none}
+.academy-modal .career-sheet .career-slot{background:url('/art/academy/slot.webp') center/100% 100% no-repeat!important;border:0!important;color:#fff8e2}
+.academy-modal .career-sheet .career-slot .career-skill-name{color:#fff8e2;text-shadow:0 1px 0 #1f3a22}
+.academy-modal .career-sheet:not(.sb-paper):not(.world-two-sheet):not(.world-three-sheet) button.career-primary{background:linear-gradient(180deg,#9cb556,#7f9a3e 55%,#5f7a2a)!important;color:#fff8e2!important;border:2px solid #d9e6b2!important;box-shadow:0 3px 0 #4d6322!important;border-radius:999px!important;font-family:var(--vb-title)}
+
+/* 별너머 군도 */
+:is(.world-two-sheet,.world-three-sheet){background:linear-gradient(180deg,#e7f1fb 0,#f6eedc 40%),#f1ead8!important}
+:is(.world-two-sheet,.world-three-sheet)>.career-heading{position:relative;min-height:200px;display:flex;flex-direction:column;justify-content:flex-end;padding:18px;border-radius:20px;overflow:hidden;
+ background:linear-gradient(0deg,#f7f3e8f5 0,#f7f3e8b8 45%,#f7f3e800 85%),url('/art/archipelago/hero.webp') center 30%/cover no-repeat!important;border:3px solid #cfe0ef;box-shadow:0 3px 0 #a9c3d888}
+.world-two-region{position:relative;display:grid!important;grid-template-columns:88px minmax(0,1fr);gap:4px 12px;align-items:center;text-align:left!important;background:url('/art/archipelago/card.webp') center/100% 100% no-repeat!important;border:0!important;box-shadow:none!important;padding:18px 20px!important;filter:drop-shadow(0 3px 3px #6a87a044)}
+.world-two-region>*{grid-column:2}
+.world-two-region .world-two-icon{grid-column:1;grid-row:1/span 6;width:88px;height:88px;display:block;font-size:0}
+.world-two-region .isle-art{width:88px;height:88px;filter:drop-shadow(0 2px 2px #39507055)}
+.world-two-region .isle-emoji{display:none}
+.world-two-region:has(button:disabled) .isle-art{filter:saturate(.55) brightness(.97)}
+.world-two-region button.career-primary{justify-self:start;border-radius:999px!important;background:linear-gradient(180deg,#9cb556,#7f9a3e 55%,#5f7a2a)!important;color:#fff8e2!important;border:2px solid #d9e6b2!important;box-shadow:0 3px 0 #4d6322!important}
+.world-two-region button.career-primary:disabled{background:linear-gradient(180deg,#d9d0b8,#bfb293)!important;color:#6d624f!important;box-shadow:0 3px 0 #9d8f6c!important}
+.world-two-boss{background:url('/art/archipelago/boss-frame.webp') center/100% 100% no-repeat!important;border:0!important;box-shadow:none!important;padding:28px 32px!important;filter:drop-shadow(0 0 10px #ffe38a99)}
+.world-two-section{font-family:var(--font-brand,'Maplestory',sans-serif);color:#3b5a7a;text-align:center}
+.world-three-banner{background:linear-gradient(160deg,#fff7d8,#f6e2a2)!important;border:3px solid #e3c35a!important;border-radius:18px!important;box-shadow:0 0 14px #ffe38a99!important;color:#5a4320!important}
+
+/* 운영자 소식 */
+#modal.notice-modal .modal-heading{min-height:170px;align-items:flex-end;padding:18px;border-radius:20px;overflow:hidden;
+ background:linear-gradient(90deg,#fbf3dcf2 0,#fbf3dcb0 40%,#fbf3dc00 70%),url('/art/notice-hall/board-hero.webp') center/cover no-repeat;border:3px solid #c9a46a;box-shadow:0 3px 0 #8a5f3688}
+#modal.notice-modal .modal-heading h2{font-family:var(--font-brand,'Maplestory',sans-serif);color:#5a3d22;text-shadow:0 2px 0 #fffaf0,0 0 10px #fffaf0}
+#modal.notice-modal .notice-list{display:grid;gap:14px;padding:14px;border-radius:18px;background:#b98552;box-shadow:inset 0 0 0 4px #8a5f36,inset 0 4px 10px #0003}
+#modal.notice-modal .notice-card{background:url('/art/notice-hall/note.webp') center/100% 100% no-repeat!important;border:0!important;box-shadow:none!important;min-height:120px;padding:26px 24px 20px!important;color:#4a3320;filter:drop-shadow(0 4px 3px #0003)}
+#modal.notice-modal .notice-card:has(.notice-pin){background-image:url('/art/notice-hall/note-pinned.webp')!important}
+#modal.notice-modal .notice-card strong{font-family:var(--font-brand,'Maplestory',sans-serif);color:#3b5a2a}
+#modal.notice-modal .notice-article{background:url('/art/notice-hall/note.webp') center/100% 100% no-repeat;padding:34px 30px 26px;filter:drop-shadow(0 4px 3px #0003)}
+
+/* 명예의 전당 */
+.hall-sheet .hall-heading{min-height:190px;display:flex;flex-direction:column;justify-content:flex-end;padding:18px;border-radius:20px;overflow:hidden;
+ background:linear-gradient(0deg,#fbf3dcf5 0,#fbf3dcb8 45%,#fbf3dc00 85%),url('/art/notice-hall/hall-hero.webp') center/cover no-repeat;border:3px solid #e3c35a;box-shadow:0 3px 0 #c9a46a88}
+.hall-sheet .hall-tabs button{border-radius:999px;font-family:var(--font-brand,'Maplestory',sans-serif)}
+.hall-sheet .hall-tabs button[aria-selected="true"]{background:linear-gradient(180deg,#eef3d6,#dbe6b4);border-color:#c3d091;color:#3b5a2a}
+.hall-sheet .hall-list>li{background:url('/art/notice-hall/row.webp') center/100% 100% no-repeat!important;border:0!important;box-shadow:none!important;padding:14px 26px!important}
+.hall-sheet .hall-list>li:nth-child(-n+3) .hall-rank{font-size:0;width:44px;height:44px;background:center/contain no-repeat}
+.hall-sheet .hall-list>li:nth-child(1) .hall-rank{background-image:url('/art/notice-hall/medal-1.webp')}
+.hall-sheet .hall-list>li:nth-child(2) .hall-rank{background-image:url('/art/notice-hall/medal-2.webp')}
+.hall-sheet .hall-list>li:nth-child(3) .hall-rank{background-image:url('/art/notice-hall/medal-3.webp')}
+.hall-sheet .hall-mine{background:linear-gradient(160deg,#f1f6dc,#dfe9bd);border:2px solid #c3d091;border-radius:999px;padding:10px 16px;font-family:var(--font-brand,'Maplestory',sans-serif);color:#3b5a2a;box-shadow:0 0 10px #ffe38a88}
+.hall-sheet .hall-list::before{content:'';display:block;height:150px;margin:0 auto 10px;max-width:420px;background:url('/art/notice-hall/podium.webp') center bottom/contain no-repeat}
