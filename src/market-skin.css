@@ -1,0 +1,43 @@
+/* 2026-11-21 상점거리 가게 6곳 공통 「시장 가판대」 디자인(Codex 시안: 줄무늬 차양 · 나무 진열장 · 그림 칸 · 러그 · 초록 구매 버튼). */
+#modal.shop-modal,#modal.pet-shop,#modal.potion-shop,#modal.salon-modal,#modal:has(.market-mark){--mk-wood:#b98552;--mk-wood-deep:#8a5f36;--mk-ink:#3b5a2a;--mk-title:var(--font-brand,'Maplestory','Jua',sans-serif)}
+:is(#modal.shop-modal,#modal.pet-shop,#modal.potion-shop,#modal.salon-modal,#modal:has(.market-mark)) #modal-content{
+ background:url('/art/market/awning.webp') center top/100% auto no-repeat,url('/art/math-forest/parchment.webp') center top/100% auto repeat-y,#f6e8c6;
+ padding-top:clamp(64px,13.2%,128px);border:8px solid var(--mk-wood);border-radius:28px;box-shadow:inset 0 0 0 3px #e2c18a,inset 0 0 40px #d9bf8a77,0 8px 0 var(--mk-wood-deep);color:var(--mk-ink)}
+:is(#modal.shop-modal,#modal.pet-shop,#modal.potion-shop,#modal.salon-modal,#modal:has(.market-mark)) .modal-navigation{position:relative;z-index:2}
+/* 가게 이름 배너 */
+:is(#modal.shop-modal,#modal.pet-shop,#modal.potion-shop,#modal.salon-modal,#modal:has(.market-mark)) .modal-heading{position:relative;min-height:132px;align-items:flex-end;padding:18px 18px 16px;margin-bottom:14px;border-radius:20px;overflow:hidden;
+ background:linear-gradient(90deg,#fbf3dcf2 0,#fbf3dcb0 40%,#fbf3dc00 70%),var(--mk-banner,url('/art/market/banner-potion.webp')) center/cover no-repeat;border:3px solid #e2c18a;box-shadow:0 3px 0 #c9a46a88}
+:is(#modal.shop-modal,#modal.pet-shop,#modal.potion-shop,#modal.salon-modal,#modal:has(.market-mark)) .modal-heading h2{font-family:var(--mk-title);color:#2f5a22;text-shadow:0 2px 0 #fffaf0,0 0 10px #fffaf0}
+:is(#modal.shop-modal,#modal.pet-shop,#modal.potion-shop,#modal.salon-modal,#modal:has(.market-mark)) .modal-heading .eyebrow{background:#fffaf0e6;color:#7a5b43;border-radius:999px;padding:3px 12px;font-family:var(--mk-title)}
+#modal.weapon-shop .modal-heading{--mk-banner:url('/art/market/banner-weapon.webp')}
+#modal.outfit-shop .modal-heading{--mk-banner:url('/art/market/banner-outfit.webp')}
+#modal.pet-shop .modal-heading{--mk-banner:url('/art/market/banner-pet.webp')}
+#modal:has(.market-mark) .modal-heading{--mk-banner:url('/art/market/banner-ride.webp')}
+#modal.salon-modal .modal-heading{--mk-banner:url('/art/market/banner-beauty.webp')}
+#modal.potion-shop .modal-heading{--mk-banner:url('/art/market/banner-potion.webp')}
+/* 아이템 칸: 나무 액자 */
+:is(#modal.shop-modal,#modal.pet-shop,#modal.potion-shop,#modal.salon-modal,#modal:has(.market-mark)) .item-card,
+#modal.potion-shop .inventory-item{background:url('/art/market/slot.webp') center/100% 100% no-repeat!important;border:0!important;box-shadow:none!important;border-radius:18px;filter:drop-shadow(0 3px 2px #7a5b4333);padding:14px 12px!important}
+:is(#modal.shop-modal,#modal.pet-shop,#modal.potion-shop,#modal.salon-modal,#modal:has(.market-mark)) .item-card.selected,
+:is(#modal.shop-modal,#modal.pet-shop,#modal.potion-shop,#modal.salon-modal,#modal:has(.market-mark)) .item-card[aria-pressed="true"]{background-image:url('/art/market/slot-owned.webp')!important;filter:drop-shadow(0 0 8px #fff0a8) drop-shadow(0 3px 2px #7a5b4344)}
+:is(#modal.shop-modal,#modal.pet-shop,#modal.potion-shop,#modal.salon-modal,#modal:has(.market-mark)) .item-card strong,
+#modal.potion-shop .inventory-item strong{font-family:var(--mk-title);color:#2f5a22}
+/* 미리보기: 동그란 러그 위 */
+:is(#modal.shop-modal,#modal.pet-shop,#modal.salon-modal,#modal:has(.market-mark)) .item-detail,
+:is(#modal.shop-modal,#modal.pet-shop,#modal.salon-modal,#modal:has(.market-mark)) .collection-showcase{background:#fffaf0d9!important;border:3px solid #e2c18a!important;border-radius:22px!important;box-shadow:0 3px 0 #c9a46a66!important}
+:is(#modal.shop-modal,#modal.pet-shop,#modal.salon-modal,#modal:has(.market-mark)) .preview-stage{background:url('/art/market/rug.webp') center 88%/78% auto no-repeat,radial-gradient(circle at 50% 40%,#fffdf3,#f4ead0)!important;border-radius:18px}
+/* 구매 버튼: 초록 잎 버튼 */
+:is(#modal.shop-modal,#modal.pet-shop,#modal.potion-shop,#modal.salon-modal,#modal:has(.market-mark)) :is(#buy-item,.primary.wide,[data-buy-potion],[data-buy-pet],[data-buy-ride],[data-buy-look]):not(:disabled){
+ background:url('/art/market/button-buy.webp') center/100% 100% no-repeat!important;border:0!important;color:#fff8e2!important;font-family:var(--mk-title);text-shadow:0 1px 0 #3d5a1d;box-shadow:none!important;filter:drop-shadow(0 3px 0 #4d6322aa);min-height:52px}
+/* 베리 지갑 문구 */
+:is(#modal.shop-modal,#modal.pet-shop,#modal.potion-shop,#modal.salon-modal,#modal:has(.market-mark)) .shop-explainer{background:#fffaf0d9;border:2px solid #e2cf9f;border-radius:14px;padding:10px 14px;box-shadow:0 2px 0 #c9b98455}
+@media(max-width:600px){
+ :is(#modal.shop-modal,#modal.pet-shop,#modal.potion-shop,#modal.salon-modal,#modal:has(.market-mark)) #modal-content{border-width:6px;padding-top:58px}
+ :is(#modal.shop-modal,#modal.pet-shop,#modal.potion-shop,#modal.salon-modal,#modal:has(.market-mark)) .modal-heading{min-height:112px;background:linear-gradient(180deg,#fbf3dcf0 0,#fbf3dcb8 45%,#fbf3dc30 85%),var(--mk-banner,url('/art/market/banner-potion.webp')) center/cover no-repeat}
+}
+/* 새 컬렉션 배너도 가판대 색(연두 리본·양피지)으로 맞춰요. */
+:is(#modal.shop-modal,#modal.pet-shop,#modal.potion-shop,#modal.salon-modal,#modal:has(.market-mark)) :is(.dawn-banner,.skyward-banner){background:linear-gradient(160deg,#f1f6dc,#dfe9bd)!important;color:#3b5a2a!important;border:3px solid #c3d091!important;box-shadow:0 3px 0 #a3b26c88!important}
+:is(#modal.shop-modal,#modal.pet-shop,#modal.potion-shop,#modal.salon-modal,#modal:has(.market-mark)) :is(.dawn-banner,.skyward-banner) :is(h3,strong,b,p,small,span){color:#3b5a2a!important}
+:is(#modal.shop-modal,#modal.pet-shop,#modal.potion-shop,#modal.salon-modal,#modal:has(.market-mark)) :is(.dawn-banner,.skyward-banner) h3{font-family:var(--mk-title)}
+:is(#modal.shop-modal,#modal.pet-shop,#modal.potion-shop,#modal.salon-modal,#modal:has(.market-mark)) .dawn-banner-sun{background:radial-gradient(circle at 35% 30%,#fff6c8,#f3d58b)!important;color:#a37a1c!important}
+:is(#modal.shop-modal,#modal.pet-shop,#modal.potion-shop,#modal.salon-modal,#modal:has(.market-mark)) .modal-navigation{background:transparent!important;box-shadow:none!important}

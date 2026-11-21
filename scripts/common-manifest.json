@@ -601,7 +601,21 @@
     "public/art/forest-stages/stage-7.webp": "de5a425ae9f4bab2970f5de43cd891135a14e4020ee45370d42d1d145c24d8cf",
     "public/art/forest-stages/stage-8.webp": "9d13909f559d4f1905c63855ac53af78962f9f2eb3443072b5d37b6bb83cbb99",
     "public/art/forest-stages/stage-9.webp": "fc6b2583cb4bc255855d975d0a9a52d6ecb381b92ac62d78efacdd07dc90289f",
-    "public/art/forest-stages/trail.webp": "0f069eccf9c0040a8cc467275375d1fe24e6d1cb46873c217cf55515620956fc"
+    "public/art/forest-stages/trail.webp": "0f069eccf9c0040a8cc467275375d1fe24e6d1cb46873c217cf55515620956fc",
+    "src/market-skin.css": "53d42e868cf755618d25111bde6d01acfc32c33fa51af09a7fa7c43888e9136c",
+    "public/art/market/awning.webp": "2fbed3420fcf71310dcfd91278673db430857dc68e0c24af6df621a04b54bbef",
+    "public/art/market/banner-beauty.webp": "db879660740ce407521bb7bd904e18c77f02d009d993db735a6e186d96c644d7",
+    "public/art/market/banner-outfit.webp": "3a23f3f2c4b8ad3c1898e9cde10d79d48db1393968487b2fb84c037dc75d10fd",
+    "public/art/market/banner-pet.webp": "3202567f53d80403b2f5200d2605bf17f70cf39aad4d6157e0869e16c35c2939",
+    "public/art/market/banner-potion.webp": "a5c96565fe32b23d6c43a19700f4ee07ff5f0ce6da19110fcb3e79bb50c257c6",
+    "public/art/market/banner-ride.webp": "469b09f6689d9c30ab0a0bf9acf3bd924c0b208f7bf616bb22076bf12a6504c1",
+    "public/art/market/banner-weapon.webp": "780a2693bc5ec7073682cc9f81cd5c6bb12ef30f345b5c64b53f03eae84384af",
+    "public/art/market/button-buy.webp": "67174750f56ac62fab05ae6ba55db76f00d7c7bc4ea9bffb676fa8d7cb5f5514",
+    "public/art/market/icon-berry.webp": "4b8f85cb3fec335e8f5967644370f8982fa500568b355f99d28f8a617d975c3f",
+    "public/art/market/price-tag.webp": "73f96e83c29d3113459b19f9e1876e078a5e0504ded9828cc8976e8cdff1d127",
+    "public/art/market/rug.webp": "b5246b797906a4f47ee4c0f377973caa164d0a6cb17de3e8632db77d7951780f",
+    "public/art/market/slot-owned.webp": "743a724ec878441981bc9f21647f78f22ff972d2af693373e6982457d3ee2ffe",
+    "public/art/market/slot.webp": "34b9f47569da769eb4809b5512e7cb9d4e2f0c92acac23e94cf113ec7e987500"
   },
-  "generation": "5da8b26f51c9006f031ddb28ef2081368edf333092d337629921e18e048bdb7d"
+  "generation": "e2dd1e798780b1aadb1fcb0d7adba6279719af03736601ae1f04ecef7f3fe1be"
 }

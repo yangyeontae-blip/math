@@ -14,6 +14,7 @@ import {showBerryMachine} from './berry-machine';
 import './potion-workshop.css';
 import {showPotionWorkshop} from './potion-workshop-view';
 import './math-forest-entry.css';
+import './market-skin.css';
 import {mathForestEntryHtml} from './math-forest-entry';
 import {plazaGuideHtml} from './plaza-guide-view';
 import {forestStageHtml} from './forest-stage-view';
@@ -1687,7 +1688,7 @@ function openInventory(tab: 'weapon' | 'outfit' | 'ride' | 'pet' | 'title' | 'st
   if (mode === 'shop' && tab !== 'ride') return;
   rememberMenu(mode === 'shop' ? 'ride-shop' : 'inventory', () => openInventory(tab, selectedId, mode));
   const s = state;
-  const tabs = mode === 'shop' ? dawnShopBanner('ride')+skywardShopBanner('ride')+'<p>탈것을 골라 미리 타 보세요. 구매한 탈것은 가방에도 보관돼요.</p>' : `<div class="inventory-tabs"><button data-inventory-tab="weapon" class="${tab === 'weapon' ? 'active' : ''}">⚔ 무기</button><button data-inventory-tab="outfit" class="${tab === 'outfit' ? 'active' : ''}">👗 옷</button><button data-inventory-tab="ride" class="${tab === 'ride' ? 'active' : ''}" aria-label="탈것">🪽 탈것</button><button data-inventory-tab="pet" class="${tab === 'pet' ? 'active' : ''}">🐾 펫</button><button data-career-action="show-supplies">🍪 보급품</button><button data-inventory-tab="title">✦ 칭호</button><button data-inventory-tab="status">📊 상태</button></div>`;
+  const tabs = mode === 'shop' ? '<i class="market-mark" hidden></i>'+dawnShopBanner('ride')+skywardShopBanner('ride')+'<p>탈것을 골라 미리 타 보세요. 구매한 탈것은 가방에도 보관돼요.</p>' : `<div class="inventory-tabs"><button data-inventory-tab="weapon" class="${tab === 'weapon' ? 'active' : ''}">⚔ 무기</button><button data-inventory-tab="outfit" class="${tab === 'outfit' ? 'active' : ''}">👗 옷</button><button data-inventory-tab="ride" class="${tab === 'ride' ? 'active' : ''}" aria-label="탈것">🪽 탈것</button><button data-inventory-tab="pet" class="${tab === 'pet' ? 'active' : ''}">🐾 펫</button><button data-career-action="show-supplies">🍪 보급품</button><button data-inventory-tab="title">✦ 칭호</button><button data-inventory-tab="status">📊 상태</button></div>`;
   const summary = `<p class="inventory-summary"><span>무기 ${Object.keys(s.weapons).length} · 옷 ${Object.keys(s.outfits).length} · 탈것 ${Object.keys(s.rides).length} · 펫 ${Object.keys(s.pets).length}</span><b>🍓 ${s.berries.toLocaleString()}베리</b></p>`;
   if (tab === 'weapon') {
     const ownedIds = Object.keys(s.weapons).map(Number).sort((a, b) => a === s.weapon ? -1 : b === s.weapon ? 1 : a - b);
