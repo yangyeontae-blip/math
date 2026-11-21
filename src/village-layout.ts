@@ -36,6 +36,8 @@ export function villageMonsterSpot(id: number, x: number, z: number): { x: numbe
   return { x, z };
 }
 
+/** 2026-11-21 물약 공방: 왼쪽 앞 빈터(가로등·꽃밭·벤치·무기점과 떨어진 곳). 문은 카메라 쪽(+z)을 봐요. */
+export const POTION_WORKSHOP_SPOT={x:-14.5,z:8.2,radius:2.8,keeper:{x:-14.5,z:12.4}} as const;
 /** Building centres. Merchants stand 3.1 units in front of their own door. */
 export const MARKET_SCALE=1.3, MARKET_RADIUS=2.8, MARKET_DOOR_OFFSET=4.2;
 export const MARKET_SHOPS = [

@@ -3,7 +3,8 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { questionPool, newSave, validateSave, buy, upgrade, buyRide, dismount, buyPet, buyLook, buyPotion, usePotion, potionEffects, applyTeacherCode, enableTeacherMode, grantReward, rewardFor, Encounter, WEAPONS, OUTFITS, PETS, POTIONS, RIDES, HAIRSTYLES, FACES, MONSTERS, CHARACTERS, STAGE_DIVISION_DIFFICULTY, SHINBI_STAR_PET_ID, HERO_BREAD_PET_ID, collectBerry, journeyFor, finishHunt, fellTree, treeDamage, canEnter, monsterBattleRounds, recordWrongAnswer, recordCorrectAnswer, PLAYER_MOVE_SPEED, berryWithinReach, petChaseSpeed, riderHeight } from '../src/rules.ts';
 import { stageBerries, stageMonsters, stageTrees, clearBonus, berryValue, isVillagePond } from '../src/stages.ts';
-import { rematchHunt } from '../src/rules.ts';
+import { rematchHunt, mathLevelBerries, brewPotion } from '../src/rules.ts';
+import { WORKSHOP_MAX_ORBS, SHOP_BOOST_DAILY_LIMIT, WORKSHOP_RECIPES } from '../src/potion-workshop.ts';
 
 test('village pond never rescues a player on a hunt-stage path', () => {
   assert.equal(isVillagePond(0, 19, 8), true);
@@ -47,7 +48,7 @@ test('division questions grow gradually harder across the ten hunt stages', () =
 });
 test('all weapons and upgrades give the documented rewards for every monster', () => {
   const s = newSave('베리', 0);
-  WEAPONS.forEach((w, wi) => { s.weapon = wi; for (let u = 0; u <= 3; u++) { s.weapons[wi] = u; MONSTERS.forEach((m, mi) => { assert.deepEqual(rewardFor(s, mi, true), { berries: m.berry + w.bonus, xp: m.xp, score: Math.round(m.score * (w.multiplier + u * .1)) }); assert.equal(rewardFor(s, mi, false).berries, m.berry + w.bonus + 2); assert.equal(rewardFor(s, mi, false).score, 0); }); } });
+  WEAPONS.forEach((w, wi) => { s.weapon = wi; for (let u = 0; u <= 3; u++) { s.weapons[wi] = u; MONSTERS.forEach((m, mi) => { assert.deepEqual(rewardFor(s, mi, true), { berries: m.berry + w.bonus + mathLevelBerries(1), xp: m.xp, score: Math.round(m.score * (w.multiplier + u * .1)) }); assert.equal(rewardFor(s, mi, false).berries, m.berry + w.bonus + 2 + mathLevelBerries(1, m.rounds)); assert.equal(rewardFor(s, mi, false).score, 0); }); } });
 });
 test('species-named forest creatures appear across the stages and require several correct answers', () => {
   assert.deepEqual(MONSTERS.slice(4).map(monster => monster.name), ['반짝 별꿀벌', '말랑 민들레 고양이', '살금 달빛 여우', '폭신 꽃구름 양', '씩씩 별도토리 곰']);
@@ -69,15 +70,15 @@ test('outfit combat effects never change the division or arena score rule', () =
   const s = newSave('옷', 2), before = rewardFor(s, 3, true); s.berries = 1000; buy(s, 'outfit', 7); upgrade(s, 'outfit', 7); upgrade(s, 'outfit', 7); const after = rewardFor(s, 3, true); assert.equal(after.score, before.score); assert.equal(after.berries, before.berries); assert.equal(after.xp, before.xp + 2);
 });
 test('level-up threshold, remaining XP and 20 berry gift', () => {
-  const s = newSave('성장', 3); for (let i = 0; i < 4; i++) grantReward(s, 0, true); assert.equal(s.level, 2); assert.equal(s.xp, 0); assert.equal(s.berries, 52); assert.equal(s.tutorial.battle, true);
-  for (let i = 0; i < 4; i++) grantReward(s, 3, false); assert.equal(s.level, 3); assert.equal(s.xp, 0); assert.equal(s.berries, 140);
+  const s = newSave('성장', 3); for (let i = 0; i < 4; i++) grantReward(s, 0, true); assert.equal(s.level, 2); assert.equal(s.xp, 0); assert.equal(s.berries, 4 * (8 + mathLevelBerries(1)) + 20); assert.equal(s.tutorial.battle, true);
+  let levelBerries = 0; for (let i = 0; i < 4; i++) { levelBerries += mathLevelBerries(s.level); grantReward(s, 3, false); } assert.equal(s.level, 3); assert.equal(s.xp, 0); assert.equal(s.berries, 140 + 4 * mathLevelBerries(1) + levelBerries);
 });
 test('secret milestone gifts are paid once on crossing levels 30, 50 and 100', () => {
   for (const [level, gift] of [[30, 30_000], [50, 50_000], [100, 100_000]]) {
     const s = newSave('비밀', 0); s.level = level - 1; s.xp = s.level * 40 - 1;
     const result = grantReward(s, 0, true);
     assert.equal(s.level, level); assert.deepEqual(result.milestones, [{ level, berries: gift }]);
-    assert.equal(s.berries, 8 + 20 + gift);
+    assert.equal(s.berries, 8 + mathLevelBerries(level - 1) + 20 + gift);
     assert.deepEqual(grantReward(s, 0, true).milestones, []);
     assert.deepEqual(validateSave(JSON.parse(JSON.stringify(s))), s);
   }
@@ -195,19 +196,19 @@ test('Junwoo potions last for their exact time and never overspend', () => {
   buyPotion(s, 0); buyPotion(s, 0); assert.equal(s.berries, 1_000 - POTIONS[0].price * 2); assert.equal(s.potions.stock[0], 2);
   usePotion(s, 0, now); assert.equal(s.potions.berryMultiplier, 2); assert.equal(potionEffects(s, now).berrySeconds, 600);
   assert.throws(() => usePotion(s, 0, now + 1_000)); assert.equal(s.potions.stock[0], 1);
-  const doubled = rewardFor(s, 0, false, now + 599_000).berries; assert.equal(doubled, (MONSTERS[0].berry + 2) * 2);
+  const doubled = rewardFor(s, 0, false, now + 599_000).berries; assert.equal(doubled, (MONSTERS[0].berry + 2 + mathLevelBerries(1)) * 2);
   for (let i = 0; i < 8; i++) grantReward(s, 0, false, now + 599_000);
-  assert.equal(potionEffects(s, now + 600_001).berryMultiplier, 1); assert.equal(rewardFor(s, 0, false, now + 600_001).berries, MONSTERS[0].berry + 2);
+  assert.equal(potionEffects(s, now + 600_001).berryMultiplier, 1); assert.equal(rewardFor(s, 0, false, now + 600_001).berries, MONSTERS[0].berry + 2 + mathLevelBerries(s.level));
   usePotion(s, 0, now + 600_001); assert.equal(s.potions.stock[0], 0);
   const poor = newSave('부족', 0); assert.throws(() => buyPotion(poor, 2)); assert.equal(poor.berries, 0);
 });
 test('new potions have distinct long and strong time effects', () => {
   const now = 1_900_000_000_000;
-  const berry = newSave('긴물약', 0); berry.berries = 2_000; buyPotion(berry, 3); usePotion(berry, 3, now);
+  const berry = newSave('긴물약', 0); berry.workshop!.orbs = 20; brewPotion(berry, 3); usePotion(berry, 3, now);
   assert.equal(potionEffects(berry, now).berryMultiplier, 2); assert.equal(potionEffects(berry, now).berrySeconds, 1_200);
   const study = newSave('공부물약', 0); study.berries = 2_000; buyPotion(study, 4); usePotion(study, 4, now);
   assert.equal(potionEffects(study, now).xpMultiplier, 2); assert.equal(potionEffects(study, now).xpSeconds, 1_200);
-  const focus = newSave('집중물약', 0); focus.berries = 2_000; buyPotion(focus, 5); usePotion(focus, 5, now);
+  const focus = newSave('집중물약', 0); focus.workshop!.orbs = 20; brewPotion(focus, 5); usePotion(focus, 5, now);
   assert.equal(potionEffects(focus, now).xpMultiplier, 4); assert.equal(potionEffects(focus, now).xpSeconds, 300);
 });
 test('new named equipment is ordered safely and flying pets stay below the hero range', () => {
@@ -252,10 +253,10 @@ test('a nickname change charges exactly 100,000 berries and preserves the save i
 
 test('math forest bonuses grow without modifying the village tutorial or arena',()=>{
  const save=newSave('수학친구',0,3);const monster=MONSTERS[0],stage=3;
- assert.equal(rewardFor(save,0,false).berries,monster.berry+2);
+ assert.equal(rewardFor(save,0,false).berries,monster.berry+2+mathLevelBerries(1));
  journeyFor(save).stage=stage;
- assert.deepEqual(rewardFor(save,0,false),{berries:Math.round((monster.berry+2+stage*5)*1.1),xp:Math.round(monster.xp*1.1),score:0});
- assert.deepEqual(rewardFor(save,0,true),{berries:monster.berry,xp:monster.xp,score:monster.score});
+ assert.deepEqual(rewardFor(save,0,false),{berries:Math.round((monster.berry+2+stage*5)*1.1)+mathLevelBerries(1),xp:Math.round(monster.xp*1.1),score:0});
+ assert.deepEqual(rewardFor(save,0,true),{berries:monster.berry+mathLevelBerries(1),xp:monster.xp,score:monster.score});
  assert.deepEqual(rewardFor(save,0,false,Date.now(),false),{berries:0,xp:0,score:0});
  assert.equal(clearBonus(stage),308);
 });

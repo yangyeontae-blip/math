@@ -24,10 +24,10 @@ import { huntingPower, huntingCompanionStats, PPOJJAK_PET_ID } from './rules';
 import {createPpojjakiPet,createPpojjakiAura,animatePpojjakiPet,animatePpojjakiAura,disposePpojjakiAssets} from './legendary-pet';
 import {salonHairModel,salonFaceModel,disposeSalonMaterials} from './salon-models';
 import { HUNT_ZONES, HUNT_CAMP } from './hunting';
-import { mathForestGateway, academyBuilding, academyInterior, skillEffectModel, VILLAGE_ART, PLAZA_BERRY_TREES, berryTreeModel, plazaGarden, fountainModel, cottageModel, marketGarden, homesteadGarden, stoneLane, districtBorder, flowerBed } from './village-art';
+import { potionWorkshopModel, mathForestGateway, academyBuilding, academyInterior, skillEffectModel, VILLAGE_ART, PLAZA_BERRY_TREES, berryTreeModel, plazaGarden, fountainModel, cottageModel, marketGarden, homesteadGarden, stoneLane, districtBorder, flowerBed } from './village-art';
 import { shopSignText, shopInteraction } from './shop-signs';
 import { showEntityLabel } from './navigation';
-import { MARKET_SCALE, MARKET_RADIUS, MARKET_DOOR_OFFSET, MARKET_SHOPS, VILLAGE_SPOTS, HALL_GUIDE_SPOT, villageWelcomeClear, villageTreeSpot, villageMonsterSpot } from './village-layout';
+import { POTION_WORKSHOP_SPOT, MARKET_SCALE, MARKET_RADIUS, MARKET_DOOR_OFFSET, MARKET_SHOPS, VILLAGE_SPOTS, HALL_GUIDE_SPOT, villageWelcomeClear, villageTreeSpot, villageMonsterSpot } from './village-layout';
 import { homeScenery } from './homestead-models';
 import { HOME_ITEMS, objectCells, visitorTargets, homeRoute, homeReachable, type HomeObject } from './homestead';
 import { HOME_EXIT, HOME_PROJECT_SPOTS, HOME_VISITORS, atHomeExit } from './home-experience';
@@ -776,7 +776,7 @@ export class World {
     const exit=(id:string,name:string,x:number,z:number,color:number)=>{const g=this.gate(color);this.addEntity(id,name,x,z,g);this.sign(g,name.split(' · ')[0],0,4.8,0,6);};
     const gateway=this.astralGateway=worldTwoGateway();this.addEntity('world2Gate','별너머 군도 · 세계 2',WORLD_TWO_GATE.x,WORLD_TWO_GATE.z,gateway);this.sign(gateway,'별너머 군도',0,4.15,0,5.4,'#585282',true);const approachStart={x:15,z:-2},dx=WORLD_TWO_GATE.x-approachStart.x,dz=WORLD_TWO_GATE.z-approachStart.z;const skyPath=box(this.scene,theme.path,(approachStart.x+WORLD_TWO_GATE.x)/2,.035,(approachStart.z+WORLD_TWO_GATE.z)/2,2.8,.07,Math.hypot(dx,dz));skyPath.rotation.y=Math.atan2(dx,dz);skyPath.name='world2-fitted-approach';
     exit('huntingGate','가시덩굴숲 · 왼쪽 위 사냥터',PLAZA_COMBAT_GATES.hunting.x,PLAZA_COMBAT_GATES.hunting.z,0x6d9563);
-    exit('shopStreet','상점거리 · 왼쪽 아래 길',PLAZA_COMBAT_GATES.market.x,PLAZA_COMBAT_GATES.market.z,0xd69aa9);const mathGate=mathForestGateway();this.addEntity('journey','수학숲으로 모험하기 · 아래쪽 메인 입구',0,16,mathGate);this.sign(mathGate,'수학숲으로 모험하기',0,6.3,0,7.8,'#235c3d',true);this.sign(mathGate,'수학 문제로 경험치 듬뿍!',0,4.35,0,5.4,'#6c552c',true);
+    exit('shopStreet','상점거리 · 왼쪽 아래 길',PLAZA_COMBAT_GATES.market.x,PLAZA_COMBAT_GATES.market.z,0xd69aa9);const mathGate=mathForestGateway();this.addEntity('journey','수학숲으로 모험하기 · 아래쪽 메인 입구',0,16,mathGate);this.sign(mathGate,'수학숲으로 모험하기',0,6.3,0,7.8,'#235c3d',true);this.sign(mathGate,'정답마다 베리·경험치 듬뿍!',0,4.35,0,5.4,'#6c552c',true);
     for(const [x,z]of [[-17,-13],[-12,-15],[11,-15],[17,-13],[-19,14],[18,16],[-23,-5],[23,-6]])this.tree(x,z,1.05,false,theme.foliage);
     stageTrees(0).forEach(({x,z},id)=>{const at=villageTreeSpot(id,x,z);this.addChoppableTree(id,at.x,at.z,1,false,theme.foliage);});
     // Keep the earned story pond and bridge exactly where earlier saves expect them.
@@ -820,6 +820,10 @@ export class World {
     // 베리 풍차는 2026-11-18 팀장 결정으로 광장에서 뺐어요. 이미 올린 단계의 보상 배율은 그대로 유지돼요.
 
     this.sign(stall, '비밀상인', 0, 3.15, .52, 3.3, '#55426e', true);
+    const workshop=potionWorkshopModel();workshop.position.set(POTION_WORKSHOP_SPOT.x,0,POTION_WORKSHOP_SPOT.z);workshop.scale.setScalar(MARKET_SCALE);this.scene.add(workshop);
+    this.colliders.push({x:POTION_WORKSHOP_SPOT.x,z:POTION_WORKSHOP_SPOT.z,r:POTION_WORKSHOP_SPOT.radius});
+    this.sign(workshop,'물약 공방',0,5.05,1.3,3.2,'#3f5e48',true);
+    this.addEntity('potionWorkshop','물약 공방 · 이슬이',POTION_WORKSHOP_SPOT.keeper.x,POTION_WORKSHOP_SPOT.keeper.z,makeCharacter(1, 14, 3));
     const exit=this.gate(0x91b9a1);this.addEntity('marketExit','중앙 광장 · 돌아가기',0,11,exit);this.sign(exit,'중앙 광장',0,4.6,0,4.5);
     stoneLane(this.scene,0,8,4,18);
     for(const x of [-23,23])for(const z of [-16,-5,7]){this.tree(x,z,.75,false,0x7fad78);cylinder(this.scene,0x8b6e52,x*.9,.9,z+3,.07,.09,1.8,8);ball(this.scene,0xffe9af,x*.9,1.9,z+3,.2);}

@@ -60,7 +60,7 @@ test('hunting rewards combine level and daily reductions before flooring, includ
  s.potions.berryMultiplier=3;s.potions.berryUntil=now+10000;s.potions.xpMultiplier=4;s.potions.xpUntil=now+10000;
  let event={type:'defeat' as const,id:'one',enemyId:'0',enemyType:'ranged' as const,zone:1,practice:false};const oldLearning=structuredClone(s.learning),oldDaily=structuredClone(s.daily),oldJourney=structuredClone(s.journey);
  const reward=grantHuntingReward(s,event,now);assert.equal(reward.berries,13);assert.equal(reward.xp,10);assert.equal(s.career.stats.defeats,1);assert.deepEqual(s.career.stats.seen,['ranged']);const once=structuredClone(s);assert.equal(grantHuntingReward(s,event,now).eligible,false);assert.deepEqual(s,once);
- s.career.daily.counts[1]=100;const reduced=huntingRewardFor(s,1,now);assert.equal(reduced.berries,13);assert.equal(reduced.xp,10);assert.deepEqual(s.learning,oldLearning);assert.deepEqual(s.daily,oldDaily);assert.deepEqual(s.journey,oldJourney);assert.equal(s.best,0);validateSave(s);
+ s.career.daily.counts[1]=100;const reduced=huntingRewardFor(s,1,now);assert.equal(reduced.berries,3);assert.equal(reduced.xp,2);assert.deepEqual(s.learning,oldLearning);assert.deepEqual(s.daily,oldDaily);assert.deepEqual(s.journey,oldJourney);assert.equal(s.best,0);validateSave(s);
 });
 test('level growth strengthens combat monotonically from novice through the maximum level',()=>{
  const s=newSave('모험가',0);assert.ok(Math.abs(huntingPower(s)-10.95)<1e-9);
@@ -77,7 +77,7 @@ test('the strengthened level base preserves weapon strength and every upgrade mu
 test('each unlocked hunting zone grants the adjusted base reward without learning bonuses',()=>{
  const now=new Date(2026,9,28,12).getTime(),expected=[[18,11],[45,27],[90,54],[180,108]];
  for(const zone of HUNT_ZONES){const s=newSave('모험가',0);s.level=zone.level;const before=structuredClone(s.learning);const reward=grantHuntingReward(s,zone.id,'melee',now);assert.equal(reward.berries,expected[zone.id][0]);assert.equal(reward.xp,expected[zone.id][1]);assert.equal(s.berries,reward.berries);assert.equal(s.xp,reward.xp);assert.deepEqual(s.learning,before);validateSave(s);}
- const s=newSave('모험가',0);s.level=80;grantHuntingReward(s,3,'melee',now);s.career.daily.counts[3]=100;const minimum=huntingRewardFor(s,3,now);assert.equal(minimum.berries,180);assert.equal(minimum.xp,108);
+ const s=newSave('모험가',0);s.level=80;grantHuntingReward(s,3,'melee',now);s.career.daily.counts[3]=100;const minimum=huntingRewardFor(s,3,now);assert.equal(minimum.berries,45);assert.equal(minimum.xp,27);
 });
 test('updating level and weapon power keeps the same battle, cooldowns and enemy health',()=>{
  const r=new HuntingRuntime({zone:0,level:10,power:5,job:'mage',learned:['starbolt'],practice:true});const p={x:0,z:2};r.cast('starbolt',p);r.step(.2,p);const before=r.snapshot();
@@ -94,9 +94,9 @@ test('disengaged enemies return to their spawn and recover while camp remains sa
  const r=new HuntingRuntime({zone:0,level:1,power:1}),spawn=r.snapshot().enemies[0];r.attack({x:spawn.x,z:spawn.z+1});assert.ok(r.snapshot().enemies[0].hp<spawn.maxHp);
  const events=r.step(5,HUNT_CAMP);assert.equal(r.snapshot().enemies[0].hp,spawn.maxHp);assert.equal(events.some(e=>e.type==='playerHit'),false);
 });
-test('normal hunting retains full daily rewards beyond one hundred kills',()=>{
+test('the first hundred daily kills are full reward, then quarter reward, and a new day restores the allowance',()=>{
  const s=newSave('모험가',0);s.level=10;const now=new Date(2026,9,26,12).getTime();grantHuntingReward(s,1,'melee',now);s.career.daily.counts[1]=99;
- assert.equal(grantHuntingReward(s,1,'charge',now).berries,45);assert.equal(grantHuntingReward(s,1,'charge',now).berries,45);assert.equal(huntingRewardFor(s,1,now+86400000).berries,45);
+ assert.equal(grantHuntingReward(s,1,'charge',now).berries,45);assert.equal(grantHuntingReward(s,1,'charge',now).berries,11);assert.equal(huntingRewardFor(s,1,now+86400000).berries,45);
 });
 test('basic attacks keep hitting the chosen enemy and splash nearby enemies (2026-10-27 hold-F fix)',()=>{
  // 예전에는 매 공격마다 가장 가까운 몬스터로 대상이 바뀌어, 계속 눌러도 한 마리도 쓰러지지 않았어요.
@@ -139,16 +139,16 @@ test('highest enterable hunting zones retain full level rewards at every boundar
  s.level=60;assert.equal(huntingRewardFor(s,2,now).multiplier,.1);assert.equal(huntingRewardFor(s,3,now).multiplier,1);
 });
 
-test('level 50 zone 30 deposits 90 berries and 54 XP, keeps 90 and 54 after daily 100, across save restore',()=>{
+test('level 50 zone 30 deposits 90 berries and 54 XP, then 22 and 13 after daily 100, across save restore',()=>{
  const now=new Date(2026,9,29,12).getTime(),s=newSave('모험가',0);s.level=50;
  const event={type:'defeat' as const,id:'level50-99',enemyId:'0',enemyType:'melee' as const,zone:2,practice:false};
  grantHuntingReward(s,{...event,id:'seed'},now);s.career.daily.counts[2]=99;
  const berries=s.berries,xp=s.xp,full=grantHuntingReward(s,event,now);
  assert.equal(full.berries,90);assert.equal(full.xp,54);assert.equal(s.berries-berries,90);assert.equal(s.xp-xp,54);assert.equal(s.career.daily.counts[2],100);
  const restored=validateSave(JSON.parse(JSON.stringify(s))),reduced=grantHuntingReward(restored,{...event,id:'level50-100'},now);
- assert.equal(reduced.berries,90);assert.equal(reduced.xp,54);assert.equal(reduced.multiplier,1);assert.equal(restored.berries-s.berries,90);assert.equal(restored.xp-s.xp,54);assert.equal(restored.career.stats.totalBerries-s.career.stats.totalBerries,90);
+ assert.equal(reduced.berries,22);assert.equal(reduced.xp,13);assert.equal(reduced.multiplier,.25);assert.equal(restored.berries-s.berries,22);assert.equal(restored.xp-s.xp,13);assert.equal(restored.career.stats.totalBerries-s.career.stats.totalBerries,22);
  const once=structuredClone(restored);assert.equal(grantHuntingReward(restored,{...event,id:'level50-100'},now).eligible,false);assert.deepEqual(restored,once);
  assert.equal(huntingRewardFor(restored,2,now+86400000).berries,90);
  restored.potions.berryMultiplier=3;restored.potions.berryUntil=now+10000;restored.potions.xpMultiplier=4;restored.potions.xpUntil=now+10000;
- assert.equal(huntingRewardFor(restored,2,now).berries,270);assert.equal(huntingRewardFor(restored,2,now).xp,216);
+ assert.equal(huntingRewardFor(restored,2,now).berries,67);assert.equal(huntingRewardFor(restored,2,now).xp,54);
 });

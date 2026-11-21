@@ -1,0 +1,52 @@
+/* 물약 공방: 손그림 수채화 종이 위의 따뜻한 켈트풍 공방(2026-11-21 Codex 시안 색상). */
+.potion-workshop{--pw-ivory:#f4ebdd;--pw-beam:#654b3e;--pw-slate:#71858e;--pw-sage:#91a77a;--pw-stone:#a69f8c;--pw-copper:#c98862;--pw-mint:#8fd6be;--pw-gold:#f3d58b;color:#3d3128;max-width:860px;margin:auto}
+.pw-paper{position:relative;padding:24px;border-radius:22px;border:3px solid var(--pw-beam);
+ background:
+  radial-gradient(120% 80% at 10% 0%,#fffaf0 0,transparent 60%),
+  radial-gradient(90% 70% at 100% 100%,#e8dcc4 0,transparent 70%),
+  radial-gradient(60% 40% at 80% 10%,#dceedd88 0,transparent 70%),
+  var(--pw-ivory);
+ box-shadow:inset 0 0 0 6px #fff8ea,inset 0 0 40px #c9b48f55,0 6px 0 #4d382b33}
+.pw-paper:before{content:'';position:absolute;inset:10px;border:1.5px dashed #b49a7a88;border-radius:16px;pointer-events:none}
+.pw-head{display:grid;grid-template-columns:minmax(0,1fr) 168px;gap:16px;align-items:center;margin-bottom:16px}
+.pw-head small{letter-spacing:.08em;color:#7a6650;font-weight:800}
+.pw-head h2{font-family:'Berry Notebook Serif','Berry Forest Sans',serif;font-size:2rem;color:var(--pw-beam);margin:4px 0 8px;text-shadow:0 2px 0 #fff8ea}
+.pw-head p{margin:0;line-height:1.7}
+.pw-head b{color:#2f7a66}
+.pw-cauldron{width:168px;height:126px;filter:drop-shadow(0 4px 0 #4d382b22)}
+.pw-steam{animation:pw-steam 3.2s ease-in-out infinite;transform-origin:80px 40px;opacity:.85}
+@keyframes pw-steam{0%,100%{transform:translateY(0) scaleY(1);opacity:.85}50%{transform:translateY(-4px) scaleY(1.08);opacity:.55}}
+.pw-jar{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;padding:12px 16px;margin-bottom:16px;border-radius:16px;background:linear-gradient(180deg,#fdf6e6,#efe3c9);border:2px solid #c8ad86}
+.pw-jar strong{display:block;color:#2f6b5c;font-size:1.1rem}
+.pw-jar small{color:#7a6650}
+.pw-orbs{display:grid;grid-template-columns:repeat(10,16px);gap:6px}
+.pw-orbs i{width:16px;height:16px;border-radius:50%;background:#e2d6bd;box-shadow:inset 0 2px 2px #0001}
+.pw-orbs i.on{background:radial-gradient(circle at 35% 30%,#ffffff,var(--pw-mint) 45%,#4fa58c);box-shadow:0 0 8px #8fd6becc}
+.pw-recipes{display:grid;grid-template-columns:1fr;gap:10px}
+.pw-recipe{display:grid;grid-template-columns:56px minmax(0,1fr) auto;gap:12px;align-items:center;padding:12px;border-radius:16px;background:#fffaf0;border:2px solid #dccbab;box-shadow:0 3px 0 #b49a7a44}
+.pw-recipe.ready{border-color:var(--pw-sage);background:linear-gradient(160deg,#fffdf5,#eef5e4)}
+.pw-recipe-icon{display:grid;place-items:center;width:56px;height:56px;border-radius:14px;background:radial-gradient(circle at 50% 40%,#fff7de,#f1e1bf)}
+.pw-recipe strong{display:block;color:var(--pw-beam)}
+.pw-recipe small{display:block;color:#7a6650;font-size:.85rem;line-height:1.45}
+.potion-workshop button{min-height:44px;font-weight:800;border-radius:14px}
+.pw-brew{display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 12px;background:#2f6b5c;color:#fff8e2;border:2px solid #c8ad86;box-shadow:0 3px 0 #1f4a3f}
+.pw-brew b{color:var(--pw-gold);font-size:.95rem}
+.pw-brew:disabled{background:#d9cfbd;color:#7a6c58;box-shadow:none}
+.pw-brew:disabled b{color:#8b7a62}
+.pw-note{margin:16px 0 0;font-size:.9rem;line-height:1.65;color:#5d4c3d;background:#fdf3dc;border-left:4px solid var(--pw-copper);padding:10px 14px;border-radius:0 12px 12px 0}
+.pw-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+.pw-actions button{flex:1 1 180px;padding:12px 16px}
+.potion-shop .pw-shop-link{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:8px 0 12px;padding:12px 16px;border-radius:14px;background:linear-gradient(160deg,#fffaf0,#e7f3ea);border:2px solid #91a77a}
+.potion-shop .pw-shop-link p{margin:0;font-size:.9rem;line-height:1.5}
+.potion-shop .pw-only{font-size:.85rem;color:#2f6b5c;font-weight:800}
+@media(max-width:600px){
+ .pw-paper{padding:16px}
+ .pw-head{grid-template-columns:1fr}
+ .pw-cauldron{width:120px;height:90px;justify-self:center;grid-row:1}
+ .pw-head h2{font-size:1.5rem}
+ .pw-recipes{grid-template-columns:1fr}
+ .pw-orbs{grid-template-columns:repeat(10,12px);gap:5px}
+ .pw-orbs i{width:12px;height:12px}
+ .potion-shop .pw-shop-link{flex-direction:column;align-items:stretch}
+}
+@media(prefers-reduced-motion:reduce){.pw-steam{animation:none}}

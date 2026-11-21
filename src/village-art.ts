@@ -265,3 +265,46 @@ export function mathForestGateway(){const g=new T.Group();g.name='math-forest-ma
  for(const side of [-1,1]){const lantern=piece(g,0xffe6a2,new T.SphereGeometry(.22,12,8),side*1.85,3.3,.25);lantern.scale.y=1.3;post(g,a.wood,side*1.85,3.75,.18,.025,.6);}
  const glowMaterial=mathGatewayGlow;const veil=new T.Mesh(new T.CircleGeometry(2.15,40),glowMaterial);veil.position.set(0,2.35,-.08);g.add(veil);const halo=piece(g,0xffe6a5,new T.RingGeometry(2.12,2.18,48),0,2.35,.12);for(let i=0;i<8;i++){const angle=i*Math.PI/4,twinkle=piece(g,0xffe7a5,new T.OctahedronGeometry(.1),Math.cos(angle)*1.75,2.35+Math.sin(angle)*1.75,.2);twinkle.scale.y=1.6;}
  const trail=piece(g,0xa5c99a,new T.CircleGeometry(1.7,40),0,.2,0);trail.rotation.x=-Math.PI/2;trail.scale.y=.6;return g;}
+
+/** 2026-11-21 물약 공방: 돌 기초·반목조 벽·이끼 지붕·가마솥(Codex 시안 색). 문은 +z 쪽이에요. */
+export function potionWorkshopModel(){
+ const g=new T.Group(),stone=0xa69f8c,beam=0x654b3e,plaster=0xf4ebdd,slate=0x71858e,moss=0x91a77a,copper=0xc98862,mint=0x8fd6be,gold=0xf3d58b;
+ block(g,VILLAGE_ART.edge,0,.15,0,4.9,.3,4.3);
+ block(g,stone,0,.62,0,4,.9,3.4);
+ block(g,plaster,0,1.9,0,3.9,1.75,3.3);
+ // 앞면 반목조: 세로 기둥, 가로 띠, 사선 버팀대.
+ for(const x of [-1.9,-.45,1.9])block(g,beam,x,1.9,1.68,.16,1.8,.1);
+ for(const y of [1.07,2.72])block(g,beam,0,y,1.68,3.95,.14,.1);
+ for(const side of [-1,1]){const brace=block(g,beam,side*1.2,1.95,1.7,.12,1.45,.08);brace.rotation.z=side*.55;}
+ // 옆면 반목조: 모서리 기둥과 가로 띠, 가운데 기둥.
+ for(const x of [-1.96,1.96]){for(const z of [-1.62,0,1.62])block(g,beam,x,1.9,z,.1,1.8,.16);for(const y of [1.07,2.72])block(g,beam,x,y,0,.1,.14,3.32);}
+ // 가파른 슬레이트 지붕과 이끼, 앞쪽 박공.
+ for(const side of [-1,1]){const half=block(g,slate,0,3.55,side*1.05,4.5,.22,2.55);half.rotation.x=side*.72;}
+ block(g,beam,0,4.36,0,4.6,.16,.18);
+ // 앞뒤 박공: 세운 삼각기둥(밑변은 벽 위, 꼭짓점은 용마루 아래).
+ const tri=new T.Shape();tri.moveTo(-1.66,0);tri.lineTo(1.66,0);tri.lineTo(0,1.55);tri.closePath();
+ const gableGeo=new T.ExtrudeGeometry(tri,{depth:.12,bevelEnabled:false});gableGeo.translate(0,0,-.06);
+ for(const side of [-1,1]){const gable=piece(g,plaster,gableGeo,side*1.9,2.77,0);gable.rotation.y=Math.PI/2;block(g,beam,side*1.97,3.25,0,.06,.95,.12);}
+ for(const [x,z] of [[-1.4,.7],[.9,1.2],[1.6,-.5],[-.3,-1.1],[.2,.2]])orb(g,moss,x,3.75+Math.abs(z)*-.25,z,.32,.35);
+ // 굴뚝과 민트빛 김.
+ block(g,stone,-1.35,3.7,-.75,.72,2.4,.72);block(g,0x8f8878,-1.35,4.95,-.75,.86,.16,.86);
+ for(const [i,y] of [4.0,5.5,5.95,6.4].entries())if(i)orb(g,mint,-1.35+i*.12,y,-.75,.26-i*.03,.8);
+ // 둥근 나무문, 등불 두 개.
+ block(g,stone,-.45,1.2,1.72,1.15,1.95,.12);block(g,beam,-.45,1.15,1.8,.82,1.7,.1);orb(g,beam,-.45,2,1.8,.41,1).scale.z=.25;
+ orb(g,0x3a3330,-.2,1.15,1.88,.07);
+ for(const x of [-1.2,.3]){post(g,0x3a3330,x,2.05,1.86,.03,.3);orb(g,gold,x,1.8,1.9,.13,1.3);}
+ // 물약 병이 반짝이는 큰 창.
+ block(g,beam,1.15,1.95,1.75,1.2,1.1,.1);block(g,0xffe6a6,1.15,1.95,1.79,1,.92,.04);
+ for(const [i,x] of [.8,1.05,1.3,1.5].entries())orb(g,i%2?gold:mint,x,1.75+(i%2)*.4,1.84,.11,1.2);
+ block(g,beam,1.15,1.95,1.82,.06,.92,.04);block(g,beam,1.15,1.95,1.82,1,.06,.04);
+ // 처마 밑 약초 다발(세이지·라벤더).
+ for(const [i,x] of [.4,.8,1.2,1.6].entries()){post(g,0x8a6a4c,x,2.98,1.95,.02,.25);orb(g,i%2?0x9b86c4:moss,x,2.72,1.95,.12,1.6);}
+ // 걸린 간판: 물약병 그림.
+ post(g,beam,-2.25,2.95,1.6,.06,.9).rotation.z=Math.PI/2;block(g,beam,-2.55,2.4,1.6,.7,.6,.08);orb(g,mint,-2.55,2.36,1.66,.16,1.1);block(g,0xd9e4dc,-2.55,2.58,1.66,.07,.14,.04);
+ // 바깥 가마솥과 돌 화덕, 나무통.
+ const hearth=post(g,stone,1.75,.3,2.75,.62,.6);hearth.scale.set(1,1,.9);orb(g,0xf29a4a,1.75,.34,3.32,.14,.8);
+ const pot=orb(g,copper,1.75,.95,2.75,.55,.8);pot.scale.x=1.05;orb(g,mint,1.75,1.28,2.75,.42,.18);
+ for(const [x,z] of [[1.6,2.7],[1.9,2.85]])orb(g,0xd9fbef,x,1.4,z,.07);
+ const barrel=post(g,0x8a6343,-2.05,.55,2.35,.36,.85);barrel.rotation.y=.4;post(g,0x5c4a3e,-2.05,.55,2.35,.38,.08);
+ return g;
+}

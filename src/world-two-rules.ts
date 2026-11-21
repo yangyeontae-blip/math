@@ -17,7 +17,7 @@ export function worldTwoRewardFor(s:Save,region:number,boss=false,now=Date.now()
   if (!canEnterWorldTwo(s.world2,s.level,region,boss,operatorAccess()) || !Number.isFinite(new Date(now).getTime())) return {berries:0,xp:0,multiplier:0};
   const base = boss ? worldTwoBoss(region)! : WORLD_TWO_REGIONS[region];
   const count = s.world2.daily.date===todayKey(new Date(now)) ? s.world2.daily.counts[dailySlot(region,boss)] : 0;
-  const multiplier = boss && count>=3 ? .25 : 1;
+  const multiplier = count>=(boss?3:100) ? .25 : 1;
   const potion = potionEffects(s,now), guardian = s.pet===PPOJJAK_PET_ID;
   return {berries:Math.floor(base.berries*multiplier*potion.berryMultiplier*titleEffect(s).berries*berryMachineMultiplier(s)*(guardian?1.5:1)),xp:Math.floor(base.xp*multiplier*potion.xpMultiplier*(guardian?1.4:1)),multiplier};
 }

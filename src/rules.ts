@@ -20,6 +20,7 @@ import {emptyCareer,validCareer,expandCareer,type CareerProgress} from './academ
 import {HUNT_ZONES,type HuntDefeatEvent} from './hunting';
 import {todayKey} from './daily';
 import { emptyFishing, validFishing, type FishingState } from './fishing';
+import { emptyPotionWorkshop, validPotionWorkshop, potionWorkshopOf, chargePotionWorkshop, shopBoostRemaining, recordShopBoost, workshopRecipe, WORKSHOP_ONLY_POTIONS, SHOP_LIMITED_POTIONS, SHOP_BOOST_DAILY_LIMIT, type PotionWorkshop } from './potion-workshop';
 export const WEAPONS = [
   { name: '새싹 나무검', price: 0, bonus: 0, multiplier: 1, treePower: 1, icon: '🌱', color: 0x96bf6a },
   { name: '도토리 망치', price: 80, bonus: 2, multiplier: 1.2, treePower: 2, icon: '🔨', color: 0xbf8c52 },
@@ -237,6 +238,7 @@ export interface Save {
   garden?: { rescued: number; flowers: number[] };
   /** 광장 연못 낚시 · 수학자 카드(2026-11). 저장 버전을 올리지 않도록 선택 항목으로 두고, 불러올 때 빈 상태를 채워요. */
   fishing?: FishingState;
+  workshop?: PotionWorkshop;
   daily?: DailyState;
   expedition: ExpeditionProgress;
   homestead: Homestead;
@@ -282,7 +284,7 @@ export const STAGE_DIVISION_DIFFICULTY = [
 export function newSave(nickname: string, character: number, grade: SchoolGrade = 3): Save {
   if (!nickname.trim() || [...nickname.trim()].length > 10 || !Number.isInteger(character) || character < 0 || character > 3 || !Number.isInteger(grade) || grade < 1 || grade > 6) throw new Error('이름은 1~10자, 학년과 캐릭터를 골라 주세요.');
   const hairstyle = CHARACTERS[character].style;
-  return { version: 26, fishing: emptyFishing(), profileId:crypto.randomUUID(), partyClaims:[], selectedTitleId:null, astralStudy:emptyAstralStudy(), world2: emptyWorldTwo(), career: emptyCareer(), grade, nickname: nickname.trim(), character, berries: 0, level: 1, xp: 0, weapon: 0, outfit: 0, weapons: { 0: 0 }, outfits: { 0: 0 }, ride: -1, rides: {}, pet: -1, pets: {}, hairstyle, hairstyles: { 0: true, [hairstyle]: true }, face: 0, faces: { 0: true }, teacherMode: false, best: 0, position: { x: 0, z: 8 }, tutorial: { collected: false, battle: false, shop: false }, settings: { music: true, sound: true, lowQuality: false, maxDividend: 0, multiplicationRange: 'stage', sessionMinutes: 0, focusUnit: 'all', spiralReview: true, practice: { operation: 'auto', tier: 1, skipPicker: false } }, learning: { elapsedSeconds: 0, correct: 0, wrong: 0, wrongQuestions: [] }, discoveries: { monsters: [], pets: [], outfits: [0] }, room: { furniture: [], inside: false, positions: {} }, forest: grade <= 2 ? 'addition' : 'division', journey: emptyJourney(), multiplicationJourney: emptyJourney(), multiplicationFinal: null, multiplicationCompleted: false, multiplicationRewardClaimed: false, additionJourney: emptyJourney(), subtractionJourney: emptyJourney(), additionCompleted: false, subtractionCompleted: false, curriculum: emptyCurriculumProgress(), potions: { stock: POTIONS.map(() => 0), berryMultiplier: 1, berryUntil: 0, xpMultiplier: 1, xpUntil: 0 }, garden: { rescued: 0, flowers: [-1, -1, -1] }, expedition: emptyExpedition(), story: emptyStory(), homestead: emptyHomestead(), exploration: emptyExploration(), forestTrail: emptyForestTrail(), forestActivities: emptyForestActivities(), petFriends: {}, adventure: emptyAdventure(grade) };
+  return { version: 26, fishing: emptyFishing(), workshop: emptyPotionWorkshop(), profileId:crypto.randomUUID(), partyClaims:[], selectedTitleId:null, astralStudy:emptyAstralStudy(), world2: emptyWorldTwo(), career: emptyCareer(), grade, nickname: nickname.trim(), character, berries: 0, level: 1, xp: 0, weapon: 0, outfit: 0, weapons: { 0: 0 }, outfits: { 0: 0 }, ride: -1, rides: {}, pet: -1, pets: {}, hairstyle, hairstyles: { 0: true, [hairstyle]: true }, face: 0, faces: { 0: true }, teacherMode: false, best: 0, position: { x: 0, z: 8 }, tutorial: { collected: false, battle: false, shop: false }, settings: { music: true, sound: true, lowQuality: false, maxDividend: 0, multiplicationRange: 'stage', sessionMinutes: 0, focusUnit: 'all', spiralReview: true, practice: { operation: 'auto', tier: 1, skipPicker: false } }, learning: { elapsedSeconds: 0, correct: 0, wrong: 0, wrongQuestions: [] }, discoveries: { monsters: [], pets: [], outfits: [0] }, room: { furniture: [], inside: false, positions: {} }, forest: grade <= 2 ? 'addition' : 'division', journey: emptyJourney(), multiplicationJourney: emptyJourney(), multiplicationFinal: null, multiplicationCompleted: false, multiplicationRewardClaimed: false, additionJourney: emptyJourney(), subtractionJourney: emptyJourney(), additionCompleted: false, subtractionCompleted: false, curriculum: emptyCurriculumProgress(), potions: { stock: POTIONS.map(() => 0), berryMultiplier: 1, berryUntil: 0, xpMultiplier: 1, xpUntil: 0 }, garden: { rescued: 0, flowers: [-1, -1, -1] }, expedition: emptyExpedition(), story: emptyStory(), homestead: emptyHomestead(), exploration: emptyExploration(), forestTrail: emptyForestTrail(), forestActivities: emptyForestActivities(), petFriends: {}, adventure: emptyAdventure(grade) };
 }
 
 export function defaultRoomFurniturePosition(index: number): RoomFurniturePosition {
@@ -669,9 +671,12 @@ export function battleRewardReason(s: Save, question: Question, usedHint: boolea
     && (practiceTier !== undefined && practiceTier < 2 || question.dividend < 100 && question.divisor < 100 && question.answer < 100)) return 'easy';
   return null;
 }
+/** 2026-11-21: 수학 정답 베리가 레벨과 함께 커져요(정답 한 판마다 레벨 × 4베리). */
+export const MATH_BERRY_PER_LEVEL=4;
+export function mathLevelBerries(level:number,rounds=1){const safe=Math.max(1,Math.min(100000,Math.floor(Number.isFinite(level)?level:1)));return safe*MATH_BERRY_PER_LEVEL*Math.max(1,Math.floor(rounds));}
 /** A correct math answer keeps at least 10% of the next-level XP at high levels. */
 export function mathQuestionXp(level:number,base:number,questions=1){return Math.max(base,Math.ceil(Math.max(1,Math.min(100000,level))*4)*questions);}
-export function grantMathQuestionXp(s:Save,base=12,now=Date.now()){chargeBerryMachine(s);const xp=mathQuestionXp(s.level,base)*potionEffects(s,now).xpMultiplier;s.xp+=xp;let levels=0;while(s.level<100000&&s.xp>=s.level*40){s.xp-=s.level*40;s.level++;levels++;s.berries=Math.min(1e9,s.berries+20+({30:30000,50:50000,100:100000}[s.level]??0));}if(s.level===100000)s.xp=Math.min(s.xp,s.level*40-1);return {xp,levels};}
+export function grantMathQuestionXp(s:Save,base=12,now=Date.now()){chargeBerryMachine(s);chargePotionWorkshop(s,1);const xp=mathQuestionXp(s.level,base)*potionEffects(s,now).xpMultiplier;s.xp+=xp;let levels=0;while(s.level<100000&&s.xp>=s.level*40){s.xp-=s.level*40;s.level++;levels++;s.berries=Math.min(1e9,s.berries+20+({30:30000,50:50000,100:100000}[s.level]??0));}if(s.level===100000)s.xp=Math.min(s.xp,s.level*40-1);return {xp,levels};}
 export function rewardFor(s: Save, monster: number, arena: boolean, now = Date.now(), eligible = true) {
   const m = MONSTERS[monster], w = WEAPONS[s.weapon];
   const { berryMultiplier, xpMultiplier } = potionEffects(s, now);
@@ -679,8 +684,9 @@ export function rewardFor(s: Save, monster: number, arena: boolean, now = Date.n
   const baseBerries = m.berry + (arena ? 0 : 2 + stage * 5);
   const berries = stage > 0 ? Math.round(baseBerries * 1.1) : baseBerries;
   const xp = stage > 0 ? Math.round(m.xp * 1.1) : m.xp;
+  const levelBerries = mathLevelBerries(s.level, arena ? 1 : monsterBattleRounds(monster, false));
   return {
-    berries: eligible ? Math.floor((berries + w.bonus) * berryMultiplier * berryMachineMultiplier(s)) : 0,
+    berries: eligible ? Math.floor((berries + w.bonus + levelBerries) * berryMultiplier * berryMachineMultiplier(s)) : 0,
     xp: eligible ? (mathQuestionXp(s.level,xp,arena?1:stage===10&&monster===stageMonsters(10).at(-1)!.type?5:monsterBattleRounds(monster,false)) + OUTFITS[s.outfit].xpBonus) * xpMultiplier : 0,
     score: eligible && arena ? Math.round(m.score * (w.multiplier + s.weapons[s.weapon] * 0.1)) : 0,
   };
@@ -688,7 +694,7 @@ export function rewardFor(s: Save, monster: number, arena: boolean, now = Date.n
 export function grantReward(s: Save, monster: number, arena: boolean, now = Date.now(), eligible = true) {
   const reward = rewardFor(s, monster, arena, now, eligible); let levels = 0;
   const milestones: { level: number; berries: number }[] = [];
-  s.berries += reward.berries; s.xp += reward.xp; s.tutorial.battle = true; if (eligible) recordDaily(s, 'monster');
+  s.berries += reward.berries; s.xp += reward.xp; s.tutorial.battle = true; if (eligible) { recordDaily(s, 'monster'); chargePotionWorkshop(s, arena ? 1 : monsterBattleRounds(monster, false)); }
   while (s.level < 100000 && s.xp >= s.level * 40) {
     s.xp -= s.level * 40; s.level++; s.berries += 20; levels++;
     const gift = s.level === 30 ? 30_000 : s.level === 50 ? 50_000 : s.level === 100 ? 100_000 : 0;
@@ -700,12 +706,14 @@ export function grantReward(s: Save, monster: number, arena: boolean, now = Date
 /** Combat power is separate from all learning reward bonuses. */
 export function huntingCompanionStats(s:{pet?:number;outfit?:number}){const armor=s.outfit===undefined?1:dawnItem('outfit',s.outfit)?1.25:skywardItem('outfit',s.outfit)?1.2:worldTwoEquipment('outfit',s.outfit)?1.15:1;return s.pet===PPOJJAK_PET_ID?{maxHpMultiplier:1.35*armor,damageReduction:.2}:{maxHpMultiplier:armor,damageReduction:0};}
 export function huntingPower(s:Pick<Save,'level'|'weapon'|'weapons'>&{pet?:number;selectedTitleId?:TitleId|null}){const w=WEAPONS[s.weapon]??WEAPONS[0],upgrade=Math.max(0,Math.min(10,s.weapons[s.weapon]??0)),level=Math.min(100000,s.level);return (8+level*1.15+Math.sqrt(level)*1.8)*(1+(w.treePower-1)*.22+upgrade*.15)*(s.pet===PPOJJAK_PET_ID?1.45:1)*(s.selectedTitleId?titleEffect(s as Save).attack:1);} // 레벨의 힘을 키우되 기존 무기·강화 배율은 유지해요.
+/** 2026-11-21: 사냥 구역마다 하루 첫 100마리만 온전한 보상, 그 뒤에는 25%예요. */
+export const HUNT_DAILY_FULL_REWARDS=100;
 export function huntingRewardFor(s:Save,zone:number,now=Date.now()){
   const z=HUNT_ZONES[zone];if(!z||s.level<z.level||!Number.isFinite(now)||!Number.isFinite(new Date(now).getTime()))return {berries:0,xp:0,eligible:false,multiplier:0};
   const date=todayKey(new Date(now)),count=s.career.daily.date===date?s.career.daily.counts[zone]:0;
   // Never penalize the highest zone this player can actually enter.
   const higherZoneOpen=HUNT_ZONES.some(next=>next.level>z.level&&s.level>=next.level);
-  const multiplier=(higherZoneOpen&&s.level>=z.level+20?.1:1),potion=potionEffects(s,now);
+  const multiplier=(higherZoneOpen&&s.level>=z.level+20?.1:1)*(count>=HUNT_DAILY_FULL_REWARDS?.25:1),potion=potionEffects(s,now);
   return {berries:Math.floor(z.berries*multiplier*potion.berryMultiplier*titleEffect(s).berries*berryMachineMultiplier(s)*(s.pet===PPOJJAK_PET_ID?1.5:1)),xp:Math.floor(z.xp*multiplier*potion.xpMultiplier*(s.pet===PPOJJAK_PET_ID?1.4:1)),eligible:true,multiplier};
 }
 const huntingClaims=new WeakMap<Save,Set<string>>();
@@ -776,11 +784,24 @@ export function changeNickname(s: Save, proposed: string) {
   s.nickname = name;
   s.berries -= NICKNAME_CHANGE_PRICE;
 }
-export function buyPotion(s: Save, id: number) {
+export function buyPotion(s: Save, id: number, now = Date.now()) {
   const potion = POTIONS[id]; if (!Number.isInteger(id) || !potion) throw new Error('없는 물약이에요.');
+  if (WORKSHOP_ONLY_POTIONS.includes(id)) throw new Error(`${j(potion.name, '은는')} 물약 공방에서 수학 지혜 구슬로 만들어요.`);
+  const limited = SHOP_LIMITED_POTIONS.includes(id) && !s.teacherMode;
+  if (limited && shopBoostRemaining(s, now) <= 0) throw new Error(`베리·경험치 물약은 하루 ${SHOP_BOOST_DAILY_LIMIT}병까지 살 수 있어요. 물약 공방에서 수학으로 더 만들어요!`);
   if (s.potions.stock[id] >= 99) throw new Error('이 물약은 99개까지 보관할 수 있어요.');
   if (s.berries < potion.price) throw new Error(`${potion.price - s.berries}베리가 더 필요해요.`);
-  s.berries -= potion.price; s.potions.stock[id]++; return `${j(potion.name, '을를')} 가방에 넣었어요!`;
+  s.berries -= potion.price; s.potions.stock[id]++; if (limited) recordShopBoost(s, now); return `${j(potion.name, '을를')} 가방에 넣었어요!`;
+}
+/** 물약 공방: 수학 정답으로 모은 지혜 구슬로 배수 물약을 만들어요. 베리는 들지 않아요. */
+export function brewPotion(s: Save, id: number) {
+  const recipe = workshopRecipe(id), potion = POTIONS[id];
+  if (!Number.isInteger(id) || !recipe || !potion) throw new Error('공방에서 만들 수 없는 물약이에요.');
+  if (s.potions.stock[id] >= 99) throw new Error('이 물약은 99개까지 보관할 수 있어요.');
+  const w = potionWorkshopOf(s);
+  if (w.orbs < recipe.orbs) throw new Error(`지혜 구슬이 ${recipe.orbs - w.orbs}개 더 필요해요. 수학숲에서 문제를 맞혀 모아요!`);
+  w.orbs -= recipe.orbs; w.brewed = Math.min(1e9, w.brewed + 1); s.potions.stock[id]++;
+  return `가마솥이 보글보글! ${j(potion.name, '을를')} 만들었어요.`;
 }
 export function useHuntingSupply(s:Save,id:number,activate:(id:number)=>SupplyUseResult){
  const item=huntingSupply(id);if(!item||!s.potions.stock[id])throw new Error('가방에 이 보급품이 없어요.');
@@ -973,6 +994,7 @@ export function validateSave(value: unknown): Save {
   if(s.potions&&Array.isArray(s.potions.stock)&&s.potions.stock.length===LEGACY_POTION_COUNT)s.potions.stock.push(...HUNT_RECOVERY_ITEMS.map(()=>s.teacherMode?9:0));
   if (s.garden === undefined) s.garden = { rescued: 0, flowers: [-1, -1, -1] };
   if (s.fishing === undefined) s.fishing = emptyFishing();
+  if (s.workshop === undefined) s.workshop = emptyPotionWorkshop();
   // 4학년 '각도와 삼각형길'을 각도·삼각형 두 지역으로 나눴어요. 예전 진행은 삼각형 지역에도 그대로 이어 줘요(저장 구조 버전은 그대로예요).
   if (s.curriculum?.units && !s.curriculum.units.triangle) { const angle = s.curriculum.units.lengthTime; s.curriculum.units.triangle = s.grade === 4 && angle ? structuredClone(angle) : emptyCurriculumUnit(); }
   if (s.potions === undefined) s.potions = { stock: s.teacherMode ? POTIONS.map(() => 9) : POTIONS.map(() => 0), berryMultiplier: 1, berryUntil: 0, xpMultiplier: 1, xpUntil: 0 };
@@ -989,6 +1011,7 @@ export function validateSave(value: unknown): Save {
   }
   const integer = (v: unknown, min: number, max: number): v is number => typeof v === 'number' && Number.isSafeInteger(v) && v >= min && v <= max;
   if (!validFishing(s.fishing)) return fail();
+  if (!validPotionWorkshop(s.workshop)) return fail();
   if (!s.garden || !integer(s.garden.rescued, 0, 3) || !Array.isArray(s.garden.flowers) || s.garden.flowers.length !== 3 || s.garden.flowers.some(f => !integer(f, -1, 2)) || s.garden.flowers.filter(f => f >= 0).length > s.garden.rescued) return fail();
   if (s.version !== 26 || typeof s.profileId!=='string'||!/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/.test(s.profileId) || !Array.isArray(s.partyClaims)||s.partyClaims.length>4096||s.partyClaims.some(r=>!r||typeof r.id!=='string'||!/^[a-f0-9-]{36}:\d$/.test(r.id)||!Number.isSafeInteger(r.expiresAt)||r.expiresAt<0)||new Set(s.partyClaims.map(r=>r.id)).size!==s.partyClaims.length || (s.selectedTitleId!==null&&!titleDefinition(s.selectedTitleId)) || !validAstralStudy(s.astralStudy,s.grade,s.level) || s.astralStudy.location!==null&&(s.world2.location!==null||s.career?.location!==null||s.room?.inside||s.homestead?.inside) || !validWorldTwo(s.world2) || s.world2.location!==null&&(s.career?.location!==null||s.room?.inside||s.homestead?.inside) || !validCareer(s.career) || !integer(s.grade, 1, 6) || !OPERATIONS.includes(s.forest) || typeof s.teacherMode !== 'boolean' || typeof s.nickname !== 'string' || !s.nickname.trim() || [...s.nickname].length > 10 || !integer(s.character, 0, 3) || !integer(s.berries, 0, 1e9) || !integer(s.level, 1, 100000) || !integer(s.xp, 0, s.level * 40 - 1) || !integer(s.best, 0, 1e9)) return fail();
   if (!validHomestead(s.homestead) || !validExploration(s.exploration) || s.homestead.inside && s.room?.inside || !validForestActivities(s.forestActivities, s.grade) || !validForestTrail(s.forestTrail) || !validAdventure(s.adventure) || !s.pets || !validPetFriends(s.petFriends, s.pets)) return fail();
