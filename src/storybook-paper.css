@@ -91,3 +91,41 @@
  .sb-hero:before{background:linear-gradient(180deg,#fbf3dce8 0,#fbf3dca8 34%,#fbf3dc00 62%)}
  .pg-main-chips b{font-size:.78rem;padding:3px 8px}
 }
+/* 수학숲 안쪽 단계 지도: 숲길을 따라 아래(1단계)에서 위(10단계)로 올라가요. */
+.fs-tools{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:-26px 14px 6px;position:relative;z-index:4}
+.fs-sheet .fs-round{width:52px;height:52px;min-height:52px;border-radius:50%;font:700 1.4rem var(--sb-title);color:#5f7a2a;background:linear-gradient(180deg,#fbf0d2,#f0dca9);border:2px solid #dcc28a;box-shadow:0 3px 0 #c4a66a88}
+.fs-sheet .fs-tools .sb-chip{min-height:52px;cursor:pointer;font-size:.98rem}
+.fs-sheet .fs-tools .sb-chip:first-of-type{background:linear-gradient(180deg,#eef3d6,#dbe6b4);border-color:#c3d091}
+.fs-trail{list-style:none;margin:8px 10px 0;padding:24px 0;display:flex;flex-direction:column-reverse;gap:6px;border-radius:20px;
+ background:url('/art/forest-stages/trail.webp') center/100% 100% no-repeat}
+.fs-node{display:flex}
+.fs-node.is-left{justify-content:flex-start;padding-right:22%}
+.fs-node.is-right{justify-content:flex-end;padding-left:22%}
+.fs-sheet .fs-stage{display:flex;align-items:center;gap:0;background:none;border:0;box-shadow:none;padding:0;min-height:0;color:var(--sb-ink);text-align:left;width:auto;max-width:100%}
+.fs-node.is-right .fs-stage{flex-direction:row}
+.fs-medal{position:relative;flex:none;width:118px;height:118px;border-radius:50%;filter:drop-shadow(0 3px 3px #5a432f55);z-index:1}
+.fs-medal>img:first-child{width:100%;height:100%;display:block}
+.fs-num{position:absolute;left:-4px;top:-4px;display:grid;place-items:center;width:38px;height:38px;border-radius:50%;font:700 1.15rem var(--sb-title);color:#5a4320;background:radial-gradient(circle at 35% 30%,#fffaf0,#f3e3b8);border:2.5px solid #c9a24f;box-shadow:0 2px 0 #9b7a3366}
+.fs-badge{position:absolute;right:30%;bottom:-6px;width:40px;height:auto;filter:drop-shadow(0 2px 1px #0004)}
+.fs-label{display:flex;flex-direction:column;gap:2px;min-width:0;margin-left:-14px;padding:8px 14px 8px 22px;border-radius:0 16px 16px 0;background:#fffaf0e8;border:2px solid #e2cf9f;box-shadow:0 2px 0 #c9b98455}
+.fs-label strong{font:700 1.05rem var(--sb-title);color:#2f5a22;white-space:nowrap}
+.fs-label small{font-size:.78rem;color:var(--sb-soft);margin:0}
+.fs-label em{font-style:normal;font:700 .78rem var(--sb-title);color:#6b7d3d}
+.fs-node.is-locked .fs-medal>img:first-child{filter:saturate(.55) brightness(.97)}
+.fs-node.is-locked .fs-label{opacity:.8}
+.fs-node.is-current .fs-medal{filter:drop-shadow(0 0 10px #ffe38a) drop-shadow(0 0 22px #ffd45acc);animation:fs-glow 2.4s ease-in-out infinite}
+.fs-node.is-current .fs-label{border-color:#e3c35a;background:#fffbe6}
+@keyframes fs-glow{50%{filter:drop-shadow(0 0 4px #ffe38a) drop-shadow(0 0 14px #ffd45a99)}}
+.fs-sheet .fs-stage:not(:disabled):hover .fs-medal{transform:translateY(-2px)}
+.fs-village{margin-top:14px}
+@media(max-width:600px){
+ .fs-medal{width:92px;height:92px}.fs-num{width:32px;height:32px;font-size:1rem}.fs-badge{width:32px}
+ .fs-node.is-left{padding-right:6%}.fs-node.is-right{padding-left:6%}
+ .fs-label{padding:6px 10px 6px 18px}.fs-label strong{font-size:.95rem}
+ .fs-sheet .fs-tools .sb-chip{font-size:.85rem;padding:5px 10px}
+}
+@media(prefers-reduced-motion:reduce){.fs-node.is-current .fs-medal{animation:none}}
+/* 예전 단계 카드 스타일(초록 상자·통과 도장·흐림)을 숲길 지도에서는 끄고 메달 그림만 보여 줘요. */
+.fs-sheet .stage-card,.fs-sheet .stage-card.cleared,.fs-sheet .stage-card:disabled{background:none!important;border:0!important;box-shadow:none!important;opacity:1!important;filter:none;outline-offset:4px}
+.fs-sheet .stage-card:before,.fs-sheet .stage-card:after,.fs-sheet .stage-card.cleared:before,.fs-sheet .stage-card.cleared:after{display:none!important;content:none!important}
+.fs-trail{background:url('/art/forest-stages/trail.webp') center top/100% auto repeat-y}

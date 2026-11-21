@@ -32,3 +32,16 @@ body:has(.room-activity-panel:not([hidden])) .quest-card,body:has(.room-activity
 #modal.academy-modal{width:min(1000px,calc(100vw - 28px));max-width:1000px}.career-release-heading{padding:20px 20px 16px}.career-release-heading h2{margin:3px 0}.career-edition{margin-bottom:4px}.career-release-intro{margin:12px 0}.career-release .career-howto{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px 16px;padding:12px 16px}.career-release .career-howto h3{font-size:15px;margin:0}.career-release .career-howto p{font-size:14px;font-weight:500;margin:4px 0}.career-release .career-howto>button{width:auto;align-self:center;font-size:14px;max-width:190px}.career-release .career-howto details{grid-column:1/-1;font-size:14px;border-top:1px solid #a8ba9777}.career-release .career-howto summary{display:flex;align-items:center;min-height:32px;cursor:pointer;color:#56724e;font-weight:800}.career-release .career-howto summary:before{content:'＋';margin-right:6px}.career-release .career-howto details[open] summary:before{content:'−'}.career-release .career-howto details small{font-size:14px;font-weight:500}.career-release .career-job-card{padding:16px 12px 12px}.career-release .career-job-card h3{font-size:18px;margin:0}.career-release .career-job-card p{font-size:14px;line-height:1.6}.career-job-emblem{padding:8px 28px 12px}.career-release .career-job-card button{font-size:14px}.career-release .career-job-card strong{font-size:14px}.career-release .career-notice{font-size:14px;margin:12px 0}@media(max-width:650px){#modal.academy-modal{width:calc(100vw - 16px)}.career-release .career-howto{grid-template-columns:1fr}.career-release .career-howto>button{width:100%;max-width:none}.career-release .career-job-card h3{font-size:15px}.career-release .career-job-card p{font-size:14px}.career-release .career-job-card{padding:12px 8px}.career-release .career-job-card button{font-size:14px}}
 
 .career-release .career-howto summary{min-height:48px}
+/* 2026-11-21 휴대폰: 광장 탐험 스킬 칸은 오른쪽 아래 2×2 작은 칸으로 모아 대화 버튼·대화창을 덮지 않아요. 대화창이 열리면 잠시 숨겨요. */
+@media(max-width:600px){
+ #game #hud .academy-bar.career-exploration-bar{display:grid;grid-template-columns:repeat(2,50px);flex-direction:unset;gap:4px;padding:4px;bottom:calc(150px + env(safe-area-inset-bottom));max-height:none}
+ #game #hud .academy-bar.career-exploration-bar[hidden]{display:none}
+ #game #hud .career-exploration-bar button{min-width:50px;width:50px;min-height:50px;height:50px;padding:2px}
+ #game #hud .career-exploration-bar button>small,#game #hud .career-exploration-bar .academy-cooldown:empty{display:none}
+ #game #hud .career-exploration-bar .academy-cooldown{display:none}
+ #game #hud .career-exploration-bar .career-sigil{width:40px;height:40px}
+}
+body:has(.talk-bubble) #academy-skills{visibility:hidden}
+/* 2026-11-21 대화창 이름표는 한 줄로만, 대사 위를 덮지 않게 */
+.talk-bubble .talk-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:calc(100% - 44px);line-height:1.4}
+.talk-bubble .talk-text{margin-top:6px}

@@ -16,6 +16,7 @@ import {showPotionWorkshop} from './potion-workshop-view';
 import './math-forest-entry.css';
 import {mathForestEntryHtml} from './math-forest-entry';
 import {plazaGuideHtml} from './plaza-guide-view';
+import {forestStageHtml} from './forest-stage-view';
 import {WORKSHOP_ONLY_POTIONS,SHOP_LIMITED_POTIONS,SHOP_BOOST_DAILY_LIMIT,shopBoostRemaining} from './potion-workshop';
 import {mountCommunity} from './community';
 import {mountAdventureAccount} from './account-view';
@@ -1052,7 +1053,8 @@ function openStageMap(forest?: ForestKind) {
   }
   if (!operationsForGrade(s.grade).includes(forest)) { toast('이 학년에서 배우는 계산 숲을 골라 주세요.'); return; }
   const journey = journeyFor(s, forest), info = FOREST_INFO[forest], region = curriculumRegions().find(item => item.id === forest);
-  openModal(title(region?.name ?? info.title, '단계와 발견') + `<div class="nav-tabs"><button id="forest-discoveries" class="secondary">🗺 발견 장소</button><button id="forest-story" class="secondary">✉️ 이야기 의뢰</button></div><div class="map-nav"><button id="forest-back" class="text-button">← 수학 모험 지도로 돌아가기</button><button id="forest-village" class="secondary">🏡 중앙 광장으로 돌아가기</button></div><p class="shop-explainer">${region?.short ?? info.intro} 한 단계의 몬스터를 모두 만나면 다음 길이 열려요.</p><div class="stage-grid ${forest}-map">${STAGES.map((stage, i) => { const step = i + 1, progress = journey.maps[step], open = canEnter(s, step, forest), complete = progress.cleared; const range = operationStageLabel(s.grade, forest, step); return `<button class="stage-card ${complete ? 'cleared' : ''}" data-stage="${step}" ${open ? '' : 'disabled'}><span class="stage-number">${complete ? '✓' : step}</span><strong>${info.icon} ${stage.name}</strong><small>${range}</small><small>${open ? complete ? '통과 완료 · 다시 탐험' : `${progress.monsters.length} / ${stageMonsters(step).length} 친구와 만나기` : '앞 단계를 먼저 통과해요'}</small></button>`; }).join('')}</div>`);
+  openModal(title(region?.name ?? info.title, '단계와 발견') + forestStageHtml({base:import.meta.env.BASE_URL,title:region?.name ?? info.title,intro:region?.short ?? info.intro,stages:STAGES.map((stage,i)=>{const step=i+1,progress=journey.maps[step];return {step,name:stage.name,range:operationStageLabel(s.grade,forest,step),open:canEnter(s,step,forest),cleared:progress.cleared,met:progress.monsters.length,total:stageMonsters(step).length};})}));
+  requestAnimationFrame(()=>document.querySelector('.fs-node.is-current, .fs-node.is-open')?.scrollIntoView({block:'center'}));
   $('#forest-back').onclick = openAdventureMap;
   $('#forest-discoveries').onclick = () => { if(state) showDiscoveryMap(state,discoveryHooks(),forest); };
   $('#forest-story').onclick = () => { if(!state)return; if(state.forest!==forest){if(state.story.active||state.expedition.active){toast('진행 중인 모험을 먼저 이어 주세요.');return;}switchStage(0,forest);}openStoryBoard(); };

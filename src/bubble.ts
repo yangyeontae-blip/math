@@ -18,7 +18,8 @@ export function showBubble(name: string, text: string, onDone: () => void, onTic
   const el = document.createElement('div');
   el.className = 'talk-bubble'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-label', `${name}의 말`);
   el.innerHTML = '<span class="talk-name"></span><p class="talk-text" aria-live="polite"></p><i class="talk-next" aria-hidden="true">▼</i>';
-  (el.querySelector('.talk-name') as HTMLElement).textContent = name;
+  // 이름표에는 「이름 · 설명」 중 이름만 보여 줘요. 긴 안내가 두 줄로 커져 대사를 덮지 않게 해요(2026-11-21).
+  (el.querySelector('.talk-name') as HTMLElement).textContent = name.split(' · ')[0] || name;
   const out = el.querySelector('.talk-text') as HTMLElement;
   document.body.appendChild(el);
   const state = { el, timer: 0, text, shown: reducedMotion ? text.length : 0, onDone, off: () => {} };
