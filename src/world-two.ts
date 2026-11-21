@@ -67,6 +67,16 @@ export function worldTwoRegionReady(p:WorldTwoProgress,id:number) {
   const r=p.regions[id];
   return !!r && r.kills>=WORLD_TWO_REGIONS[id].killGoal && r.beacons.length===3;
 }
+/** 잠긴 지역에서 무엇이 남았는지 아이가 바로 알 수 있게 알려 줘요(2026-11-21 "몇몇 지역이 안 들어가져요" 의견). */
+export function worldTwoLockReason(p:WorldTwoProgress,level:number,id:number,boss=false){
+  const region=WORLD_TWO_REGIONS[id];
+  if(!Number.isInteger(id)||!region)return '없는 지역이에요.';
+  const left=(rid:number)=>{const r=p.regions[rid],goal=WORLD_TWO_REGIONS[rid].killGoal;return '등불 '+(r?.beacons.length??0)+'/3 · 정령 '+Math.min(r?.kills??0,goal)+'/'+goal;};
+  if(!(level>=region.level))return '레벨 '+region.level+'부터 들어가요(지금 레벨 '+level+').';
+  if(id>0&&id!==WORLD_THREE_START&&!p.regions[id-1]?.claimed)return '앞 지역 「'+WORLD_TWO_REGIONS[id-1].name+'」 탐험을 먼저 완수해요 · '+left(id-1);
+  if(boss){const e=worldTwoBoss(id);if(!e)return '이 지역에는 수호자가 없어요.';if(!(level>=e.level))return '레벨 '+e.level+'부터 도전해요(지금 레벨 '+level+').';if(!p.regions[id]?.claimed)return '「'+region.name+'」 탐험을 먼저 완수해요 · '+left(id);}
+  return '';
+}
 export function canEnterWorldTwo(p:WorldTwoProgress,level:number,id:number,boss=false,operator=false) {
   const region=WORLD_TWO_REGIONS[id];
   // 세계 3 첫 지역은 레벨만 맞으면 바로 들어가요(2026-11-19 선생님 결정: 세계 2를 다 깨지 않아도 세계 3에 갈 수 있게). 나머지 지역은 앞 지역을 마쳐야 열려요.
