@@ -56,3 +56,20 @@
 .street-list .street-shop{min-height:140px!important}
 @media(max-width:600px){.street-list .street-shop{min-height:128px!important}}
 #modal:has(.street-sheet) .nav-links button{border-radius:999px!important;background:linear-gradient(180deg,#fffaf0,#f1e6c9)!important;border:2px solid #e0d0ad!important;color:#3f5a48!important;font-family:var(--font-brand,'Maplestory',sans-serif)}
+/* 2026-11-22 광장 거래: 휴대폰에서 잘리지 않게, 물건은 작은 칩 두 줄로, 양피지 느낌 */
+.trade-sheet{max-width:100%;overflow:hidden}
+.trade-sheet h2{font-family:var(--font-brand,'Maplestory',sans-serif);color:#2f5a22}
+.trade-columns{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+.trade-columns section{min-width:0;background:url('/art/math-forest/parchment.webp') center/cover,#fffaee!important;border:2px solid #e2c18a!important;box-shadow:0 3px 0 #c9a46a55}
+.trade-columns h3{font-family:var(--font-brand,'Maplestory',sans-serif);color:#5a3d22}
+.trade-berries input{min-width:0;width:100%;border-radius:12px;border:2px solid #e2cf9f}
+.trade-fee{overflow-wrap:anywhere}
+.trade-actions button{border-radius:999px!important;font-family:var(--font-brand,'Maplestory',sans-serif)}
+@media(max-width:600px){
+ .trade-columns{grid-template-columns:minmax(0,1fr)!important;gap:10px!important}
+ .trade-sheet p{font-size:.85rem;line-height:1.5}
+ .trade-items{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px!important;max-height:200px!important}
+ .trade-items label{min-height:40px!important;padding:4px 6px!important;gap:4px!important;font-size:.8rem;line-height:1.25;min-width:0;overflow:hidden}
+ .trade-items label span{display:none}
+ .trade-items label input{flex:none;width:18px;height:18px}
+}

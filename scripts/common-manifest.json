@@ -602,7 +602,7 @@
     "public/art/forest-stages/stage-8.webp": "9d13909f559d4f1905c63855ac53af78962f9f2eb3443072b5d37b6bb83cbb99",
     "public/art/forest-stages/stage-9.webp": "fc6b2583cb4bc255855d975d0a9a52d6ecb381b92ac62d78efacdd07dc90289f",
     "public/art/forest-stages/trail.webp": "0f069eccf9c0040a8cc467275375d1fe24e6d1cb46873c217cf55515620956fc",
-    "src/market-skin.css": "178bb4250b7e2dec255afc4ee788501c08c232a9f9d11206029caf588b5bffc0",
+    "src/market-skin.css": "4560cb620cd0d488e39293d6623c550ae3f302b959c06fd579872c9ffc65cff9",
     "public/art/market/awning.webp": "2fbed3420fcf71310dcfd91278673db430857dc68e0c24af6df621a04b54bbef",
     "public/art/market/banner-beauty.webp": "db879660740ce407521bb7bd904e18c77f02d009d993db735a6e186d96c644d7",
     "public/art/market/banner-outfit.webp": "3a23f3f2c4b8ad3c1898e9cde10d79d48db1393968487b2fb84c037dc75d10fd",
@@ -696,5 +696,5 @@
     "public/art/workshop/potion-5.webp": "259df8df6fde51c800382dd497e4aea5555a911a4cf407ce8cd0cca1066f84a8",
     "public/art/workshop/recipe-card.webp": "2c7e6fce916e282edfe071b349732df6ab280cc7c37531df1fcde5a9c42c7556"
   },
-  "generation": "b4db85d1455f659af45ae9866d15457f9f80270e95cc721b229d43453059b3d8"
+  "generation": "9b1f0320696dcbbd138474dd8df9b9cbc971aa500711e9fec700561f299ad90a"
 }
