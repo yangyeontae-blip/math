@@ -616,7 +616,7 @@
     "public/art/market/rug.webp": "b5246b797906a4f47ee4c0f377973caa164d0a6cb17de3e8632db77d7951780f",
     "public/art/market/slot-owned.webp": "743a724ec878441981bc9f21647f78f22ff972d2af693373e6982457d3ee2ffe",
     "public/art/market/slot.webp": "34b9f47569da769eb4809b5512e7cb9d4e2f0c92acac23e94cf113ec7e987500",
-    "src/village-boards.css": "da91289cea157a5710f5e07ab43f328f93e9465ef420e7704be4369cd1ba0faa",
+    "src/village-boards.css": "465509e0cb3de4ef09eddf00c1285ed79debf2f34c367ad058d415ac7ceaa7f9",
     "public/art/academy/card.webp": "2f585a66343116bea4e26852e22726a3e18f3e2a0472da0ab9b5c19c02921e77",
     "public/art/academy/hero.webp": "7908307537e1bfb0d718bc80cf83f621e8423248ccb0d04e47f310898aa9e484",
     "public/art/academy/job-alchemist.webp": "d2e27ca9a3079513bd6d45d2e039843ef0ceeb9614f39d4d5669cbcdf7e24160",
@@ -696,5 +696,5 @@
     "public/art/workshop/potion-5.webp": "259df8df6fde51c800382dd497e4aea5555a911a4cf407ce8cd0cca1066f84a8",
     "public/art/workshop/recipe-card.webp": "2c7e6fce916e282edfe071b349732df6ab280cc7c37531df1fcde5a9c42c7556"
   },
-  "generation": "576f85cf4531e99e56715b243fb2080915c5a40daea34558d5a0eae3bfcc2c42"
+  "generation": "858a385d56f3bdd5693c1b2e3b7266da734360af07966bc65cef555c42230e23"
 }

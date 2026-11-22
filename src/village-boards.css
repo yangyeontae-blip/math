@@ -70,3 +70,17 @@
 .hall-sheet .hall-value{font:700 .95rem var(--font-brand,'Maplestory',sans-serif);color:#5f7a2a;white-space:nowrap}
 .hall-sheet .hall-list>li:nth-child(-n+3) .hall-rank{width:44px;height:44px}
 @media(max-width:600px){.hall-sheet .hall-list>li{grid-template-columns:40px minmax(0,1fr) auto;padding:10px 22px 10px 18px!important;min-height:64px}}
+/* 2026-11-22 늘어짐 대안: 그림을 늘리지 않는 단정한 종이 카드(따뜻한 크림색 · 금빛 테두리 · 압정 점) */
+#modal.notice-modal .notice-list{background:#c99a64!important;box-shadow:inset 0 0 0 4px #9a6b3f,inset 0 4px 12px #0003!important}
+#modal.notice-modal .notice-card{position:relative;background:linear-gradient(180deg,#fffaf0,#f7ead0)!important;border:2px solid #e2c18a!important;border-radius:14px!important;padding:18px 16px 14px!important;min-height:0!important;box-shadow:0 3px 0 #9a6b3f55!important;filter:none!important;transform:rotate(-.4deg)}
+#modal.notice-modal .notice-card:nth-child(even){transform:rotate(.4deg)}
+#modal.notice-modal .notice-card::before{content:'';position:absolute;top:-6px;left:50%;width:14px;height:14px;margin-left:-7px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#ff8a7a,#c0392b 60%,#7d1f17);box-shadow:0 2px 2px #0003}
+#modal.notice-modal .notice-card:has(.notice-pin){background:linear-gradient(180deg,#fbfff0,#eaf2d2)!important;border-color:#b9cf8f!important}
+#modal.notice-modal .notice-article{position:relative;background:linear-gradient(180deg,#fffaf0,#f7ead0)!important;border:2px solid #e2c18a;border-radius:16px;padding:30px 20px 20px!important;filter:none!important;box-shadow:0 3px 0 #c9a46a66}
+#modal.notice-modal .notice-article::before{content:'';position:absolute;top:8px;left:50%;width:18px;height:18px;margin-left:-9px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#ff8a7a,#c0392b 60%,#7d1f17);box-shadow:0 2px 2px #0003}
+#modal.notice-modal .notice-article h3{font-family:var(--font-brand,'Maplestory',sans-serif);color:#3b5a2a}
+#modal.notice-modal .notice-article time{display:inline-block;margin:4px 0 10px;padding:2px 10px;border-radius:999px;background:#fffaf0;border:1.5px solid #e2cf9f;font-size:.8rem;color:#7a5b43}
+.hall-sheet .hall-list>li{background:linear-gradient(180deg,#fffaf0,#f7ead0)!important;border:2px solid #e2c18a!important;border-radius:999px!important;box-shadow:0 3px 0 #c9a46a55!important;padding:8px 18px 8px 10px!important;min-height:60px!important}
+.hall-sheet .hall-list>li:nth-child(1){border-color:#e8c45a!important;background:linear-gradient(180deg,#fffbe6,#f9e9b8)!important}
+.hall-sheet .hall-list::before{height:120px;margin-bottom:6px}
+.hall-sheet .hall-list::before{display:none!important}
