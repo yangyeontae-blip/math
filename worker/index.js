@@ -7,6 +7,7 @@ const embeddedAssets = /*__EMBEDDED_ASSETS__*/{};
 const allowedOrigins = new Set([
   'https://berry-forest-school.yangyeontae.chatgpt.site',
   'https://yangyeontae-blip.github.io',
+  'https://berry-forest-school.vercel.app',
 ]);
 
 function allowedOrigin(request) {

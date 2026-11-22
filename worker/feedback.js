@@ -1,6 +1,6 @@
 // Server-only. Never copy runtime mail secrets or recipient addresses into the client build.
 const categories = ['개선 제안', '오류 제보', '좋았던 점'];
-const origins = new Set(['https://berry-forest-school.yangyeontae.chatgpt.site', 'https://yangyeontae-blip.github.io']);
+const origins = new Set(['https://berry-forest-school.yangyeontae.chatgpt.site', 'https://yangyeontae-blip.github.io', 'https://berry-forest-school.vercel.app']);
 export async function handleFeedback(request, env, fetcher = fetch) {
   const origin = request.headers.get('origin') || '';
   const allowed = origins.has(origin) || /^http:\/\/(localhost|127\.0\.0\.1):\d+$/.test(origin);

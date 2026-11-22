@@ -2,7 +2,7 @@ import {isBlockedNickname} from '../src/nickname.ts';
 import {operationsForGrade,questionAnswerText} from '../src/rules.ts';
 import {createPartyRun,publicPartyQuestion,answerPartyQuestion} from '../src/forest-party.ts';
 
-const ORIGINS=new Set(['https://yangyeontae-blip.github.io','https://berry-forest-school.yangyeontae.chatgpt.site','https://localhost','http://localhost','capacitor://localhost']);
+const ORIGINS=new Set(['https://yangyeontae-blip.github.io','https://berry-forest-school.vercel.app','https://berry-forest-school.yangyeontae.chatgpt.site','https://localhost','http://localhost','capacitor://localhost']);
 const enc=new TextEncoder();
 const reads=new Map();
 const hash=async value=>Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',enc.encode(value))),v=>v.toString(16).padStart(2,'0')).join('');

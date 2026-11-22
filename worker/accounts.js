@@ -1,6 +1,6 @@
 // Passwords, tokens and recovery codes are never logged or stored in plaintext.
 import {validateSave, newSave} from '../src/rules.ts';
-const ORIGINS=new Set(['https://yangyeontae-blip.github.io','https://berry-forest-school.yangyeontae.chatgpt.site']);
+const ORIGINS=new Set(['https://yangyeontae-blip.github.io','https://berry-forest-school.vercel.app','https://berry-forest-school.yangyeontae.chatgpt.site']);
 const enc=new TextEncoder(),MAX_BYTES=524288,SESSION_MS=8*60*60*1000,INACTIVE_MS=365*24*60*60*1000;
 const hex=b=>Array.from(new Uint8Array(b),x=>x.toString(16).padStart(2,'0')).join('');
 const random=()=>hex(crypto.getRandomValues(new Uint8Array(32)));
