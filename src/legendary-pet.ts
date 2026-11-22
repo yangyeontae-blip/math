@@ -26,13 +26,13 @@ export function createPpojjakiPet(): T.Group {
   const root = new T.Group(), body = new T.Group(); root.add(body);
   root.name = '뽀짝이'; root.userData.petModel = true; root.userData.petBody = body;
   const sphere = new T.SphereGeometry(1, 18, 12), curlGeometry = new T.SphereGeometry(1, 10, 8);
-  const fur = new T.MeshStandardMaterial({ color: 0xdca675, roughness: .87 });
-  const earFur = new T.MeshStandardMaterial({ color: 0xc58c5d, roughness: .9 });
-  const cream = new T.MeshStandardMaterial({ color: 0xffe1bb, roughness: .84 });
+  const fur = new T.MeshStandardMaterial({ color: 0xc4703f, roughness: .9 });
+  const earFur = new T.MeshStandardMaterial({ color: 0xb9653d, roughness: .92 });
+  const cream = new T.MeshStandardMaterial({ color: 0xe8c5a0, roughness: .86 });
   const dark = new T.MeshStandardMaterial({ color: 0x261f1c, roughness: .21 });
   const shine = new T.MeshBasicMaterial({ color: 0xfffaf0 });
   const gold = new T.MeshStandardMaterial({ color: 0xf1c76e, metalness: .45, roughness: .38 });
-  const pink = new T.MeshStandardMaterial({ color: 0xd78986, roughness: .8 });
+  const pink = new T.MeshStandardMaterial({ color: 0xe98d91, roughness: .7 });
   const ball = (parent: T.Object3D, material: T.Material, x: number, y: number, z: number, sx: number, sy = sx, sz = sx) => {
     const mesh = new T.Mesh(sphere, material); mesh.position.set(x, y, z); mesh.scale.set(sx, sy, sz); mesh.castShadow = true; parent.add(mesh); return mesh;
   };
@@ -41,32 +41,31 @@ export function createPpojjakiPet(): T.Group {
     const mesh = new T.InstancedMesh(curlGeometry, material, count), dummy = new T.Object3D();
     for (let i = 0; i < count; i++) {
       const y = 1 - 2 * (i + .5) / count, r = Math.sqrt(Math.max(0, 1 - y * y)), a = i * 2.399963 + seed;
-      dummy.position.set(center.x + Math.cos(a) * r * size.x, center.y + y * size.y, center.z + Math.sin(a) * r * size.z);
-      if (seed === 1.1 && dummy.position.y < .12 && dummy.position.z > .22) dummy.position.z = .2; // soft wool stays behind the expression
+      dummy.position.set(center.x + Math.cos(a) * r * size.x * .82, center.y + y * size.y * .82, center.z + Math.sin(a) * r * size.z * .82);
+      if (seed === 1.1 && dummy.position.y < .14 && dummy.position.z > .1) dummy.position.z = .06; // soft wool stays behind the expression
       // Embed tiny, flattened curls into a smooth silhouette rather than stacking hard balls on it.
-      const scale = .032 + (Math.sin(i * 5.7 + seed) + 1) * .006;
-      dummy.scale.set(scale * 1.12, scale * .84, scale); dummy.rotation.set(a, i * .3, 0); dummy.updateMatrix(); mesh.setMatrixAt(i, dummy.matrix);
+      const scale = .1 + (Math.sin(i * 5.7 + seed) + 1) * .008;
+      dummy.scale.set(scale, scale * .92, scale); dummy.rotation.set(a, i * .3, 0); dummy.updateMatrix(); mesh.setMatrixAt(i, dummy.matrix);
     }
     mesh.instanceMatrix.needsUpdate = true; mesh.computeBoundingSphere(); mesh.castShadow = true; mesh.userData.fullCount = count; mesh.userData.ppoWool = true; parent.add(mesh); curls.push(mesh); return mesh;
   };
   ball(body, fur, 0, .405, -.075, .285, .245, .335);
-  ball(body, cream, 0, .41, .16, .155, .17, .145);
-  wool(body, fur, 38, new T.Vector3(0, .405, -.075), new T.Vector3(.272, .228, .322), .2);
-  const head = new T.Group(); head.position.set(0, .855, .18); body.add(head); body.userData.ppoHead = head;
+  ball(body, fur, 0, .41, .16, .155, .17, .145);
+  wool(body, fur, 30, new T.Vector3(0, .405, -.075), new T.Vector3(.272, .228, .322), .2);
+  const head = new T.Group(); head.position.set(0, .86, .17); head.scale.setScalar(1.12); body.add(head); body.userData.ppoHead = head;
   ball(head, fur, 0, 0, 0, .35, .325, .295);
-  wool(head, fur, 36, new T.Vector3(), new T.Vector3(.334, .31, .281), 1.1);
+  wool(head, fur, 34, new T.Vector3(), new T.Vector3(.334, .31, .281), 1.1);
   const ears: T.Group[] = [];
   for (const side of [-1, 1]) {
-    const ear = new T.Group(); ear.position.set(side * .31, .13, .005); ear.rotation.z = side * .1; head.add(ear); ears.push(ear);
+    const ear = new T.Group(); ear.position.set(side * .27, .13, .005); ear.rotation.z = side * .1; head.add(ear); ears.push(ear);
     ball(ear, earFur, side * .025, -.195, 0, .135, .265, .15);
     ball(ear, fur, side * .035, -.34, .055, .095, .095, .09);
-    wool(ear, earFur, 16, new T.Vector3(side * .025, -.195, 0), new T.Vector3(.123, .248, .136), side * .7);
+    wool(ear, earFur, 12, new T.Vector3(side * .025, -.195, 0), new T.Vector3(.123, .248, .136), side * .7);
   }
   // Clear eyes sit in front of the wool rather than getting lost between curls.
   for (const side of [-1, 1]) {
-    ball(head, dark, side * .127, .043, .273, .077, .087, .044);
-    ball(head, shine, side * .127 - .023, .073, .31, .025, .027, .009);
-    ball(head, shine, side * .127 + .023, .014, .312, .011, .012, .006);
+    ball(head, dark, side * .135, .01, .3, .048, .052, .03);
+    ball(head, shine, side * .135 - .014, .028, .326, .013, .014, .005);
     ball(head, cream, side * .062, -.112, .293, .109, .083, .097);
     ball(head, pink, side * .226, -.079, .239, .037, .021, .009);
   }
@@ -79,13 +78,12 @@ export function createPpojjakiPet(): T.Group {
   const legs: T.Group[] = [];
   for (const z of [-.255, .195]) for (const side of [-1, 1]) {
     const leg = new T.Group(); leg.position.set(side * .18, .29, z); body.add(leg); legs.push(leg);
-    ball(leg, fur, 0, -.075, 0, .093, .14, .1); ball(leg, cream, 0, -.205, .038, .108, .072, .132);
+    ball(leg, fur, 0, -.075, 0, .093, .14, .1); ball(leg, fur, 0, -.205, .03, .1, .07, .12);
   }
-  const tail = new T.Group(); tail.position.set(0, .47, -.38); body.add(tail);
-  ball(tail, fur, 0, .11, -.075, .075, .14, .085); wool(tail, fur, 12, new T.Vector3(0, .17, -.095), new T.Vector3(.07, .104, .078), 2.2);
-  // Small gold bow and bell, without adding a bright shell around the dog.
-  for (const side of [-1, 1]) { const bow = ball(body, cream, side * .064, .56, .295, .069, .04, .024); bow.rotation.z = side * .35; }
-  ball(body, gold, 0, .531, .335, .039); ball(body, dark, 0, .526, .371, .01, .014, .005);
+  const tail = new T.Group(); tail.position.set(0, .52, -.36); body.add(tail);
+  ball(tail, fur, 0, .08, -.04, .045, .1, .05); ball(tail, fur, 0, .2, -.06, .1, .1, .1); wool(tail, fur, 10, new T.Vector3(0, .2, -.06), new T.Vector3(.09, .09, .09), 2.2);
+  // 혀를 살짝 내민 모습(시안 B)
+  { const tongue = ball(head, pink, 0, -.205, .36, .042, .05, .02); tongue.rotation.x = .25; }
   root.userData.ppoParts = { body, ears, legs, tail, curls } satisfies PetParts;
   ownAssets(root);
   return root;

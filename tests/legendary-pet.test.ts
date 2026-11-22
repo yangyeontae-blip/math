@@ -13,7 +13,7 @@ function matrices(group: T.Group) { group.updateMatrixWorld(true); const values:
 test('legendary poodle has instanced curly wool, a compact silhouette and no external textures', () => {
   const pet = createPpojjakiPet(), { geometries, materials, instances } = resources(pet);
   assert.ok(pet.userData.petBody instanceof T.Group);
-  assert.equal(instances.length, 5); assert.equal(instances.reduce((n, mesh) => n + mesh.count, 0), 118);
+  assert.equal(instances.length, 5); assert.equal(instances.reduce((n, mesh) => n + mesh.count, 0), 98);
   assert.equal(geometries.size, 2, 'smooth face and wool each share a single geometry');
   for (const material of materials) assert.equal((material as T.MeshStandardMaterial).map ?? null, null);
   const bounds = new T.Box3().setFromObject(pet), size = bounds.getSize(new T.Vector3());
@@ -25,7 +25,7 @@ test('pet gait is deterministic, returns to rest and reduces wool triangles with
   animatePpojjakiPet(pet, 1.1, true, false, false); const walking = matrices(pet);
   animatePpojjakiPet(pet, 1.1, true, false, false); assert.deepEqual(matrices(pet), walking, 'same simulation time freezes the animation');
   animatePpojjakiPet(pet, 1.4, true, true, false); assert.notDeepEqual(matrices(pet), walking);
-  assert.ok(resources(pet).instances.reduce((n, mesh) => n + mesh.count, 0) < 118);
+  assert.ok(resources(pet).instances.reduce((n, mesh) => n + mesh.count, 0) < 98);
   animatePpojjakiPet(pet, 9, true, false, true); const reduced = matrices(pet); assert.equal(body.position.y, 0);
   animatePpojjakiPet(pet, 99, true, false, true); assert.deepEqual(matrices(pet), reduced);
   assert.deepEqual(resources(pet).geometries, before.geometries); assert.deepEqual(resources(pet).materials, before.materials);

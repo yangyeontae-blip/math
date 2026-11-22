@@ -89,10 +89,10 @@
     "e2e/hunting.spec.mjs": "4d8fb2cef26d2f351f8097e3171ac154d188fa7d7f6adaee21436b647e2c4fc3",
     "src/item-rarity.ts": "8f061ff5da236ee8ab53afd0c62ba58a50ff07ac2fa24ead0b6a4d8ba7d075a7",
     "src/item-rarity.css": "7faa3ac934e14e6e3fc851d7167e44afd2cfb362062c8f461b3bb48aa12269dc",
-    "src/legendary-pet.ts": "8f3169d988e96a56e7fa0984fc61d9b9ba6c7b1e25c321a3cb8975d51d08181d",
+    "src/legendary-pet.ts": "5b36375ae3a2a2fce4d79554416b3589c623eb44bd763ee9766d077421f93a42",
     "src/salon-models.ts": "051ffcb1efadf13076eaa2b6f33c50b169b75335b64b204e113e9921fec5b0c6",
     "tests/item-rarity.test.ts": "92bd0ca07d346019962f61989723363ea4d5d4ffdf8faea0c50b49d787b185ea",
-    "tests/legendary-pet.test.ts": "e3c86d6c288bd9f18a0366bf40dbe2f7169a52188bcbd8e772ece1c63c1fcff2",
+    "tests/legendary-pet.test.ts": "726ca3b3b8c40190f20ac1795f33d330dba04cd8cc0ba65b8db1b86d5e059b4c",
     "tests/salon-models.test.ts": "73e5b23cab54241d8062ba987d9a44f25c4e8c0f239ba4cebbab08e767cd8a4f",
     "tests/career-ui.test.ts": "a2b2d96811210bde5d1e27fb9c17f2292acd5ccc75b35da67186d26125e29c26",
     "e2e/legendary-style.spec.mjs": "2b6d32330251ac24070c7af16e728de38e39e0547c62e54a6447740052e2b93b",
@@ -667,5 +667,5 @@
     "public/art/hud/icon-talk.webp": "e7eab01bd36d970e4e7183212dd0de34fc28a69bb9bc765d99e8f72556ba41c1",
     "public/art/hud/icon-view.webp": "e65fa81ecbc472609d56fd828c466ec32f1e1b07719fa9ff9d7118792f49cb6a"
   },
-  "generation": "ed6552842614cc292f00f5e13b0a41e5f6251f012cef704d27f0260d88955d67"
+  "generation": "de562375c8cb0071f9977af82b5a05677361f08529bbe5fff261303c2dc7ea22"
 }
