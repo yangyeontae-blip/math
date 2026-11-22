@@ -24,6 +24,7 @@
 ## 배포
 - 게임(프런트): `main`에 푸시하면 GitHub Actions(`deploy-pages.yml`)가 타입체크·테스트·빌드 후 GitHub Pages에 배포합니다.
 - 서버(`worker/index.js`: 랭킹·협동 보스·계정·커뮤니티·날씨, D1 `drizzle/`): 2026-11-18부터 Cloudflare Workers `berry-forest` → https://berry-forest.yangyeontae.workers.dev (ChatGPT Sites는 더 쓰지 않음). 게임이 보는 주소는 `.env.production`. 배포: PowerShell에서 `$env:NODE_OPTIONS='--use-system-ca'; pnpm build; npx wrangler deploy` (학교망 인증서 때문에 NODE_OPTIONS 필요). 새 테이블은 `npx wrangler d1 execute berry-forest-db --remote --file drizzle/<파일>.sql`. 비밀값은 `npx wrangler secret put <이름>`(ACCOUNT_PEPPER 설정됨, KMA_SERVICE_KEY 기상청 키).
+- 에듀집 등록 주소(2026-11-23): https://berry-forest-school.vercel.app — Vercel 프로젝트 `berry-forest-school`(GitHub 연결 없음, 정적 파일). 게임 화면을 바꾸면 GitHub Pages와 함께 이 주소도 다시 올립니다: 운영 빌드 후 `dist`에서 `server` 폴더를 뺀 내용을 `public/`에 담은 폴더에서 `npx vercel deploy --prod --yes`. 서버 허용 주소(worker/accounts.js·feedback.js·index.js, realtime/index.mjs, server/community.js)에 이 주소가 들어 있습니다.
 - 서버가 옛 버전이어도 게임이 깨지지 않게 만드세요(클라이언트는 서버 오류를 "준비 중"으로 처리).
 
 ## 구조 빠른 안내
