@@ -49,7 +49,7 @@ export function reportHtml(report: ReportData): string {
   const resolved = report.units.filter(unit => report.resolutions?.units[unit.id]);
   const resolutionRows = resolved.map(unit => { const row = report.resolutions!.units[unit.id]!; return `<tr><td>${escapeHtml(unit.name)}</td><td>${row.independent}</td><td>${row.assisted}</td><td>${row.retried}</td></tr>`; }).join('');
   const resolutionHtml = `<h2>풀이 과정에서 자란 힘</h2><p class="report-note">이 기능을 적용한 뒤 완료한 문제만 기록해요. 혼자 해결은 첫 시도에 도움 없이, 도움받아 해결은 오답 없이 힌트로, 재도전 성공은 틀린 뒤 해결한 문제예요. 과거 기록과 중단한 문제는 소급 분류하지 않아요.</p>${resolved.length ? `<table><thead><tr><th>단원</th><th>혼자 해결</th><th>도움받아 해결</th><th>재도전 성공</th></tr></thead><tbody>${resolutionRows}</tbody></table>` : '<p class="muted">새로운 풀이 기록이 쌓이면 보여 줄게요.</p>'}`;
-  return `<article class="report-sheet"><h1>🍓 베리숲 모험학교 학습 리포트</h1><p class="report-meta"><b>${escapeHtml(report.nickname)}</b> · Lv.${report.level} · ${report.dateLabel} · 플레이 ${report.playMinutes}분</p>
+  return `<article class="report-sheet"><h1>🍓 베리의 숲 모험학교 학습 리포트</h1><p class="report-meta"><b>${escapeHtml(report.nickname)}</b> · Lv.${report.level} · ${report.dateLabel} · 플레이 ${report.playMinutes}분</p>
 <div class="report-summary"><div><small>맞힌 문제</small><b>${report.totalCorrect}</b></div><div><small>다시 도전한 문제</small><b>${report.totalWrong}</b></div><div><small>전체 정답률</small><b>${rateText(report.overallRate)}</b></div></div>
 <p class="report-note">정답률은 시도 기록을 요약한 참고 수치예요. 문제 수가 적을 때는 실력을 판단하지 않아요.</p>
 ${resolutionHtml}<h2>단원별 기록</h2><table><thead><tr><th>단원</th><th>임무</th><th>정답/도전</th><th>정답률</th><th>힌트 사용</th></tr></thead><tbody>${rows}</tbody></table>

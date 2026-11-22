@@ -43,7 +43,7 @@ export function mountPlaza(h:{state:()=>Save|null;world:()=>World|undefined;host
  auth.validate().then(()=>{ownRole=auth.active?'operator':'player';roleUntil=auth.expiresAt;badge.hidden=ownRole!=='operator';sync();});
  function render(){
   const labels={offline:enabled?'🌿 혼자 모험 중':'🌿 혼자 다니기',connecting:'🌐 광장 연결 중',online:'🌐 '+(forestScene?'함께하는 수학숲':'함께하는 광장')+' · '+memberCount+'명',retrying:'🌐 광장 다시 연결 중',nickname:'🌿 별명을 확인해 주세요',full:'🌐 광장이 가득 찼어요'};
-  status.innerHTML=uiLabel(labels[connection]);status.dataset.connection=connection;
+  status.innerHTML=uiLabel(labels[connection]);status.dataset.connection=connection;status.dataset.count=connection==='online'?String(memberCount):'';
   count.textContent=connection==='full'?'같은 광장에 잠시 후 다시 연결할게요. 혼자 모험은 계속할 수 있어요.':connection==='online'?memberCount+'명이 같은 광장에 있어요.':connection==='nickname'?'친구에게 보여 줄 별명을 다른 이름으로 바꾸면 다시 연결돼요.':connection==='retrying'?'광장 연결이 끊겼어요. 인터넷을 확인해 주세요. 자동으로 다시 연결해요.':!endpoint?'광장 서버가 준비 중이에요. 잠시 후 친구들과 만나기를 눌러 주세요.':'광장에 들어오면 친구들이 보여요.';
   toggle.textContent=enabled?'혼자 다니기':'친구들과 만나기';buttons.forEach(b=>b.disabled=connection!=='online');
   if(panel.hidden)return;

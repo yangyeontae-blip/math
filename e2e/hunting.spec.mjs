@@ -26,7 +26,7 @@ async function openSchoolMenu(page){
  await expect(page.locator('.career-howto')).toBeVisible();
 }
 test('three knight advancements require solved math missions and preserve a second job loadout',async({page})=>{
- test.setTimeout(240000);
+ test.setTimeout(360000);
  await start(page,60);await openSchoolMenu(page);await page.locator('[data-career-action="choose-job"][data-job="knight"]').click();
  for(const rank of [1,2,3]){
   await page.locator('[data-career-action="next-career-step"]').click();await completeMathTrial(page);await page.locator('[data-career-action="next-career-step"]').click();

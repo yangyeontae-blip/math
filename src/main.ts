@@ -15,6 +15,7 @@ import './potion-workshop.css';
 import {showPotionWorkshop} from './potion-workshop-view';
 import './math-forest-entry.css';
 import './market-skin.css';
+import './mobile-hud.css';
 import {mathForestEntryHtml} from './math-forest-entry';
 import {plazaGuideHtml} from './plaza-guide-view';
 import {forestStageHtml} from './forest-stage-view';
@@ -117,7 +118,7 @@ const root = $('#game');
 const COPYRIGHT_OWNER = '양연태';
 const COPYRIGHT_YEAR = 2026;
 root.innerHTML = uiLabel(`<div id="world" aria-label="베리숲 3D 마을"></div><div id="hud" hidden>
-  <header class="topbar"><div class="player-card"><span class="level-badge" id="level">1</span><div><strong id="nickname"></strong><div class="career-badges"><span id="career-title" class="career-title" aria-label="현재 직업">새싹 모험가</span><span id="guardian-title" class="guardian-title" hidden>뽀짝이의 수호자</span></div><span id="level-milestone" class="level-milestone" hidden></span><div class="xp-track"><div id="xp-fill"></div></div><small id="xp-text"></small><span id="save-status" class="save-status" role="status" aria-live="polite">✓ 저장됨</span></div></div><div class="brand-mini">베리숲 <span>모험학교</span></div><div class="top-actions"><span class="wallet"><img class="wallet-berry" src="${import.meta.env.BASE_URL}art/berry-watercolor.png" alt="" width="40" height="40"> <b id="berries">0</b><span>베리</span></span><button id="inventory" class="icon-button" aria-label="내 가방">🎒</button><button id="stage-map" class="icon-button" aria-label="지도">🗺</button><button id="settings" class="icon-button" aria-label="설정과 저장">⚙</button></div></header>
+  <header class="topbar"><div class="player-card"><span class="level-badge" id="level">1</span><div><strong id="nickname"></strong><div class="career-badges"><span id="career-title" class="career-title" aria-label="현재 직업">새싹 모험가</span><span id="guardian-title" class="guardian-title" hidden>뽀짝이의 수호자</span></div><span id="level-milestone" class="level-milestone" hidden></span><div class="xp-track"><div id="xp-fill"></div></div><small id="xp-text"></small><span id="save-status" class="save-status" role="status" aria-live="polite">✓ 저장됨</span></div></div><div class="brand-mini">베리의 숲 <span>모험학교</span></div><div class="top-actions"><span class="wallet"><img class="wallet-berry" src="${import.meta.env.BASE_URL}art/berry-watercolor.png" alt="" width="40" height="40"> <b id="berries">0</b><span>베리</span></span><button id="inventory" class="icon-button" aria-label="내 가방">🎒</button><button id="stage-map" class="icon-button" aria-label="지도">🗺</button><button id="settings" class="icon-button" aria-label="설정과 저장">⚙</button></div></header>
   <aside class="quest-card" hidden aria-hidden="true"><button id="quest-toggle" class="quest-toggle" aria-expanded="true" aria-controls="quest-body"><span>🌿 지금 할 일</span><span class="quest-chevron" aria-hidden="true">⌃</span><span class="quest-peek" id="quest-peek"></span></button><div id="quest-body" class="quest-body"><strong id="quest-title">베리숲에 오신 걸 환영해요</strong><div id="quest-list"></div><button id="daily-open" class="text-button codex-open daily-open">📅 오늘의 미션<i class="daily-dot" aria-hidden="true"></i></button><button id="boss-open" class="text-button codex-open">🐉 우리 반 협동 보스</button><button id="codex-open" class="text-button codex-open">📖 모험 도감</button></div></aside>
   <div class="location-pill">❋ 베리숲 마을 <span>평화로운 오후</span></div>
   <div class="equipment-card"><span id="weapon-name"></span><small id="weapon-effect"></small></div>
@@ -189,7 +190,7 @@ function rememberMenu(key: string, render: () => void) { menuHistory.enter(key, 
 function previousMenu() { if (!menuHistory.back()) closeModal(); }
 function navPage(heading: string, body: string, actions: Record<string, () => void>) {
   if (!menuPending) rememberMenu(`page:${heading}`, () => navPage(heading, body, actions));
-  openModal(title('베리숲 모험학교', heading) + body + '<div class="nav-close-row"><button class="text-button wide" data-close>게임으로 돌아가기</button></div>', 'navigation-modal');
+  openModal(title('베리의 숲 모험학교', heading) + body + '<div class="nav-close-row"><button class="text-button wide" data-close>게임으로 돌아가기</button></div>', 'navigation-modal');
   // 클릭 이벤트를 넘기지 않아요. openBeauty처럼 첫 인자를 다른 뜻으로 받는 함수가 이벤트를 받으면 창이 열리지 않았어요.
   document.querySelectorAll<HTMLButtonElement>('[data-nav]').forEach(b => b.onclick = () => actions[b.dataset.nav!]?.());
 }
@@ -591,7 +592,7 @@ function openFeedback() { showFeedback(openModal, title, closeModal); }
 
 function openCopyrightNotice() {
   openModal(title('저작권과 이용 안내', '베리숲을 즐겁고 안전하게 이용해요') + `<div class="legal-notice">
-    <p class="legal-owner">© ${COPYRIGHT_YEAR} ${COPYRIGHT_OWNER}. <b>베리숲 모험학교</b>. All rights reserved.</p>
+    <p class="legal-owner">© ${COPYRIGHT_YEAR} ${COPYRIGHT_OWNER}. <b>베리의 숲 모험학교</b>. All rights reserved.</p>
     <section><span aria-hidden="true">🌿</span><div><strong>등장인물의 이름은 가명이에요</strong><p>게임에 등장하는 모든 인물의 이름은 가명이며, 실제 인물을 가리키지 않습니다. 저작권자 표시는 제작자 명의입니다.</p></div></section>
     <section><span aria-hidden="true">🏫</span><div><strong>이렇게 이용해도 돼요</strong><p>공식 게임 링크를 학생·보호자·다른 선생님에게 공유하고, 비영리 수업과 가정에서 직접 플레이할 수 있어요.</p></div></section>
     <section><span aria-hidden="true">☁</span><div><strong>온라인 모험 보관은 선택이에요</strong><p>아이디와 게임 기록을 서버에 보관해 다른 기기에서 이어할 수 있어요. 별도 상세 학습 리포트는 기기에만 남아요. 비밀번호나 복구코드를 친구에게 알려주지 마세요.</p></div></section><section><span aria-hidden="true">🚫</span><div><strong>무단 복제는 안 돼요</strong><p>소스 코드, 문제와 글, 그래픽과 음악을 허락 없이 복사·수정·재배포·재호스팅하거나 상업적으로 이용할 수 없어요. 저작권 표시를 삭제해서도 안 돼요.</p></div></section>

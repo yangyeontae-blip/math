@@ -37,7 +37,7 @@ body:has(.room-activity-panel:not([hidden])) .quest-card,body:has(.room-activity
  #game #hud .academy-bar.career-exploration-bar{display:grid;grid-template-columns:repeat(2,50px);flex-direction:unset;gap:4px;padding:4px;bottom:calc(150px + env(safe-area-inset-bottom));max-height:none}
  #game #hud .academy-bar.career-exploration-bar[hidden]{display:none}
  #game #hud .career-exploration-bar button{min-width:50px;width:50px;min-height:50px;height:50px;padding:2px}
- #game #hud .career-exploration-bar button>small,#game #hud .career-exploration-bar .academy-cooldown:empty{display:none}
+ #game #hud .career-exploration-bar button[data-cast-skill]>small,#game #hud .career-exploration-bar .academy-cooldown:empty{display:none}
  #game #hud .career-exploration-bar .academy-cooldown{display:none}
  #game #hud .career-exploration-bar .career-sigil{width:40px;height:40px}
 }
