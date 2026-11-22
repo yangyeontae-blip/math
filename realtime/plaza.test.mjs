@@ -79,10 +79,11 @@ test('plaza trade: request, accept, offers, both lock → each side gets the oth
  b.socket.send(JSON.stringify({type:'trade-reply',tradeId:invite.tradeId,accept:true}));await a.next('trade-state');await b.next('trade-state');
  const offerA={berries:300,items:[{kind:'weapon',id:2,level:4}]},offerB={berries:0,items:[{kind:'pet',id:3,level:0}]};
  a.socket.send(JSON.stringify({type:'trade-offer',tradeId:invite.tradeId,offer:offerA}));await a.next('trade-state');const seen=await b.next('trade-state');assert.deepEqual(seen.theirs,offerA);
+ b.socket.send(JSON.stringify({type:'trade-offer',tradeId:invite.tradeId,offer:offerB}));await a.next('trade-state');await b.next('trade-state');
  a.socket.send(JSON.stringify({type:'trade-lock',tradeId:invite.tradeId}));await a.next('trade-state');assert.equal((await b.next('trade-state')).theirLock,true);
- b.socket.send(JSON.stringify({type:'trade-offer',tradeId:invite.tradeId,offer:offerB}));const reset=await a.next('trade-state');assert.equal(reset.myLock,false,'a change unlocks both');await b.next('trade-state');
- a.socket.send(JSON.stringify({type:'trade-lock',tradeId:invite.tradeId}));await a.next('trade-state');await b.next('trade-state');
- b.socket.send(JSON.stringify({type:'trade-offer',tradeId:invite.tradeId,offer:offerB}));b.socket.send(JSON.stringify({type:'trade-lock',tradeId:invite.tradeId}));
+ // 2026-11-22: once anyone confirms, both offers freeze, so a later change is ignored and the confirmation stays.
+ b.socket.send(JSON.stringify({type:'trade-offer',tradeId:invite.tradeId,offer:{berries:1,items:[]}}));const kept=await a.next('trade-state');assert.equal(kept.myLock,true,'a confirmation is never undone');assert.deepEqual(kept.theirs,offerB,'offers freeze after any confirmation');await b.next('trade-state');
+ b.socket.send(JSON.stringify({type:'trade-lock',tradeId:invite.tradeId}));
  const doneA=await a.next('trade-done'),doneB=await b.next('trade-done');
  assert.deepEqual(doneA.gave,offerA);assert.deepEqual(doneA.got,offerB);assert.deepEqual(doneB.gave,offerB);assert.deepEqual(doneB.got,offerA);
  a.socket.send(JSON.stringify({type:'trade-request',to:b.welcome.id}));const second=await b.next('trade-invite');

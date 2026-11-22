@@ -1,5 +1,5 @@
 // 거래 창: 광장·상점거리 친구 목록의 "거래하기"로 시작해요.
-// 두 사람이 모두 "확정"을 눌러야 끝나고, 한쪽이 제안을 바꾸면 확정이 풀려요.
+// 두 사람이 모두 "확정"을 눌러야 끝나요. 한쪽이 확정하면 두 제안이 잠겨서 확정이 풀리지 않아요(2026-11-22).
 import type { PlazaPlayer } from './plaza-protocol';
 import type { TradeMessage } from './plaza-client';
 import type { Save } from './rules';
@@ -36,12 +36,13 @@ export function mountTrade(h: Hooks) {
     const theirs = el('#trade-theirs'); if (theirs) theirs.innerHTML = offerText(current.theirs).map(t => `<li>${esc(t)}</li>`).join('');
     const lockState = el('#trade-locks'); if (lockState) lockState.textContent = `${current.myLock ? '나: 확정함' : '나: 고르는 중'} · ${current.theirLock ? `${current.partner}: 확정함` : `${current.partner}: 고르는 중`}`;
     const lock = el<HTMLButtonElement>('#trade-lock'); if (lock) { lock.disabled = !!problem || current.myLock; lock.textContent = current.myLock ? '상대의 확정을 기다려요' : '이대로 확정'; }
-    document.querySelectorAll<HTMLInputElement>('#trade-mine input').forEach(input => input.disabled = current!.myLock);
+    // 2026-11-22 한쪽이라도 확정하면 두 사람의 제안을 모두 잠가요. 그래서 확정이 풀리지 않고, 바꾸려면 거래를 취소해요.
+    document.querySelectorAll<HTMLInputElement>('#trade-mine input').forEach(input => input.disabled = current!.myLock || current!.theirLock);
   }
   function render(s: Save) {
     if (!current) return;
     const items = tradableItems(s);
-    h.open(`<div class="trade-sheet"><header><small>광장 거래</small><h2>${esc(current.partner)}와(과) 거래</h2><p>두 사람 모두 확정하면 바로 주고받아요. 한쪽이 바꾸면 확정이 다시 풀려요.</p></header>
+    h.open(`<div class="trade-sheet"><header><small>광장 거래</small><h2>${esc(current.partner)}와(과) 거래</h2><p>두 사람 모두 확정하면 바로 주고받아요. 누군가 먼저 확정하면 두 사람 모두 더 바꿀 수 없어요. 바꾸고 싶으면 거래를 취소하고 다시 시작해요.</p></header>
       <div class="trade-columns"><section id="trade-mine"><h3>내가 줄 것</h3><label class="trade-berries">베리 <input id="trade-berries" type="number" inputmode="numeric" min="0" step="1" value="${draft.berries}"></label>
       <div class="trade-items">${items.length ? items.map(item => `<label><input type="checkbox" data-trade-item='${JSON.stringify(item)}' ${draft.items.some(d => d.kind === item.kind && d.id === item.id) ? 'checked' : ''}><span>${esc(itemKindName(item.kind))}</span>${esc(itemName(item))}${item.level ? ` +${item.level}` : ''}</label>`).join('') : '<p class="trade-empty">보낼 수 있는 물건이 없어요. 지금 쓰고 있는 장비와 기본 장비는 보낼 수 없어요.</p>'}</div>
       <p id="trade-fee" class="trade-fee"></p><p id="trade-error" class="error" role="alert"></p></section>

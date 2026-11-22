@@ -120,7 +120,7 @@
     "scripts/build-plaza.mjs": "cd9262c9c77bdb2ed4bb6589c14f3d211405f5b8f9a37b815832200d7c15538d",
     "realtime/index.mjs": "0876b5a742422ae50360c7b46d2991eae1d1168146871be96eb8352f449c0cc2",
     "realtime/wrangler.jsonc": "f5a20cb84d35d340acf6afb3302bd49985272666cbc171408495f562d33f0cae",
-    "realtime/plaza.test.mjs": "d81b8721f70eb043a76764031fa91c4448574333cf206d2b8d775e79130ae585",
+    "realtime/plaza.test.mjs": "cc94902f7ea38339601c30d6862fb13236feafa572f941b0854d2359d3d8b9b5",
     "src/world-two-planet.ts": "71cf7902894fd36bdeb3476930a0363976cd342a50f177491402633f308eeb0d",
     "src/astral-questions.ts": "f22cdfe23dba16a5bd41e1062cbbb95925465d198b00401b676f5eb1714da6e4",
     "src/astral-study.ts": "be9e7191cf5adee5a81fdd5a29f8547f12320a52a1b218e43a50bf90c2982210",
@@ -535,7 +535,7 @@
     "tests/career-math.test.ts": "3f131c15d7bfd159ee3056501265aea3f211a64ed1bf3d829b94e6663a494192",
     "e2e/career-math.spec.mjs": "bc1e9f2038c37d9799e8608f88b5fd3fb75eda9cc5745fb7d5a8b28c9bba1980",
     "e2e/career-math-helpers.mjs": "038d2b9e440992d9738a06f3a667a6a02714acfd59e84b041c457fbdf355b45d",
-    "realtime/trade.mjs": "ed28f827078e34177e856205e33fcf54fdf275d8e710d94d238a41467a1f1faa",
+    "realtime/trade.mjs": "b7a097cac54c947bc333087e0cbf3e9bf02715e385cd1c79bb7d2dc4a0b478ee",
     "src/trade.ts": "ca97f6fe629a0b68cc94c20fe28898b5cf8ab0db04142437ecbbef89418c8c8c",
     "src/identity-ui.css": "b4098062f8f5f389aa7ffe49b2bf8849e219600d9bd0958c4ad1c17f408b0ff7",
     "src/name-font.ts": "40da51c291019b544c7affa8dbfbf40c49877c1e00f9433c26e62d2223162bf7",
@@ -696,5 +696,5 @@
     "public/art/workshop/potion-5.webp": "259df8df6fde51c800382dd497e4aea5555a911a4cf407ce8cd0cca1066f84a8",
     "public/art/workshop/recipe-card.webp": "2c7e6fce916e282edfe071b349732df6ab280cc7c37531df1fcde5a9c42c7556"
   },
-  "generation": "9b1f0320696dcbbd138474dd8df9b9cbc971aa500711e9fec700561f299ad90a"
+  "generation": "576f85cf4531e99e56715b243fb2080915c5a40daea34558d5a0eae3bfcc2c42"
 }

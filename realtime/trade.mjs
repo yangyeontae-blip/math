@@ -27,7 +27,7 @@ export function handleTrade(room,ws,s,m,now=Date.now()){
  if(m.type==='trade-offer'){const offer=parseTradeOffer(m.offer);if(!offer)return true;
   // 같은 제안을 다시 보내면(확정 직전 재전송 등) 확정 상태를 건드리지 않아요. 내용이 바뀔 때만 두 사람의 확정을 풀어요.
   if(JSON.stringify(offer)===JSON.stringify(t.offers[s.id]))return true;
-  t.offers[s.id]=offer;t.locks={};t.at=now;sendState(room,t);return true;}
+  if(t.locks[t.a]||t.locks[t.b]){sendState(room,t);return true;}t.offers[s.id]=offer;t.at=now;sendState(room,t);return true;}
  if(m.type==='trade-lock'){
   t.locks[s.id]=true;t.at=now;
   if(t.locks[t.a]&&t.locks[t.b]){trades.delete(t.id);for(const [me,other] of [[t.a,t.b],[t.b,t.a]]){const p=find(room,me);if(p)room.send(p[0],{type:'trade-done',tradeId:t.id,gave:t.offers[me],got:t.offers[other]});}}
