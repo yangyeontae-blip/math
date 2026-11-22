@@ -4,3 +4,10 @@ test('level and berry boards use different metrics, share tied ranks and omit in
 test('restored character IDs update one record while operator and classroom reports remove their rank',async()=>{let now=10000;const h=new HallOfFame(storage(),()=>now),r={id:crypto.randomUUID(),nickname:'모험친구',level:20,berries:123,eligible:true};await h.report(r);now+=2000;await h.report({...r,nickname:'새로운별명',level:21});assert.equal((await h.board('level')).entries.length,1);assert.equal((await h.board('level')).entries[0].nickname,'새로운별명');await h.report(r,true);assert.equal((await h.board('level')).entries.length,0);await h.report(r);await h.report({...r,eligible:false});assert.equal((await h.board('level')).entries.length,0);for(const bad of [{...r,level:-1},{...r,berries:1e10},{...r,nickname:'<script>'},{...r,id:'bad'}])assert.equal((await h.report(bad)).ok,false);});
 
 test('board size negotiation preserves legacy defaults and rejects oversized or ambiguous limits',()=>{assert.equal(hallResponseLimit(null),50);assert.equal(hallResponseLimit('200'),200);assert.equal(hallResponseLimit('50'),50);for(const value of ['0','201','-1','1.5','NaN','Infinity','',' 200','0200'])assert.equal(hallResponseLimit(value),null,value);});
+
+test('hall rows untouched for a year are erased and stop counting toward the board limit',async()=>{const map=new Map(),store={get:async k=>map.get(k),put:async(k,v)=>{map.set(k,structuredClone(v));},delete:async k=>{for(const x of [k].flat())map.delete(x);},list:async({prefix})=>new Map([...map].filter(([k])=>k.startsWith(prefix))),transaction:async fn=>fn(store)};
+ const year=365*24*60*60*1000;let now=1_000_000;const h=new HallOfFame(store,()=>now),old={id:crypto.randomUUID(),nickname:'옛친구',level:90,berries:9,eligible:true},fresh={id:crypto.randomUUID(),nickname:'새친구',level:10,berries:1,eligible:true};
+ await h.report(old);now+=year-5000;await h.report(fresh);now+=10000;
+ const board=await h.board('level');assert.deepEqual(board.entries.map(e=>e.nickname),['새친구']);assert.equal(await store.get('hall:count'),1);
+ assert.equal([...map.keys()].some(k=>k.endsWith(hallId(old.id))),false);
+});

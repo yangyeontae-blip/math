@@ -13,6 +13,7 @@ export class AdventureAccount {
  async enter(action:'register'|'login',username:string,password:string,consent=false){const r=await this.request(action,{username,password,consent});this.token=r.token;this.username=r.username;return r;}
  async load():Promise<{snapshot:Save|null;revision:number;updatedAt:number}>{const token=this.token,r=await this.request('load');if(this.token!==token)throw new AccountError('다시 로그인해 주세요.',401);const snapshot=r.snapshot?validateSave(r.snapshot):null;if(!Number.isSafeInteger(r.revision)||r.revision<0)throw Error('보관 버전을 확인하지 못했어요.');this.revision=r.revision;return {...r,snapshot};}
  async save(snapshot:Save){const token=this.token,r=await this.request('save',{snapshot,revision:this.revision});if(this.token!==token)throw new AccountError('다시 로그인해 주세요.',401);this.revision=r.revision;return r;}
+ async remove(password:string){const r=await this.request('delete',{password});this.token='';this.username='';this.revision=0;return r;}
  async logout(){const token=this.token;this.token='';this.username='';this.revision=0;if(token)try{await this.fetcher(new URL('logout',ACCOUNT_URL),{method:'POST',credentials:'omit',headers:{'content-type':'application/json',authorization:'Bearer '+token},body:'{}',signal:AbortSignal.timeout(5000)});}catch{}}
 }
 export const LOCAL_ACCOUNT_BACKUPS='berry-forest-account-local-backups-v1';

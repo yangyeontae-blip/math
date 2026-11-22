@@ -40,3 +40,17 @@ test('real SQL account flow preserves revisions, isolates users, rotates recover
  DB.db.prepare('UPDATE adventure_sessions SET expires_at=0').run();assert.equal((await call('load',{},next.token)).status,401);
 });
 test('atomic account-target limits persist across requests',async t=>{const DB=database();t.after(()=>DB.db.close());const env={DB,ACCOUNT_PEPPER:'test-only-server-pepper-with-32-characters'};let status;for(let i=0;i<9;i++)status=(await handleAccounts(req('login',{username:'MissingAccount',password}),env)).status;assert.equal(status,429);assert.equal(DB.db.prepare('SELECT COUNT(*) AS n FROM adventure_accounts').get().n,0);});
+
+test('account deletion needs the password again and erases the account, record and logins; idle accounts expire after a year',async t=>{const DB=database();t.after(()=>DB.db.close());const env={DB,ACCOUNT_PEPPER:'test-only-server-pepper-with-32-characters'};const call=async(a,b={},token='')=>{const r=await handleAccounts(req(a,b,token),env);return {status:r.status,...await r.json()};};
+ const a=await call('register',{username:'GoneSoon',password,consent:true});const s=newSave('지울친구',0);assert.equal((await call('save',{snapshot:s,revision:0},a.token)).revision,1);
+ const other=await call('login',{username:'GoneSoon',password});
+ assert.equal((await call('delete',{password:'wrong-password-123'},a.token)).status,401);
+ assert.equal((await call('delete',{password})).status,401);
+ const gone=await call('delete',{password},a.token);assert.equal(gone.status,200);assert.equal(gone.deleted,true);
+ assert.equal(DB.db.prepare('SELECT COUNT(*) n FROM adventure_accounts').get().n,0);assert.equal(DB.db.prepare('SELECT COUNT(*) n FROM adventure_sessions').get().n,0);
+ assert.equal((await call('load',{},other.token)).status,401);assert.equal((await call('login',{username:'GoneSoon',password})).status,401);
+ const old=await call('register',{username:'SleepyOne',password,consent:true});assert.equal(old.status,200);
+ DB.db.prepare('UPDATE adventure_accounts SET updated_at=?').run(Date.now()-366*24*60*60*1000);
+ await call('login',{username:'SomeoneElse',password});
+ assert.equal(DB.db.prepare('SELECT COUNT(*) n FROM adventure_accounts').get().n,0);
+});

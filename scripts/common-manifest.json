@@ -178,9 +178,9 @@
     "src/hall.ts": "9d350410e920db402fe14a57edac14ed3c54aa5f59aa221a950a494045093ace",
     "src/hall.css": "0ab566323258b867e12a63fccb02140ddfc45218818aaed01f795ed023b36c20",
     "src/hall-controller.ts": "927625f07596aa840bb4bf351f3777af794f05798e02747a7f985c9e68021e06",
-    "tests/hall.test.mjs": "744fe39cd4419a2c507d9cbc691b82e36d19062038c9fe2dede693b78c3d2b4c",
+    "tests/hall.test.mjs": "48609dc1bce4c926e21dc02ef4f90d2edba53b657aa7717e3fc84656980503e3",
     "e2e/hall.spec.mjs": "60f750ef21f472eb03cfa35e76c7aff48d168f6346113dc7a7dee29eca8bc875",
-    "realtime/hall.mjs": "795c4724ba51fe72b3d2276e50cace464c16b548926c07d532a1edc794c3faad",
+    "realtime/hall.mjs": "3115ffb302769fafc862a7d718f358c1beadaafb8e12d648a231465640b1e8fd",
     "realtime/party.mjs": "670b094b147c57b2abba29e8259ec410cb24ca49a5040762ffcaf89790ff547d",
     "realtime/party.test.mjs": "e40f16c26968df4a142076f51263891a4e4e9cdb9a3e995d941f6488fa40170f",
     "tests/mail-feedback.test.ts": "beba37eb1192dbee56f56362aa14d87b1f2eb5b065b87d35c8249504bdb0e179",
@@ -696,5 +696,5 @@
     "public/art/workshop/potion-5.webp": "259df8df6fde51c800382dd497e4aea5555a911a4cf407ce8cd0cca1066f84a8",
     "public/art/workshop/recipe-card.webp": "2c7e6fce916e282edfe071b349732df6ab280cc7c37531df1fcde5a9c42c7556"
   },
-  "generation": "858a385d56f3bdd5693c1b2e3b7266da734360af07966bc65cef555c42230e23"
+  "generation": "75187e3f431c3d20804ec0a43650556c2197111b85182bf6f89c27f694df0ab3"
 }

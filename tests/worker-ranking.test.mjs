@@ -6,9 +6,11 @@ class FakeDB {
   rows = [{ player_id: 'device-1234567890', nickname: '별이', completed: 7 }];
   existing = null;
   writes = [];
+  cleanups = [];
   prepare(sql) {
     if (sql.includes('SELECT player_id')) return { all: async () => ({ results: this.rows }) };
     if (sql.includes('WHERE player_id')) return { bind: () => ({ first: async () => this.existing }) };
+    if (sql.startsWith('DELETE')) return { bind: () => ({ run: async () => { this.cleanups.push(sql); return { success: true }; } }) };
     return { bind: (...values) => ({ run: async () => { this.writes.push(values); return { success: true }; } }) };
   }
 }
@@ -50,7 +52,7 @@ test('ranking worker validates and writes an anonymous best score', async () => 
     body: JSON.stringify({ playerId: 'device-1234567890', nickname: ' 새별 ', completed: 9 }),
   });
   const response = await worker.fetch(request, { DB: db });
-  assert.equal(response.status, 200); assert.deepEqual(db.writes, [['device-1234567890', '새별', 9]]);
+  assert.equal(response.status, 200); assert.deepEqual(db.writes, [['device-1234567890', '새별', 9]]); assert.ok(db.cleanups.some(q => q.includes('expedition_rankings') && q.includes('-365 days')), 'stale rankings are pruned after a year');
   const bad = await worker.fetch(new Request('https://berry.example/api/rankings', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ playerId: 'short', nickname: '<아이>', completed: -1 }) }), { DB: db });
   assert.equal(bad.status, 400); assert.equal(db.writes.length, 1);
 });

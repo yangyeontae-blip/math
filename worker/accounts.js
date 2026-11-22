@@ -1,7 +1,7 @@
 // Passwords, tokens and recovery codes are never logged or stored in plaintext.
 import {validateSave, newSave} from '../src/rules.ts';
 const ORIGINS=new Set(['https://yangyeontae-blip.github.io','https://berry-forest-school.yangyeontae.chatgpt.site']);
-const enc=new TextEncoder(),MAX_BYTES=524288,SESSION_MS=8*60*60*1000;
+const enc=new TextEncoder(),MAX_BYTES=524288,SESSION_MS=8*60*60*1000,INACTIVE_MS=365*24*60*60*1000;
 const hex=b=>Array.from(new Uint8Array(b),x=>x.toString(16).padStart(2,'0')).join('');
 const random=()=>hex(crypto.getRandomValues(new Uint8Array(32)));
 const digest=async s=>hex(await crypto.subtle.digest('SHA-256',enc.encode(s)));
@@ -26,7 +26,7 @@ export async function handleAccounts(request,env){
  if(!env.DB||typeof env.ACCOUNT_PEPPER!=='string'||env.ACCOUNT_PEPPER.length<32)return reply({error:'모험 보관함을 준비 중이에요. 이 기기의 이어하기는 그대로 사용할 수 있어요.'},503);
  if(!request.headers.get('content-type')?.startsWith('application/json'))return reply({error:'요청 형식을 확인해 주세요.'},415);
  const action=new URL(request.url).pathname.split('/').at(-1);
- if(!['register','login','recover','load','save','logout'].includes(action))return reply({error:'지원하지 않는 요청이에요.'},404);
+ if(!['register','login','recover','load','save','logout','delete'].includes(action))return reply({error:'지원하지 않는 요청이에요.'},404);
  let body;try{body=await readBody(request);}catch{return reply({error:'내용을 읽지 못했어요.'},400);}
  try{
   const now=Date.now(),bucket=Math.floor(now/600000),ip=request.headers.get('cf-connecting-ip')||'unknown';
@@ -37,6 +37,8 @@ export async function handleAccounts(request,env){
   if(!hit)return reply({error:'잠시 쉬었다 다시 시도해 주세요.'},429);
   await env.DB.prepare('DELETE FROM account_limits WHERE bucket < ?').bind(bucket-1).run();
   await env.DB.prepare('DELETE FROM adventure_sessions WHERE expires_at < ?').bind(now).run();
+  // 개인정보 처리방침 제4조: 마지막 보관 뒤 1년 동안 쓰지 않은 계정은 자동 파기
+  if(auth)await env.DB.prepare('DELETE FROM adventure_accounts WHERE updated_at < ?').bind(now-INACTIVE_MS).run();
   if(auth){
    const name=accountName(body.username);
    if(!name||!accountPassword(body.password))return reply({error:'아이디는 영문자로 시작하는 영문·숫자·밑줄 4~24자, 비밀번호는 10~128자로 적어 주세요.'},400);
@@ -72,6 +74,15 @@ export async function handleAccounts(request,env){
   const hash=await digest(token),session=await env.DB.prepare('SELECT s.username FROM adventure_sessions s JOIN adventure_accounts a ON a.username=s.username AND a.salt=s.credential_version WHERE s.token_hash=? AND s.expires_at>?').bind(hash,now).first();
   if(!session)return reply({error:'로그인 시간이 끝났어요. 이 기기 기록은 남아 있어요.'},401);
   if(action==='logout'){await env.DB.prepare('DELETE FROM adventure_sessions WHERE token_hash=?').bind(hash).run();return reply({ok:true});}
+  if(action==='delete'){
+   // 정보주체의 삭제 요구: 비밀번호를 한 번 더 확인한 뒤 계정·기록·로그인을 모두 지운다
+   const own=await env.DB.prepare('SELECT password_hash,salt FROM adventure_accounts WHERE username=?').bind(session.username).first();
+   if(!own||!accountPassword(body.password)||!same(await passwordHash(body.password,own.salt,env.ACCOUNT_PEPPER),own.password_hash))return reply({error:'비밀번호를 확인해 주세요.'},401);
+   // 계정 행을 먼저 지우면 남은 로그인도 즉시 무효(세션 조회가 계정과 JOIN)
+   await env.DB.prepare('DELETE FROM adventure_accounts WHERE username=?').bind(session.username).run();
+   await env.DB.prepare('DELETE FROM adventure_sessions WHERE username=?').bind(session.username).run();
+   return reply({ok:true,deleted:true});
+  }
   const row=await env.DB.prepare('SELECT snapshot,revision,updated_at FROM adventure_accounts WHERE username=?').bind(session.username).first();
   if(action==='load')return reply({ok:true,snapshot:row.snapshot?JSON.parse(row.snapshot):null,revision:row.revision,updatedAt:row.updated_at});
   if(!Number.isSafeInteger(body.revision)||body.revision<0)return reply({error:'보관 버전을 확인해 주세요.'},400);

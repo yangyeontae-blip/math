@@ -109,6 +109,11 @@ async function writeRanking(request, env) {
       completed = CASE WHEN excluded.completed > expedition_rankings.completed THEN excluded.completed ELSE expedition_rankings.completed END,
       updated_at = CASE WHEN excluded.completed > expedition_rankings.completed THEN excluded.updated_at ELSE expedition_rankings.updated_at END
   `).bind(playerId, nickname, stored).run();
+  // 개인정보 처리방침 제4조: 1년 동안 바뀌지 않은 랭킹·협동 보스 기록은 자동 파기
+  try {
+    await env.DB.prepare("DELETE FROM expedition_rankings WHERE updated_at < datetime('now', '-365 days')").bind().run();
+    await env.DB.prepare("DELETE FROM boss_progress WHERE updated_at < datetime('now', '-365 days')").bind().run();
+  } catch { /* 정리는 다음 기록 때 다시 시도 */ }
   return json(request, { ok: true, completed: stored });
 }
 
