@@ -41,3 +41,18 @@
 :is(#modal.shop-modal,#modal.pet-shop,#modal.potion-shop,#modal.salon-modal,#modal:has(.market-mark)) :is(.dawn-banner,.skyward-banner) h3{font-family:var(--mk-title)}
 :is(#modal.shop-modal,#modal.pet-shop,#modal.potion-shop,#modal.salon-modal,#modal:has(.market-mark)) .dawn-banner-sun{background:radial-gradient(circle at 35% 30%,#fff6c8,#f3d58b)!important;color:#a37a1c!important}
 :is(#modal.shop-modal,#modal.pet-shop,#modal.potion-shop,#modal.salon-modal,#modal:has(.market-mark)) .modal-navigation{background:transparent!important;box-shadow:none!important}
+/* 2026-11-22 상점거리 메뉴: 줄무늬 차양 아래 가게 배너 카드 */
+.street-sheet{position:relative;border-radius:22px;overflow:hidden;background:url('/art/math-forest/parchment.webp') center top/100% auto repeat-y,#f6e8c6;border:6px solid #b98552;box-shadow:inset 0 0 0 3px #e2c18a,0 6px 0 #8a5f36;padding:0 12px 14px}
+.street-awning{height:72px;margin:0 -12px 6px;background:url('/art/market/awning.webp') center top/100% auto no-repeat}
+.street-intro{background:#fffaf0d9!important;border:2px solid #e2cf9f!important;border-radius:14px}
+.street-intro h3{font-family:var(--font-brand,'Maplestory',sans-serif);color:#2f5a22}
+.street-list.nav-list{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:10px!important}
+.street-list .street-shop{position:relative;display:flex!important;flex-direction:column;justify-content:flex-end;min-height:118px!important;padding:12px!important;border:3px solid #e2c18a!important;border-radius:18px!important;text-align:left;
+ background-color:#f6e8c6!important;background-size:cover!important;background-position:center!important;background-repeat:no-repeat!important;box-shadow:0 3px 0 #c9a46a88!important;color:#3b5a2a}
+.street-list .street-shop strong{font:700 1.1rem var(--font-brand,'Maplestory',sans-serif);color:#2f5a22;text-shadow:0 1px 0 #fffaf0}
+.street-list .street-shop small{margin-top:2px;font-size:.8rem;color:#5d4c3d}
+.street-list [data-nav="workshop"]{grid-column:1/-1;background:linear-gradient(160deg,#f1f6dc,#dfe9bd)!important;border:2px solid #c3d091!important;border-radius:999px!important;font-family:var(--font-brand,'Maplestory',sans-serif)}
+@media(max-width:600px){.street-awning{height:52px}.street-list .street-shop{min-height:100px!important}}
+.street-list .street-shop{min-height:140px!important}
+@media(max-width:600px){.street-list .street-shop{min-height:128px!important}}
+#modal:has(.street-sheet) .nav-links button{border-radius:999px!important;background:linear-gradient(180deg,#fffaf0,#f1e6c9)!important;border:2px solid #e0d0ad!important;color:#3f5a48!important;font-family:var(--font-brand,'Maplestory',sans-serif)}

@@ -69,3 +69,30 @@
  #game #hud .career-exploration-bar .academy-toggle-button[aria-expanded="false"]::after{transform:translate(-50%,-65%) rotate(180deg)}
  #game #hud .academy-bar.career-exploration-bar.is-collapsed{background:none!important;border:0!important;box-shadow:none!important;padding:0!important}
 }
+/* 2026-11-22 휴대폰 사냥 화면: 가운데를 비우고 정보는 위쪽 얇은 띠로 */
+@media (max-width:600px){
+ .has-career-combat #game #hud .player-card{display:none}
+ .career-combat .career-vitals{top:62px!important;left:10px!important;right:64px;transform:none!important;width:auto!important;gap:4px;grid-template-columns:1fr 1fr}
+ .career-combat .career-hp,.career-combat .career-target-hp{padding:4px 8px!important;border-radius:12px!important;font-size:11px!important;line-height:1.3;background:#fffaf0eb!important;color:#3b5a2a!important;border:2px solid #e2c18a!important;box-shadow:0 2px 0 #c9a46a66}
+ .career-combat .career-hp span,.career-combat .career-target-hp span{font-size:11px;max-width:70%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:inline-block;vertical-align:bottom}
+ .career-combat .career-hp b,.career-combat .career-target-hp b{font-size:11px;float:right}
+ .career-combat .career-health-track{height:6px!important;margin-top:2px}
+ .career-combat .career-target-hp{grid-column:2;grid-row:1}
+ .career-combat .career-combat-status{grid-column:1/-1;font-size:11px!important;padding:4px 8px!important;margin:0;border-radius:12px;background:#fffaf0d9!important;color:#5d4c3d!important;border:1.5px solid #e2cf9f;max-height:34px;overflow:hidden}
+ /* 물약·음식: 오른쪽 아래 작은 동그란 버튼 + 개수 배지 */
+ .career-combat .career-supplies{position:fixed;right:12px;bottom:calc(250px + env(safe-area-inset-bottom));display:flex!important;flex-direction:column;gap:8px}
+ .career-combat .career-supply{width:48px;min-height:48px!important;height:48px;padding:0!important;border-radius:50%!important;display:grid!important;place-items:center;grid-template-columns:1fr!important;background:radial-gradient(circle at 40% 35%,#fffdf4,#f0dfba)!important;border:2px solid #c9a46a!important;box-shadow:0 2px 0 #8a5f3655}
+ .career-combat .career-supply :is(.career-supply-name,.career-supply-note,kbd){display:none!important}
+ .career-combat .career-supply-icon{grid-row:auto!important;font-size:24px}
+ .career-combat .career-supply-icon img{width:30px;height:30px}
+ .career-combat .career-supply-stock{position:absolute;right:-4px;top:-4px;min-width:18px;height:18px;padding:0 4px;border-radius:9px;background:#5f7a2a;color:#fff8e2;font:700 11px/18px var(--font-brand,'Maplestory',sans-serif)!important}
+ /* 왼쪽 메뉴 버튼: 작게 */
+ .career-combat-menu{left:8px!important;bottom:calc(176px + env(safe-area-inset-bottom))!important;top:auto!important;gap:6px!important;max-width:120px!important}
+ .career-combat-menu button{min-height:40px!important;padding:4px 10px!important;font-size:12px!important;border-radius:999px!important}
+}
+@media (max-width:600px){
+ .career-combat .career-hp .career-health-track,.career-combat .career-target-hp .career-health-track{background:#efe5cc!important;border-radius:99px}
+ .career-combat .career-hp .career-health-track i{background:linear-gradient(180deg,#a8c06a,#6a9a4f)!important;border-radius:99px}
+ .career-combat .career-target-hp .career-health-track i{background:linear-gradient(180deg,#f0a07a,#c9663f)!important;border-radius:99px}
+ .career-combat-menu button{background:linear-gradient(180deg,#fffaf0,#f1e6c9)!important;border:2px solid #e0d0ad!important;color:#3f5a48!important;font-family:var(--font-brand,'Maplestory',sans-serif)!important;box-shadow:0 2px 0 #cdb88f88!important}
+}

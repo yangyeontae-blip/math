@@ -16,8 +16,10 @@ import {showPotionWorkshop} from './potion-workshop-view';
 import './math-forest-entry.css';
 import './market-skin.css';
 import './mobile-hud.css';
+import './map-bag-skin.css';
 import {mathForestEntryHtml} from './math-forest-entry';
 import {plazaGuideHtml} from './plaza-guide-view';
+import {shopStreetHtml} from './shop-street-view';
 import {forestStageHtml} from './forest-stage-view';
 import {WORKSHOP_ONLY_POTIONS,SHOP_LIMITED_POTIONS,SHOP_BOOST_DAILY_LIMIT,shopBoostRemaining} from './potion-workshop';
 import {mountCommunity} from './community';
@@ -257,7 +259,7 @@ function openPlazaWelcome() {
 }
 function openShopStreet() {
   rememberMenu('shops', openShopStreet);
-  navPage('상점거리', '<div class="nav-intro"><h3>모험가의 취향을 골라요</h3><p>옷, 꾸미기, 펫, 탈것, 무기, 물약 가게가 모여 있어요. 여기서 바로 구경해도 좋아요.</p></div><div class="nav-list">' + navButton('outfit','👗 옷') + navButton('beauty','✨ 헤어와 얼굴 꾸미기') + navButton('pet','🐾 펫') + navButton('ride','🦄 탈것') + navButton('weapon','🪄 무기') + navButton('potion','🧪 물약·음식') + navButton('workshop','⚗️ 물약 공방','수학 정답으로 모은 지혜 구슬로 물약 만들기') + '</div><div class="nav-links">'+navButton('walk','상점거리로 이동')+navButton('plaza','중앙 광장으로 돌아가기')+navButton('back','← 전체 지도')+'</div>', {outfit:()=>openShop('outfit'),beauty:openBeauty,pet:openPetShop,ride:openRideShop,weapon:()=>openShop('weapon'),potion:openPotionShop,workshop:openPotionWorkshop,walk:()=>world.inMarket?closeModal():walkTo('shopStreet','상점거리 입구',enterShopStreet),plaza:()=>walkTo('marketExit','중앙 광장 쪽 출구',()=>switchStage(0)),back:openNavigation});
+  navPage('상점거리', shopStreetHtml(import.meta.env.BASE_URL, navButton('workshop','⚗️ 물약 공방','수학 정답으로 모은 지혜 구슬로 물약 만들기')) + '<div class="nav-links">'+navButton('walk','상점거리로 이동')+navButton('plaza','중앙 광장으로 돌아가기')+navButton('back','← 전체 지도')+'</div>', {outfit:()=>openShop('outfit'),beauty:openBeauty,pet:openPetShop,ride:openRideShop,weapon:()=>openShop('weapon'),potion:openPotionShop,workshop:openPotionWorkshop,walk:()=>world.inMarket?closeModal():walkTo('shopStreet','상점거리 입구',enterShopStreet),plaza:()=>walkTo('marketExit','중앙 광장 쪽 출구',()=>switchStage(0)),back:openNavigation});
 }
 function openAdventureBook(tab: 'discover' | 'collection' | 'learning' = 'discover') {
   if (!state) return;

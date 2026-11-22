@@ -18,3 +18,46 @@
 #editor-items{grid-auto-rows:minmax(92px,auto)}
 #editor-items .editor-item{min-height:92px!important;height:auto!important;gap:3px;overflow:hidden}
 #editor-items .editor-item span{line-height:1}
+
+/* 2026-11-22 휴대폰 정원 꾸미기 다시 배치: 3D 정원을 크게, 버튼은 꼭 필요한 것만, 물건은 아래 가로 서랍 */
+.home-editor-modal{background:url('/art/math-forest/parchment.webp') center top/100% auto repeat-y,#f6e8c6!important}
+.editor-header h2,.editor-item b,.editor-preset b,.editor-catalog h3{font-family:var(--font-brand,'Maplestory',sans-serif)}
+.editor-stage{border:3px solid #e2c18a;box-shadow:0 3px 0 #c9a46a66}
+.editor-tools #editor-place{background:linear-gradient(180deg,#9cb556,#7f9a3e 55%,#5f7a2a)!important;color:#fff8e2!important;border:2px solid #d9e6b2!important;border-radius:999px!important;font-family:var(--font-brand,'Maplestory',sans-serif)}
+.editor-tools button,.editor-camera button{border-radius:999px!important}
+@media(max-width:700px){
+ .editor-body{flex-direction:column!important}
+ .editor-stage{flex:1 1 auto;min-height:52dvh}
+ /* 카메라: 돌리기·확대만, 작은 동그라미로 */
+ .editor-camera{top:8px;right:8px;gap:6px}
+ .editor-camera #editor-fit,.editor-camera #editor-grid{display:none}
+ .editor-camera button{min-width:40px!important;min-height:40px!important;width:40px;height:40px;padding:0!important;font-size:18px!important}
+ /* 안내 한 줄, 작게 */
+ .editor-instruction{padding:6px 12px;font-size:12px;line-height:1.4}
+ /* 핵심 버튼 3개만 크게: 놓기 · 돌리기 · 보관 */
+ .editor-tools{padding:8px 10px}
+ .editor-tools>b{font-size:12px;margin-bottom:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+ .editor-controls{display:grid!important;grid-template-columns:2fr 1fr 1fr auto;gap:6px}
+ .editor-controls #editor-cancel{display:none}
+ .editor-controls #editor-undo{width:44px;padding:0!important;font-size:0!important}
+ .editor-controls #editor-undo::before{content:'↶';font-size:20px}
+ .editor-controls button{min-height:48px!important;font-size:14px!important;padding:6px!important}
+ /* 화살표 한 칸 이동은 끌어서 옮기기로 대신해요(만들기 버튼만 남김) */
+ .editor-nudge{margin-top:6px}
+ .editor-nudge button[data-nudge]{display:none}
+ .editor-nudge #editor-craft{flex:1;min-height:44px}
+ /* 물건: 아래 가로로 넘기는 서랍 */
+ .editor-catalog{height:auto!important;max-height:none!important;padding:8px 10px!important;flex:none}
+ .editor-catalog>h3,.editor-filter{display:none}
+ .editor-presets{grid-template-columns:repeat(3,1fr);margin:0 0 6px}
+ .editor-preset{min-height:48px;padding:4px!important;flex-direction:row}
+ .editor-preset span{font-size:1.2rem}
+ .editor-catalog #editor-items{display:flex!important;overflow-x:auto!important;overflow-y:hidden!important;gap:8px;margin-top:4px;padding-bottom:4px;scroll-snap-type:x mandatory}
+ .editor-catalog #editor-items .editor-item{flex:0 0 88px;min-height:100px!important;height:100px!important;justify-content:center;gap:2px!important;scroll-snap-align:start;border:2px solid #e2c18a!important;border-radius:16px!important;background:radial-gradient(circle at 50% 35%,#fffdf4,#f3e7c8)!important}
+ .editor-catalog #editor-items .editor-item>span{font-size:30px}
+ .editor-catalog #editor-items .editor-item b{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;font-size:11px!important;line-height:1.3!important;white-space:normal;word-break:keep-all;overflow:hidden;max-width:82px;text-align:center;padding:1px 0}
+ .editor-catalog #editor-items .editor-item>span{line-height:1.1!important}
+ .editor-catalog #editor-items .editor-item b span{font-size:10px!important;display:block}
+ .editor-catalog #editor-items .editor-item small{font-size:10px}
+ .editor-catalog p{font-size:11px;margin:4px 0 0}
+}

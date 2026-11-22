@@ -1,0 +1,45 @@
+/* 2026-11-22 Codex 시안: 수학 모험 지도(낡은 보물지도) · 나의 가방(가죽 가방). 화면 구조는 그대로 두고 그림만 입혀요. */
+/* ── 수학 모험 지도 ── */
+#modal:has(.semester-tabs) #modal-content{background:url('/art/math-forest/parchment.webp') center top/100% auto repeat-y,#f3e3bd!important}
+#modal:has(.semester-tabs) .modal-heading{min-height:150px;align-items:flex-end;padding:16px;border-radius:20px;overflow:hidden;
+ background:linear-gradient(90deg,#fbf3dcf0 0,#fbf3dcb0 42%,#fbf3dc00 72%),url('/art/mapbag/map-hero.webp') center/cover no-repeat;border:3px solid #c9a46a;box-shadow:0 3px 0 #8a5f3666}
+#modal:has(.semester-tabs) .modal-heading h2{font-family:var(--font-brand,'Maplestory',sans-serif);color:#5a3d22;text-shadow:0 2px 0 #fffaf0,0 0 10px #fffaf0}
+#modal:has(.semester-tabs) .map-continue{display:flex;align-items:center;justify-content:center;gap:10px;min-height:58px;border-radius:999px!important;font-family:var(--font-brand,'Maplestory',sans-serif)!important;color:#fff8e2!important;
+ background:linear-gradient(180deg,#9cb556,#7f9a3e 55%,#5f7a2a)!important;border:3px solid #d9e6b2!important;box-shadow:0 4px 0 #4d6322!important}
+#modal:has(.semester-tabs) .map-continue::before{content:'';width:34px;height:34px;flex:none;background:url('/art/mapbag/compass.webp') center/contain no-repeat}
+#modal .semester-tabs button{display:flex;align-items:center;justify-content:center;gap:6px;border-radius:999px!important;font-family:var(--font-brand,'Maplestory',sans-serif);background:linear-gradient(180deg,#fffaf0,#f1e6c9)!important;border:2px solid #e0d0ad!important;color:#5d4c3d!important;font-size:0!important}
+#modal .semester-tabs button::before{content:'';width:30px;height:30px;background:center/contain no-repeat}
+#modal .semester-tabs button[data-semester="1"]::before{background-image:url('/art/mapbag/tab-spring.webp')}
+#modal .semester-tabs button[data-semester="2"]::before{background-image:url('/art/mapbag/tab-autumn.webp')}
+#modal .semester-tabs button[data-semester="1"]::after{content:'1학기';font-size:1rem}
+#modal .semester-tabs button[data-semester="2"]::after{content:'2학기';font-size:1rem}
+#modal .semester-tabs button.active{background:linear-gradient(180deg,#eef3d6,#dbe6b4)!important;border-color:#c3d091!important;color:#3b5a2a!important;box-shadow:0 0 10px #ffe38a88}
+#modal:has(.semester-tabs) .semester-heading{font-family:var(--font-brand,'Maplestory',sans-serif);color:#5a3d22;background:none!important}
+#modal:has(.semester-tabs) .curriculum-region{background:url('/art/mapbag/region-card.webp') center/100% 100% no-repeat!important;border:0!important;box-shadow:none!important;padding:18px 26px 18px 22px!important;color:#4a3320!important;filter:drop-shadow(0 3px 2px #7a5b4344)}
+#modal:has(.semester-tabs) .curriculum-region strong{font-family:var(--font-brand,'Maplestory',sans-serif);color:#3b5a2a!important}
+#modal:has(.semester-tabs) .curriculum-region small{color:#6b5a44!important}
+#modal:has(.semester-tabs) .curriculum-region>span:first-child{display:grid;place-items:center;width:48px;height:48px;border-radius:50%;background:radial-gradient(circle at 40% 35%,#fffdf4,#efe0bc);border:2px solid #c9a46a;box-shadow:0 2px 0 #8a5f3655}
+#modal:has(.semester-tabs) .stamp-row u{width:16px;height:16px;border-radius:50%;background:url('/art/mapbag/stamp-off.webp') center/contain no-repeat!important;border:0!important}
+#modal:has(.semester-tabs) .stamp-row u.on{background-image:url('/art/mapbag/stamp.webp')!important}
+#modal:has(.semester-tabs) .region-progress{display:none}
+#modal:has(.semester-tabs) .curriculum-region b{display:inline-block;margin-top:4px;padding:3px 12px;border-radius:999px;background:linear-gradient(160deg,#f1f6dc,#dfe9bd);border:1.5px solid #c3d091;color:#3b5a2a!important;font-family:var(--font-brand,'Maplestory',sans-serif)}
+/* ── 나의 가방 ── */
+#modal:has(.inventory-tabs) #modal-content{background:url('/art/math-forest/parchment.webp') center top/100% auto repeat-y,#f3e3bd!important}
+#modal:has(.inventory-tabs) .modal-heading{min-height:150px;align-items:flex-end;padding:16px;border-radius:20px;overflow:hidden;
+ background:linear-gradient(90deg,#fbf3dcf0 0,#fbf3dcb0 42%,#fbf3dc00 72%),url('/art/mapbag/bag-hero.webp') center/cover no-repeat;border:3px solid #a8774a;box-shadow:0 3px 0 #6e4b2a66}
+#modal:has(.inventory-tabs) .modal-heading h2{font-family:var(--font-brand,'Maplestory',sans-serif);color:#5a3d22;text-shadow:0 2px 0 #fffaf0,0 0 10px #fffaf0}
+#modal .inventory-tabs{display:flex!important;flex-wrap:wrap;justify-content:center;gap:8px!important}
+#modal .inventory-tabs button{position:relative;width:62px;height:72px;min-height:72px!important;padding:0 0 4px!important;display:flex!important;flex-direction:column;align-items:center;justify-content:flex-end;font:700 11px var(--font-brand,'Maplestory',sans-serif)!important;color:#5a3d22!important;background:none!important;border:0!important;box-shadow:none!important}
+#modal .inventory-tabs button::before{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);width:50px;height:50px;border-radius:50%;background:center/cover no-repeat;box-shadow:0 2px 0 #8a5f3655}
+#modal .inventory-tabs button>svg,#modal .inventory-tabs button>.ui-icon{display:none}
+#modal .inventory-tabs button.active::before{box-shadow:0 0 0 3px #f3d58b,0 0 12px #ffe38a}
+#modal .inventory-tabs [data-inventory-tab="weapon"]::before{background-image:url('/art/mapbag/tab-weapon.webp')}
+#modal .inventory-tabs [data-inventory-tab="outfit"]::before{background-image:url('/art/mapbag/tab-outfit.webp')}
+#modal .inventory-tabs [data-inventory-tab="ride"]::before{background-image:url('/art/mapbag/tab-ride.webp')}
+#modal .inventory-tabs [data-inventory-tab="pet"]::before{background-image:url('/art/mapbag/tab-pet.webp')}
+#modal .inventory-tabs [data-career-action="show-supplies"]::before{background-image:url('/art/mapbag/tab-supply.webp')}
+#modal .inventory-tabs [data-inventory-tab="title"]::before{background-image:url('/art/mapbag/tab-title.webp')}
+#modal .inventory-tabs [data-inventory-tab="status"]::before{background-image:url('/art/mapbag/tab-status.webp')}
+#modal:has(.inventory-tabs) :is(.item-card,.collection-card,.inventory-item){background:url('/art/mapbag/pocket.webp') center/100% 100% no-repeat!important;border:0!important;box-shadow:none!important;filter:drop-shadow(0 3px 2px #5a3d2244);padding:16px 12px!important}
+#modal:has(.inventory-tabs) :is(.item-card,.collection-card).selected{filter:drop-shadow(0 0 8px #fff0a8) drop-shadow(0 3px 2px #5a3d2255)}
+#modal:has(.inventory-tabs) :is(.item-card,.collection-card) strong{font-family:var(--font-brand,'Maplestory',sans-serif);color:#3b5a2a}

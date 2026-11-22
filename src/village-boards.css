@@ -62,3 +62,11 @@
 .hall-sheet .hall-list>li:nth-child(3) .hall-rank{background-image:url('/art/notice-hall/medal-3.webp')}
 .hall-sheet .hall-mine{background:linear-gradient(160deg,#f1f6dc,#dfe9bd);border:2px solid #c3d091;border-radius:999px;padding:10px 16px;font-family:var(--font-brand,'Maplestory',sans-serif);color:#3b5a2a;box-shadow:0 0 10px #ffe38a88}
 .hall-sheet .hall-list::before{content:'';display:block;height:150px;margin:0 auto 10px;max-width:420px;background:url('/art/notice-hall/podium.webp') center bottom/contain no-repeat}
+/* 2026-11-22 명예의 전당 줄: 글자가 리본 밖으로 넘치지 않게, 메이플체로 */
+.hall-sheet .hall-list>li{display:grid!important;grid-template-columns:46px minmax(0,1fr) auto;align-items:center;gap:8px;min-height:72px;padding:12px 30px 12px 26px!important;margin-bottom:8px}
+.hall-sheet .hall-rank{display:grid;place-items:center;width:40px;height:40px;font:700 1.1rem var(--font-brand,'Maplestory',sans-serif);color:#7a5b43}
+.hall-sheet .hall-name{min-width:0;display:flex;flex-direction:column;font:700 1.02rem var(--font-brand,'Maplestory',sans-serif);color:#2f5a22;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hall-sheet .hall-name small{font:500 .72rem var(--font-body,sans-serif);color:#8a7a5f;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hall-sheet .hall-value{font:700 .95rem var(--font-brand,'Maplestory',sans-serif);color:#5f7a2a;white-space:nowrap}
+.hall-sheet .hall-list>li:nth-child(-n+3) .hall-rank{width:44px;height:44px}
+@media(max-width:600px){.hall-sheet .hall-list>li{grid-template-columns:40px minmax(0,1fr) auto;padding:10px 22px 10px 18px!important;min-height:64px}}
