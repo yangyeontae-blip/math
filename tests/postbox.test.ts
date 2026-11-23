@@ -39,3 +39,11 @@ test('공지판에 우체통 안내가 맨 위에 있다', () => {
   assert.equal(n.id, 'postbox-2026-11-23');
   for (const w of ['우체통', '이름', '50베리']) assert.ok(n.body.includes(w), w);
 });
+
+import { screenSkin, SCREEN_SKINS } from '../src/screen-skin';
+import { existsSync } from 'node:fs';
+test('기본 모양이던 창은 제목으로 수채화 머리 그림을 고르고, 그림 파일이 모두 있다', () => {
+  assert.equal(screenSkin(' 하루 5분 모험 '), 'daily');
+  assert.equal(screenSkin('없는 창'), '');
+  for (const skin of new Set([...Object.values(SCREEN_SKINS), 'start', 'garden'])) assert.ok(existsSync(`public/art/ui-skin/banner-${skin}.webp`), skin);
+});

@@ -97,6 +97,8 @@ import { buildReport, reportHtml } from './report';
 import { addBossDamage, bossOfWeek, claimBossReward, readBoss, setClassCode, syncBoss, type BossSummary } from './boss';
 import { bubbleOpen, closeBubble, greetingFor, showBubble } from './bubble';
 import { showPostbox } from './postbox-view';
+import { screenSkin } from './screen-skin';
+import './screen-skin.css';
 import { postboxRewardToday } from './postbox';
 import { speak, speechSupported, stopSpeech, autoReadEnabled, setAutoRead } from './speech';
 import { voiceControls } from './speech-controls';
@@ -580,6 +582,7 @@ function openModal(html: string, cls = '') {
   menuPending = false;
   dialog.className = cls; $('#modal-content').innerHTML = `<div class="modal-navigation"><button id="modal-back" type="button" class="secondary" ${!battle && !parent ? 'hidden' : ''}>${battle ? '게임으로 돌아가기' : '← 이전 메뉴'}</button></div>`+html; if (!dialog.open) dialog.showModal();
   decorateUiIcons($('#modal-content'));
+  { const skin = screenSkin($('#modal-content').querySelector('.modal-heading h2')?.textContent); if (skin) dialog.dataset.skin = skin; else delete dialog.dataset.skin; }
   if(/shop|inventory|salon|room|home/.test(cls)||/data-room|home-editor|data-home/.test(html))decorateCatalogUI($('#modal-content'));
   dialog.scrollTop = 0;
   $('#modal-back').onclick=()=>{if(battle){exitBattle();return;}if(parent)parent();else closeModal();};
