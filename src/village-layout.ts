@@ -9,6 +9,9 @@ export const VILLAGE_SPOTS = {
 /** 명예의 전당 안내 NPC 뽀짝이는 운영자 소식 공지판 바로 옆(공지판의 빈 구역 안)에 서요. */
 export const HALL_GUIDE_SPOT = { x: -13.2, z: 8.4 } as const;
 
+/** 베리숲 우체통(아이들 의견 편지)은 공지판 뒤쪽 풀밭(수학숲 입구 간판에 가리지 않는 곳)에 둡니다(2026-11-23). */
+export const POSTBOX_SPOT = { x: -8.6, z: 5.0 } as const;
+
 export function villageWelcomeClear(x: number, z: number): boolean {
   return Math.hypot(x - VILLAGE_SPOTS.notice.x, z - VILLAGE_SPOTS.notice.z) < 4.5
     || Math.hypot(x - VILLAGE_SPOTS.home.x, z - VILLAGE_SPOTS.home.z) < 4.5

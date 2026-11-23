@@ -320,3 +320,36 @@ export function potionWorkshopModel(){
  const barrel=post(g,0x8a6343,-2.05,.55,2.35,.36,.85);barrel.rotation.y=.4;post(g,0x5c4a3e,-2.05,.55,2.35,.38,.08);
  return g;
 }
+
+/** 광장 우체통(아이들 의견 편지). Codex 시안(2026-11-23): 빨간 몸통·하트 구멍·놋쇠 종·편지 간판·파랑새·이끼 돌 받침. */
+export function postboxModel(){
+ const g=new T.Group(),red=0xd65a4c,deep=0x8f2f2a,cream=0xf6e7c6,roof=0xe8774f,stone=0xb3ab98,moss=0x8fb36c,gold=0xe8b84d,blue=0x5d9bd8;
+ // 이끼 낀 돌 받침과 풀밭
+ const lawn=piece(g,VILLAGE_ART.grass,new T.CylinderGeometry(1.35,1.45,.16,12),0,.08,0);lawn.receiveShadow=true;
+ for(const [x,z,r] of [[-.75,.35,.34],[.7,.3,.3],[-.2,-.55,.32],[.55,-.5,.27],[0,.7,.25]])orb(g,stone,x,.28,z,r,.7);
+ piece(g,stone,new T.CylinderGeometry(.34,.45,1.05,8),0,.65,0);
+ orb(g,moss,0,1.16,0,.42,.35);
+ // 몸통(빨강) + 크림 테두리
+ block(g,red,0,1.82,0,1.35,1.05,.95);
+ for(const y of [1.33,2.31])block(g,cream,0,y,0,1.43,.12,1.03);
+ for(const x of [-.7,.7])block(g,cream,x,1.82,.49,.1,1.05,.08);
+ // 하트 모양 편지 구멍(앞면)
+ for(const side of [-1,1])orb(g,deep,side*.13,1.92,.49,.16,.9).scale.z=.35;
+ const tip=block(g,deep,0,1.78,.49,.26,.26,.06);tip.rotation.z=Math.PI/4;
+ // 살짝 삐져나온 편지들
+ for(const [x,r] of [[-.18,.12],[.16,-.1]]){const letter=block(g,cream,x,2.47,.05,.5,.36,.05);letter.rotation.z=r;orb(g,deep,x,2.45,.09,.06,.5);}
+ // 지붕(기와 두 장) + 굴뚝 모양 횃대 + 파랑새
+ for(const side of [-1,1]){const half=block(g,roof,side*.42,2.62,0,1,.14,1.25);half.rotation.z=-side*.52;}
+ block(g,cream,.38,2.95,-.2,.24,.36,.24);
+ const bird=new T.Group();bird.position.set(.38,3.22,-.2);g.add(bird);
+ orb(bird,blue,0,.06,0,.14);orb(bird,0xfaf4e6,0,.02,.07,.09);orb(bird,blue,0,.2,.05,.09);block(bird,gold,0,.2,.15,.05,.04,.08);
+ // 놋쇠 종
+ piece(g,gold,new T.CylinderGeometry(.05,.15,.2,8),-.82,2.05,.3);orb(g,gold,-.82,1.93,.3,.05);
+ // 편지 간판(나무 팔 + 매달린 판)
+ block(g,VILLAGE_ART.wood,.98,2.05,0,.7,.1,.12);
+ block(g,VILLAGE_ART.wood,1.2,1.65,0,.55,.42,.08);
+ block(g,cream,1.2,1.65,.05,.38,.26,.02);orb(g,red,1.2,1.62,.07,.05,.6);
+ // 들꽃
+ for(const [x,z,c] of [[-1,.75,0xf1a4c4],[-.55,1.05,0xb79ae0],[.95,.85,0xf7d36b],[1.05,-.2,0xfffbf0],[-1.1,-.3,0xf1a4c4]])orb(g,c as number,x as number,.32,z as number,.11);
+ return g;
+}

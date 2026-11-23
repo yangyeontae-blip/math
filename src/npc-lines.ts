@@ -79,6 +79,11 @@ export const GREETINGS: Record<string, string[]> = {
     '마을 공지판이야. 새 소식과 이용 안내를 확인해 봐!',
     '공지부터 읽을까? 숲 지도는 안쪽 버튼으로 열 수 있어.'
   ],
+  postbox: [
+    '짹짹! 베리숲을 만든 선생님께 편지를 전해 줄게.',
+    '고장 난 곳, 바라는 것, 좋았던 것 모두 편지로 써 줘!',
+    '편지에는 이름이랑 학교는 쓰지 말아 줘. 짹!'
+  ],
   hallGuide: [
     '멍멍! 나는 뽀짝이야. 친구들 순위를 보여 줄게!',
     '왈! (꼬리 살랑) 명예의 전당 보러 갈래?',
@@ -112,7 +117,7 @@ export const RAIN_LINES = [
 export function pickLine(id: string, random: () => number = Math.random, context: LineContext = {}, previous = ''): string | null {
   const lines = GREETINGS[id]; if (!lines) return null;
   const seasonal = [...(context.night ? NIGHT_LINES : []), ...(context.rain ? RAIN_LINES : [])];
-  const pool = id !== 'noticeBoard' && id !== 'unit' && id !== 'hallGuide' && seasonal.length && random() < .3 ? seasonal : lines;
+  const pool = id !== 'noticeBoard' && id !== 'unit' && id !== 'hallGuide' && id !== 'postbox' && seasonal.length && random() < .3 ? seasonal : lines;
   const options = pool.filter(line => line !== previous);
   const list = options.length ? options : pool;
   return list[Math.min(list.length - 1, Math.floor(random() * list.length))];

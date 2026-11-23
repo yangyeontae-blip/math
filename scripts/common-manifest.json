@@ -24,7 +24,7 @@
     "src/exploration.ts": "ff78cebc5789fc8912f9844b0e866145bae88dfd4419b1bbebcf5eaa7a414729",
     "src/feedback-view.ts": "5b8c19fc1e70576ee839c91e60ff4929e14de1bebcae83720c8a9ab7e98844fc",
     "src/feedback.css": "ed533c4cb8b3c0e67a12098b380f6955d0d0f4b9f0f678969d49b6a2ba8c624e",
-    "src/feedback.ts": "587819dae405d926220236b737de09f7142cba9833f4c917a2848cf54bc8c0e1",
+    "src/feedback.ts": "f01693daf7007141382d365010e0c6c4479f27fca252a511bff90606962c35dc",
     "src/forest-activities.ts": "c2e7e5c84284a69bb48c0be1caa42e12a04a8495d628cb26dbc6fdea76f05b3e",
     "src/forest-activity-view.ts": "1ad86f10cc7af427560e737e9815b22051c2d53b96d158dd460a1b5c1dd70f4b",
     "src/forest-trail.css": "adeb8337355709e0082bbe967f9a34eb231487638a732f93864a0244a8e2d025",
@@ -54,7 +54,7 @@
     "src/learning-tools.ts": "d8a2ad493162cb20f402aa23f05557c4d5cdd360e0f30027677615177fe817bd",
     "src/math-format.ts": "1cd347b406f4641a9fb7c9745e008878ca89c837ac5d779777f074818c609b7d",
     "src/notices.css": "e5538018e7f451e9b38a868ca10c3ab2991fc847aebc0839e6c689e03b55d580",
-    "src/notices.ts": "0cc9ed3f4f99563667129c7a6e4b2d2585dbe0880efabc911271c832b3083bc2",
+    "src/notices.ts": "886095496398704cb7ab15d0032819cea438ef2c5fd84ea9dc95ccfecea4ce27",
     "src/pet-care.ts": "96f52db45ffc9af53676598b2772555f9b48a5c9675495cca499320070a35492",
     "src/ranking.ts": "9696fb7434f1c8a89ec564e82d25caafa0cb46a414fae71722e9a7b79f8f2f15",
     "src/report.ts": "982321b1000d2b9fdd623b015b720df3c52455b850e040edc7faeb876288de87",
@@ -69,7 +69,7 @@
     "src/vite-env.d.ts": "65996936fbb042915f7b74a200fcdde7e410f32a669b1ab9597cfaa4b0faddb5",
     "src/world-map.css": "31b7708b738c91d0de2ad31f932fedcf0b50743272d347817204f93e01afb6b4",
     "tests/common-improvements.test.ts": "b2f51e8cde08db2ec17e4680af25511f739b209e53b298e09e34795c8317a441",
-    "src/village-art.ts": "128c06787db95c13ceaa751ffe92b944d99da98f680aa2ea4f0ef3b34dfdcc10",
+    "src/village-art.ts": "c78093e61b5e658ae2abd071f63878914163c55ef062a5ab0726cbb13b90d94b",
     "tests/village-art.test.ts": "91e520c6457801ea865a7b8118d56da22ed9d6d6ed24477087ba05982897ea87",
     "src/academy.ts": "5206e1a2afd48d78115fc02a350d5d31feba2f854fa809fb6ce2169aa30f4c43",
     "src/academy.css": "3f836bd201252c287ca5dc6b9704e4cad306da5fe65ad7b10029412f5df6ca43",
@@ -83,7 +83,7 @@
     "src/career-controller.ts": "3af9aa4f78018a90662ee993e1cc9ba9dee2eac61e63bcdecd663ad090b22e7f",
     "src/career-ui.ts": "1d46853cfe77a6c68502ad0a5e6d0fd7b7fdbe13c920bcd8d54266dfc201c39c",
     "src/career.css": "0ec9d372ce844876fdbae317ce3a6a9105e485ecaef8e768cae1c4e51fab0275",
-    "src/village-layout.ts": "a2a5602f6306b716299db20b55c8edc6ecbc3a3d59c775546aa89447b2296202",
+    "src/village-layout.ts": "735ad98d5b7731bfdfb53c8ed5145c0fa1ab101a89d3ec89463252d9886a68b1",
     "tests/hunting.test.ts": "7cd8707271f94f5832f9126004af42da975d6444b4fc58062dec7dfec07b6ded",
     "tests/hunting-world.test.ts": "e3042142c4134835628f0018ecde0e4891ee1d62234199e6ec85af7edf9e0adc",
     "e2e/hunting.spec.mjs": "4d8fb2cef26d2f351f8097e3171ac154d188fa7d7f6adaee21436b647e2c4fc3",
@@ -696,5 +696,5 @@
     "public/art/workshop/potion-5.webp": "259df8df6fde51c800382dd497e4aea5555a911a4cf407ce8cd0cca1066f84a8",
     "public/art/workshop/recipe-card.webp": "2c7e6fce916e282edfe071b349732df6ab280cc7c37531df1fcde5a9c42c7556"
   },
-  "generation": "4d0a698db43b45c134a0962b2599f04cb5a2bb59b3d9d09b17a66c50e7e11c04"
+  "generation": "f7ee968cdccd2b5ae6e1c77f8817da1edbcdca7a126ec7dd5fd876a0d3672a34"
 }

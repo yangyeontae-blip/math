@@ -1,3 +1,6 @@
+// 2026-11-18 서버를 Cloudflare Workers로 옮긴 뒤에도 옛 ChatGPT Sites 주소로 보내고 있어서 의견이 닿지 않았다(2026-11-23 수정).
+const API_ORIGIN = ((import.meta as { env?: Record<string, string | undefined> }).env?.VITE_RANKING_API || 'https://berry-forest.yangyeontae.workers.dev').replace(/\/+$/, '');
+export const FEEDBACK_URL = API_ORIGIN + '/api/feedback';
 export const FEEDBACK_CATEGORIES = ['개선 제안', '오류 제보', '좋았던 점'] as const;
 export type FeedbackCategory = typeof FEEDBACK_CATEGORIES[number];
 export type FeedbackPayload = { category: FeedbackCategory; message: string; consent: boolean; requestId: string };
@@ -14,7 +17,7 @@ export async function sendFeedback(payload: FeedbackPayload, fetcher: typeof fet
   if (error) throw new Error(error);
   const controller = new AbortController(), timer = setTimeout(() => controller.abort(), 15_000);
   try {
-    const response = await fetcher('https://berry-forest-school.yangyeontae.chatgpt.site/api/feedback', {
+    const response = await fetcher(FEEDBACK_URL, {
       method: 'POST', credentials: 'omit', headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ category: payload.category, message: payload.message.trim(), consent: payload.consent, requestId: payload.requestId }), signal: controller.signal,
     });

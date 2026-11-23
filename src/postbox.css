@@ -1,0 +1,32 @@
+/* 광장 베리숲 우체통 편지지 (Codex 수채화 시안 2026-11-23) */
+#modal.postbox-modal{width:min(880px,calc(100vw - 24px));max-width:880px;background:transparent!important;box-shadow:none!important;border:0!important;padding:0!important;overflow:visible}
+#modal.postbox-modal #modal-content{background:transparent!important;padding:0!important;box-shadow:none!important;border:0!important}
+#modal.postbox-modal .modal-navigation{display:none}
+.postbox-letter{position:relative;padding:30px 44px 30px;border-radius:30px;background:var(--paper) center/cover no-repeat,#fbf1dc;box-shadow:0 18px 40px rgba(70,48,20,.28),inset 0 0 0 2px rgba(201,167,120,.45);color:#5a3d22;transition:transform .9s cubic-bezier(.5,-.3,.7,1),opacity .9s}
+.postbox-letter.postbox-flying{transform:translate(38vw,-60vh) rotate(-18deg) scale(.25);opacity:0}
+.postbox-close{position:absolute;right:16px;top:14px;width:46px;height:46px;border-radius:50%;border:3px solid #f3d6b4;background:#fff7ea;color:#c8513f;font-size:26px;font-weight:800;line-height:1;box-shadow:0 3px 0 #e6c49c;cursor:pointer}
+.postbox-letter header{display:flex;align-items:center;gap:14px;padding-right:118px}
+.postbox-envelope{width:74px;height:auto;flex:none;transform:rotate(-12deg)}
+.postbox-stamp{position:absolute;right:72px;top:14px;width:84px;transform:rotate(6deg);filter:drop-shadow(0 2px 2px rgba(80,60,30,.2))}
+.postbox-kicker{display:block;font-size:14px;font-weight:800;letter-spacing:.06em;color:#b0643f}
+.postbox-letter h2{margin:2px 0 0;font-family:var(--font-brand,'Maplestory',sans-serif);font-size:clamp(20px,3vw,28px);color:#5a3d22}
+.postbox-kinds{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:20px 0 14px}
+.postbox-kind{display:flex;flex-direction:column;align-items:center;gap:4px;padding:12px 8px 10px;border-radius:999px;border:3px solid transparent;font:800 16px var(--font-brand,'Maplestory',sans-serif);color:#5a3d22;cursor:pointer;box-shadow:inset 0 -4px 0 rgba(0,0,0,.06);transition:transform .15s,border-color .15s}
+.postbox-kind img{width:56px;height:56px;object-fit:contain}
+.postbox-kind-bug{background:#e3ecd0}.postbox-kind-idea{background:#fbecb8}.postbox-kind-love{background:#f8d8d6}
+.postbox-kind[aria-checked=true]{border-color:#c8513f;transform:translateY(-2px);box-shadow:0 5px 0 rgba(200,81,63,.25)}
+.postbox-kind:focus-visible,.postbox-send:focus-visible,.postbox-close:focus-visible{outline:3px solid #2f7d5b;outline-offset:3px}
+.postbox-write{display:block;position:relative}
+.postbox-write textarea{width:100%;min-height:170px;padding:14px 18px;border:2px solid #e2cfa8;border-radius:22px;resize:vertical;font:500 18px/34px 'Berry Forest Sans','Noto Sans KR',sans-serif;color:#4b3420;background:repeating-linear-gradient(transparent 0 33px,rgba(176,140,96,.35) 33px 34px) 0 13px/100% 34px,rgba(255,250,240,.82)}
+.postbox-write small{position:absolute;right:16px;bottom:10px;font-size:13px;color:#9b7b58}
+.postbox-lock{display:flex;align-items:center;gap:10px;margin:12px 0 6px;padding:8px 14px;border-radius:999px;background:rgba(220,234,206,.9);font-size:14px;line-height:1.5}
+.postbox-lock img{width:34px;height:34px;flex:none}
+.postbox-consent{display:flex;gap:10px;align-items:flex-start;margin:8px 4px;font-size:15px}
+.postbox-consent input{width:22px;height:22px;flex:none;accent-color:#c8513f}
+#postbox-result{min-height:1.4em;margin:4px 0;color:#b03a2e;font-weight:700;text-align:center}
+.postbox-send{display:flex;align-items:center;justify-content:center;gap:10px;margin:6px auto 0;min-width:240px;min-height:60px;padding:0 30px;border:0;border-radius:999px;background:linear-gradient(180deg,#e2685a,#c4483b);color:#fff8ec;font:800 21px var(--font-brand,'Maplestory',sans-serif);box-shadow:0 5px 0 #96352b;cursor:pointer}
+.postbox-send img{width:40px;height:40px}
+.postbox-send:disabled{opacity:.7;cursor:wait}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+@media (max-width:620px){.postbox-letter{padding:22px 16px}.postbox-letter header{padding-right:56px}.postbox-stamp{display:none}.postbox-envelope{width:52px}.postbox-kinds{gap:8px}.postbox-kind{font-size:13px;border-radius:24px}.postbox-kind img{width:40px;height:40px}.postbox-send{min-width:0;width:100%}}
+@media (prefers-reduced-motion:reduce){.postbox-letter{transition:none}.postbox-letter.postbox-flying{transform:none}}

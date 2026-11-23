@@ -11,7 +11,9 @@ export async function handleFeedback(request, env, fetcher = fetch) {
   if (!allowed) return reply({ error: '허용되지 않은 요청입니다.' }, 403);
   if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers });
   if (request.method !== 'POST') return reply({ error: '지원하지 않는 요청입니다.' }, 405);
-  if (!env.RESEND_API_KEY || !env.FEEDBACK_TO || !env.FEEDBACK_FROM || !env.DB) return reply({ error: '의견 받기를 준비 중입니다.' }, 503);
+  if (!env.DB) return reply({ error: '의견 받기를 준비 중입니다.' }, 503);
+  // 메일 설정(Resend)이 없으면 편지를 D1 우체통에 90일 보관한다(개인정보 처리방침 제4조). 2026-11-23 광장 우체통.
+  const mailReady = Boolean(env.RESEND_API_KEY && env.FEEDBACK_TO && env.FEEDBACK_FROM);
   if (!request.headers.get('content-type')?.toLowerCase().startsWith('application/json')) return reply({ error: 'JSON 요청이 필요합니다.' }, 415);
   // Bound streamed bytes too; content-length is optional and cannot be trusted.
   const reader = request.body?.getReader(); if (!reader) return reply({ error: '내용이 없습니다.' }, 400);
@@ -32,6 +34,12 @@ export async function handleFeedback(request, env, fetcher = fetch) {
     await env.DB.prepare('DELETE FROM feedback_limits WHERE bucket < ?').bind(bucket - 1).run();
     const limit = await env.DB.prepare(`INSERT INTO feedback_limits (key, bucket, hits) VALUES (?, ?, 1) ON CONFLICT(key) DO UPDATE SET hits = hits + 1 WHERE hits < 3 RETURNING hits`).bind(key, bucket).first();
     if (!limit) return reply({ error: '10분 뒤 다시 시도해 주세요.' }, 429);
+    if (!mailReady) {
+      const now = Date.now();
+      await env.DB.prepare('DELETE FROM postbox_letters WHERE created_at < ?').bind(now - 90 * 86_400_000).run();
+      await env.DB.prepare('INSERT OR IGNORE INTO postbox_letters (id, category, message, created_at) VALUES (?, ?, ?, ?)').bind(data.requestId, data.category, message, now).run();
+      return reply({ ok: true, stored: true });
+    }
     const response = await fetcher('https://api.resend.com/emails', {
       method: 'POST', signal: AbortSignal.timeout(10_000),
       headers: { authorization: `Bearer ${env.RESEND_API_KEY}`, 'content-type': 'application/json', 'Idempotency-Key': `berry-feedback/${data.requestId}` },

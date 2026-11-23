@@ -42,3 +42,13 @@ test('feedback handles CORS and enforces streamed byte limits even without conte
   const malformed = new Request('https://berry.example/api/feedback', { method: 'POST', headers: { origin: 'https://yangyeontae-blip.github.io', 'content-type': 'application/json' }, body: '{' });
   assert.equal((await handleFeedback(malformed, env())).status, 400);
 });
+
+test('without mail settings the plaza postbox keeps letters in D1 for 90 days instead of failing', async () => {
+  const statements = []; const DB = { prepare: sql => ({ bind: (...args) => { statements.push({ sql, args }); return { run: async () => ({}), first: async () => ({ hits: 1 }) }; } }) };
+  const response = await handleFeedback(request(), { DB }, async () => { throw new Error('must not mail'); });
+  assert.equal(response.status, 200); assert.deepEqual(await response.json(), { ok: true, stored: true });
+  const insert = statements.find(s => s.sql.startsWith('INSERT OR IGNORE INTO postbox_letters'));
+  assert.deepEqual(insert.args.slice(0, 3), [payload.requestId, payload.category, payload.message]);
+  assert.ok(statements.some(s => s.sql.startsWith('DELETE FROM postbox_letters') && s.args[0] <= Date.now() - 89 * 86_400_000));
+  assert.ok(statements.every(s => !JSON.stringify(s.args).includes('192.0.2')));
+});

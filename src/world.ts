@@ -24,10 +24,10 @@ import { huntingPower, huntingCompanionStats, PPOJJAK_PET_ID } from './rules';
 import {createPpojjakiPet,createPpojjakiAura,animatePpojjakiPet,animatePpojjakiAura,disposePpojjakiAssets} from './legendary-pet';
 import {salonHairModel,salonFaceModel,disposeSalonMaterials} from './salon-models';
 import { HUNT_ZONES, HUNT_CAMP } from './hunting';
-import { potionWorkshopModel, mathForestGateway, academyBuilding, academyInterior, skillEffectModel, VILLAGE_ART, PLAZA_BERRY_TREES, berryTreeModel, plazaGarden, fountainModel, cottageModel, marketGarden, homesteadGarden, stoneLane, districtBorder, flowerBed } from './village-art';
+import { postboxModel, potionWorkshopModel, mathForestGateway, academyBuilding, academyInterior, skillEffectModel, VILLAGE_ART, PLAZA_BERRY_TREES, berryTreeModel, plazaGarden, fountainModel, cottageModel, marketGarden, homesteadGarden, stoneLane, districtBorder, flowerBed } from './village-art';
 import { shopSignText, shopInteraction } from './shop-signs';
 import { showEntityLabel } from './navigation';
-import { POTION_WORKSHOP_SPOT, MARKET_SCALE, MARKET_RADIUS, MARKET_DOOR_OFFSET, MARKET_SHOPS, VILLAGE_SPOTS, HALL_GUIDE_SPOT, villageWelcomeClear, villageTreeSpot, villageMonsterSpot } from './village-layout';
+import { POTION_WORKSHOP_SPOT, MARKET_SCALE, MARKET_RADIUS, MARKET_DOOR_OFFSET, MARKET_SHOPS, VILLAGE_SPOTS, HALL_GUIDE_SPOT, POSTBOX_SPOT, villageWelcomeClear, villageTreeSpot, villageMonsterSpot } from './village-layout';
 import { homeScenery } from './homestead-models';
 import { HOME_ITEMS, objectCells, visitorTargets, homeRoute, homeReachable, type HomeObject } from './homestead';
 import { HOME_EXIT, HOME_PROJECT_SPOTS, HOME_VISITORS, atHomeExit } from './home-experience';
@@ -794,6 +794,8 @@ export class World {
     const hallGuide=new T.Group(),hallDog=createPpojjakiPet();hallDog.scale.setScalar(1.7);hallGuide.add(hallDog);this.hallGuideDog=hallDog;
     this.sign(hallGuide,'명예의 전당',0,2.3,0,3.4,'#8a6418',true);
     this.addEntity('hallGuide','뽀짝이 · 명예의 전당 보기',HALL_GUIDE_SPOT.x,HALL_GUIDE_SPOT.z,hallGuide);
+    const postbox=postboxModel();postbox.scale.setScalar(1.55);this.sign(postbox,'베리숲 우체통',0,2.65,0,2.4,'#9a3b2e',true);
+    this.addEntity('postbox','베리숲 우체통 · 의견 편지 쓰기',POSTBOX_SPOT.x,POSTBOX_SPOT.z,postbox);
     this.addBerries();
   }
   enterMarket(s:Save) {
