@@ -40,6 +40,7 @@
 #modal .inventory-tabs [data-career-action="show-supplies"]::before{background-image:url('/art/mapbag/tab-supply.webp')}
 #modal .inventory-tabs [data-inventory-tab="title"]::before{background-image:url('/art/mapbag/tab-title.webp')}
 #modal .inventory-tabs [data-inventory-tab="status"]::before{background-image:url('/art/mapbag/tab-status.webp')}
-#modal:has(.inventory-tabs) :is(.item-card,.collection-card,.inventory-item){background:url('/art/mapbag/pocket.webp') center/100% 100% no-repeat!important;border:0!important;box-shadow:none!important;filter:drop-shadow(0 3px 2px #5a3d2244);padding:16px 12px!important}
+/* 가죽 주머니 테두리는 카드 크기와 상관없이 두께가 같게(border-image). 가운데 끈은 글씨를 가려서 뺐다(2026-11-24) */
+#modal:has(.inventory-tabs) :is(.item-card,.collection-card,.inventory-item){background:none!important;border:16px solid transparent!important;border-image:url('/art/mapbag/pocket-frame.webp') 58 72 34 72 fill / 29px 36px 17px 36px stretch!important;border-radius:0!important;box-shadow:none!important;filter:drop-shadow(0 3px 2px #5a3d2244);padding:12px 2px 4px!important}
 #modal:has(.inventory-tabs) :is(.item-card,.collection-card).selected{filter:drop-shadow(0 0 8px #fff0a8) drop-shadow(0 3px 2px #5a3d2255)}
 #modal:has(.inventory-tabs) :is(.item-card,.collection-card) strong{font-family:var(--font-brand,'Maplestory',sans-serif);color:#3b5a2a}

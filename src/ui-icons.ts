@@ -35,9 +35,11 @@ const paths = {
   speaker: '<path d="M3 9h4l5-5v16l-5-5H3V9Zm13-2a7 7 0 0 1 0 10m3-13a11 11 0 0 1 0 16"/>',
 } as const;
 export type UiIcon = keyof typeof paths;
+/** 2026-11-24 수채화 그림 아이콘(Codex). 선 모양(paths)은 이름 목록으로만 남긴다. */
 export function uiIcon(name: UiIcon) {
-  return `<svg class="ui-icon" data-ui-icon="${name}" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">${paths[name]}</svg>`;
+  return `<img class="ui-icon" data-ui-icon="${name}" src="${import.meta.env?.BASE_URL ?? './'}art/ui-icons/${name}.webp" width="24" height="24" alt="" aria-hidden="true" decoding="async" draggable="false">`;
 }
+
 const marks: Record<string, UiIcon> = {
   '🧭':'compass','🌿':'leaf','🍂':'leaf','🍃':'leaf','🌱':'leaf','🌳':'leaf','🌲':'leaf',
   '🗺':'map','🌐':'globe','🌍':'globe','💬':'chat','🤝':'friends','👋':'friends',

@@ -38,6 +38,15 @@ test('every saved catalogue ID has both an intact v1 original and a readable v2 
   }
 });
 
+test('every weapon, outfit, ride and pet shows its painted v3 icon',async()=>{
+  const {itemIcon}=await import('../src/item-icons');
+  for(const [kind,items] of Object.entries({weapon:WEAPONS,outfit:OUTFITS,ride:RIDES,pet:PETS}))for(let id=0;id<items.length;id++){
+    assert.ok(existsSync(`public/art/berry-items-v3/${kind}-${id}.webp`),`${kind}-${id}`);
+    assert.ok(itemIcon(kind as 'weapon',id).includes(`berry-items-v3/${kind}-${id}.webp`));
+  }
+  assert.ok(itemIcon('potion',0).includes('berry-items-v2'));
+});
+
 test('plaza batching preserves toon equipment and back-face outlines; low quality hides its effects',()=>{
   const root=new T.Group(),equipment=new T.Group();root.add(equipment);
   const blade=new T.Mesh(new T.BoxGeometry(.2,1,.1),new T.MeshStandardMaterial({color:0x8877cc}));equipment.add(blade);

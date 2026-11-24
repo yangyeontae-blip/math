@@ -17,9 +17,9 @@
 #modal.potion-shop .modal-heading{--mk-banner:url('/art/market/banner-potion.webp')}
 /* 아이템 칸: 나무 액자 */
 :is(#modal.shop-modal,#modal.pet-shop,#modal.potion-shop,#modal.salon-modal,#modal:has(.market-mark)) .item-card,
-#modal.potion-shop .inventory-item{background:url('/art/market/slot.webp') center/100% 100% no-repeat!important;border:0!important;box-shadow:none!important;border-radius:18px;filter:drop-shadow(0 3px 2px #7a5b4333);padding:14px 12px!important}
+#modal.potion-shop .inventory-item{background:none!important;border:14px solid transparent!important;border-image:url('/art/market/slot.webp') 52 64 52 64 fill / 26px 32px 26px 32px stretch!important;box-shadow:none!important;border-radius:0!important;filter:drop-shadow(0 3px 2px #7a5b4333);padding:6px 2px!important}
 :is(#modal.shop-modal,#modal.pet-shop,#modal.potion-shop,#modal.salon-modal,#modal:has(.market-mark)) .item-card.selected,
-:is(#modal.shop-modal,#modal.pet-shop,#modal.potion-shop,#modal.salon-modal,#modal:has(.market-mark)) .item-card[aria-pressed="true"]{background-image:url('/art/market/slot-owned.webp')!important;filter:drop-shadow(0 0 8px #fff0a8) drop-shadow(0 3px 2px #7a5b4344)}
+:is(#modal.shop-modal,#modal.pet-shop,#modal.potion-shop,#modal.salon-modal,#modal:has(.market-mark)) .item-card[aria-pressed="true"]{border-image-source:url('/art/market/slot-owned.webp')!important;filter:drop-shadow(0 0 8px #fff0a8) drop-shadow(0 3px 2px #7a5b4344)}
 :is(#modal.shop-modal,#modal.pet-shop,#modal.potion-shop,#modal.salon-modal,#modal:has(.market-mark)) .item-card strong,
 #modal.potion-shop .inventory-item strong{font-family:var(--mk-title);color:#2f5a22}
 /* 미리보기: 동그란 러그 위 */

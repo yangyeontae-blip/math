@@ -56,10 +56,10 @@
 .hall-sheet .hall-tabs button{border-radius:999px;font-family:var(--font-brand,'Maplestory',sans-serif)}
 .hall-sheet .hall-tabs button[aria-selected="true"]{background:linear-gradient(180deg,#eef3d6,#dbe6b4);border-color:#c3d091;color:#3b5a2a}
 .hall-sheet .hall-list>li{background:url('/art/notice-hall/row.webp') center/100% 100% no-repeat!important;border:0!important;box-shadow:none!important;padding:14px 26px!important}
-.hall-sheet .hall-list>li:nth-child(-n+3) .hall-rank{font-size:0;width:44px;height:44px;background:center/contain no-repeat}
-.hall-sheet .hall-list>li:nth-child(1) .hall-rank{background-image:url('/art/notice-hall/medal-1.webp')}
-.hall-sheet .hall-list>li:nth-child(2) .hall-rank{background-image:url('/art/notice-hall/medal-2.webp')}
-.hall-sheet .hall-list>li:nth-child(3) .hall-rank{background-image:url('/art/notice-hall/medal-3.webp')}
+.hall-sheet .hall-rank.hall-medal{font-size:0;width:44px;height:44px;background:center/contain no-repeat}
+.hall-sheet .hall-rank.hall-medal-1{background-image:url('/art/notice-hall/medal-1.webp')}
+.hall-sheet .hall-rank.hall-medal-2{background-image:url('/art/notice-hall/medal-2.webp')}
+.hall-sheet .hall-rank.hall-medal-3{background-image:url('/art/notice-hall/medal-3.webp')}
 .hall-sheet .hall-mine{background:linear-gradient(160deg,#f1f6dc,#dfe9bd);border:2px solid #c3d091;border-radius:999px;padding:10px 16px;font-family:var(--font-brand,'Maplestory',sans-serif);color:#3b5a2a;box-shadow:0 0 10px #ffe38a88}
 .hall-sheet .hall-list::before{content:'';display:block;height:150px;margin:0 auto 10px;max-width:420px;background:url('/art/notice-hall/podium.webp') center bottom/contain no-repeat}
 /* 2026-11-22 명예의 전당 줄: 글자가 리본 밖으로 넘치지 않게, 메이플체로 */
@@ -68,7 +68,7 @@
 .hall-sheet .hall-name{min-width:0;display:flex;flex-direction:column;font:700 1.02rem var(--font-brand,'Maplestory',sans-serif);color:#2f5a22;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .hall-sheet .hall-name small{font:500 .72rem var(--font-body,sans-serif);color:#8a7a5f;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .hall-sheet .hall-value{font:700 .95rem var(--font-brand,'Maplestory',sans-serif);color:#5f7a2a;white-space:nowrap}
-.hall-sheet .hall-list>li:nth-child(-n+3) .hall-rank{width:44px;height:44px}
+.hall-sheet .hall-rank.hall-medal{width:44px;height:44px}
 @media(max-width:600px){.hall-sheet .hall-list>li{grid-template-columns:40px minmax(0,1fr) auto;padding:10px 22px 10px 18px!important;min-height:64px}}
 /* 2026-11-22 늘어짐 대안: 그림을 늘리지 않는 단정한 종이 카드(따뜻한 크림색 · 금빛 테두리 · 압정 점) */
 #modal.notice-modal .notice-list{background:#c99a64!important;box-shadow:inset 0 0 0 4px #9a6b3f,inset 0 4px 12px #0003!important}

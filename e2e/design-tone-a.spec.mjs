@@ -31,8 +31,8 @@ test('tone A: HUD uses line icons and retains folding, navigation and profile cl
     localStorage.setItem('berry-forest-ambience-v1','off');
   },s);await page.reload();await page.locator('#continue').click();await expect(page.locator('#hud')).toBeVisible();
   await expect(page.locator('.quest-card')).toBeHidden();
-  for(const id of ['plaza-chat-toggle','party-open'])await expect(page.locator('#'+id+' svg.ui-icon')).toHaveCount(1);
+  for(const id of ['plaza-chat-toggle','party-open'])await expect(page.locator('#'+id+' img.ui-icon')).toHaveCount(1);
   await expect(page.locator('.wallet-berry')).toBeVisible();
   await page.locator('#stage-map').click();await expect(page.locator('[data-nav="explore"]')).toBeVisible();
-  await expect(page.locator('[data-nav="explore"] svg.ui-icon')).toHaveCount(1);
+  await expect(page.locator('[data-nav="explore"] img.ui-icon')).toHaveCount(1);
 });

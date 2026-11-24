@@ -5,7 +5,7 @@
  /* 오른쪽 위: 지갑과 메뉴 아이콘을 한 단계 작게 */
  #game #hud .top-actions{gap:6px;top:10px}
  #game #hud .top-actions .icon-button{width:44px;min-width:44px;height:44px;min-height:44px;padding:0;border-radius:50%}
- #game #hud .top-actions .icon-button svg{width:22px;height:22px}
+ #game #hud .top-actions .icon-button .ui-icon{width:22px;height:22px}
  #game #hud .wallet{padding:4px 10px 4px 6px;gap:4px;min-height:40px}
  #game #hud .wallet img{width:26px;height:26px}
  #game #hud .wallet b{font-size:1rem}
@@ -17,7 +17,7 @@
  #game #hud .plaza-tools[hidden]{display:none!important}
  #game #hud :is(#hud-toggle,#view-toggle,#party-open,#plaza-status,#plaza-chat-toggle){position:relative;width:var(--rail-size);min-width:var(--rail-size);height:var(--rail-size);min-height:var(--rail-size);padding:0!important;border-radius:50%!important;font-size:0!important;line-height:0;color:transparent;
   background:radial-gradient(circle at 40% 35%,#fffdf4,#f5ead0) center/cover no-repeat!important;border:2px solid #c9a46a!important;box-shadow:0 2px 0 #8a5f3655,0 3px 8px #2a3a2a22!important}
- #game #hud :is(#hud-toggle,#view-toggle,#party-open,#plaza-status,#plaza-chat-toggle)>svg{display:none}
+ #game #hud :is(#hud-toggle,#view-toggle,#party-open,#plaza-status,#plaza-chat-toggle)>.ui-icon{display:none}
  #game #hud :is(#hud-toggle,#view-toggle,#party-open,#plaza-status,#plaza-chat-toggle)::before{content:'';position:absolute;inset:2px;border-radius:50%;background:center/cover no-repeat}
  #game #hud #hud-toggle::before{background-image:url('/art/hud/icon-collapse.webp')}
  #game #hud #hud-toggle[aria-expanded="false"]::before{background-image:url('/art/hud/icon-expand.webp')}
@@ -50,7 +50,7 @@
 
  /* 메뉴·터치 버튼도 같은 수채화 아이콘으로 */
  #game #hud .top-actions .icon-button{background:center/cover no-repeat!important;border:2px solid #c9a46a!important;box-shadow:0 2px 0 #8a5f3655!important}
- #game #hud .top-actions .icon-button svg{display:none}
+ #game #hud .top-actions .icon-button .ui-icon{display:none}
  #game #hud #inventory{background-image:url('/art/hud/icon-bag.webp')!important}
  #game #hud #stage-map{background-image:url('/art/hud/icon-map.webp')!important}
  #game #hud #settings{background-image:url('/art/hud/icon-settings.webp')!important}
