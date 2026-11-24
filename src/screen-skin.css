@@ -198,8 +198,9 @@ button.editor-item.editor-item>b>span{font-size:13px!important}
 /* HUD 동그란 버튼 이름표가 옆 버튼과 겹치지 않게 두 줄 허용 */
 @media (min-width:701px){#hud :is(#hud-toggle,#view-toggle,#party-open,#plaza-status,#plaza-chat-toggle){width:70px;min-width:70px;height:72px;white-space:normal;text-align:center;line-height:1.05!important}}
 /* 2026-11-24 HUD 오른쪽 위 정리: 동그란 버튼 5개를 3칸 격자(윗줄 3 ·아랫줄 2)로 맞추고,
-   이름표는 한 줄 짧은 글로 고정해 동그라미와 겹치지 않게 한다. 긴 상태 글은 화면 읽기용으로만 남긴다. */
-@media (min-width:701px){
+   이름표는 한 줄 짧은 글로 고정해 동그라미와 겹치지 않게 한다. 긴 상태 글은 화면 읽기용으로만 남긴다.
+   높이가 낮은 가로 휴대폰(≤500px)은 친구 이름표 자리를 위해 아래 작은 판을 쓴다. */
+@media (min-width:701px) and (min-height:501px){
  #hud .display-controls,#hud.is-clean-screen .display-controls{top:100px!important;right:20px!important;display:flex!important;flex-direction:row!important;gap:8px!important}
  #hud .plaza-tools,#hud.is-clean-screen .plaza-tools{top:180px!important;right:20px!important;display:flex!important;flex-direction:row!important;align-items:flex-start;gap:8px!important}
  #hud .plaza-tools[hidden]{display:none!important}
@@ -219,4 +220,13 @@ button.editor-item.editor-item>b>span{font-size:13px!important}
  #hud #plaza-status[data-connection=full]::after{content:'광장 가득'}
  #hud #plaza-status[data-connection=nickname]::after{content:'별명 확인'}
  #hud #plaza-status:is([data-connection=retrying],[data-connection=offline])::before{filter:grayscale(.6) brightness(1.05)}
+}
+@media (min-width:701px) and (max-height:500px){
+ #hud .display-controls,#hud.is-clean-screen .display-controls{top:84px!important;right:14px!important;gap:6px!important}
+ #hud .plaza-tools,#hud.is-clean-screen .plaza-tools{top:136px!important;right:14px!important;display:flex!important;flex-direction:row!important;gap:6px!important}
+ #hud .plaza-tools[hidden]{display:none!important}
+ #hud .plaza-tools>#plaza-chat-toggle{margin:0!important}
+ #hud :is(#hud-toggle,#view-toggle,#party-open,#plaza-status,#plaza-chat-toggle){width:46px!important;min-width:46px!important;height:46px!important;min-height:46px!important;font-size:0!important;line-height:0!important}
+ #hud :is(#hud-toggle,#view-toggle,#party-open,#plaza-status,#plaza-chat-toggle)>*{display:none!important}
+ #hud :is(#hud-toggle,#view-toggle,#party-open,#plaza-status,#plaza-chat-toggle)::before{width:42px!important;height:42px!important;margin-left:-21px!important}
 }
