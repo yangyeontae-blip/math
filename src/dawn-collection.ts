@@ -19,6 +19,6 @@ export const DAWN_RIDES=[
 ] as const;
 export type DawnKind=keyof typeof DAWN_START;
 export function dawnItem(kind:DawnKind,id:number){const data={weapon:DAWN_WEAPONS,outfit:DAWN_OUTFITS,pet:DAWN_PETS,ride:DAWN_RIDES}[kind];return Number.isInteger(id)&&id>=DAWN_START[kind]&&id<DAWN_START[kind]+data.length?data[id-DAWN_START[kind]]:undefined;}
-export function dawnIcon(kind:DawnKind,id:number){return dawnItem(kind,id)?'<img class="skyward-item-icon dawn-item-icon" src="'+(import.meta.env?.BASE_URL??'./')+'art/dawn-'+kind+'-'+id+'.svg" alt="" aria-hidden="true" width="72" height="72">':'';}
+export function dawnIcon(kind:DawnKind,id:number){return dawnItem(kind,id)?'<img class="skyward-item-icon dawn-item-icon" src="'+(import.meta.env?.BASE_URL??'./')+'art/berry-items-v3/'+kind+'-'+id+'.webp" alt="" aria-hidden="true" width="72" height="72">':'';}
 export function dawnShopBanner(kind:DawnKind){const count={weapon:3,outfit:3,pet:2,ride:2}[kind];return '<section class="dawn-banner"><div class="dawn-banner-sun" aria-hidden="true">✺</div><div><span class="dawn-eyebrow">NEW COLLECTION · 새벽서약</span><h3>숲이 깨어나는 순간</h3><p>금빛 햇살, 별의 선율. 새로운 '+({weapon:'무기',outfit:'의상',pet:'펫',ride:'라이딩'}[kind])+' '+count+'종을 만나 보세요.</p><button id="dawn-featured" class="secondary">새벽서약 컬렉션 보기 <span aria-hidden="true">↗</span></button></div></section>';}
 export function dawnShopOrder(kind:DawnKind,selected:number,ids:number[]){return dawnItem(kind,selected)?[...ids.filter(id=>dawnItem(kind,id)),...ids.filter(id=>!dawnItem(kind,id))]:ids;}

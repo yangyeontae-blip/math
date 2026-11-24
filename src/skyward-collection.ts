@@ -23,7 +23,7 @@ export const SKYWARD_RIDES=[
 ] as const;
 export type SkywardKind='weapon'|'outfit'|'pet'|'ride';
 export function skywardItem(kind:SkywardKind,id:number){const data={weapon:SKYWARD_WEAPONS,outfit:SKYWARD_OUTFITS,pet:SKYWARD_PETS,ride:SKYWARD_RIDES}[kind],start={weapon:36,outfit:29,pet:21,ride:19}[kind];return Number.isInteger(id)&&id>=start&&id<start+data.length?data[id-start]:undefined;}
-export function skywardIcon(kind:SkywardKind,id:number){return skywardItem(kind,id)?'<img class="skyward-item-icon" src="'+(import.meta.env?.BASE_URL??'./')+'art/skyward-'+kind+'-'+id+'.svg" alt="" aria-hidden="true" width="64" height="64">':'';}
+export function skywardIcon(kind:SkywardKind,id:number){return skywardItem(kind,id)?'<img class="skyward-item-icon" src="'+(import.meta.env?.BASE_URL??'./')+'art/berry-items-v3/'+kind+'-'+id+'.webp" alt="" aria-hidden="true" width="64" height="64">':'';}
 export function skywardShopBanner(kind:SkywardKind){const count={weapon:3,outfit:3,pet:3,ride:5}[kind];return '<section class="skyward-banner"><div><small>✦ 별너머 컬렉션</small><strong>새로운 '+({weapon:'무기',outfit:'의상',pet:'펫 친구',ride:'라이딩'}[kind])+' '+count+'종</strong></div><button id="skyward-featured" class="secondary">새 컬렉션 보기 <span aria-hidden="true">→</span></button></section>';}
 /** Keep each group in catalogue order while surfacing the new group on selection. */
 export function skywardShopOrder(kind:SkywardKind, selected:number, ids:number[]){
