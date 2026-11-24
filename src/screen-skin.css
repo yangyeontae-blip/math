@@ -197,3 +197,26 @@ button.editor-item.editor-item>b>span{font-size:13px!important}
 .world-two-boss{background:none!important;border:18px solid transparent!important;border-image:url('/art/archipelago/boss-frame.webp') 80 180 80 180 fill / 34px 70px 34px 70px stretch!important;padding:8px 12px!important}
 /* HUD 동그란 버튼 이름표가 옆 버튼과 겹치지 않게 두 줄 허용 */
 @media (min-width:701px){#hud :is(#hud-toggle,#view-toggle,#party-open,#plaza-status,#plaza-chat-toggle){width:70px;min-width:70px;height:72px;white-space:normal;text-align:center;line-height:1.05!important}}
+/* 2026-11-24 HUD 오른쪽 위 정리: 동그란 버튼 5개를 3칸 격자(윗줄 3 ·아랫줄 2)로 맞추고,
+   이름표는 한 줄 짧은 글로 고정해 동그라미와 겹치지 않게 한다. 긴 상태 글은 화면 읽기용으로만 남긴다. */
+@media (min-width:701px){
+ #hud .display-controls,#hud.is-clean-screen .display-controls{top:100px!important;right:20px!important;display:flex!important;flex-direction:row!important;gap:8px!important}
+ #hud .plaza-tools,#hud.is-clean-screen .plaza-tools{top:180px!important;right:20px!important;display:flex!important;flex-direction:row!important;align-items:flex-start;gap:8px!important}
+ #hud .plaza-tools[hidden]{display:none!important}
+ #hud .plaza-tools>#plaza-chat-toggle{margin:0!important}
+ #hud :is(#hud-toggle,#view-toggle,#party-open,#plaza-status,#plaza-chat-toggle){width:70px!important;min-width:70px!important;height:70px!important;min-height:70px!important;justify-content:flex-start!important;font-size:0!important;line-height:0!important;white-space:nowrap!important;overflow:visible}
+ #hud :is(#hud-toggle,#view-toggle,#party-open,#plaza-status,#plaza-chat-toggle)>*{display:none!important}
+ #hud :is(#hud-toggle,#view-toggle,#party-open,#plaza-status,#plaza-chat-toggle)::after{position:absolute;left:50%;top:53px;transform:translateX(-50%);font:800 12px/1 var(--font-brand,'Maplestory',sans-serif);color:#5b3315;white-space:nowrap;text-shadow:0 1px 0 #fff8e4,0 0 4px #fff8e4,0 0 2px #fff8e4}
+ #hud #hud-toggle::after{content:'화면 접기'}
+ #hud #hud-toggle[aria-expanded="false"]::after{content:'화면 펴기'}
+ #hud #view-toggle::after{content:'시야'}
+ #hud #party-open::after{content:'친구 모험'}
+ #hud #plaza-chat-toggle::after{content:'광장 대화'}
+ #hud #plaza-status::after{content:'광장'}
+ #hud #plaza-status[data-connection=online]::after{content:'광장 ' attr(data-count) '명'}
+ #hud #plaza-status:is([data-connection=connecting],[data-connection=retrying])::after{content:'연결 중…'}
+ #hud #plaza-status[data-connection=offline]::after{content:'혼자 모험'}
+ #hud #plaza-status[data-connection=full]::after{content:'광장 가득'}
+ #hud #plaza-status[data-connection=nickname]::after{content:'별명 확인'}
+ #hud #plaza-status:is([data-connection=retrying],[data-connection=offline])::before{filter:grayscale(.6) brightness(1.05)}
+}
