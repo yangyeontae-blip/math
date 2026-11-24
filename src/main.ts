@@ -665,8 +665,8 @@ function showStart() {
   stopAmbienceCycle(); if (world!) { world.setActive(false); } disposeStartPreviews(); $('#hud').hidden = true; $('#start-screen').hidden = false;
   $('#start-screen').innerHTML = `<section class="welcome-card">
     <div class="start-story"><div class="start-wordmark"><span class="logo-mark" aria-hidden="true">${uiIcon('leaf')}</span> BERRY FOREST · 모험 수첩</div>
-      <span class="eyebrow">작은 모험, 자라는 생각</span><h1>베리의 숲<br><span>모험학교</span></h1>
-      <p class="intro">숲에서 발견하고,<br> 나만의 마을을 꾸며요.<br> 수학으로 작은 약속을 풀어 보세요.</p>
+      <span class="eyebrow">작은 모험, 자라는 생각</span><img class="start-berry" src="${import.meta.env.BASE_URL}art/berry-watercolor.png" alt="" aria-hidden="true" width="120" height="120"><h1>베리의 숲<br><span>모험학교</span></h1>
+      <p class="intro">수학으로 작은 약속을 풀어 보세요.</p>
       <div class="start-trail" aria-hidden="true">${uiIcon('compass')}<span></span>${uiIcon('book')}<span></span>${uiIcon('home')}</div>
       <p class="start-story-note">발견하고 · 생각하고 · 함께 자라는 숲<br>1~6학년, 나의 속도로 걸어요.</p>
       <div class="start-world-caption" id="start-weather" aria-live="polite">${uiIcon('cloud')} 기상청 날씨를 확인하고 있어요…</div>

@@ -44,7 +44,7 @@ test('every weapon, outfit, ride and pet shows its painted v3 icon',async()=>{
     assert.ok(existsSync(`public/art/berry-items-v3/${kind}-${id}.webp`),`${kind}-${id}`);
     assert.ok(itemIcon(kind as 'weapon',id).includes(`berry-items-v3/${kind}-${id}.webp`));
   }
-  assert.ok(itemIcon('potion',0).includes('berry-items-v2'));
+  for(let id=0;id<10;id++)assert.ok(itemIcon('potion',id).includes(`berry-items-v3/potion-${id}.webp`)&&existsSync(`public/art/berry-items-v3/potion-${id}.webp`));
 });
 
 test('plaza batching preserves toon equipment and back-face outlines; low quality hides its effects',()=>{
