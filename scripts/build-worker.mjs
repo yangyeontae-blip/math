@@ -56,6 +56,13 @@ await mkdir(join(dist, 'server'), { recursive: true });
 const {build} = createRequire(import.meta.resolve('vite'))('esbuild');
 const bundled = await build({stdin:{contents:embedWorkerAssets(template, marker, manifest),resolveDir:join(root,'worker'),sourcefile:'index.js'},bundle:true,format:'esm',platform:'browser',target:'es2022',write:false});
 await writeFile(join(dist, 'server', 'index.js'), bundled.outputFiles[0].text, 'utf8');
+// Cloudflare 정적 파일(assets)로 게임 화면을 함께 올릴 때 서버 묶음·호스팅 설정·큰 홍보 영상(25MB 한도 초과)은 빼요.
+await writeFile(join(dist, '.assetsignore'), ['server', '.openai', 'promo.mp4', '.assetsignore'].join('\n') + '\n', 'utf8');
+// 첫 화면·서비스 워커는 늘 새로 받고, 이름에 해시가 붙은 assets/만 오래 보관해요(GitHub Pages 쪽과 같은 갱신 흐름).
+await writeFile(join(dist, '_headers'), [
+  ...['/', '/index.html', '/sw.js', '/manifest.webmanifest'].map(path => `${path}\n  Cache-Control: no-store`),
+  '/assets/*\n  Cache-Control: public, max-age=31536000, immutable',
+].join('\n') + '\n', 'utf8');
 await mkdir(join(dist, '.openai'), { recursive: true });
 await cp(join(root, '.openai', 'hosting.json'), join(dist, '.openai', 'hosting.json'));
 await rm(join(dist, '.openai', 'drizzle'), { recursive: true, force: true });

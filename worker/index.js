@@ -8,6 +8,7 @@ const allowedOrigins = new Set([
   'https://berry-forest-school.yangyeontae.chatgpt.site',
   'https://yangyeontae-blip.github.io',
   'https://berry-forest-school.vercel.app',
+  'https://berry-forest.yangyeontae.workers.dev',
 ]);
 
 function allowedOrigin(request) {

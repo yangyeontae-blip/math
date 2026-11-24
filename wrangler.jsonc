@@ -3,6 +3,11 @@
   "name": "berry-forest",
   "main": "dist/server/index.js",
   "compatibility_date": "2026-10-01",
+  // 게임 화면 파일(dist)도 이 주소에서 함께 보여 줘요. server·.openai·promo.mp4는 dist/.assetsignore로 빼요(build-worker.mjs가 만듦).
+  "assets": {
+    "directory": "./dist",
+    "binding": "ASSETS"
+  },
   "d1_databases": [
     {
       "binding": "DB",

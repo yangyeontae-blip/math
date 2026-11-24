@@ -8,7 +8,7 @@ import {DurableObject} from 'cloudflare:workers';
 import {PLAZA_VERSION,PLAZA_ROOM,PLAZA_CAPACITY,PLAZA_AVATAR_CATALOG,PLAZA_TITLE_CATALOG,compatibleTitleProfile,compatiblePlazaProfile,parsePlazaProfile,parsePlazaPose,isPlazaEmote} from '../src/plaza-protocol.ts';
 const MARKET_ROOM='berry-forest-market-street';
 import {handleTrade,closeTradesFor} from './trade.mjs';
-const ORIGINS=new Set(['https://yangyeontae-blip.github.io','https://berry-forest-school.vercel.app','https://berry-forest-school.yangyeontae.chatgpt.site','capacitor://localhost','ionic://localhost','https://localhost','http://localhost']);
+const ORIGINS=new Set(['https://yangyeontae-blip.github.io','https://berry-forest-school.vercel.app','https://berry-forest.yangyeontae.workers.dev','https://berry-forest-school.yangyeontae.chatgpt.site','capacitor://localhost','ionic://localhost','https://localhost','http://localhost']);
 export function allowedPlazaOrigin(origin){return ORIGINS.has(origin)||/^http:\/\/(localhost|127\.0\.0\.1):[0-9]+$/.test(origin??'');}
 const json=(value,status=200)=>new Response(JSON.stringify(value),{status,headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store','x-content-type-options':'nosniff'}});
 export default {
