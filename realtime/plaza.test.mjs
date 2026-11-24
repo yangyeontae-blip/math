@@ -73,6 +73,13 @@ test('shop street is its own shared room: market players meet each other but not
  const old=await mf.dispatchFetch('https://plaza.test/market/connect?v=0',{headers:{Upgrade:'websocket',Origin:origin}});assert.equal(old.status,409);
  const bad=await mf.dispatchFetch('https://plaza.test/market/connect?v=1',{headers:{Upgrade:'websocket',Origin:'https://evil.example'}});assert.equal(bad.status,403);
 });
+test('plaza trade refusal: an automatic refusal tells the requester the friend is not taking trades; a normal no stays declined',{timeout:15000},async t=>{
+ const mf=await setup(t),a=await connect(mf,origin,profile('RefuseA')),b=await connect(mf,origin,profile('RefuseB'));await a.next('upsert');
+ a.socket.send(JSON.stringify({type:'trade-request',to:b.welcome.id}));const first=await b.next('trade-invite');await a.next('trade-pending');
+ b.socket.send(JSON.stringify({type:'trade-reply',tradeId:first.tradeId,accept:false,reason:'refused'}));assert.equal((await a.next('trade-closed')).reason,'refused');await b.next('trade-closed');
+ a.socket.send(JSON.stringify({type:'trade-request',to:b.welcome.id}));const second=await b.next('trade-invite');await a.next('trade-pending');
+ b.socket.send(JSON.stringify({type:'trade-reply',tradeId:second.tradeId,accept:false,reason:'anything'}));assert.equal((await a.next('trade-closed')).reason,'declined');
+});
 test('plaza trade: request, accept, offers, both lock → each side gets the other offer; changes unlock; leaving closes',{timeout:15000},async t=>{
  const mf=await setup(t),a=await connect(mf,origin,profile('TradeA')),b=await connect(mf,origin,profile('TradeB'));await a.next('upsert');
  a.socket.send(JSON.stringify({type:'trade-request',to:b.welcome.id}));const invite=await b.next('trade-invite');assert.equal(invite.from.nickname,'TradeA');await a.next('trade-pending');

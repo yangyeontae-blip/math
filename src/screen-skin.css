@@ -168,3 +168,32 @@ button.editor-item.editor-item>b{font:800 13px/1.25 var(--font-brand,'Maplestory
 button.editor-item.editor-item>small{font-size:12px!important}
 button.editor-item.editor-item>span{font-size:22px!important}
 button.editor-item.editor-item>b>span{font-size:13px!important}
+/* ── 2026-11-24 오후 다듬기: ① 모든 큰 창을 같은 나무 틀로 ② 틀은 얇고 연한 꿀색 ③ HUD 간판 줄을 동그란 그림 버튼으로 ④ 글씨체 통일 ── */
+#modal[data-skin],#modal:is(.shop-modal,.pet-shop,.potion-shop,.salon-modal,.inventory-modal,.notice-modal):not(.postbox-modal){border:18px solid transparent!important;border-image:url('/art/ui-skin/kit2/window.webp') 150 fill / 56px stretch!important;background:transparent!important;border-radius:0!important;box-shadow:none!important;outline:0!important;filter:drop-shadow(0 12px 22px #4a321844)}
+#modal:is(.shop-modal,.pet-shop,.potion-shop,.salon-modal,.inventory-modal,.notice-modal) #modal-content{background:transparent!important;box-shadow:none!important}
+#modal[data-skin] :is(.settings-list>label,.daily-list>li,.nav-intro,.nav-section,.learning-insight,.codex-list>section,.report-summary,.arena-intro,.unit-learning-list>*){border-width:9px!important;border-image-width:22px!important}
+@media (max-width:620px){#modal[data-skin],#modal:is(.shop-modal,.pet-shop,.potion-shop,.salon-modal,.inventory-modal,.notice-modal):not(.postbox-modal){border-width:12px!important;border-image-width:38px!important}}
+/* 글씨: 제목·항목 이름은 둥근 글씨(메이플체), 설명은 본문 글씨로 통일 */
+#modal[data-skin] :is(h3,h4,.daily-row b,.settings-list>label>span,.unit-learning-list strong,.nav-section h3,.learning-insight b){font-family:var(--font-brand,'Maplestory',sans-serif)!important;color:#4a2c12}
+#modal[data-skin] :is(p,small,li,td,.note){font-family:'Berry Forest Sans','Noto Sans KR',sans-serif}
+#modal[data-skin] .settings-list>label>span small{font-family:'Berry Forest Sans','Noto Sans KR',sans-serif!important;font-weight:500;color:#7a5025}
+/* HUD: 매달린 간판 5개 대신 수채화 동그란 버튼 + 작은 이름표 (휴대폰과 같은 그림) */
+@media (min-width:701px){
+ #hud :is(#hud-toggle,#view-toggle,#party-open,#plaza-status,#plaza-chat-toggle){position:relative;display:inline-flex!important;flex-direction:column;align-items:center;justify-content:flex-end;width:62px;min-width:62px;height:66px;min-height:66px;padding:0 0 1px!important;border:0!important;border-image:none!important;background:none!important;box-shadow:none!important;border-radius:0!important;font:800 11px/1.1 var(--font-brand,'Maplestory',sans-serif)!important;color:#5b3315!important;text-shadow:0 1px 0 #fff8e4,0 0 4px #fff8e4;white-space:nowrap;overflow:visible}
+ #hud :is(#hud-toggle,#view-toggle,#party-open,#plaza-status,#plaza-chat-toggle)>.ui-icon{display:none}
+ #hud :is(#hud-toggle,#view-toggle,#party-open,#plaza-status,#plaza-chat-toggle)::before{content:'';position:absolute;top:0;left:50%;width:46px;height:46px;margin-left:-23px;border-radius:50%;background:center/cover no-repeat;box-shadow:0 0 0 3px #f3d79a,0 3px 6px #4a321844}
+ #hud #hud-toggle::before{background-image:url('/art/hud/icon-collapse.webp')}
+ #hud #hud-toggle[aria-expanded="false"]::before{background-image:url('/art/hud/icon-expand.webp')}
+ #hud #view-toggle::before{background-image:url('/art/hud/icon-view.webp')}
+ #hud #party-open::before{background-image:url('/art/hud/icon-skills.webp')}
+ #hud #plaza-status::before{background-image:url('/art/hud/icon-friends.webp')}
+ #hud #plaza-chat-toggle::before{background-image:url('/art/hud/icon-chat.webp')}
+ #hud :is(.display-controls,.plaza-tools){gap:8px!important;background:none!important;box-shadow:none!important;border:0!important}
+}
+/* 2026-11-24 군도 지역 카드: 가로로 긴 구름 그림이 세로 칸에서 3배로 늘어나 글씨가 구름 밖으로 나가던 것.
+   9조각 테두리로 바꿔 구름·꽃 두께는 고정하고 가운데 하늘만 늘린다. 글씨는 하늘 안쪽에만 둔다. */
+.world-two-region{background:none!important;border:16px solid transparent!important;border-image:url('/art/archipelago/card.webp') 60 170 70 170 fill / 26px 64px 34px 64px stretch!important;padding:6px 6px 10px!important;border-radius:0!important}
+.world-two-region img,.world-two-region [class*=isle]{max-width:100%;height:auto}
+.world-two-boss{background:none!important;border:18px solid transparent!important;border-image:url('/art/archipelago/boss-frame.webp') 80 180 80 180 fill / 34px 70px 34px 70px stretch!important;padding:8px 12px!important}
+/* HUD 동그란 버튼 이름표가 옆 버튼과 겹치지 않게 두 줄 허용 */
+@media (min-width:701px){#hud :is(#hud-toggle,#view-toggle,#party-open,#plaza-status,#plaza-chat-toggle){width:70px;min-width:70px;height:72px;white-space:normal;text-align:center;line-height:1.05!important}}

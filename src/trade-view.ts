@@ -10,7 +10,13 @@ type Hooks = { state: () => Save | null; send: Send; open: (html: string, cls?: 
 
 const esc = (text: string) => text.replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch]!);
 const n = (value: number) => value.toLocaleString('ko-KR');
-const REASONS: Record<string, string> = { declined: '상대가 거래를 거절했어요.', cancelled: '거래가 취소됐어요. 아무것도 오가지 않았어요.', gone: '상대가 자리를 떠나 거래가 끝났어요. 아무것도 오가지 않았어요.', busy: '지금은 둘 중 한 명이 다른 거래 중이에요. 잠시 뒤 다시 신청해 주세요.', expired: '5분 동안 끝나지 않아 거래가 닫혔어요. 아무것도 오가지 않았어요.' };
+const REASONS: Record<string, string> = { refused: '이 친구는 지금 거래 신청을 받지 않아요.', declined: '상대가 거래를 거절했어요.', cancelled: '거래가 취소됐어요. 아무것도 오가지 않았어요.', gone: '상대가 자리를 떠나 거래가 끝났어요. 아무것도 오가지 않았어요.', busy: '지금은 둘 중 한 명이 다른 거래 중이에요. 잠시 뒤 다시 신청해 주세요.', expired: '5분 동안 끝나지 않아 거래가 닫혔어요. 아무것도 오가지 않았어요.' };
+
+// 거래 거부(2026-11-24): 켜 두면 들어오는 거래 신청을 묻지 않고 바로 거절해요. 이 기기에만 저장돼요.
+const REFUSE_KEY = 'berry-forest-trade-refuse-v1';
+type Store = Pick<Storage, 'getItem' | 'setItem'>;
+export function tradeRefused(storage: Store = localStorage) { try { return storage.getItem(REFUSE_KEY) === '1'; } catch { return false; } }
+export function setTradeRefused(on: boolean, storage: Store = localStorage) { try { storage.setItem(REFUSE_KEY, on ? '1' : '0'); } catch { /* 저장 못 해도 이번 접속 동안만 반영 안 됨 */ } }
 
 export function offerText(offer: TradeOffer) {
   const parts = [...(offer.berries ? [`${n(offer.berries)}베리`] : []), ...offer.items.map(item => `${itemKindName(item.kind)} · ${itemName(item)}${item.level ? ` +${item.level}` : ''}`)];
@@ -65,6 +71,7 @@ export function mountTrade(h: Hooks) {
       const s = h.state(); if (!s) return;
       if (m.type === 'trade-invite') {
         const id = String(m.tradeId), from = esc(String((m.from as { nickname?: string })?.nickname ?? '친구'));
+        if (tradeRefused()) { h.send({ type: 'trade-reply', tradeId: id, accept: false, reason: 'refused' }); h.toast(`${from}의 거래 신청을 자동으로 거절했어요. (설정 › 거래 신청 받지 않기)`); return; }
         h.open(`<div class="trade-sheet"><header><small>광장 거래</small><h2>${from}이(가) 거래를 신청했어요</h2><p>베리와 무기·옷·펫·탈것을 주고받을 수 있어요. 보내는 쪽이 가치의 1%를 수수료로 내요.</p></header><div class="trade-actions"><button id="trade-accept" class="primary">거래 창 열기</button><button id="trade-decline" class="secondary">괜찮아요</button></div></div>`, 'trade-modal');
         el<HTMLButtonElement>('#trade-accept')!.onclick = () => h.send({ type: 'trade-reply', tradeId: id, accept: true });
         el<HTMLButtonElement>('#trade-decline')!.onclick = () => { h.send({ type: 'trade-reply', tradeId: id, accept: false }); h.close(); };

@@ -21,7 +21,7 @@ export function handleTrade(room,ws,s,m,now=Date.now()){
   room.send(target[0],{type:'trade-invite',tradeId:id,from:{id:s.id,nickname:nick(s)}});room.send(ws,{type:'trade-pending',tradeId:id,to:{id:m.to,nickname:nick(target[1])}});return true;
  }
  if(!party)return true;
- if(m.type==='trade-reply'){if(t.b!==s.id||t.accepted)return true;if(m.accept!==true){closeTrade(room,t,'declined');return true;}t.accepted=true;t.at=now;sendState(room,t);return true;}
+ if(m.type==='trade-reply'){if(t.b!==s.id||t.accepted)return true;if(m.accept!==true){closeTrade(room,t,m.reason==='refused'?'refused':'declined');return true;}t.accepted=true;t.at=now;sendState(room,t);return true;}
  if(m.type==='trade-cancel'){closeTrade(room,t,'cancelled');return true;}
  if(!t.accepted)return true;
  if(m.type==='trade-offer'){const offer=parseTradeOffer(m.offer);if(!offer)return true;
