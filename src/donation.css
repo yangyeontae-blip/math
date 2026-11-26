@@ -28,4 +28,6 @@
 .donation-thanks{margin:6px 18px;text-align:center;font:700 1rem var(--sb-title);color:#a8264e}
 .donation-paper .error{margin:6px 18px;text-align:center}
 .donation-paper{padding-bottom:28px}
+.donation-period{margin:2px 22px 0;padding:6px 12px;border-radius:999px;background:#eaf4e2;border:1.5px solid #9cb556;color:#2f5a22;font:700 .95rem var(--sb-title);text-align:center}
+.donation-period.is-closed{background:#fff1f4;border-color:#e3a3b5;color:#8c1f45}
 @media (max-width:600px){.donation-custom{margin:8px 18px}.donation-small{margin:4px 22px}.donation-presets{grid-template-columns:repeat(2,minmax(0,1fr))}.donation-goals{grid-template-columns:1fr}.donation-head h2{font-size:1.5rem}.donation-total strong{font-size:2rem}}

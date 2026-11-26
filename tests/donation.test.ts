@@ -36,3 +36,13 @@ test('server errors become child-friendly messages and nothing is applied', asyn
   const ok = (async (_url: RequestInfo | URL, init?: RequestInit) => new Response(JSON.stringify({ ok: true, total: 10 + (init?.body ? 5 : 0), gifts: 1 }))) as typeof fetch;
   assert.deepEqual(await sendDonation(5, crypto.randomUUID(), ok), { total: 15, gifts: 1 });
 });
+
+test('the donation box is open through Christmas Day (KST) and closed after', async () => {
+  const { DONATION_END, donationOpen, donationDaysLeft } = await import('../src/donation.ts');
+  const s = newSave('베리', 0, 3); s.berries = 500;
+  const lastMinute = Date.parse('2026-12-25T23:59:00+09:00'), after = Date.parse('2026-12-26T00:00:00+09:00');
+  assert.equal(donationOpen(lastMinute), true); assert.equal(donationOpen(after), false); assert.equal(after, DONATION_END);
+  assert.equal(donationError(s, 10, lastMinute), '');
+  assert.match(donationError(s, 10, after), /크리스마스/);
+  assert.equal(donationDaysLeft(Date.parse('2026-11-26T12:00:00+09:00')), 30);
+});

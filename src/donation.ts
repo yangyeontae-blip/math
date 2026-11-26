@@ -6,6 +6,11 @@ const API_ORIGIN = ((import.meta as { env?: Record<string, string | undefined> }
 export const DONATION_URL = API_ORIGIN + '/api/donation';
 export const DONATION_MAX = 100_000;
 export const DONATION_PRESETS = [10, 100, 1_000, 10_000];
+/** 기부함은 크리스마스(2026-12-25, 한국 시간)까지 열려요. 서버(worker/donation.js)도 같은 날짜로 막아요. */
+export const DONATION_END = Date.parse('2026-12-26T00:00:00+09:00');
+export const donationOpen = (now = Date.now()) => now < DONATION_END;
+/** 크리스마스까지 남은 날(오늘 포함). */
+export const donationDaysLeft = (now = Date.now()) => Math.max(0, Math.ceil((DONATION_END - now) / 86_400_000));
 /** 모두의 합계가 이만큼 모이면 기부함 둘레가 하나씩 꾸며져요. */
 export const DONATION_GOALS = [
   { at: 10_000, label: '기부함 둘레에 꽃이 피어요' },
@@ -17,7 +22,8 @@ export type DonationTotal = { total: number; gifts: number };
 
 export const donationOf = (s: Save) => (s.donation ??= { given: 0, gifts: 0 });
 export const goalsReached = (total: number) => DONATION_GOALS.filter(g => total >= g.at).length;
-export function donationError(s: Save, amount: number): string {
+export function donationError(s: Save, amount: number, now = Date.now()): string {
+  if (!donationOpen(now)) return '기부함은 크리스마스(12월 25일)까지만 열려 있었어요. 함께해 줘서 고마워요!';
   if (!Number.isSafeInteger(amount) || amount < 1) return '낼 베리를 1베리 이상 골라 주세요.';
   if (amount > DONATION_MAX) return `한 번에 ${DONATION_MAX.toLocaleString('ko-KR')}베리까지 낼 수 있어요.`;
   if (amount > s.berries) return `베리가 ${(amount - s.berries).toLocaleString('ko-KR')}개 모자라요.`;

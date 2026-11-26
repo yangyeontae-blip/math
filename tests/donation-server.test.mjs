@@ -37,3 +37,13 @@ test('donation box rejects bad amounts, other sites, floods and a missing databa
   assert.equal((await handleDonation(get(), {}, tools())).status, 503);
   assert.equal(env.DB.box.total, 0);
 });
+
+test('donation box stops taking berries after Christmas but still shows the total', async () => {
+  const { DONATION_END } = await import('../worker/donation.js');
+  const env = { DB: fakeDb() };
+  await handleDonation(post({ amount: 70, requestId: id(9) }), env, tools(), DONATION_END - 1);
+  const closed = await handleDonation(post({ amount: 5, requestId: id(10) }), env, tools(), DONATION_END);
+  assert.equal(closed.status, 410);
+  assert.deepEqual(await closed.json(), { error: '기부함은 크리스마스(12월 25일)까지만 열려 있었어요.', closed: true, total: 70, gifts: 1 });
+  assert.deepEqual(await (await handleDonation(get(), env, tools(), DONATION_END + 1)).json(), { total: 70, gifts: 1 });
+});
