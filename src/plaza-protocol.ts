@@ -30,10 +30,10 @@ export function compatiblePlazaProfile(p:PlazaProfile,catalog:number|undefined) 
  if (catalog === 2 || classicGear) return look;
  return { ...look, weapon:p.weapon<36?p.weapon:33+p.weapon-36, outfit:p.outfit<29?p.outfit:26+p.outfit-29, pet:p.pet<21?p.pet:([1,0,12][p.pet-21]??-1), ride:p.ride<19?p.ride:([1,3,7,17,6][p.ride-19]??-1) };
 }
-export const PLAZA_TITLE_CATALOG=3;
-/** Catalog 3 adds the berry-wealth titles and level 2000 VIP; 2 adds level 500/1000. Older peers would drop unknown ids. */
-export function titleCatalogOf(v:unknown){return v===2||v===3?v:1;}
-export function compatibleTitleProfile(p:PlazaProfile,catalog=1):PlazaProfile{if(catalog<3&&String(p.selectedTitleId).startsWith('rich-'))p={...p,selectedTitleId:null};if(catalog<3&&p.selectedTitleId==='level-2000')p={...p,selectedTitleId:'level-1000'};const legacy=catalog<2&&(p.selectedTitleId==='level-500'||p.selectedTitleId==='level-1000')?{...p,selectedTitleId:'level-300' as TitleId}:p;return catalog<2&&!parsePlazaProfile(legacy)?{...legacy,selectedTitleId:null}:legacy;}
+export const PLAZA_TITLE_CATALOG=4;
+/** Catalog 4 adds the fishing tier-set titles (fish-*). Catalog 3 adds the berry-wealth titles and level 2000 VIP; 2 adds level 500/1000. Older peers would drop unknown ids. */
+export function titleCatalogOf(v:unknown){return v===2||v===3||v===4?v:1;}
+export function compatibleTitleProfile(p:PlazaProfile,catalog=1):PlazaProfile{if(catalog<4&&String(p.selectedTitleId).startsWith('fish-'))p={...p,selectedTitleId:null};if(catalog<3&&String(p.selectedTitleId).startsWith('rich-'))p={...p,selectedTitleId:null};if(catalog<3&&p.selectedTitleId==='level-2000')p={...p,selectedTitleId:'level-1000'};const legacy=catalog<2&&(p.selectedTitleId==='level-500'||p.selectedTitleId==='level-1000')?{...p,selectedTitleId:'level-300' as TitleId}:p;return catalog<2&&!parsePlazaProfile(legacy)?{...legacy,selectedTitleId:null}:legacy;}
 export function forestLevelTitle(level:number) {
  if(level>=1000)return '베리의 숲 회장';
  if(level>=500)return '베리의 숲 정령';

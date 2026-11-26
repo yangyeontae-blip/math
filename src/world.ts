@@ -24,10 +24,10 @@ import { huntingPower, huntingCompanionStats, PPOJJAK_PET_ID } from './rules';
 import {createPpojjakiPet,createPpojjakiAura,animatePpojjakiPet,animatePpojjakiAura,disposePpojjakiAssets} from './legendary-pet';
 import {salonHairModel,salonFaceModel,disposeSalonMaterials} from './salon-models';
 import { HUNT_ZONES, HUNT_CAMP } from './hunting';
-import { postboxModel, potionWorkshopModel, mathForestGateway, academyBuilding, academyInterior, skillEffectModel, VILLAGE_ART, PLAZA_BERRY_TREES, berryTreeModel, plazaGarden, fountainModel, cottageModel, marketGarden, homesteadGarden, stoneLane, districtBorder, flowerBed } from './village-art';
+import { donationBoxModel, postboxModel, potionWorkshopModel, mathForestGateway, academyBuilding, academyInterior, skillEffectModel, VILLAGE_ART, PLAZA_BERRY_TREES, berryTreeModel, plazaGarden, fountainModel, cottageModel, marketGarden, homesteadGarden, stoneLane, districtBorder, flowerBed } from './village-art';
 import { shopSignText, shopInteraction } from './shop-signs';
 import { showEntityLabel } from './navigation';
-import { POTION_WORKSHOP_SPOT, MARKET_SCALE, MARKET_RADIUS, MARKET_DOOR_OFFSET, MARKET_SHOPS, VILLAGE_SPOTS, HALL_GUIDE_SPOT, POSTBOX_SPOT, villageWelcomeClear, villageTreeSpot, villageMonsterSpot } from './village-layout';
+import { POTION_WORKSHOP_SPOT, MARKET_SCALE, MARKET_RADIUS, MARKET_DOOR_OFFSET, MARKET_SHOPS, VILLAGE_SPOTS, HALL_GUIDE_SPOT, POSTBOX_SPOT, DONATION_SPOT, villageWelcomeClear, villageTreeSpot, villageMonsterSpot } from './village-layout';
 import { homeScenery } from './homestead-models';
 import { HOME_ITEMS, objectCells, visitorTargets, homeRoute, homeReachable, type HomeObject } from './homestead';
 import { HOME_EXIT, HOME_PROJECT_SPOTS, HOME_VISITORS, atHomeExit } from './home-experience';
@@ -796,6 +796,8 @@ export class World {
     this.addEntity('hallGuide','뽀짝이 · 명예의 전당 보기',HALL_GUIDE_SPOT.x,HALL_GUIDE_SPOT.z,hallGuide);
     const postbox=postboxModel();postbox.scale.setScalar(1.55);this.sign(postbox,'베리숲 우체통',0,2.65,0,2.4,'#9a3b2e',true);
     this.addEntity('postbox','베리숲 우체통 · 의견 편지 쓰기',POSTBOX_SPOT.x,POSTBOX_SPOT.z,postbox);
+    const donation=donationBoxModel();donation.scale.setScalar(1.4);this.donationBox=donation;this.applyDonationGoals();this.sign(donation,'작은 기부함',0,2.55,0,2.2,'#a8264e',true);
+    this.addEntity('donationBox','작은 기부함 · 모두 함께 베리 모으기',DONATION_SPOT.x,DONATION_SPOT.z,donation);
     this.addBerries();
   }
   enterMarket(s:Save) {
@@ -1731,6 +1733,11 @@ export class World {
   private fishingDock: T.Group | null = null;
   /** 수학자 카드를 다 모으면 낚시터에 황금 낚싯대와 명패를 보여 줘요. */
   private fishingTrophyOn = false;
+  private donationBox: T.Group | null = null;
+  private donationGoals = 0;
+  /** 모두의 기부 합계로 연 꾸밈 수(0~4). 광장을 다시 만들어도 유지돼요. */
+  setDonationGoals(n: number) { this.donationGoals = n; this.applyDonationGoals(); }
+  private applyDonationGoals() { this.donationBox?.traverse(o => { if (typeof o.userData.goal === 'number') o.visible = o.userData.goal < this.donationGoals; }); }
   setFishingTrophy(on: boolean) { this.fishingTrophyOn = on; this.fishingDock?.traverse(o => { if (o.userData.goldenRod) o.visible = on; }); }
   get isPublicMarket(){return this.active&&this.inMarket&&!this.inRoom&&!this.inHomestead&&!this.inAcademy&&!this.inHunting&&!this.inTraining&&!this.inAstralStudy;}
   get isPublicPlaza(){return this.active&&this.stage===0&&!this.inRoom&&!this.inHomestead&&!this.inMarket&&!this.inAcademy&&!this.inHunting&&!this.inTraining&&!this.inAstralStudy;}

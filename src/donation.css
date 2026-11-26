@@ -1,0 +1,31 @@
+/* 광장 작은 기부함(2026-11-26) — 양피지 틀(sb-paper) 위에 얹는 부분 */
+.donation-paper{padding-top:18px}
+.donation-head{display:flex;align-items:center;gap:14px;padding:4px 22px 6px}
+.donation-head img{width:72px;height:72px;object-fit:contain;filter:drop-shadow(0 2px 2px #5a432f55)}
+.donation-head small{display:inline-block;padding:3px 10px;border-radius:999px;background:#fffaf0e0;color:#7a5b43;font:700 .8rem var(--sb-title)}
+.donation-head h2{margin:6px 0 0;font:700 1.8rem/1.2 var(--sb-title);color:#2f5a22}
+.donation-head p{margin:6px 0 0;font-size:.92rem;line-height:1.5;color:#35503f}
+.donation-total{display:grid;justify-items:center;gap:2px;margin:8px 18px;padding:14px;border-radius:18px;background:linear-gradient(180deg,#fff7df,#ffe9b8);border:2px solid #e8c66a;box-shadow:0 3px 0 #c9a24a55}
+.donation-total span{font:700 .95rem var(--sb-title);color:#7a5b20}
+.donation-total strong{font:700 2.4rem/1.1 var(--sb-title);color:#a8264e}
+.donation-total small{color:#6b5a35;font-size:.88rem}
+.donation-next{margin:4px 22px}
+.donation-next p{margin:0 0 6px;text-align:center;color:#4b5a35;font-size:.95rem}
+.donation-bar{display:block;height:12px;border-radius:999px;background:#efe3c2;overflow:hidden;box-shadow:inset 0 1px 2px #8a6d3a55}
+.donation-bar i{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,#e86a8a,#f2c94c)}
+.donation-goals{list-style:none;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:10px 18px;padding:0}
+.donation-goals li{display:grid;gap:2px;padding:8px 12px;border-radius:12px;background:#fffaf0cc;border:1.5px dashed #d9c79a;color:#6b5a35;font-size:.88rem}
+.donation-goals li b{font:700 .95rem var(--sb-title);color:#6b6248}
+.donation-goals li.is-done{border-style:solid;border-color:#9cb556;background:#f1f7df;color:#3b5a2a}
+.donation-goals li.is-done b{color:#3b5a2a}
+.donation-presets{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:6px 18px}
+.donation-presets button{min-height:48px;padding:0 6px;white-space:nowrap;font:700 .95rem var(--sb-title)}
+.donation-custom{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:8px;margin:8px 40px}
+.donation-custom span{font:700 .95rem var(--sb-title);color:#4b5a35}
+.donation-custom input{min-height:48px;min-width:0;padding:0 12px;border-radius:12px;border:2px solid #d9c79a;background:#fffdf6;font-size:1.1rem}
+.donation-custom button{min-height:48px;padding:0 20px}
+.donation-small{margin:4px 48px;color:#6b5a35;font-size:.85rem;text-align:center}
+.donation-thanks{margin:6px 18px;text-align:center;font:700 1rem var(--sb-title);color:#a8264e}
+.donation-paper .error{margin:6px 18px;text-align:center}
+.donation-paper{padding-bottom:28px}
+@media (max-width:600px){.donation-custom{margin:8px 18px}.donation-small{margin:4px 22px}.donation-presets{grid-template-columns:repeat(2,minmax(0,1fr))}.donation-goals{grid-template-columns:1fr}.donation-head h2{font-size:1.5rem}.donation-total strong{font-size:2rem}}

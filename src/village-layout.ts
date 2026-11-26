@@ -12,6 +12,9 @@ export const HALL_GUIDE_SPOT = { x: -13.2, z: 8.4 } as const;
 /** 베리숲 우체통(아이들 의견 편지)은 공지판 뒤쪽 풀밭(수학숲 입구 간판에 가리지 않는 곳)에 둡니다(2026-11-23). */
 export const POSTBOX_SPOT = { x: -8.6, z: 5.0 } as const;
 
+/** 작은 기부함(모두의 베리 모으기)은 우체통 왼쪽, 명예의 전당 뽀짝이 아래 풀밭에 둡니다(2026-11-26). */
+export const DONATION_SPOT = { x: -12.4, z: 4.6 } as const;
+
 export function villageWelcomeClear(x: number, z: number): boolean {
   return Math.hypot(x - VILLAGE_SPOTS.notice.x, z - VILLAGE_SPOTS.notice.z) < 4.5
     || Math.hypot(x - VILLAGE_SPOTS.home.x, z - VILLAGE_SPOTS.home.z) < 4.5

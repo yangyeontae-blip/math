@@ -16,7 +16,7 @@ export const EXPEDITION_TITLES = [
 ] as const;
 
 
-export type TitleId = 'math-friend'|'level-50'|'level-100'|'level-300'|'level-500'|'level-1000'|'level-2000'|'ppojjaki'|'multiplication'|`grade-${number}`|`expedition-${number}`|'rich-1m'|'rich-10m'|'rich-100m';
+export type TitleId = 'math-friend'|'level-50'|'level-100'|'level-300'|'level-500'|'level-1000'|'level-2000'|'ppojjaki'|'multiplication'|`grade-${number}`|`expedition-${number}`|'rich-1m'|'rich-10m'|'rich-100m'|'fish-common'|'fish-rare'|'fish-hero';
 export type TitleStyle = 'leaf'|'star'|'divine'|'pet'|'study'|'explorer'|'wealth';
 export type TitleDefinition = {id:TitleId;name:string;style:TitleStyle;icon:string;requirement:string;level?:number;grade?:number;expeditions?:number;berries?:number};
 export const TITLES:readonly TitleDefinition[] = [
@@ -31,6 +31,9 @@ export const TITLES:readonly TitleDefinition[] = [
  ...Array.from({length:6},(_,i)=>({id:('grade-'+(i+1)) as TitleId,name:(i+1)+'학년 수학 탐험가',style:'study' as const,icon:'📚',requirement:(i+1)+'학년 학습 졸업 보상 받기',grade:i+1})),
  {id:'multiplication',name:'곱셈숲 탐험가',style:'study',icon:'✖',requirement:'곱셈숲 완수'},
  {id:'math-friend',name:'수학자의 벗',style:'study',icon:'✦',requirement:'수학자 카드 24장 모두 모으기'},
+ {id:'fish-common',name:'연못 낚시꾼',style:'study',icon:'🎣',requirement:'보통 수학자 카드 모두 모으고 보상 받기'},
+ {id:'fish-rare',name:'반짝 물결 낚시꾼',style:'study',icon:'🎣',requirement:'희귀 수학자 카드 모두 모으고 보상 받기'},
+ {id:'fish-hero',name:'수학자 낚시 명인',style:'study',icon:'🎣',requirement:'영웅 수학자 카드 모두 모으고 보상 받기'},
  {id:'rich-1m',name:'백만장자',style:'wealth',icon:'🪙',requirement:'베리 1,000,000개 모으기',berries:1_000_000},
  {id:'rich-10m',name:'천만장자',style:'wealth',icon:'🪙',requirement:'베리 10,000,000개 모으기',berries:10_000_000},
  {id:'rich-100m',name:'억만장자',style:'wealth',icon:'🪙',requirement:'베리 100,000,000개 모으기',berries:100_000_000},
@@ -43,6 +46,7 @@ export function titleAvailable(s:Save,t:TitleDefinition){
  if(t.grade)return s.grade===t.grade&&!!s.curriculum?.graduationClaimed;
  if(t.expeditions!==undefined)return (s.expedition?.completed??-1)>=t.expeditions;
  if(t.id==='math-friend')return !!s.fishing?.completed;
+ if(t.id.startsWith('fish-'))return !!s.fishing?.tierClaimed?.includes(t.id.slice(5) as 'common'|'rare'|'hero');
  return t.id==='ppojjaki'?s.pet===20:!!s.multiplicationCompleted;
 }
 export function migratedTitle(s:Save):TitleId|null{

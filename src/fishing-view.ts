@@ -1,6 +1,6 @@
 // 연못 낚시터 화면: 낚싯대 던지기 → 카드 뒤집기 → 수학자 소개(초상 사진·업적) → 도감 24칸 · 조각 교환 · 완성 보상.
 import type { Save } from './rules';
-import { CAST_COST, COMPLETE_BERRIES, COMPLETE_TITLE, DAILY_CASTS, MATH_CARDS, TIERS, castLine, castsLeft, claimCompletion, exchangeCard, fishingOf, ownedCount, type MathCard } from './fishing';
+import { CAST_COST, COMPLETE_BERRIES, COMPLETE_TITLE, DAILY_CASTS, MATH_CARDS, TIERS, TIER_SETS, castLine, castsLeft, claimCompletion, claimTierSet, exchangeCard, fishingOf, ownedCount, tierClaimed, tierComplete, treasureLabel, type CardTier, type MathCard } from './fishing';
 import { PORTRAIT_CREDITS } from './mathematician-portraits';
 import { todayKey } from './daily';
 import './storybook-paper.css';
@@ -38,14 +38,16 @@ export function showFishing(s: Save, h: Hooks, view: 'dock' | 'book' = 'dock', m
   // 2026-11-21 지브리풍 연못 테마(Codex 시안): 연못 배너 · 하늘색 리본 탭 · 낚싯대 버튼 · 등급 배지 카드.
   const art = import.meta.env.BASE_URL + 'art/fishing-dock/';
   const tabs = `<nav class="sb-ribbon fishing-tabs"><img src="${art}ribbon.webp" alt="" aria-hidden="true"><button class="sb-chip" data-fish-view="dock" aria-pressed="${view === 'dock'}"><img src="${art}icon-rod.webp" alt="">낚시하기</button><button class="sb-chip" data-fish-view="book" aria-pressed="${view === 'book'}"><img src="${art}icon-book.webp" alt="">수학자 도감 ${owned}/${MATH_CARDS.length}</button></nav>`;
-  const head = `<header class="sb-hero fishing-head"><img src="${art}hero.webp" alt="" decoding="async"><div class="sb-hero-text"><small>광장 연못 낚시터</small><h2>수학자 카드 낚시</h2><p>${CAST_COST}베리로 낚싯대를 던지면 수학자 카드 한 장을 낚아요. 하루 ${DAILY_CASTS}번 · 높은 등급일수록 드물어요.</p></div></header>`;
+  const head = `<header class="sb-hero fishing-head"><img src="${art}hero.webp" alt="" decoding="async"><div class="sb-hero-text"><small>광장 연못 낚시터</small><h2>수학자 카드 낚시</h2><p>${CAST_COST}베리로 낚싯대를 던지면 수학자 카드 한 장과 베리를 낚아요. 가끔 보물도 올라와요. 하루 ${DAILY_CASTS}번 · 높은 등급일수록 드물어요.</p></div></header>`;
   const status = `<p class="sb-note fishing-status"><b>오늘 남은 낚시 ${left}/${DAILY_CASTS}</b> · 베리 ${n(s.berries)} · 조각 ${n(f.pieces)}개<br>${tierCounts}</p>`;
   const done = owned >= MATH_CARDS.length;
-  const reward = done ? (f.completed ? `<p class="fishing-complete">✦ 칭호 「${COMPLETE_TITLE}」와 황금 낚싯대를 받았어요.</p>` : `<button class="primary wide" id="fish-claim">24장 완성 보상 받기 · 칭호 + 황금 낚싯대 + ${n(COMPLETE_BERRIES)}베리</button>`) : '';
+  // 등급을 다 모으면 받는 보상(보통·희귀·영웅). 받을 수 있는 것만 버튼으로, 받은 것은 작은 표시로 보여 줘요.
+  const sets = TIER_SETS.map(set => tierClaimed(s, set.tier) ? `<span class="fishing-set is-done">✦ ${TIERS[set.tier].name} 완성 · 「${esc(set.title)}」</span>` : tierComplete(s, set.tier) ? `<button class="primary wide fishing-set-claim" data-fish-set="${set.tier}">${TIERS[set.tier].name} 카드 모두 모음! 보상 받기 · 칭호 「${esc(set.title)}」 + ${n(set.berries)}베리</button>` : '').join('');
+  const reward = (sets ? `<div class="fishing-sets">${sets}</div>` : '') + (done ? (f.completed ? `<p class="fishing-complete">✦ 칭호 「${COMPLETE_TITLE}」와 황금 낚싯대를 받았어요.</p>` : `<button class="primary wide" id="fish-claim">24장 완성 보상 받기 · 칭호 + 황금 낚싯대 + ${n(COMPLETE_BERRIES)}베리</button>`) : '');
   let body = '';
   if (view === 'dock') {
     body = `${message}<button class="primary wide fishing-cast sb-cast" id="fish-cast" ${left <= 0 || s.berries < CAST_COST ? 'disabled' : ''}><img src="${art}icon-rod.webp" alt="" aria-hidden="true"><span>낚싯대 던지기 · ${CAST_COST}베리</span><img src="${art}icon-bobber.webp" alt="" aria-hidden="true"></button>${left <= 0 ? '<p class="note">오늘 낚시는 끝났어요. 내일 다시 와요!</p>' : s.berries < CAST_COST ? `<p class="note">베리가 ${CAST_COST - s.berries}개 모자라요. 수학숲에서 문제를 풀면 베리를 모을 수 있어요.</p>` : ''}
-      <ul class="fishing-odds sb-cards">${(Object.keys(TIERS) as (keyof typeof TIERS)[]).map(t => { const got = MATH_CARDS.filter(c => c.tier === t && f.cards[c.id]).length, all = MATH_CARDS.filter(c => c.tier === t).length; return `<li class="sb-card fish-tier" style="--tier:${TIERS[t].color}"><img class="sb-emblem" src="${art}tier-${TIER_BADGE[t]}.webp" alt="" aria-hidden="true"><span class="sb-card-body"><strong>${TIERS[t].name}</strong><span class="fish-bar" aria-hidden="true"><i style="width:${all ? Math.round(got / all * 100) : 0}%"></i></span><small>${TIERS[t].weight}% · 겹치면 조각 ${TIERS[t].piece}개 · 교환 ${TIERS[t].exchange}조각</small></span><span class="fish-got"><img src="${art}card-back.webp" alt="" aria-hidden="true"><b>${got}/${all}</b></span></li>`; }).join('')}</ul>`;
+      <ul class="fishing-odds sb-cards">${(Object.keys(TIERS) as (keyof typeof TIERS)[]).map(t => { const got = MATH_CARDS.filter(c => c.tier === t && f.cards[c.id]).length, all = MATH_CARDS.filter(c => c.tier === t).length; return `<li class="sb-card fish-tier" style="--tier:${TIERS[t].color}"><img class="sb-emblem" src="${art}tier-${TIER_BADGE[t]}.webp" alt="" aria-hidden="true"><span class="sb-card-body"><strong>${TIERS[t].name}</strong><span class="fish-bar" aria-hidden="true"><i style="width:${all ? Math.round(got / all * 100) : 0}%"></i></span><small>${TIERS[t].weight}% · ${TIERS[t].berries}베리 · 겹치면 조각 ${TIERS[t].piece}개 · 교환 ${TIERS[t].exchange}조각</small></span><span class="fish-got"><img src="${art}card-back.webp" alt="" aria-hidden="true"><b>${got}/${all}</b></span></li>`; }).join('')}</ul>`;
   } else {
     body = `<div class="math-card-grid">${MATH_CARDS.map(card => f.cards[card.id]
       ? `<button class="math-card-slot tier-${card.tier}" style="--tier:${TIERS[card.tier].color}" data-fish-card="${card.id}">${portraitHtml(card, 'small')}<b>${esc(card.name)}</b><small>${TIERS[card.tier].name}${f.cards[card.id] > 1 ? ` · ${f.cards[card.id]}장` : ''}</small></button>`
@@ -58,7 +60,8 @@ export function showFishing(s: Save, h: Hooks, view: 'dock' | 'book' = 'dock', m
     let result;
     try { result = castLine(s, today); } catch (error) { showFishing(s, h, 'dock', `<p class="error" role="alert">${esc((error as Error).message)}</p>`); return; }
     save();
-    const tag = result.fresh ? '<p class="math-card-new">새 카드!</p>' : `<p class="math-card-dup">이미 있는 카드 · 조각 +${result.pieces}</p>`;
+    const tag = (result.fresh ? '<p class="math-card-new">새 카드!</p>' : `<p class="math-card-dup">이미 있는 카드 · 조각 +${result.pieces}</p>`)
+      + `<p class="fishing-gain">🍓 +${n(result.berries)}베리</p>` + (result.treasure ? `<p class="fishing-treasure">🎁 보물도 올라왔어요! ${esc(treasureLabel(result.treasure))}</p>` : '');
     showFishing(s, h, 'dock', `<div class="fishing-catch tier-${result.card.tier}">${detailHtml(result.card)}${tag}</div>`);
   });
   document.querySelectorAll<HTMLButtonElement>('[data-fish-card]').forEach(b => b.onclick = () => {
@@ -69,6 +72,12 @@ export function showFishing(s: Save, h: Hooks, view: 'dock' | 'book' = 'dock', m
   document.querySelectorAll<HTMLButtonElement>('[data-fish-exchange]').forEach(b => b.onclick = () => {
     try { const card = exchangeCard(s, b.dataset.fishExchange!); save(); h.toast(`조각으로 ${card.name} 카드를 받았어요!`); showFishing(s, h, 'book'); }
     catch (error) { h.toast((error as Error).message); }
+  });
+  document.querySelectorAll<HTMLButtonElement>('[data-fish-set]').forEach(b => b.onclick = () => {
+    const set = claimTierSet(s, b.dataset.fishSet as CardTier);
+    if (!set) return;
+    save(); h.toast(`${TIERS[set.tier].name} 카드를 모두 모았어요! 칭호 「${set.title}」와 ${n(set.berries)}베리를 받았어요.`);
+    showFishing(s, h, view);
   });
   document.querySelector<HTMLButtonElement>('#fish-claim')?.addEventListener('click', () => {
     if (!claimCompletion(s)) return;

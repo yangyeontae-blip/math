@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { newSave, validateSave } from '../src/rules.ts';
-import { CAST_COST, COMPLETE_BERRIES, DAILY_CASTS, MATH_CARDS, TIERS, castLine, castsLeft, claimCompletion, exchangeCard, fishingOf, rollCard, rollTier } from '../src/fishing.ts';
+import { CAST_COST, COMPLETE_BERRIES, DAILY_CASTS, MATH_CARDS, TIERS, TIER_SETS, castLine, castsLeft, claimCompletion, claimTierSet, exchangeCard, fishingOf, rollCard, rollTier, rollTreasure, validFishing } from '../src/fishing.ts';
 import { titleAvailable, titleDefinition } from '../src/titles.ts';
 
 const seq = (...values: number[]) => { let i = 0; return () => values[i++] ?? 0; };
@@ -25,8 +25,8 @@ test('rolls pick the tier first, then a card inside it', () => {
 
 test('casting costs berries, is limited to 10 a day, and resets the next day', () => {
   const s = rich();
-  for (let i = 0; i < DAILY_CASTS; i++) castLine(s, '2026-11-18', seq(0, 0));
-  assert.equal(s.berries, 100_000 - CAST_COST * DAILY_CASTS);
+  for (let i = 0; i < DAILY_CASTS; i++) castLine(s, '2026-11-18', seq(0, 0, .99));
+  assert.equal(s.berries, 100_000 - (CAST_COST - TIERS.common.berries) * DAILY_CASTS);
   assert.equal(castsLeft(s, '2026-11-18'), 0);
   assert.throws(() => castLine(s, '2026-11-18'), /내일 다시/);
   assert.equal(castsLeft(s, '2026-11-19'), DAILY_CASTS);
@@ -62,4 +62,44 @@ test('saves without fishing load with an empty fishing state; broken fishing dat
   assert.deepEqual(validateSave(s).fishing, { day: '', casts: 0, cards: {}, pieces: 0, completed: false });
   assert.throws(() => validateSave({ ...newSave('베리', 0, 3), fishing: { day: '', casts: 99, cards: {}, pieces: 0, completed: false } }));
   assert.throws(() => validateSave({ ...newSave('베리', 0, 3), fishing: { day: '', casts: 0, cards: { nobody: 1 }, pieces: 0, completed: false } }));
+});
+
+test('each catch pays tier berries, averaging a little less than the cast cost', () => {
+  const expected = Object.values(TIERS).reduce((sum, t) => sum + t.weight / 100 * t.berries, 0);
+  assert.ok(expected > 0 && expected < CAST_COST);
+  const s = rich(), r = castLine(s, 'd', seq(.995, 0, .99));
+  assert.equal(r.card.id, 'gauss'); assert.equal(r.berries, TIERS.legend.berries); assert.equal(r.treasure, null);
+  assert.equal(s.berries, 100_000 - CAST_COST + TIERS.legend.berries);
+});
+
+test('treasure comes about one in ten casts and is applied to the save', () => {
+  assert.equal(rollTreasure(seq(.1)), null);
+  assert.deepEqual(rollTreasure(seq(0, 0)), { kind: 'pouch', berries: 200 });
+  assert.deepEqual(rollTreasure(seq(0, .6)), { kind: 'pieces', pieces: 5 });
+  assert.deepEqual(rollTreasure(seq(0, .9)), { kind: 'potion', potion: 0 });
+  const s = rich(), before = s.potions.stock[0];
+  castLine(s, 'd', seq(0, 0, 0, .9));
+  assert.equal(s.potions.stock[0], before + 1);
+  const p = rich(); castLine(p, 'd', seq(0, 0, 0, .6));
+  assert.equal(fishingOf(p).pieces, 5);
+  const full = rich(); full.potions.stock[0] = 99; castLine(full, 'd', seq(0, 0, 0, .9));
+  assert.equal(full.potions.stock[0], 99); assert.equal(full.berries, 100_000 - CAST_COST + TIERS.common.berries + 140);
+});
+
+test('collecting a whole tier pays berries and a title once, and survives save validation', () => {
+  const s = rich(), before = s.berries;
+  assert.equal(claimTierSet(s, 'rare'), null);
+  for (const c of MATH_CARDS.filter(c => c.tier === 'rare')) fishingOf(s).cards[c.id] = 1;
+  const set = claimTierSet(s, 'rare')!;
+  assert.equal(set.title, '반짝 물결 낚시꾼');
+  assert.equal(s.berries, before + TIER_SETS.find(t => t.tier === 'rare')!.berries);
+  assert.equal(claimTierSet(s, 'rare'), null);
+  assert.equal(claimTierSet(s, 'legend'), null);
+  assert.equal(titleAvailable(s, titleDefinition('fish-rare')!), true);
+  assert.equal(titleAvailable(s, titleDefinition('fish-common')!), false);
+  s.selectedTitleId = 'fish-rare';
+  const loaded = validateSave(JSON.parse(JSON.stringify(s)));
+  assert.equal(loaded?.selectedTitleId, 'fish-rare');
+  assert.equal(validFishing({ ...fishingOf(s), tierClaimed: ['rare', 'rare'] }), false);
+  assert.equal(validFishing({ ...fishingOf(s), tierClaimed: ['legend'] }), false);
 });

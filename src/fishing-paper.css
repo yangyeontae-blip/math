@@ -32,3 +32,8 @@
 @media(max-width:600px){.fishing-paper .sb-ribbon{flex-wrap:nowrap;padding:12px 26px 22px}}
 @media(max-width:600px){.fishing-paper .sb-ribbon .sb-chip{font-size:.8rem;padding:5px 8px;white-space:nowrap}}
 @media(max-width:600px){.fishing-paper .sb-ribbon .sb-chip img{width:18px;height:18px}}
+/* 2026-11-26 낚시 보상: 낚은 베리·보물·등급 완성 */
+.fishing-gain{margin:.35rem 0 0;font-weight:700;color:#7a4b12;text-align:center}
+.fishing-treasure{margin:.35rem auto 0;padding:.35rem .7rem;width:fit-content;border-radius:999px;background:#fff3c4;border:1.5px solid #e8c66a;color:#6d4a0c;font-weight:700;text-align:center}
+.fishing-sets{display:grid;gap:.4rem;margin:.4rem 0}
+.fishing-set.is-done{display:inline-block;padding:.25rem .6rem;border-radius:999px;background:#eef6e4;color:#4b6a34;font-size:.85rem}

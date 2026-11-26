@@ -353,3 +353,27 @@ export function postboxModel(){
  for(const [x,z,c] of [[-1,.75,0xf1a4c4],[-.55,1.05,0xb79ae0],[.95,.85,0xf7d36b],[1.05,-.2,0xfffbf0],[-1.1,-.3,0xf1a4c4]])orb(g,c as number,x as number,.32,z as number,.11);
  return g;
 }
+
+/** 광장 작은 기부함(2026-11-26): 나무 상자 + 하트 투입구 + 베리. 모두의 합계가 목표를 넘을 때마다 userData.goal 0~3 장식이 하나씩 보여요. */
+export function donationBoxModel(){
+ const g=new T.Group(),wood=VILLAGE_ART.wood,dark=0x6e4a32,cream=VILLAGE_ART.cream,gold=0xe8b84d,berry=VILLAGE_ART.berry,leaf=VILLAGE_ART.leaf,stone=0xb3ab98;
+ const lawn=piece(g,VILLAGE_ART.grass,new T.CylinderGeometry(1.3,1.4,.16,12),0,.08,0);lawn.receiveShadow=true;
+ for(const [x,z,r] of [[-.7,.4,.3],[.68,.32,.26],[.1,-.62,.28]])orb(g,stone,x,.26,z,r,.7);
+ block(g,dark,0,.42,0,1.2,.22,.9);
+ block(g,wood,0,.95,0,1.05,.86,.78);
+ for(const y of [.62,1.3])block(g,gold,0,y,0,1.1,.08,.83);
+ for(const x of [-.5,.5])block(g,dark,x,.95,.4,.1,.86,.06);
+ const lid=block(g,wood,0,1.47,0,1.15,.18,.88);lid.rotation.x=-.04;
+ block(g,dark,0,1.57,.05,.5,.05,.14);
+ for(const side of [-1,1])orb(g,berry,side*.1,1.02,.4,.13,.9).scale.z=.35;
+ const tip=block(g,berry,0,.95,.4,.2,.2,.05);tip.rotation.z=Math.PI/4;
+ orb(g,berry,0,1.82,0,.22);orb(g,0xc44d6d,.08,1.88,.15,.05);
+ for(const r of [-.6,.6]){const l=orb(g,leaf,r*.25,2.02,0,.12,.4);l.rotation.z=r;}
+ const goal=(i:number)=>{const d=new T.Group();d.userData.goal=i;d.visible=false;g.add(d);return d;};
+ const flowers=goal(0);for(let i=0;i<10;i++){const a=i/10*Math.PI*2;orb(flowers,[0xf4a6c0,0xfff1a8,0xb9d8ff][i%3],Math.cos(a)*1.15,.28,Math.sin(a)*1.15,.12);orb(flowers,leaf,Math.cos(a)*1.15,.18,Math.sin(a)*1.15,.1,.5);}
+ const lamps=goal(1);for(const x of [-1.05,1.05]){piece(lamps,dark,new T.CylinderGeometry(.04,.05,1.4,6),x,.85,-.35);const glow=orb(lamps,0xfff2b0,x,1.62,-.35,.16);(glow.material as T.MeshStandardMaterial).emissive=new T.Color(0x8a6a10);}
+ const flag=goal(2);piece(flag,dark,new T.CylinderGeometry(.04,.05,2.4,6),-.85,1.3,.45);
+ for(const [i,c] of [0xe86a6a,0xf2b24c,0xf2e35c,0x7cc47a,0x6aa5e8].entries())block(flag,c,-.55,2.35-i*.14,.45,.56,.14,.03);
+ const wreath=goal(3);for(let i=0;i<12;i++){const a=i/12*Math.PI*2;orb(wreath,i%2?berry:leaf,Math.cos(a)*.55,1.82+Math.sin(a)*.08,Math.sin(a)*.55,.1);}
+ return g;
+}

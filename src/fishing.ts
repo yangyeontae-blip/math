@@ -5,18 +5,33 @@ import type { Save } from './rules';
 
 export type CardTier = 'common' | 'rare' | 'hero' | 'legend';
 export type MathCard = { id: string; name: string; tier: CardTier; era: string; deed: string; story: string; emblem: string; portrait: boolean };
-export type FishingState = { day: string; casts: number; cards: Record<string, number>; pieces: number; completed: boolean };
+export type FishingState = { day: string; casts: number; cards: Record<string, number>; pieces: number; completed: boolean; tierClaimed?: CardTier[] };
 
 export const CAST_COST = 50;
 export const DAILY_CASTS = 10;
 export const COMPLETE_BERRIES = 5000;
 export const COMPLETE_TITLE = '수학자의 벗';
-export const TIERS: Record<CardTier, { name: string; weight: number; piece: number; exchange: number; color: string }> = {
-  common: { name: '보통', weight: 70, piece: 1, exchange: 10, color: '#6d7a63' },
-  rare: { name: '희귀', weight: 22, piece: 3, exchange: 25, color: '#2f6fb0' },
-  hero: { name: '영웅', weight: 7, piece: 8, exchange: 60, color: '#8a46b0' },
-  legend: { name: '전설', weight: 1, piece: 20, exchange: 150, color: '#b07a12' },
+// berries: 낚을 때마다 돌려받는 베리(2026-11-26). 평균 약 40베리라 한 번 50베리보다 조금 적어요.
+export const TIERS: Record<CardTier, { name: string; weight: number; piece: number; exchange: number; color: string; berries: number }> = {
+  common: { name: '보통', weight: 70, piece: 1, exchange: 10, color: '#6d7a63', berries: 15 },
+  rare: { name: '희귀', weight: 22, piece: 3, exchange: 25, color: '#2f6fb0', berries: 50 },
+  hero: { name: '영웅', weight: 7, piece: 8, exchange: 60, color: '#8a46b0', berries: 150 },
+  legend: { name: '전설', weight: 1, piece: 20, exchange: 150, color: '#b07a12', berries: 800 },
 };
+/** 한 등급의 카드를 모두 모으면 한 번씩 받는 보상(전설은 24장 완성 보상으로 대신해요). */
+export const TIER_SETS: { tier: CardTier; berries: number; titleId: 'fish-common' | 'fish-rare' | 'fish-hero'; title: string }[] = [
+  { tier: 'common', berries: 1000, titleId: 'fish-common', title: '연못 낚시꾼' },
+  { tier: 'rare', berries: 3000, titleId: 'fish-rare', title: '반짝 물결 낚시꾼' },
+  { tier: 'hero', berries: 6000, titleId: 'fish-hero', title: '수학자 낚시 명인' },
+];
+/** 열 번에 한 번쯤 카드와 함께 낚이는 보물. */
+export const TREASURE_CHANCE = 0.1;
+export type Treasure = { kind: 'pouch'; berries: number } | { kind: 'pieces'; pieces: number } | { kind: 'potion'; potion: number };
+export const TREASURES: { weight: number; make: () => Treasure; label: string }[] = [
+  { weight: 50, make: () => ({ kind: 'pouch', berries: 200 }), label: '베리 주머니 200베리' },
+  { weight: 35, make: () => ({ kind: 'pieces', pieces: 5 }), label: '카드 조각 5개' },
+  { weight: 15, make: () => ({ kind: 'potion', potion: 0 }), label: '달콤 베리물약 1병' },
+];
 const TIER_ORDER: CardTier[] = ['common', 'rare', 'hero', 'legend'];
 
 // emblem: 초상화가 없을 때 쓰는 상징 그림 이름(fishing-view.ts의 SVG). portrait: public/art/mathematicians/<id>.webp가 있으면 true.
@@ -54,7 +69,8 @@ export function validFishing(v: unknown): v is FishingState {
   const f = v as FishingState, ids = new Set(MATH_CARDS.map(c => c.id));
   return typeof f.day === 'string' && f.day.length <= 10 && Number.isSafeInteger(f.casts) && f.casts >= 0 && f.casts <= DAILY_CASTS
     && Number.isSafeInteger(f.pieces) && f.pieces >= 0 && f.pieces <= 1_000_000 && typeof f.completed === 'boolean'
-    && !!f.cards && typeof f.cards === 'object' && Object.entries(f.cards).every(([id, n]) => ids.has(id) && Number.isSafeInteger(n) && n >= 1 && n <= 100_000);
+    && !!f.cards && typeof f.cards === 'object' && Object.entries(f.cards).every(([id, n]) => ids.has(id) && Number.isSafeInteger(n) && n >= 1 && n <= 100_000)
+    && (f.tierClaimed === undefined || Array.isArray(f.tierClaimed) && f.tierClaimed.length <= TIER_SETS.length && f.tierClaimed.every(t => TIER_SETS.some(set => set.tier === t)) && new Set(f.tierClaimed).size === f.tierClaimed.length);
 }
 
 export function fishingOf(s: Save): FishingState { return (s as Save & { fishing?: FishingState }).fishing ??= emptyFishing(); }
@@ -71,7 +87,14 @@ export function rollCard(random: () => number): MathCard {
   return pool[Math.min(pool.length - 1, Math.floor(random() * pool.length))];
 }
 
-export type CastResult = { card: MathCard; fresh: boolean; pieces: number };
+export type CastResult = { card: MathCard; fresh: boolean; pieces: number; berries: number; treasure: Treasure | null };
+export function rollTreasure(random: () => number): Treasure | null {
+  if (random() >= TREASURE_CHANCE) return null;
+  let roll = random() * TREASURES.reduce((sum, t) => sum + t.weight, 0);
+  for (const t of TREASURES) { roll -= t.weight; if (roll < 0) return t.make(); }
+  return TREASURES[0].make();
+}
+export function treasureLabel(t: Treasure) { return t.kind === 'pouch' ? `베리 주머니 +${t.berries}베리` : t.kind === 'pieces' ? `카드 조각 +${t.pieces}개` : '달콤 베리물약 1병'; }
 /** 낚싯대 던지기: 베리와 오늘 횟수를 확인하고, 결과를 저장 객체에 바로 반영해요. 문제가 있으면 아이에게 보여 줄 문장으로 오류를 던져요. */
 export function castLine(s: Save, today: string, random: () => number = Math.random): CastResult {
   const f = fishingOf(s);
@@ -83,7 +106,17 @@ export function castLine(s: Save, today: string, random: () => number = Math.ran
   f.cards[card.id] = (f.cards[card.id] ?? 0) + 1;
   const pieces = fresh ? 0 : TIERS[card.tier].piece;
   f.pieces += pieces;
-  return { card, fresh, pieces };
+  const berries = TIERS[card.tier].berries;
+  s.berries = Math.min(1e9, s.berries + berries);
+  const treasure = rollTreasure(random);
+  if (treasure?.kind === 'pouch') s.berries = Math.min(1e9, s.berries + treasure.berries);
+  else if (treasure?.kind === 'pieces') f.pieces = Math.min(1_000_000, f.pieces + treasure.pieces);
+  else if (treasure?.kind === 'potion') {
+    // 물약 칸이 가득(99병)이면 같은 값의 베리로 바꿔 줘요.
+    if ((s.potions.stock[treasure.potion] ?? 0) < 99) s.potions.stock[treasure.potion] = (s.potions.stock[treasure.potion] ?? 0) + 1;
+    else s.berries = Math.min(1e9, s.berries + 140);
+  }
+  return { card, fresh, pieces, berries, treasure };
 }
 
 /** 조각으로 아직 없는 카드를 받아요. */
@@ -95,6 +128,16 @@ export function exchangeCard(s: Save, id: string): MathCard {
   if (f.pieces < cost) throw new Error(`조각이 ${cost - f.pieces}개 더 필요해요.`);
   f.pieces -= cost; f.cards[id] = 1;
   return card;
+}
+
+export function tierComplete(s: Save, tier: CardTier) { const f = fishingOf(s); return MATH_CARDS.filter(c => c.tier === tier).every(c => f.cards[c.id]); }
+export function tierClaimed(s: Save, tier: CardTier) { return !!fishingOf(s).tierClaimed?.includes(tier); }
+/** 한 등급을 다 모으면 한 번만 베리와 칭호를 받아요. */
+export function claimTierSet(s: Save, tier: CardTier) {
+  const set = TIER_SETS.find(t => t.tier === tier), f = fishingOf(s);
+  if (!set || tierClaimed(s, tier) || !tierComplete(s, tier)) return null;
+  (f.tierClaimed ??= []).push(tier); s.berries = Math.min(1e9, s.berries + set.berries);
+  return set;
 }
 
 /** 24장을 다 모으면 한 번만 보상을 받아요: 칭호, 황금 낚싯대 장식, 5,000베리. */
