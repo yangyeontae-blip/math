@@ -7,7 +7,7 @@ export const PLAZA_CAPACITY = 128;
 export const PLAZA_AVATAR_CATALOG=5;
 export const AVATAR_LIMITS = {character:4,outfit:35,weapon:45,hairstyle:13,face:17,pet:26,ride:26} as const;
 export const JOB_TITLES=CAREER_TITLES;
-export const ADVENTURE_TITLES = ['모험가','첫 발자국','숲길 길잡이','반짝임 수집가','별사탕 해결사','별빛 탐험가','달빛 개척자','해바라기 수호대','베리숲 수호자','두 숲의 전설','영원한 별빛 영웅'] as const;
+export const ADVENTURE_TITLES = ['모험가','첫 발자국','숲길 길잡이','반짝임 수집가','별사탕 해결사','별빛 탐험가','달빛 개척자','해바라기 수호대','베리의 숲 수호자','두 숲의 전설','영원한 별빛 영웅'] as const;
 export const PLAZA_EMOTES = {wave:'안녕! 👋',heart:'반가워! 💛',cheer:'멋지다! ✨',play:'함께 놀자! 🌿'} as const;
 export type PlazaEmote = keyof typeof PLAZA_EMOTES;
 export interface PlazaProfile {
@@ -35,11 +35,11 @@ export const PLAZA_TITLE_CATALOG=3;
 export function titleCatalogOf(v:unknown){return v===2||v===3?v:1;}
 export function compatibleTitleProfile(p:PlazaProfile,catalog=1):PlazaProfile{if(catalog<3&&String(p.selectedTitleId).startsWith('rich-'))p={...p,selectedTitleId:null};if(catalog<3&&p.selectedTitleId==='level-2000')p={...p,selectedTitleId:'level-1000'};const legacy=catalog<2&&(p.selectedTitleId==='level-500'||p.selectedTitleId==='level-1000')?{...p,selectedTitleId:'level-300' as TitleId}:p;return catalog<2&&!parsePlazaProfile(legacy)?{...legacy,selectedTitleId:null}:legacy;}
 export function forestLevelTitle(level:number) {
- if(level>=1000)return '베리숲 회장';
- if(level>=500)return '베리숲 정령';
- if (level >= 300) return '베리숲 신';
- if (level >= 100) return '베리숲의 전설';
- if (level >= 50) return '베리숲 지킴이';
+ if(level>=1000)return '베리의 숲 회장';
+ if(level>=500)return '베리의 숲 정령';
+ if (level >= 300) return '베리의 숲 신';
+ if (level >= 100) return '베리의 숲 전설';
+ if (level >= 50) return '베리의 숲 지킴이';
  return '';
 }
 export interface PlazaPose {x:number;y:number;z:number;angle:number}

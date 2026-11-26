@@ -25,7 +25,7 @@ test('the plaza supports 128 profiles and applies a bounded batch without accept
 test('remote avatar compaction keeps the body under its animation transform and preserves two-sided faces',()=>{const root=new T.Group(),body=new T.Group();root.add(body);root.userData.body=body;const head=new T.Mesh(new T.SphereGeometry(.5,8,6),new T.MeshStandardMaterial({color:0xecc39e,side:T.DoubleSide}));head.position.y=1.5;body.add(head);const foot=new T.Mesh(new T.BoxGeometry(.3,.2,.4),new T.MeshStandardMaterial());foot.position.y=.18;body.add(foot);root.userData.feet=[foot];const dispose=mergePlazaAvatar(root),merged=body.getObjectByName('plaza-preserved-body') as T.Mesh;assert.ok(merged);assert.equal(foot.visible,true);assert.equal((merged.material as T.Material).side,T.DoubleSide);body.position.y=1.1;root.updateMatrixWorld(true);merged.geometry.computeBoundingBox();const bounds=merged.geometry.boundingBox!.clone().applyMatrix4(merged.matrixWorld);assert.ok(Math.abs(bounds.min.y-2.1)<.001);dispose();});
 
 test('legacy level titles unlock at exact thresholds without stacking job titles',()=>{
- for(const [level,title] of [[49,''],[50,'베리숲 지킴이'],[99,'베리숲 지킴이'],[100,'베리숲의 전설'],[299,'베리숲의 전설'],[300,'베리숲 신']] as const){
+ for(const [level,title] of [[49,''],[50,'베리의 숲 지킴이'],[99,'베리의 숲 지킴이'],[100,'베리의 숲 전설'],[299,'베리의 숲 전설'],[300,'베리의 숲 신']] as const){
   assert.equal(forestLevelTitle(level),title);
   assert.equal(profileTitles({...make(),level,selectedTitleId:undefined}).title,title);
  }

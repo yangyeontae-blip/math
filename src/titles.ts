@@ -10,7 +10,7 @@ export const EXPEDITION_TITLES = [
   { name: '별빛 탐험가', need: 10 },
   { name: '달빛 개척자', need: 15 },
   { name: '해바라기 수호대', need: 20 },
-  { name: '베리숲 수호자', need: 30 },
+  { name: '베리의 숲 수호자', need: 30 },
   { name: '두 숲의 전설', need: 50 },
   { name: '영원한 별빛 영웅', need: 100 },
 ] as const;
@@ -20,11 +20,11 @@ export type TitleId = 'math-friend'|'level-50'|'level-100'|'level-300'|'level-50
 export type TitleStyle = 'leaf'|'star'|'divine'|'pet'|'study'|'explorer'|'wealth';
 export type TitleDefinition = {id:TitleId;name:string;style:TitleStyle;icon:string;requirement:string;level?:number;grade?:number;expeditions?:number;berries?:number};
 export const TITLES:readonly TitleDefinition[] = [
- {id:'level-50',name:'베리숲 지킴이',style:'leaf',icon:'🍃',requirement:'레벨 50 달성',level:50},
- {id:'level-100',name:'베리숲의 전설',style:'star',icon:'✦',requirement:'레벨 100 달성',level:100},
- {id:'level-300',name:'베리숲 신',style:'divine',icon:'✧',requirement:'레벨 300 달성',level:300},
- {id:'level-500',name:'베리숲 정령',style:'divine',icon:'🧚',requirement:'레벨 500 달성',level:500},
- {id:'level-1000',name:'베리숲 회장',style:'star',icon:'♛',requirement:'레벨 1,000 달성',level:1000},
+ {id:'level-50',name:'베리의 숲 지킴이',style:'leaf',icon:'🍃',requirement:'레벨 50 달성',level:50},
+ {id:'level-100',name:'베리의 숲 전설',style:'star',icon:'✦',requirement:'레벨 100 달성',level:100},
+ {id:'level-300',name:'베리의 숲 신',style:'divine',icon:'✧',requirement:'레벨 300 달성',level:300},
+ {id:'level-500',name:'베리의 숲 정령',style:'divine',icon:'🧚',requirement:'레벨 500 달성',level:500},
+ {id:'level-1000',name:'베리의 숲 회장',style:'star',icon:'♛',requirement:'레벨 1,000 달성',level:1000},
  {id:'level-2000',name:'베리의 숲 VIP',style:'divine',icon:'💎',requirement:'레벨 2,000 달성',level:2000},
  {id:'ppojjaki',name:'뽀짝이의 수호자',style:'pet',icon:'🐾',requirement:'귀염둥이 뽀짝이와 동행 중'},
  ...EXPEDITION_TITLES.map((t,i)=>({id:('expedition-'+i) as TitleId,name:t.name,style:'explorer' as const,icon:'🌿',requirement:'원정 '+t.need+'회 완수',expeditions:t.need})),

@@ -26,7 +26,7 @@ test('World 2 and central teacher prioritize math learning and the ornate main g
 test('World 2 outer islands and the new solo guardian open from the real map and preserve their save location',async({page},info)=>{
  test.setTimeout(300000);
  await start(page,300,s=>{for(let id=0;id<6;id++)s.world2.regions[id]={beacons:[0,1,2],kills:6,claimed:true};});
- await expect(page.locator('#level-milestone')).toContainText('베리숲 신');
+ await expect(page.locator('#level-milestone')).toContainText('베리의 숲 신');
  await map(page);
  for(const region of [3,4,5]){
   if(region>3)await page.getByRole('button',{name:'군도 지도 · 진행',exact:true}).click();
@@ -49,7 +49,7 @@ test('World 2 outer islands and the new solo guardian open from the real map and
 test('World 2 release: secret merchant and salon work through their world interactions on desktop and mobile',async({page},info)=>{
  test.setTimeout(300000);
  await start(page,50,s=>{s.berries=101_000;});
- await expect(page.locator('#level-milestone')).toContainText('베리숲 지킴이');
+ await expect(page.locator('#level-milestone')).toContainText('베리의 숲 지킴이');
  async function interact(id,label){
   await page.evaluate(id=>{const w=window.__berry.getWorld(),e=w.entities.find(e=>e.id===id);w.player.position.set(e.x,0,e.z+.4);},id);
   await expect(page.locator('#interact')).toContainText(label);
