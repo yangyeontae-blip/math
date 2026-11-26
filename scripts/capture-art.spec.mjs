@@ -2,8 +2,8 @@ import { test, expect } from '@playwright/test';
 import { mkdirSync } from 'node:fs';
 import { newSave } from '../src/rules.ts';
 
-// 그림 깨짐 수리 전 증거 캡처(2026-11-26). 저장소 screenshots/before_art_2026-11-26/ 에 남겨요.
-const OUT = process.env.ART_OUT || 'screenshots/before_art_2026-11-26';
+// 그림 깨짐 수리 전/후 캡처(2026-11-26). scripts 폴더에서 npx playwright test -c capture.config.mjs capture-art (ART_OUT=../screenshots/after_art_... 로 바꿔 저장).
+const OUT = process.env.ART_OUT || '../screenshots/before_art_2026-11-26';
 mkdirSync(OUT, { recursive: true });
 const finish = page => page.evaluate(() => document.getAnimations().forEach(a => a.finish()));
 async function start(page) {
