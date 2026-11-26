@@ -34,8 +34,8 @@ test('의견은 옛 ChatGPT Sites 주소가 아니라 지금 게임 서버로 �
   assert.match(FEEDBACK_URL, /\/api\/feedback$/);
 });
 
-test('공지판에 우체통 안내가 맨 위에 있다', () => {
-  const n = sortedNotices()[0];
+test('공지판에 우체통 안내가 크리스마스·기부함 소식 바로 다음에 있다', () => {
+  const n = sortedNotices().find(x => !['christmas-2026', 'fishing-donation-2026-11-26'].includes(x.id))!;
   assert.equal(n.id, 'postbox-2026-11-23');
   for (const w of ['우체통', '이름', '50베리']) assert.ok(n.body.includes(w), w);
 });

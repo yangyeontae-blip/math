@@ -30,9 +30,9 @@ test('Christmas greetings are opt-in, short, and do not repeat a single seasonal
   assert.ok(GREETINGS.hallGuide.includes(pickLine('hallGuide', () => 0, { christmas: expired })!));
 });
 
-test('Christmas notice is temporary and unpinned; postbox remains first', () => {
+test('Christmas notice is temporary and sits first on the board, then the donation box, then the postbox (teacher decision 2026-11-26)', () => {
   const notice = VILLAGE_NOTICES.find(n => n.id === 'christmas-2026')!;
-  assert.equal(notice.christmas, true); assert.equal(notice.pinned, false);
-  assert.equal(sortedNotices()[0].id, 'postbox-2026-11-23');
+  assert.equal(notice.christmas, true); assert.equal(notice.pinned, true);
+  assert.deepEqual(sortedNotices().slice(0, 3).map(n => n.id), ['christmas-2026', 'fishing-donation-2026-11-26', 'postbox-2026-11-23']);
   assert.ok(!VILLAGE_NOTICES.filter(n => !n.christmas || christmasActive(CHRISTMAS_END, { search: '' })).includes(notice));
 });
