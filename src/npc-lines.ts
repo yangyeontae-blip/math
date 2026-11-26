@@ -1,6 +1,6 @@
 // 마을 사람들의 말풍선 대사. 틀려도 괜찮다는 마음으로, 짧고 다정하게 써요.
 // 시간대(밤)와 비 오는 날에는 그날에 어울리는 대사가 가끔 섞여 나와요.
-export type LineContext = { night?: boolean; rain?: boolean };
+export type LineContext = { night?: boolean; rain?: boolean; christmas?: boolean };
 
 export const GREETINGS: Record<string, string[]> = {
   shepherd: [
@@ -118,12 +118,23 @@ export const RAIN_LINES = [
   '우산이 없으면 처마 밑에서 잠깐 쉬어 가렴.'
 ];
 
-/** 이전에 한 말과 겹치지 않게 대사를 골라요. 밤·비 오는 날에는 가끔 그날의 말이 나와요. */
+export const CHRISTMAS_LINES: Record<string, string[]> = {
+  hallGuide: ['멍멍! 메리 크리스마스! 함께 수학 모험을 떠나자!', '왈! 빨간 목도리가 포근해! 트리도 구경해 봐!'],
+  guide: ['메리 크리스마스! 오늘도 네 속도로 즐겁게 배워 보자.', '트리의 별처럼 네 생각도 반짝반짝 빛나는구나!'],
+  arena: ['메리 크리스마스! 한 문제씩 즐겁게 도전해 볼까?', '반짝이는 전구처럼 작은 도전도 모두 소중해!'],
+  journey: ['메리 크리스마스! 눈꽃 길 따라 수학숲으로 가자!'],
+  weapon: ['메리 크리스마스! 포근한 숲에서 즐겁게 모험해!'],
+  outfit: ['메리 크리스마스! 빨간 리본이 참 예쁘지?'],
+  pet: ['메리 크리스마스! 친구와 함께라 더 따뜻한 날이야.'],
+};
+
+/** 이전 말은 피하고, 행사 중에만 가끔 크리스마스 인사를 섞어요. */
 export function pickLine(id: string, random: () => number = Math.random, context: LineContext = {}, previous = ''): string | null {
   const lines = GREETINGS[id]; if (!lines) return null;
   const seasonal = [...(context.night ? NIGHT_LINES : []), ...(context.rain ? RAIN_LINES : [])];
-  const pool = id !== 'noticeBoard' && id !== 'unit' && id !== 'hallGuide' && id !== 'postbox' && id !== 'donationBox' && seasonal.length && random() < .3 ? seasonal : lines;
+  const festive = context.christmas ? CHRISTMAS_LINES[id] : undefined;
+  const pool = festive && random() < .4 ? festive : id !== 'noticeBoard' && id !== 'unit' && id !== 'hallGuide' && id !== 'postbox' && id !== 'donationBox' && seasonal.length && random() < .3 ? seasonal : lines;
   const options = pool.filter(line => line !== previous);
-  const list = options.length ? options : pool;
+  const list = options.length ? options : lines.filter(line => line !== previous);
   return list[Math.min(list.length - 1, Math.floor(random() * list.length))];
 }

@@ -1,0 +1,19 @@
+body.is-christmas #hud .player-card,
+body.is-christmas #hud .wallet { position: relative; overflow: visible; }
+body.is-christmas #hud .player-card::before,
+body.is-christmas #hud .wallet::before {
+  content: ''; position: absolute; pointer-events: none;
+  left: -4px; right: -4px; top: -9px; height: 17px;
+  background: url('../public/art/christmas/hud-snowcap.webp') center / 100% 100% no-repeat;
+  z-index: 2;
+}
+.christmas-notice { margin: 12px 0 20px; border-radius: 16px; overflow: hidden; background: #f5f3e6; color: #365a43; }
+.christmas-notice img { display: block; width: 100%; height: auto; aspect-ratio: 3 / 1; object-fit: cover; }
+.christmas-notice h3 { margin: 12px 16px 6px; }
+.christmas-notice p { margin: 0 16px 16px; font-size: .875rem; }
+body.is-christmas #hud .brand-mini { position: relative; overflow: visible; }
+body.is-christmas #hud .brand-mini::after {
+  content: ''; position: absolute; pointer-events: none;
+  width: 44px; height: 36px; right: -15px; top: -13px;
+  background: url('../public/art/christmas/bow.webp') center / contain no-repeat;
+}

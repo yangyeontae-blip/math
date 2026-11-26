@@ -1,3 +1,5 @@
+import { christmasActive, christmasNotice } from './christmas-event';
+import './christmas-event.css';
 import './design-tokens.css';
 // 버튼·탭용 주아체(OFL). 제목·본문·손글씨는 cozy-ui.css에서 역할별로 적용해요.
 import '@fontsource/jua/400.css';
@@ -388,6 +390,7 @@ const refreshAmbience = (change = false) => {
   // 실제 날씨를 고른 경우: 아직 받은 값이 없거나 오래됐으면 받아 온 뒤 한 번 더 그려요. 실패하면 무작위 날씨 그대로예요.
   if (ambienceEnabled() && weatherRegion()) void fetchRealWeather().then(next => { if (next && (next.weather !== real?.weather || next.temp !== real?.temp) && state) refreshAmbience(); });
   if (world) world.setWeather(ambienceEnabled() ? applied : null);
+  refreshChristmas();
   audio.setMood(ambienceEnabled() ? applied.mood : 'day');
   const location = document.querySelector<HTMLElement>('.location-pill');
   if (location) location.dataset.ambience = ambienceEnabled() ? ambienceLabel(applied).replace(/\p{Extended_Pictographic}|\uFE0F/gu, '').trim() + (real ? ` · ${realWeatherText(real)}` : '') : '';
@@ -395,6 +398,12 @@ const refreshAmbience = (change = false) => {
 const scheduleAmbience = () => {
   if (ambienceTimer) clearTimeout(ambienceTimer);
   ambienceTimer = setTimeout(() => { if (state) refreshAmbience(true); scheduleAmbience(); }, ambienceDelay());
+};
+const refreshChristmas = () => {
+  const on = !!state && christmasActive();
+  world?.setChristmas(on);
+  document.body.classList.toggle('is-christmas', on && !!world?.isPublicPlaza);
+  if (!on) document.querySelectorAll('.christmas-notice, [data-christmas-notice]').forEach(el => el.remove());
 };
 const startAmbienceCycle = () => { randomizeAmbience(); refreshAmbience(); scheduleAmbience(); };
 const stopAmbienceCycle = () => { if (ambienceTimer) clearTimeout(ambienceTimer); ambienceTimer = undefined; };
@@ -872,11 +881,11 @@ async function loadWorld() {
     world.onCollect = id => { if (!state) return; const value = collectBerry(state, id); if (!value) return; audio.play('berry'); refresh(); persist(); toast(`🍓 베리 +${value}`); };
     world.onStar = id => { if (!state || !collectExpeditionStar(state, id)) return; audio.play('berry'); refresh(); persist(); toast(`✦ 별빛 표식 ${state.expedition.active!.stars.length} / 3`); };
     world.onPetWalk = distance => { if (state && walkWithPet(state, distance)) { persist(); const friend = petFriend(state); if ([3, 8, 12].includes(friend.bond)) toast(`🐾 펫과 더 친해졌어요! 인벤토리에서 새 재주와 목걸이를 확인해요.`); } };
-    world.onStageLoaded = () => syncShadows();
+    world.onStageLoaded = () => { syncShadows(); refreshChristmas(); };
     world.onJump = () => audio.play('jump'); world.onRescue = () => toast('폭신한 길로 돌아왔어요. 다시 가 볼까요?');
     world.onNear = (name, id) => { if((id==='huntingGate'||id==='world2Gate'||id==='shopStreet')&&matchMedia('(max-width:600px)').matches)setQuestCollapsed(true); nearNpcName = name || nearNpcName; $('#interact').hidden = !name; const verb = actionVerb(id); $('#interact').textContent = name ? id?.startsWith('tree') ? `${name} · F로 휘두르기` : `${name} · ${verb} E` : ''; $('#touch-talk').textContent = verb; $('#touch-attack').hidden = !id?.startsWith('tree'); };
     world.onAttack = id => { if (!state) return; if (!id) { audio.play('swing'); return; } const result = world.hitTree(id, treeDamage(state)); if (!result) return; audio.play('chop'); if (!result.fell) { toast(`통통! 나무가 흔들렸어요 · ${result.remaining}만큼 남았어요`); return; } const reward = (2 + Math.floor(Math.random() * 3)) as 2 | 3 | 4, value = fellTree(state, Number(id.slice(4)), reward); if (!value) return; audio.play('berry'); refresh(); persist(); toast(`🌳 나무를 베었어요! 🍓 +${value}베리`); };
-    world.onInteract = id => { if (!state || bubbleOpen()) return; if (id === 'storyFriend') { openModal(title('편지 친구 · 솜이', '네 편지를 받고 찾아왔어!') + '<p>흩어진 편지를 모아 줘서 고마워. 이제 마을에서 자주 만나자! 호수 다리와 별빛 쉼터도 함께 구경하고 싶어.</p><button class="primary wide" data-close>또 만나!</button>'); return; } const line = greetingFor(id, Math.random, lineContext()); if (line) { world.setPaused(true); world.clearInput(); showBubble(nearNpcName || '마을 친구', line, () => { world.setPaused(!state); world.clearInput(); handleInteract(id); }, index => audio.talk(index)); return; } handleInteract(id); };
+    world.onInteract = id => { if (!state || bubbleOpen()) return; if (id === 'storyFriend') { openModal(title('편지 친구 · 솜이', '네 편지를 받고 찾아왔어!') + '<p>흩어진 편지를 모아 줘서 고마워. 이제 마을에서 자주 만나자! 호수 다리와 별빛 쉼터도 함께 구경하고 싶어.</p><button class="primary wide" data-close>또 만나!</button>'); return; } const line = greetingFor(id, Math.random, { ...lineContext(), christmas: christmasActive() }); if (line) { world.setPaused(true); world.clearInput(); showBubble(nearNpcName || '마을 친구', line, () => { world.setPaused(!state); world.clearInput(); handleInteract(id); }, index => audio.talk(index)); return; } handleInteract(id); };
     const handleInteract = (id: string) => { if (!state) return;if(id==='postbox'){openPostbox();return;}if(id==='donationBox'){openDonation();return;}if(id==='berryMachine'){openBerryMachine();return;}if(id==='potionWorkshop'){openPotionWorkshop();return;}if(id==='fishingDock'){openFishing();return;}if(astral.onInteract(id))return; if(id.startsWith('roomUse')){world.beginRoomActivity(Number(id.slice(7)));return;}if(id==='world2Gate'||id==='world2Board'){career.showWorldTwo();return;}if(id.startsWith('world2Beacon')){career.lightWorldTwoBeacon(Number(id.slice(12)));return;}if(id==='huntingGate'){career.showHunting();return;}if(id==='huntingExit'){career.exitHunting();return;}if(id.startsWith('huntingZone')){career.enterHunting(Number(id.slice(11)));return;}if(id==='trainingExit'){career.exitTraining();return;}if(id==='academyPractice'){career.showPractice();return;} if(id==='academyGate'){enterAcademy();return;}if(id==='academyExit'){leaveAcademy();return;}if(id==='academyTeacher'||id==='academyBook'){openAcademyMenu();return;}if(id==='academyRecords'){openAcademyMenu(true);return;} const journey = journeyFor(state); if (id === 'homesteadGate') {if(enterHomeGarden())closeModal();} else if (id === 'homeEditor') openHomestead(); else if (id === 'shopStreet') enterShopStreet(); else if(id==='marketExit'){world.exitMarket(state);syncAvatar();closeModal();refresh();persist();} else if (id === 'homeExit') {persist();switchStage(0);} else if (id.startsWith('homeVisitor')) openHomeVisitor(Number(id.slice(11))); else if (id.startsWith('homeObject')) interactHomeObject(Number(id.slice(10))); else if (id === 'discovery') openCurrentDiscovery(); else if (id.startsWith('forestWork')) openForestWork(Number(id.slice(10))); else if (id.startsWith('trailSeed')) { if (collectTrailSeed(state, Number(id.slice(9)))) { persist(); world.refreshForestTrail(state); refresh(); audio.play('berry'); toast(`✦ 빛씨앗 묶음 ${state.forestTrail.seeds.length}/6 · 나무 등불로 가져가요!`); } } else if (id.startsWith('trailLamp')) openTrailLamp(Number(id.slice(9))); else if (id.startsWith('tree')) world.attack(); else if (id.startsWith('villageProject')) openVillageProjects(); else if (id === 'storyMailbox') openStoryBoard(); else if (id.startsWith('storyClue')) collectStoryClue(Number(id.slice('storyClue'.length))); else if (id === 'storyPuzzle') void startStoryQuestion(); else if (id === 'guide') openPlazaWelcome(); else if (id === 'shepherd') openGarden(); else if (id === 'weapon' || id === 'outfit') openShop(id); else if (id === 'ride') openRideShop(); else if (id === 'pet') openPetShop(); else if (id === 'potion') openPotionShop(); else if (id === 'beauty') openBeauty(); else if (id === 'secretMerchant') openSecretMerchant(); else if (id === 'arena') openArena(); else if (id === 'journey') openAdventureMap(); else if (id === 'room') enterMyRoom(); else if (id === 'roomDecor') openRoom(); else if (id === 'roomExit') { state.room.inside=false; world.enterHomestead(state,true); closeModal(); refresh(); persist(); toast('내 정원으로 돌아왔어요!'); } else if (id === 'village') switchStage(0); else if (id === 'noticeBoard') openNoticeBoard(); else if (id === 'hallGuide') hall.show(); else if (id === 'unit') openVillageBoard(); else if (id === 'next') openNextGate(); else if (id.startsWith('expMonster')) { const monsterId = Number(id.slice('expMonster'.length)), monster = stageMonsters(state.journey.stage)[monsterId]; if (state.forest === 'division' && state.expedition.active && monster) startBattle(monster.type, false, id); } else if (id.startsWith('shadow')) { const mistake = shadowList[Number(id.slice(6))]; if (mistake) void startCurriculumReview(mistake.unit, mistake); } else if (id.startsWith('monster')) { const huntId = Number(id.slice(7)); beginHuntBattle(stageMonsters(journey.stage)[huntId].type, id); } };
   } catch (e) {
     root.innerHTML = `<div class="fallback"><h1>숲을 그리지 못했어요</h1><p>3D 화면을 지원하는 최신 Chrome 또는 Edge에서 열어 주세요. 브라우저의 그래픽 가속이 켜져 있는지도 확인해 주세요.</p><button onclick="location.reload()">다시 열기</button></div>`; throw e;
@@ -1019,8 +1028,9 @@ function openNoticeBoard() {
   rememberMenu('notices', openNoticeBoard);
   if (!state) return;
   const show = (id?: string) => {
-    const notice = VILLAGE_NOTICES.find(n => n.id === id);
-    openModal(title('마을 광장', '운영자 소식') + mathLearningNotice(state!.level) + (notice ? noticeDetailHtml(notice) : noticeListHtml()), 'notice-modal');
+    const notices = VILLAGE_NOTICES.filter(n => !n.christmas || christmasActive());
+    const notice = notices.find(n => n.id === id);
+    openModal(title('마을 광장', '운영자 소식') + christmasNotice() + mathLearningNotice(state!.level) + (notice ? noticeDetailHtml(notice) : noticeListHtml(notices)), 'notice-modal');
     document.querySelectorAll<HTMLButtonElement>('[data-notice]').forEach(button => button.onclick = () => show(button.dataset.notice));
     const back = document.getElementById('notice-back');
     if (back) back.onclick = () => { show(); Array.from(document.querySelectorAll<HTMLButtonElement>('[data-notice]')).find(b => b.dataset.notice === id)?.focus(); };
@@ -2084,6 +2094,7 @@ $<HTMLInputElement>('#import-file').onchange = async e => {
 };
 let saveTick = 0;
 setInterval(() => {
+  refreshChristmas();
   if (state && world.active && !document.hidden && (!($('#modal') as HTMLDialogElement).open || battle || curriculumRun)) {
     sessionElapsed++; state.learning.elapsedSeconds++;
     const limit = state.settings.sessionMinutes * 60;

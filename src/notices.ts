@@ -5,9 +5,12 @@ export interface VillageNotice {
   publishedAt: string; // YYYY-MM-DD
   body: string;
   pinned: boolean;
+  christmas?: boolean;
 }
 
 export const VILLAGE_NOTICES: readonly VillageNotice[] = [
+  { id: 'christmas-2026', title: '🎄 메리 크리스마스! 눈꽃 광장에 놀러 와요', publishedAt: '2026-11-26', pinned: false, christmas: true,
+    body: '산타 모자와 빨간 목도리를 한 뽀짝이를 만나 보세요! 연태쌤과 신비도 크리스마스 차림으로 기다려요.\n\n커다란 트리와 선물 꾸러미, 반짝이는 전구, 사탕 지팡이 무늬 가로등을 찾아보세요. 수학숲 입구에서는 「메리 크리스마스」 간판이 반겨 줘요.\n\n겨울 장식은 2026년 12월 25일 밤 11시 59분까지 만날 수 있어요. 문제와 보상은 평소와 같아요. 화면이 느리면 설정에서 「가벼운 화면」을 켜거나 「계절과 날씨 이벤트」를 꺼 주세요.' },
   {"id": "postbox-2026-11-23", "title": "📮 중앙광장에 「베리숲 우체통」이 생겼어요!", "publishedAt": "2026-11-23", "pinned": true, "body": "이제 베리숲을 만든 선생님께 편지를 보낼 수 있어요!\n\n📮 어디에 있나요?\n중앙광장 「운영자 소식」 공지판 오른쪽에 빨간 우체통이 있어요. 파랑새가 편지를 전해 줘요.\n\n✉ 이런 편지를 보내 주세요\n🐞 고장 났어요 — 이상하게 움직이거나 멈춘 곳\n💡 이렇게 바꿔 주세요 — 있으면 좋겠는 것, 바꾸고 싶은 것\n❤ 좋았어요 — 재미있었던 것, 고마운 마음\n\n🎁 하루 첫 편지를 보내면 편지 선물로 50베리를 받아요.\n\n🔒 약속해요\n편지에는 이름·학교·반·전화번호를 쓰지 마세요. 편지는 선생님께만 가고 친구들에게는 보이지 않아요. 보내기 전에 보호자와 함께 확인해 주세요."},
   {"id": "fishing-donation-2026-11-26", "title": "🎣 낚시터 보상이 늘고, 광장에 「작은 기부함」이 생겼어요!", "publishedAt": "2026-11-26", "pinned": false, "body": "🎣 연못 낚시터\n낚싯대를 던질 때마다 카드와 함께 베리도 낚여요. 보통 15 · 희귀 50 · 영웅 150 · 전설 800베리예요.\n열 번에 한 번쯤은 보물도 올라와요. 베리 주머니, 카드 조각, 달콤 베리물약 중 하나예요.\n보통·희귀·영웅 카드를 한 등급씩 모두 모으면 베리와 새 칭호를 받아요. 「연못 낚시꾼」, 「반짝 물결 낚시꾼」, 「수학자 낚시 명인」이에요.\n\n🍓 작은 기부함\n중앙광장 우체통 왼쪽에 작은 기부함이 생겼어요. 베리를 넣으면 모두가 넣은 베리가 한곳에 모여요.\n합계가 1만 · 10만 · 100만 · 1,000만 베리가 될 때마다 기부함 둘레가 하나씩 꾸며져요.\n넣은 베리는 돌려받을 수 없으니 천천히 골라 주세요. 이름은 기록하지 않아요."},
   {"id":"workshop-2026-11-21","title":"⚗️ 수학 몬스터 보상 대폭 강화 & 물약 공방 오픈!","publishedAt":"2026-11-21","pinned":true,"body":"수학숲이 훨씬 든든해졌어요!\n\n🍓 수학 몬스터 보상 대폭 강화\n힌트 없이 맞힌 수학 몬스터 한 판마다 「내 레벨 × 4」베리를 더 받아요. 레벨 60이면 한 판에 +240베리, 레벨 200이면 +800베리, 레벨 500이면 +2,000베리예요. 여러 판짜리 몬스터는 판 수만큼 더 받아요.\n\n⚗️ 물약 공방 오픈\n상점거리 왼쪽 앞, 이끼 지붕의 작은 공방을 찾아보세요. 수학 정답 한 판마다 「지혜 구슬」이 1개 모여요(최대 60개). 구슬을 가마솥에 넣으면 베리 없이 물약을 만들 수 있어요.\n· 황금 베리물약·쑥쑥 경험물약·긴밤 베리차·별빛 집중물약은 이제 공방에서만 만들어요.\n· 물약 가게의 달콤 베리물약·포근 공부물약은 하루 3병까지 살 수 있어요.\n· 음식과 회복물약은 지금처럼 얼마든지 살 수 있어요.\n· 이미 가방에 있는 물약은 그대로 쓸 수 있어요.\n\n⚔ 사냥 보상 안내\n사냥터마다 하루 첫 100마리는 온전한 보상을 받고, 그 뒤에는 25%만 받아요. 다음 날이 되면 다시 100마리가 채워져요. 수학숲 보상은 줄지 않아요.\n\n사냥으로 힘을 키우고, 수학으로 물약을 만들어 더 멀리 모험해요! 🌳"},
@@ -42,9 +45,9 @@ function text(value: string): string {
 
 export function noticeListHtml(notices: readonly VillageNotice[] = VILLAGE_NOTICES): string {
   const list = sortedNotices(notices);
-  return `<p class="notice-intro">운영자가 전하는 베리숲의 소식이에요.</p><div class="notice-list">${list.length ? list.map(n => `<button class="secondary notice-card" data-notice="${text(n.id)}"><span>${n.pinned ? '<small class="notice-pin">📌 중요 공지</small>' : ''}<strong>${text(n.title)}</strong><time datetime="${text(n.publishedAt)}">${text(n.publishedAt)}</time></span><span aria-hidden="true">›</span></button>`).join('') : '<p class="notice-empty" role="status">아직 등록된 소식이 없어요.</p>'}</div>`;
+  return `<p class="notice-intro">운영자가 전하는 베리숲의 소식이에요.</p><div class="notice-list">${list.length ? list.map(n => `<button class="secondary notice-card" data-notice="${text(n.id)}"${n.christmas ? ' data-christmas-notice' : ''}><span>${n.pinned ? '<small class="notice-pin">📌 중요 공지</small>' : ''}<strong>${text(n.title)}</strong><time datetime="${text(n.publishedAt)}">${text(n.publishedAt)}</time></span><span aria-hidden="true">›</span></button>`).join('') : '<p class="notice-empty" role="status">아직 등록된 소식이 없어요.</p>'}</div>`;
 }
 
 export function noticeDetailHtml(notice: VillageNotice): string {
-  return `<article class="notice-article" aria-labelledby="notice-title"><h3 id="notice-title" tabindex="-1">${text(notice.title)}</h3><time datetime="${text(notice.publishedAt)}">${text(notice.publishedAt)}</time><p class="notice-body">${text(notice.body)}</p></article><button class="secondary wide" id="notice-back">← 공지 목록</button>`;
+  return `<article class="notice-article"${notice.christmas ? ' data-christmas-notice' : ''} aria-labelledby="notice-title"><h3 id="notice-title" tabindex="-1">${text(notice.title)}</h3><time datetime="${text(notice.publishedAt)}">${text(notice.publishedAt)}</time><p class="notice-body">${text(notice.body)}</p></article><button class="secondary wide" id="notice-back">← 공지 목록</button>`;
 }
