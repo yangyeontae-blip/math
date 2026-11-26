@@ -48,6 +48,7 @@ import { VILLAGE_THEMES, villageThemeId, type VillageTheme } from './villages';
 import type { AmbienceScene } from './ambience';
 import { STORYBOOK_LIGHTING, storybookMaterial, seasonalParticleAt } from './storybook-art';
 import { StorybookScene, leafMaterial } from './storybook-scene';
+import { ChristmasOverlay } from './christmas-overlay';
 
 type Entity = { id: string; name: string; x: number; z: number; mesh: T.Group; label: HTMLDivElement };
 export type GuideKind = 'village' | 'roomExit' | 'academyExit' | 'astralQuestion' | 'astralNext' | 'astralExit' | 'world2Gate' | 'world2Beacon' | 'huntingGate' | 'huntingExit' | 'academyGate' | 'academyBook' | 'guide' | 'marketExit' | 'noticeBoard' | 'homesteadGate' | 'shopStreet' | 'homeEditor' | 'homeExit' | 'homeVisitor' | 'discovery' | 'forestWork' | 'trailSeed' | 'trailLamp' | 'berry' | 'monster' | 'shop' | 'journey' | 'next' | 'star' | 'expMonster' | 'roomExit' | 'storyClue' | 'storyPuzzle' | 'storyMailbox' | 'village' | 'villageProject0' | 'villageProject1' | 'villageProject2';
@@ -643,6 +644,8 @@ export class World {
   private keys = new Set<string>(); private stick = { x: 0, z: 0 }; private clock = new T.Clock(); private time = 0; private vy = 0; private grounded = true;
   private particles: { mesh: T.Mesh; v: T.Vector3; life: number }[] = []; private lastSafe = new T.Vector3(0, 0, 8); private follow = new T.Vector3(0, 0, 1);
   private weatherKind: 'none' | 'rain' | 'snow' | 'leaves' | 'fireflies' = 'none';
+  private christmas: ChristmasOverlay | null = null;
+  private ambienceScene: AmbienceScene | null = null;
   private lowQuality = false;
   private storybook = new StorybookScene();
   private walkBlend = 0;
@@ -750,6 +753,12 @@ export class World {
       // 주아 글꼴은 글자 묶음별로 나눠 받아요. 이 간판에 쓰인 글자 묶음을 모두 받은 뒤 다시 그려야 글꼴이 섞이지 않아요.
       void document.fonts.load('700 116px "Maplestory"',text).catch(()=>null).then(()=>{if(!this.signResources.some(r=>r.texture===texture))return;paint();texture.needsUpdate=true;this.renderOnce();});
     }
+    // Seasonal signs can be removed repeatedly without retaining canvas/GPU resources.
+    return () => {
+      plaque.removeFromParent();
+      this.signResources = this.signResources.filter(r => r.texture !== texture);
+      texture.dispose(); material.dispose(); geometry.dispose();
+    };
   }
   private buildVillage(theme: VillageTheme = VILLAGE_THEMES.division) {
     this.scene.background=new T.Color(theme.sky);this.scene.fog=new T.Fog(theme.sky,58,112);
@@ -977,6 +986,7 @@ export class World {
     this.addBerries();
   }
   private clearMap() {
+    this.setChristmas(false);
     this.combatVfx?.dispose(); this.combatVfx = null; this.attackMotion = null; this.poseStop = this.shakeLife = 0;
     const combatBody = this.player.userData.body as T.Group | undefined; if (combatBody) combatBody.rotation.x = combatBody.rotation.y = 0;
     if(this.astralSave)this.astralSave.astralStudy.location=null;this.astralSave=null;this.inAstralStudy=null;
@@ -1668,7 +1678,22 @@ export class World {
   }
   private disposeModel(g: T.Group) { disposeSalonMaterials(g);disposePpojjakiAssets(g);g.traverse(o => { if (o instanceof T.Mesh && !sharedGeometries.has(o.geometry)&&!o.geometry.userData.sharedSalonAsset&&!o.geometry.userData.ppoDisposed && !o.geometry.userData.sharedStorybookAsset) o.geometry.dispose(); }); }
   /** 날씨는 화면 위 필터가 아니라 캐릭터 주변 3D 공간에서 움직여 글자와 지형을 가리지 않아요. */
+  setChristmas(on: boolean) {
+    on = on && (this.isPublicPlaza || this.isPublicMarket);
+    if (on === !!this.christmas) return;
+    this.christmas?.dispose(); this.christmas = null;
+    if (on) this.christmas = new ChristmasOverlay(this.scene, this.lowQuality,
+      new Set<T.Object3D>([this.player, ...this.entities.filter(e => !e.id.startsWith('tree')).map(e => e.mesh), ...this.coins.map(c => c.mesh), ...(this.petModel ? [this.petModel] : []), ...(this.weatherMesh ? [this.weatherMesh] : []), ...(this.astralGateway ? [this.astralGateway] : [])]),
+      { market: this.isPublicMarket, dog: this.isPublicPlaza ? this.hallGuideDog : null, camera: this.camera,
+        characters: ['guide', 'arena'].flatMap(id => this.entities.filter(e => e.id === id).map(e => e.mesh)),
+        sign: parent => this.sign(parent, '메리 크리스마스', 2, 10.8, 16, 6.8, '#a5343d', true) });
+    this.setWeather(this.ambienceScene);
+    this.renderOnce();
+  }
+
   setWeather(scene: AmbienceScene | null) {
+    this.ambienceScene = scene;
+    if (this.christmas) scene = null; // Snow belongs to the disposable event group.
     const kind = !scene || matchMedia('(prefers-reduced-motion: reduce)').matches ? 'none' : scene.weather === 'rain' ? 'rain' : scene.weather === 'snow' ? 'snow' : scene.season === 'autumn' ? 'leaves' : scene.mood === 'night' ? 'fireflies' : 'none';
     this.container.dataset.weatherEffect=kind;
     if (kind === this.weatherKind) return;
@@ -1758,7 +1783,7 @@ export class World {
   }
   private renderOnce() { if (!document.hidden) { this.scene.fog=null;this.storybook.update(this.time,this.player.position,this.petModel?.position??null,this.shadowFloor);this.renderer.render(this.scene, this.camera); } }
   restore(s: Save) { this.setAvatar(s.character, s.outfit, s.weapon, s.outfits[s.outfit], s.weapons[s.weapon], s.ride, s.pet, s.hairstyle, s.face); if(s.astralStudy.location)this.enterAstralStudy(s,{...s.astralStudy.location});else if (s.homestead.inside) this.enterHomestead(s,true); else if (s.room.inside) this.enterRoom(s); else this.loadStage(s); this.quality(s.settings.lowQuality); }
-  quality(low: boolean) { this.lowQuality = low; this.combatVfx?.setQuality({lowQuality:low,reducedMotion:matchMedia('(prefers-reduced-motion: reduce)').matches});this.combatWorld?.setQuality({lowQuality:low,reducedMotion:matchMedia('(prefers-reduced-motion: reduce)').matches});this.storybook.quality(low); const touchDevice = matchMedia('(pointer: coarse)').matches; this.renderer.setPixelRatio(Math.min(devicePixelRatio, low ? (this.container.clientWidth >= 1000 ? .75 : 1) : touchDevice ? 1 : 1.25)); this.renderer.shadowMap.enabled = !low; this.sun.castShadow = !low;this.homeVisitors.forEach((v,i)=>v.entity.mesh.visible=i<(low?2:3)); }
+  quality(low: boolean) { const christmasOn = !!this.christmas; if (christmasOn) this.setChristmas(false); this.lowQuality = low; this.combatVfx?.setQuality({lowQuality:low,reducedMotion:matchMedia('(prefers-reduced-motion: reduce)').matches});this.combatWorld?.setQuality({lowQuality:low,reducedMotion:matchMedia('(prefers-reduced-motion: reduce)').matches});this.storybook.quality(low); const touchDevice = matchMedia('(pointer: coarse)').matches; this.renderer.setPixelRatio(Math.min(devicePixelRatio, low ? (this.container.clientWidth >= 1000 ? .75 : 1) : touchDevice ? 1 : 1.25)); this.renderer.shadowMap.enabled = !low; this.sun.castShadow = !low;this.homeVisitors.forEach((v,i)=>v.entity.mesh.visible=i<(low?2:3)); if (christmasOn) this.setChristmas(true); }
   textInputFocus=false;
   setTextInputFocus(focused:boolean){this.textInputFocus=focused;if(focused)this.clearInput();}
   clearInput() { this.keys.clear(); this.stick = { x: 0, z: 0 }; }
@@ -2008,7 +2033,7 @@ export class World {
     if (this.player.userData.sparkles) this.player.userData.sparkles.rotation.y += dt;
     for (let i = this.particles.length - 1; i >= 0; i--) { const q = this.particles[i]; q.life -= dt; q.v.y -= dt * 5; q.mesh.position.addScaledVector(q.v, dt); q.mesh.scale.setScalar(Math.max(0, q.life)); if (q.life <= 0) { this.scene.remove(q.mesh); this.particles.splice(i, 1); } }
     const target = this.storyActivityFocus ?? (this.active ? p : this.cameraTarget.set(0, 0, -1)); this.follow.lerp(target, 1 - Math.exp(-dt * (this.storyActivityFocus ? 8 : 6))); if (this.active && !this.storyActivityFocus && (this.occlusionTick++ & 7) === 0) this.updateOcclusion();
-    this.camera.position.copy(this.follow).add(this.storyActivityFocus ? this.cameraTarget.set(0, 13, 16) : this.inRoom || this.inAcademy ? ROOM_CAMERA_OFFSET : CAMERA_OFFSET); this.camera.lookAt(this.follow); this.updateGuide();this.plazaVisual.update(dt,this.camera,this.player,this.isPublicPlaza||this.isPublicMarket||this.isPublicForest||this.partyScene,this.active&&!this.storyActivityFocus,this.lowQuality,matchMedia('(prefers-reduced-motion: reduce)').matches);this.scene.fog=null;this.storybook.update(this.time,p,this.petModel?.position??null,this.shadowFloor);updatePlanetaryScenery(this.planetVisual,this.time,this.lowQuality,matchMedia('(prefers-reduced-motion: reduce)').matches);updatePlanetaryScenery(this.astralGateway,this.time,this.lowQuality,matchMedia('(prefers-reduced-motion: reduce)').matches); this.shakeLife = Math.max(0, this.shakeLife - dt); if (this.shakeLife > 0 && !matchMedia('(prefers-reduced-motion: reduce)').matches) { const strength = (this.lowQuality ? .025 : .065) * this.shakeLife / .12; this.camera.position.x += Math.sin(this.time*137)*strength; this.camera.position.y += Math.cos(this.time*109)*strength*.6; } this.combatVfx?.update(dt); this.renderer.render(this.scene, this.camera);
+    this.camera.position.copy(this.follow).add(this.storyActivityFocus ? this.cameraTarget.set(0, 13, 16) : this.inRoom || this.inAcademy ? ROOM_CAMERA_OFFSET : CAMERA_OFFSET); this.camera.lookAt(this.follow); this.updateGuide();this.plazaVisual.update(dt,this.camera,this.player,this.isPublicPlaza||this.isPublicMarket||this.isPublicForest||this.partyScene,this.active&&!this.storyActivityFocus,this.lowQuality,matchMedia('(prefers-reduced-motion: reduce)').matches);this.scene.fog=null;this.storybook.update(this.time,p,this.petModel?.position??null,this.shadowFloor);this.christmas?.update(this.time,p);updatePlanetaryScenery(this.planetVisual,this.time,this.lowQuality,matchMedia('(prefers-reduced-motion: reduce)').matches);updatePlanetaryScenery(this.astralGateway,this.time,this.lowQuality,matchMedia('(prefers-reduced-motion: reduce)').matches); this.shakeLife = Math.max(0, this.shakeLife - dt); if (this.shakeLife > 0 && !matchMedia('(prefers-reduced-motion: reduce)').matches) { const strength = (this.lowQuality ? .025 : .065) * this.shakeLife / .12; this.camera.position.x += Math.sin(this.time*137)*strength; this.camera.position.y += Math.cos(this.time*109)*strength*.6; } this.combatVfx?.update(dt); this.renderer.render(this.scene, this.camera);
   }
   private updateGuide() {
     const target = this.guideTarget;
