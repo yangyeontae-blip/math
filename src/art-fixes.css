@@ -1,0 +1,32 @@
+/* 2026-11-26 그림 깨짐 수리(A1). 모양 방향은 그대로 두고 겹침·이중 틀·안 읽히는 글씨만 고쳐요.
+   전/후 화면: screenshots/before_art_2026-11-26/ · screenshots/after_art_2026-11-26/ */
+
+/* 1. 양피지 화면(낚시터·사냥터·물약 공방·기부함·모험학교)은 흰 기본 틀 없이 한 겹으로 보여요. */
+#modal:is(.fishing-modal,.potion-workshop-modal,.donation-modal):not([data-skin]),
+#modal.academy-modal:has(#modal-content > :is(.sb-paper,.career-sheet)){background:transparent!important;border:0!important;outline:0!important;box-shadow:none!important;padding:0!important}
+#modal:is(.fishing-modal,.potion-workshop-modal,.donation-modal):not([data-skin]) #modal-content,
+#modal.academy-modal:has(#modal-content > :is(.sb-paper,.career-sheet)) #modal-content{background:transparent!important;padding:0!important;box-shadow:none!important;border:0!important}
+#modal:is(.fishing-modal,.potion-workshop-modal,.donation-modal,.academy-modal) .modal-navigation:has(#modal-back[hidden]){display:none}
+#modal:is(.fishing-modal,.potion-workshop-modal,.donation-modal,.academy-modal) .modal-navigation #modal-back{background:#fffaf0;border:2px solid #e2cf9f}
+#modal:is(.fishing-modal,.potion-workshop-modal,.donation-modal).is-open,#modal:is(.fishing-modal,.potion-workshop-modal,.donation-modal){filter:drop-shadow(0 18px 40px #244d4540)}
+
+/* 2. 복잡한 머리 그림 위 글씨는 종이 띠 위에 올려 읽히게 해요. */
+.sb-hero-text{background:linear-gradient(90deg,#fffaf0e6,#fffaf0b3 70%,#fffaf000);border-radius:0 0 22px 0;padding-right:28px}
+.sb-hero-text p{color:#2e4a35;text-shadow:none}
+.academy-modal .career-sheet:not(.sb-paper) .career-heading :is(small,p,span,.eyebrow){text-shadow:0 0 3px #fffaf0,0 0 8px #fffaf0,0 0 14px #fffaf0,0 1px 0 #fff;color:#4a3a22}
+
+/* 3. 카드가 양피지 안쪽 여백 안에 들어오게 해서 양옆 장식이 잘리지 않게 해요. */
+.sb-paper .sb-cards{padding-inline:22px}
+.potion-workshop{overflow-x:clip}
+.potion-workshop .pw-recipes{padding-inline:18px}
+
+/* 4. 낮은 가로 화면(폰을 눕힌 화면)에서는 HUD 카드를 작게 해서 숲이 보이게 해요. */
+@media (max-height:500px) and (orientation:landscape){
+  #game #hud .player-card{transform:scale(.74);transform-origin:top left}
+  #game #hud .wallet{transform:scale(.8);transform-origin:top center}
+  #game #hud .brand-mini{transform:scale(.8);transform-origin:top center}
+}
+
+/* 5. 낚시터 등급 카드: 한 줄에 한 장씩 넓게 놓아 글이 그림과 겹치지 않게 해요. */
+.fishing-paper .fishing-odds.sb-cards{grid-template-columns:1fr!important}
+.fishing-odds .sb-card-body small{display:block}

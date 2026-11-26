@@ -163,7 +163,7 @@
     "src/feedback-ui.css": "44efc3db48b0d28985967e4579375d0259fa5157e4466f1667694062e47f4868",
     "tests/feedback-upgrade.test.ts": "264e29e4c6b45231a2050af84025c00e455499342ba3d8f31dc95542db623d27",
     "e2e/feedback-upgrade.spec.mjs": "2b394cc8a6fcba1c31dcf19dd972c849ab12040d4ce3c26d08b0a1bbdff81a97",
-    "src/character-stats.ts": "11cc4e7d7431d53b5640c30e527a2a61d77bd21a971b7320894db17e36631745",
+    "src/character-stats.ts": "7a6725eae36a31761b0efb6f3e8e4ff550f8a8f97ba0e16004ce58b6f6fe9463",
     "src/operator-access.ts": "06bc1b039dc487cbb92e4205e78518d01a7441619dbc5c2629ce139438e3038d",
     "src/operator-checkpoint.ts": "fc6c0ff1b6b2f744716241093a13af89f640b7006852b9350b2f0162bb0712c4",
     "tests/growth-status.test.ts": "339c36cd2d28f19803ae158489578eb1338e96d57b45cc7445e3bda3c24dc936",

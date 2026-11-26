@@ -116,6 +116,7 @@ import './navigation.css';
 import './cozy-ui.css';
 import './storybook-ui.css';
 import './identity-ui.css';
+import './art-fixes.css';
 import { toolSpec, toolHtml, adjustTool } from './learning-tools';
 
 const CLIENT_BUILD = '2026-11-20.title-garden.1';
@@ -126,7 +127,7 @@ const root = $('#game');
 const COPYRIGHT_OWNER = '양연태';
 const COPYRIGHT_YEAR = 2026;
 root.innerHTML = uiLabel(`<div id="world" aria-label="베리숲 3D 마을"></div><div id="hud" hidden>
-  <header class="topbar"><div class="player-card"><span class="level-badge" id="level">1</span><div><strong id="nickname"></strong><div class="career-badges"><span id="career-title" class="career-title" aria-label="현재 직업">새싹 모험가</span><span id="guardian-title" class="guardian-title" hidden>뽀짝이의 수호자</span></div><span id="level-milestone" class="level-milestone" hidden></span><div class="xp-track"><div id="xp-fill"></div></div><small id="xp-text"></small><span id="save-status" class="save-status" role="status" aria-live="polite">✓ 저장됨</span></div></div><div class="brand-mini">베리의 숲 <span>모험학교</span></div><div class="top-actions"><span class="wallet"><img class="wallet-berry" src="${import.meta.env.BASE_URL}art/berry-watercolor.png" alt="" width="40" height="40"> <b id="berries">0</b><span>베리</span></span><button id="inventory" class="icon-button" aria-label="내 가방">🎒</button><button id="stage-map" class="icon-button" aria-label="지도">🗺</button><button id="settings" class="icon-button" aria-label="설정과 저장">⚙</button></div></header>
+  <header class="topbar"><div class="player-card"><span class="level-badge" id="level">1</span><div><strong id="nickname"></strong><div class="career-badges"><span id="career-title" class="career-title" aria-label="현재 직업">새싹 모험가</span><span id="guardian-title" class="guardian-title" hidden>뽀짝이의 수호자</span></div><span id="level-milestone" class="level-milestone" hidden></span><div class="xp-track"><div id="xp-fill"></div></div><small id="xp-text"></small><span id="save-status" class="save-status" role="status" aria-live="polite">✓ 저장됨</span></div></div><div class="brand-mini">베리의 숲 <span>모험학교</span></div><div class="top-actions"><span class="wallet"><img class="wallet-berry" src="${import.meta.env.BASE_URL}art/berry-watercolor-160.webp" alt="" width="40" height="40"> <b id="berries">0</b><span>베리</span></span><button id="inventory" class="icon-button" aria-label="내 가방">🎒</button><button id="stage-map" class="icon-button" aria-label="지도">🗺</button><button id="settings" class="icon-button" aria-label="설정과 저장">⚙</button></div></header>
   <aside class="quest-card" hidden aria-hidden="true"><button id="quest-toggle" class="quest-toggle" aria-expanded="true" aria-controls="quest-body"><span>🌿 지금 할 일</span><span class="quest-chevron" aria-hidden="true">⌃</span><span class="quest-peek" id="quest-peek"></span></button><div id="quest-body" class="quest-body"><strong id="quest-title">베리숲에 오신 걸 환영해요</strong><div id="quest-list"></div><button id="daily-open" class="text-button codex-open daily-open">📅 오늘의 미션<i class="daily-dot" aria-hidden="true"></i></button><button id="boss-open" class="text-button codex-open">🐉 우리 반 협동 보스</button><button id="codex-open" class="text-button codex-open">📖 모험 도감</button></div></aside>
   <div class="location-pill">❋ 베리숲 마을 <span>평화로운 오후</span></div>
   <div class="equipment-card"><span id="weapon-name"></span><small id="weapon-effect"></small></div>
@@ -669,7 +670,7 @@ function showStart() {
   stopAmbienceCycle(); if (world!) { world.setActive(false); } disposeStartPreviews(); $('#hud').hidden = true; $('#start-screen').hidden = false;
   $('#start-screen').innerHTML = `<section class="welcome-card">
     <div class="start-story"><div class="start-wordmark"><span class="logo-mark" aria-hidden="true">${uiIcon('leaf')}</span> BERRY FOREST · 모험 수첩</div>
-      <span class="eyebrow">작은 모험, 자라는 생각</span><img class="start-berry" src="${import.meta.env.BASE_URL}art/berry-watercolor.png" alt="" aria-hidden="true" width="120" height="120"><h1>베리의 숲<br><span>모험학교</span></h1>
+      <span class="eyebrow">작은 모험, 자라는 생각</span><img class="start-berry" src="${import.meta.env.BASE_URL}art/berry-watercolor-160.webp" alt="" aria-hidden="true" width="120" height="120"><h1>베리의 숲<br><span>모험학교</span></h1>
       <p class="intro">수학으로 작은 약속을 풀어 보세요.</p>
       <div class="start-trail" aria-hidden="true">${uiIcon('compass')}<span></span>${uiIcon('book')}<span></span>${uiIcon('home')}</div>
       <p class="start-story-note">발견하고 · 생각하고 · 함께 자라는 숲<br>1~6학년, 나의 속도로 걸어요.</p>
@@ -2100,7 +2101,7 @@ if (import.meta.env.PROD && 'serviceWorker' in navigator && window.isSecureConte
 }
 
 if ((import.meta as unknown as { env?: { DEV?: boolean; VITE_BROWSER_TEST?: string } }).env?.DEV || import.meta.env.VITE_BROWSER_TEST === '1') {
-  const devApi = { getWorld:()=>world, openFishing, openDonation, careerSchool:()=>career.showSchool(),careerPractice:()=>career.showPractice(),careerRecords:()=>career.showRecords(),huntingMenu:()=>career.showHunting(), openArena, beginHuntBattle, openStageMap, openSettings, openDaily, openInventory, openShop, openPetShop, openGuide, openNotebook, openRoom, openCurriculumUnit, switchStage, refresh, getState: () => state, begin, openReport, openBeauty, persist, openHomestead, enterHomeGarden, closeModal, testBattleQuestion: () => battle ? ({ answer: formatScaled(battle.encounter.question.answer, battle.encounter.question.places?.[2] ?? 0), remainder: battle.encounter.question.remainder }) : null, testHomeEditor: () => { if (state) showHomeEditor(state, homesteadHooks(), 0); } };
+  const devApi = { getWorld:()=>world, openFishing, openDonation, openAdventureMap, openPotionWorkshop, careerSchool:()=>career.showSchool(),careerPractice:()=>career.showPractice(),careerRecords:()=>career.showRecords(),huntingMenu:()=>career.showHunting(), openArena, beginHuntBattle, openStageMap, openSettings, openDaily, openInventory, openShop, openPetShop, openGuide, openNotebook, openRoom, openCurriculumUnit, switchStage, refresh, getState: () => state, begin, openReport, openBeauty, persist, openHomestead, enterHomeGarden, closeModal, testBattleQuestion: () => battle ? ({ answer: formatScaled(battle.encounter.question.answer, battle.encounter.question.places?.[2] ?? 0), remainder: battle.encounter.question.remainder }) : null, testHomeEditor: () => { if (state) showHomeEditor(state, homesteadHooks(), 0); } };
   Object.assign(window, { __berry: devApi }); void import('./dev-audit').then(module => module.installAudit(devApi as never));
 }
 

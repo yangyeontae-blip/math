@@ -8,7 +8,7 @@ export function renderCharacterStats(s:Save,current?:HuntSnapshot|null){
  const v=characterStats(s,current);
  return `<section class="character-stats" aria-label="나의 모험가 상태">
   <button class="close status-close" data-close aria-label="상태창 닫기">×</button>
-  <header class="status-header"><div class="status-emblem" aria-hidden="true"><img src="${import.meta.env.BASE_URL}art/berry-watercolor.png" alt="" width="46" height="46"><span>Lv. ${s.level}</span></div><div><p class="eyebrow">나의 모험가 수첩</p><h2>${esc(s.nickname)}</h2><p class="status-job">${esc(v.job)}</p></div></header>
+  <header class="status-header"><div class="status-emblem" aria-hidden="true"><img src="${import.meta.env.BASE_URL}art/berry-watercolor-160.webp" alt="" width="46" height="46"><span>Lv. ${s.level}</span></div><div><p class="eyebrow">나의 모험가 수첩</p><h2>${esc(s.nickname)}</h2><p class="status-job">${esc(v.job)}</p></div></header>
   <dl class="character-stat-grid">
    <div><dt>⚔ 사냥 공격력</dt><dd>${v.attack.toLocaleString()}</dd></div>
    <div><dt>♥ ${v.hp===null?'최대 체력':'현재 / 최대 체력'}</dt><dd>${v.hp===null?'':v.hp.toLocaleString()+' / '}${v.maxHp.toLocaleString()}</dd></div>
