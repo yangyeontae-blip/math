@@ -107,9 +107,9 @@
     "src/world-two-models.ts": "1556cdc00a679e8e4565fb1f351db4037f00be9c0084544e1d7a69bea282e5cf",
     "tests/world-two.test.ts": "17ab9400f3823241f60a3b559a8947061be0c2f5960814fecae81e35f34f9637",
     "e2e/world-two.spec.mjs": "8e8337437a09397031bd1b3f09d00d9aedc64683916efe696bed2a91e5b01e00",
-    "src/plaza-protocol.ts": "78c97c84efe9f61c759fce06b85deb281d4d1c48640d2f84b9873fc04fea80b1",
+    "src/plaza-protocol.ts": "85303b47beb86a8f5b8aec762381a4f0537d46d6c5b1b98efe785fbeea1b112e",
     "src/plaza-identity.ts": "761b6765d77bb67fb641e11c211487c26bd95dab9d95d6bc751cdff33a32e880",
-    "src/plaza-client.ts": "59cdec804517ac513c153d939febc4a31599a21bda051ceabf4b25ba492ac338",
+    "src/plaza-client.ts": "f861a28fdd0b2e3e7b3803524e1cd4a20a2a015a78e515819c9dec9005ced2e7",
     "src/plaza-controller.ts": "27e4cc256c19f297ba4c466deba95c2070407eac935c3c322879b9f4cdd38236",
     "src/plaza-world.ts": "5f04d1479b76fdc069282d7002e0285aec832d9dda21799dfa80713a3d8e4b0a",
     "src/plaza-endpoint.ts": "8209e54c95cbd78b65a44eefd6bfd658759567b7d8af6af4a2e87a102249e790",
@@ -118,7 +118,7 @@
     "e2e/plaza.spec.mjs": "a7ee29c6922db6ee43abac8e352727692e0f6db5b79715151fa2d3d4ab66cea0",
     "e2e/plaza-server.mjs": "cd016309ab2ef4b00c50c706f47a120efd73e6ad09e25646404a2aeb90f5d16b",
     "scripts/build-plaza.mjs": "cd9262c9c77bdb2ed4bb6589c14f3d211405f5b8f9a37b815832200d7c15538d",
-    "realtime/index.mjs": "5e0f66ca88741d5e5dfc0e3cf5eb7eb82009613318f9b1f5e689bb7ae684fd2f",
+    "realtime/index.mjs": "f1285e7f126dadbc9b90caa4518b670cb57788ec391c159f133d81853aa89bb7",
     "realtime/wrangler.jsonc": "f5a20cb84d35d340acf6afb3302bd49985272666cbc171408495f562d33f0cae",
     "realtime/plaza.test.mjs": "4d01371030aa24c45d7ace93fa0aa77387d492ad192e8ea38f1057ffed1c5b07",
     "src/world-two-planet.ts": "71cf7902894fd36bdeb3476930a0363976cd342a50f177491402633f308eeb0d",
@@ -156,7 +156,7 @@
     "public/art/skyward-weapon-36.svg": "f5a25d53ad070cf4a44a8697450ee5ef91193ba5bd8f728770c24b29b7b7bf07",
     "public/art/skyward-weapon-37.svg": "0b79582b7349629dfba6c34f03f729c971a4659f043f880fb27a8d098e660de6",
     "public/art/skyward-weapon-38.svg": "46ae0f4ff502186fbd37fed4613fe3d0f3d9cb4d28ffd810389d1374e97aec34",
-    "src/titles.ts": "8e85d8ec8c6d0f12325a537e6e3e8771ba1e784f6303a7ab54064741a1687b60",
+    "src/titles.ts": "ded03d76814120ffd5c87a914cc0c5bc2aef197dacf519370f080616d22b77ea",
     "src/title-view.ts": "3c30a66ef51ad2e5c208c9f918a2090db9a0cd9e3ff1fbc7c81cf7a2095f91f4",
     "src/safe-landing.ts": "c3bb10a850a4946528cf1dfc9086a40af18c84e6743175526dd990a13cf83991",
     "src/display-controls.ts": "e9ad98305414809c60a8dc5d41de3380a367d6c7b77d30867bbc095b8655f8bb",
@@ -537,9 +537,9 @@
     "e2e/career-math-helpers.mjs": "038d2b9e440992d9738a06f3a667a6a02714acfd59e84b041c457fbdf355b45d",
     "realtime/trade.mjs": "fef07fe652c8162e8a69bdffb8b9cd7132cc159f04340d7e450a4a8c3c6a85a1",
     "src/trade.ts": "ca97f6fe629a0b68cc94c20fe28898b5cf8ab0db04142437ecbbef89418c8c8c",
-    "src/identity-ui.css": "b4098062f8f5f389aa7ffe49b2bf8849e219600d9bd0958c4ad1c17f408b0ff7",
+    "src/identity-ui.css": "d7edec9885f560b76ef5c868124f65ccaf3a454ff46aff91fe4f935eb87bfd7a",
     "src/name-font.ts": "40da51c291019b544c7affa8dbfbf40c49877c1e00f9433c26e62d2223162bf7",
-    "src/title-aura.ts": "dc047cd235eaf28d3cd349a82bace9420d106beec870f52060438fcd4461527e",
+    "src/title-aura.ts": "85807a647ec276f391520c8ea444198ef0383e04d5259c43f43af3c31831124a",
     "tests/title-aura.test.ts": "b8028cfe82d561e849d98eafc2b988617a1446b05c70b62c327a85f816324a31",
     "src/potion-workshop.ts": "e0137c9009ac66ca8629a89edd217e83561a30c52b6bfbc5ec9c36bd687cc99e",
     "src/potion-workshop-view.ts": "54464fdf5a5b2531141103045cb9f61ed5549c5a416d0c8dd4ced236f6c3c81e",
@@ -696,5 +696,5 @@
     "public/art/workshop/potion-5.webp": "259df8df6fde51c800382dd497e4aea5555a911a4cf407ce8cd0cca1066f84a8",
     "public/art/workshop/recipe-card.webp": "2c7e6fce916e282edfe071b349732df6ab280cc7c37531df1fcde5a9c42c7556"
   },
-  "generation": "4bd2df078a7e7caf6250c5350730c0ed70e7d9ebfd9e3f63ce711d05b539bc79"
+  "generation": "e101d65adf1539cd879c1a1ea6e734fa3b37ab83c1d775ff9007399fd7dc16ac"
 }

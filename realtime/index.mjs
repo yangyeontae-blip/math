@@ -5,7 +5,7 @@ import {parseForestRoom,forestRoomKey,presenceIdFromHash} from '../src/forest-ro
 export {ForestParty} from './party.mjs';
 import {PlazaSocial} from './social.mjs';
 import {DurableObject} from 'cloudflare:workers';
-import {PLAZA_VERSION,PLAZA_ROOM,PLAZA_CAPACITY,PLAZA_AVATAR_CATALOG,PLAZA_TITLE_CATALOG,compatibleTitleProfile,compatiblePlazaProfile,parsePlazaProfile,parsePlazaPose,isPlazaEmote} from '../src/plaza-protocol.ts';
+import {PLAZA_VERSION,PLAZA_ROOM,PLAZA_CAPACITY,PLAZA_AVATAR_CATALOG,PLAZA_TITLE_CATALOG,titleCatalogOf,compatibleTitleProfile,compatiblePlazaProfile,parsePlazaProfile,parsePlazaPose,isPlazaEmote} from '../src/plaza-protocol.ts';
 const MARKET_ROOM='berry-forest-market-street';
 import {handleTrade,closeTradesFor} from './trade.mjs';
 const ORIGINS=new Set(['https://yangyeontae-blip.github.io','https://berry-forest-school.vercel.app','https://berry-forest.yangyeontae.workers.dev','https://berry-forest-school.yangyeontae.chatgpt.site','capacitor://localhost','ionic://localhost','https://localhost','http://localhost']);
@@ -76,7 +76,7 @@ export class SharedPlaza extends DurableObject {
    if(s.joining)return;s.joining=true;ws.serializeAttachment(s);
    await this.social.prepare(s,m);const profile=parsePlazaProfile(m.profile,this.social.role(s)==='operator'),pose=parsePlazaPose(m.pose,!!s.forestRoom);
    if(!profile||!pose){this.send(ws,{type:'error',code:'profile'});ws.close(1008,'profile');return;}
-   if(s.forestRoom&&s.chatEnabled){s.id=presenceIdFromHash(s.chatSender);for(const [old,other] of this.sessions())if(old!==ws&&other.joined&&other.id===s.id)try{old.close(1000,'reconnected');}catch{}}s.joined=true;s.joining=false;s.profile=profile;s.pose=pose;s.moveAt=now;s.profileAt=now;s.batchedPoses=m.batchedPoses===true;s.partyInvites=m.partyInvites===true&&Number.isInteger(m.grade)&&m.grade>=1&&m.grade<=6&&s.chatEnabled;s.grade=s.partyInvites?m.grade:null;s.titleSelection=m.titleSelection===true;s.titleCatalog=m.titleCatalog===PLAZA_TITLE_CATALOG?PLAZA_TITLE_CATALOG:1;s.avatarCatalog=m.salonCatalog===true||m.avatarCatalog===PLAZA_AVATAR_CATALOG?PLAZA_AVATAR_CATALOG:m.avatarCatalog===2?2:1;
+   if(s.forestRoom&&s.chatEnabled){s.id=presenceIdFromHash(s.chatSender);for(const [old,other] of this.sessions())if(old!==ws&&other.joined&&other.id===s.id)try{old.close(1000,'reconnected');}catch{}}s.joined=true;s.joining=false;s.profile=profile;s.pose=pose;s.moveAt=now;s.profileAt=now;s.batchedPoses=m.batchedPoses===true;s.partyInvites=m.partyInvites===true&&Number.isInteger(m.grade)&&m.grade>=1&&m.grade<=6&&s.chatEnabled;s.grade=s.partyInvites?m.grade:null;s.titleSelection=m.titleSelection===true;s.titleCatalog=titleCatalogOf(m.titleCatalog);s.avatarCatalog=m.salonCatalog===true||m.avatarCatalog===PLAZA_AVATAR_CATALOG?PLAZA_AVATAR_CATALOG:m.avatarCatalog===2?2:1;
    ws.serializeAttachment(s);
    this.send(ws,{type:'welcome',id:s.id,room:PLAZA_ROOM,role:this.social.role(s),operatorUntil:s.operatorUntil,features:{partyInvites:true,chat:!!s.chatEnabled,operator:true,titleSelection:true,titleCatalog:PLAZA_TITLE_CATALOG,avatarCatalog:PLAZA_AVATAR_CATALOG},players:this.sessions().filter(([other,a])=>other!==ws&&a.joined).map(([,a])=>this.public(a,s.avatarCatalog??1,!!s.titleSelection,s.titleCatalog??1)).slice(0,s.batchedPoses?PLAZA_CAPACITY-1:63)});
    this.broadcast({type:'upsert',player:this.public(s)},ws);await this.social.welcome(ws,s);return;

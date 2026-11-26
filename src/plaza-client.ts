@@ -1,7 +1,7 @@
 import {parsePartyInvitation,type PartyInvitation} from './party-lobby';
 import {forestRoomKey,type ForestRoom} from './forest-room';
 import {parseChatMessage,type PlazaChatMessage,type PlazaChatMute,type PlazaRole} from './plaza-social';
-import {PLAZA_VERSION,PLAZA_ROOM,PLAZA_CAPACITY,PLAZA_AVATAR_CATALOG,PLAZA_TITLE_CATALOG,compatibleTitleProfile,compatiblePlazaProfile,parsePlazaPlayer,parsePlazaPose,isPlazaEmote,type PlazaProfile,type PlazaPose,type PlazaPlayer,type PlazaEmote} from './plaza-protocol';
+import {PLAZA_VERSION,PLAZA_ROOM,PLAZA_CAPACITY,PLAZA_AVATAR_CATALOG,PLAZA_TITLE_CATALOG,titleCatalogOf,compatibleTitleProfile,compatiblePlazaProfile,parsePlazaPlayer,parsePlazaPose,isPlazaEmote,type PlazaProfile,type PlazaPose,type PlazaPlayer,type PlazaEmote} from './plaza-protocol';
 export type PlazaConnection='offline'|'connecting'|'online'|'retrying'|'nickname'|'full';
 export type TradeMessage={type:'trade-invite'|'trade-pending'|'trade-state'|'trade-done'|'trade-closed';[key:string]:unknown};
 type Hooks={trade?:(message:TradeMessage)=>void;invitation?:(invite:PartyInvitation)=>void;inviteStatus?:(message:string)=>void;status:(status:PlazaConnection,count:number)=>void;player:(player:PlazaPlayer)=>void;leave:(id:string)=>void;clear:()=>void;emote:(id:string,emote:PlazaEmote)=>void;social?:(ready:boolean,role:PlazaRole,expiresAt:number,verified?:boolean)=>void;chat?:(messages:PlazaChatMessage[],replace:boolean)=>void;speech?:(playerId:string|null,message:PlazaChatMessage)=>void;removed?:(id:string)=>void;chatStatus?:(until:number)=>void;chatError?:(reason:string)=>void;mutes?:(mutes:PlazaChatMute[])=>void};
@@ -60,7 +60,7 @@ export class PlazaClient {
   if(raw==='pong'){this.lastPong=Date.now();return;}
   if(typeof raw!=='string'||raw.length>200000)return;let m:any;try{m=JSON.parse(raw);}catch{return;}if(!m||typeof m!=='object')return;
   if(m.type==='welcome'&&m.room===PLAZA_ROOM&&typeof m.id==='string'&&/^[a-f0-9-]{36}$/.test(m.id)&&Array.isArray(m.players)&&m.players.length<=PLAZA_CAPACITY){
-   this.invitationsEnabled=m.features?.partyInvites===true;this.titleCatalog=m.features?.titleCatalog===PLAZA_TITLE_CATALOG?PLAZA_TITLE_CATALOG:1;this.titleSelection=m.features?.titleSelection===true;this.serverCatalog=m.features?.avatarCatalog===PLAZA_AVATAR_CATALOG?PLAZA_AVATAR_CATALOG:2;this.chatReady=m.features?.chat===true;this.role=m.role==='operator'?'operator':'player';this.hooks.social?.(this.chatReady,this.role,Number(m.operatorUntil)||0,true);this.selfId=m.id;this.attempt=0;this.seq=0;this.lastPong=Date.now();this.peers.clear();this.hooks.clear();
+   this.invitationsEnabled=m.features?.partyInvites===true;this.titleCatalog=titleCatalogOf(m.features?.titleCatalog);this.titleSelection=m.features?.titleSelection===true;this.serverCatalog=m.features?.avatarCatalog===PLAZA_AVATAR_CATALOG?PLAZA_AVATAR_CATALOG:2;this.chatReady=m.features?.chat===true;this.role=m.role==='operator'?'operator':'player';this.hooks.social?.(this.chatReady,this.role,Number(m.operatorUntil)||0,true);this.selfId=m.id;this.attempt=0;this.seq=0;this.lastPong=Date.now();this.peers.clear();this.hooks.clear();
    for(const item of m.players){const p=parsePlazaPlayer(item,!!this.scene);if(p&&p.id!==this.selfId){this.peers.set(p.id,p);this.hooks.player(p);}}this.report();return;
   }
   if(m.type==='correction'){this.lastSent='';this.lastPose=null;this.poseAt=0;return;}

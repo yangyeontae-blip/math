@@ -62,7 +62,8 @@ class Sculpture {
 
 function themeFor(t:TitleDefinition):Theme{
   if(t.id==='math-friend')return 'aurora';
-  if(t.id==='level-1000')return 'crown';
+  if(t.id==='level-1000'||t.id==='level-2000'||t.id==='rich-100m')return 'crown';
+  if(t.style==='wealth')return 'compass';
   if(t.id==='level-500')return 'spirit';
   if(t.id==='level-300')return 'prism';
   if(t.id==='level-100')return 'constellation';

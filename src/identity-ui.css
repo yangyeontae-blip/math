@@ -58,6 +58,15 @@
 .chosen-title[data-title-theme=study] .title-sparks>i{border:1px solid #9bc1d3;background:#effaff;width:5px;height:5px}
 .chosen-title[data-title-theme=explorer]{--title-ink:#7c7141;--title-accent:#b9a363;--title-edge:#d3c591;--title-paper:#f9f6e4;--title-soft:#e8e0b7}
 .chosen-title[data-title-theme=explorer] .title-sparks>i{width:4px;height:7px;border-radius:70% 0;background:#b2b97a}
+.chosen-title[data-title-theme=vip]{--title-ink:#8c1f45;--title-accent:#d4456f;--title-edge:#e9b14a;--title-paper:#fff0f3;--title-soft:#f7c6d3;background:linear-gradient(120deg,#fff7e3,#ffe3ec,#fff2c9,#ffe3ec)}
+.chosen-title[data-title-theme=vip]:after{inset:-4px -6px;border:1.5px solid #e9b14a;border-radius:16px}
+.chosen-title[data-title-theme=vip]>b{border-radius:9px;background:linear-gradient(135deg,#ffd6e2,#e2557f 55%,#a8264e);color:#fff4c9}
+.chosen-title[data-title-theme=vip] .title-sparks>i{width:6px;height:6px;transform:rotate(45deg);background:#e9b14a;box-shadow:0 0 6px #ffd98a}
+.chosen-title[data-title-theme=vip] .title-sparks>i:nth-child(even){background:#e2557f}
+.chosen-title[data-title-theme=wealth]{--title-ink:#7a5a12;--title-accent:#d9a62e;--title-edge:#e8c66a;--title-paper:#fff6d6;--title-soft:#f6dc8c;background:linear-gradient(120deg,#fffbe9,#ffefb8,#fff6d6)}
+.chosen-title[data-title-theme=wealth]>b{border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff6c9,#f0c24a 70%,#c8921f);color:#8a5d0f}
+.chosen-title[data-title-theme=wealth] .title-sparks>i{width:6px;height:6px;border-radius:50%;background:#f2c94c;box-shadow:0 0 5px #ffe08a}
+.chosen-title[data-title-theme=wealth] .title-sparks>i:nth-child(3n){background:#e86a8a}
 .chosen-title[data-title-theme=scholar]{--title-ink:#706a9a;--title-accent:#a498c9;--title-edge:#cfc9e5;--title-paper:#f5f0ff;--title-soft:#dbd9ef;background:linear-gradient(120deg,#f4faee,#eeeefe,#fff3df)}
 .chosen-title[data-title-theme=scholar]:after{border-color:#b9cfbb #c6b5da #e1c993 #b2ccd8}
 .plaza-nameplate .chosen-title{max-width:100%;padding:4px 9px 4px 5px;font-size:14px;line-height:1.5}
