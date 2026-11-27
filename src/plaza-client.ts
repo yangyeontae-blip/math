@@ -6,8 +6,9 @@ export type PlazaConnection='offline'|'connecting'|'online'|'retrying'|'nickname
 export type TradeMessage={type:'trade-invite'|'trade-pending'|'trade-state'|'trade-done'|'trade-closed';[key:string]:unknown};
 type Hooks={trade?:(message:TradeMessage)=>void;invitation?:(invite:PartyInvitation)=>void;inviteStatus?:(message:string)=>void;status:(status:PlazaConnection,count:number)=>void;player:(player:PlazaPlayer)=>void;leave:(id:string)=>void;clear:()=>void;emote:(id:string,emote:PlazaEmote)=>void;social?:(ready:boolean,role:PlazaRole,expiresAt:number,verified?:boolean)=>void;chat?:(messages:PlazaChatMessage[],replace:boolean)=>void;speech?:(playerId:string|null,message:PlazaChatMessage)=>void;removed?:(id:string)=>void;chatStatus?:(until:number)=>void;chatError?:(reason:string)=>void;mutes?:(mutes:PlazaChatMute[])=>void};
 // 위치 전송은 Cloudflare 무료 요청 한도를 가장 많이 써요.
-// 0.4초에 한 번까지만 보내고, 아주 조금 움직인 것은 1.5초 동안 모았다가 보내요.
-export const POSE_SEND_MS=380,POSE_SETTLE_MS=1500,POSE_MIN_STEP=.15,POSE_MIN_TURN=.08;
+// 1초에 한 번까지만 보내고, 아주 조금 움직인 것은 1.5초 동안 모았다가 보내요.
+// (2026-11-27 인디스쿨 공유 뒤 하루 10만 요청을 넘어 0.38초→1초로 늘림. 다른 아이 모습은 plaza-world가 부드럽게 이어 줘요.)
+export const POSE_SEND_MS=1000,POSE_SETTLE_MS=1500,POSE_MIN_STEP=.15,POSE_MIN_TURN=.08;
 export function shouldSendPose(last:PlazaPose|null,next:PlazaPose,lastAt:number,now:number){
  if(!last)return true;const elapsed=now-lastAt;if(elapsed<POSE_SEND_MS)return false;
  const step=Math.hypot(next.x-last.x,next.y-last.y,next.z-last.z),turn=Math.abs(Math.atan2(Math.sin(next.angle-last.angle),Math.cos(next.angle-last.angle)));
