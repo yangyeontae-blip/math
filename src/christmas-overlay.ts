@@ -17,7 +17,6 @@ export class ChristmasOverlay {
   private bulbs: T.MeshStandardMaterial[] = [];
   private snow: T.InstancedMesh;
   private dummy = new T.Object3D();
-  private treeDecor?: T.Group;
   private camera: T.Camera;
   private reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -67,20 +66,72 @@ export class ChristmasOverlay {
       }
       this.batch(accessory); this.attachments.push(accessory);
     });
-    const loader = new T.TextureLoader(), maps = new Map<string, T.Texture>();
-    const mapFor = (name: string) => {
-      let map = maps.get(name);
-      if (!map) { map = loader.load(`${import.meta.env.BASE_URL}art/christmas/${name}.webp`); map.colorSpace = T.SRGBColorSpace; this.textures.push(map); maps.set(name, map); }
-      return map;
+    // 2026-11-27: 평평한 그림(스프라이트) 대신 광장 나무와 같은 로우폴리 3D 모형으로 만들어요.
+    const flat = (color: number, emissive = 0, glow = 0) => {
+      const m = new T.MeshStandardMaterial({ color, roughness: .9, flatShading: true });
+      if (emissive) { m.emissive.setHex(emissive); m.emissiveIntensity = glow; }
+      this.materials.push(m); return m;
     };
-    const sprite = (name: string, x: number, y: number, z: number, w: number, h: number) => {
-      const material = new T.SpriteMaterial({ map: mapFor(name), transparent: true, alphaTest: .02, depthWrite: false, toneMapped: false }); this.materials.push(material);
-      const object = new T.Sprite(material); object.name = `christmas-${name}`; object.center.set(.5, 0);
-      object.position.set(x, y, z); object.scale.set(w, h, 1); this.root.add(object); return object;
+    const pine = flat(0x3f7a4a), pineDark = flat(0x2f6440), snowCap = flat(0xfbfbf7), bark = flat(0x7a5434);
+    const coal = flat(0x2b2a2e), carrot = flat(0xe8833a), scarfRed = flat(0xc23a45), scarfCream = flat(0xf6ead2);
+    const ornaments = [flat(0xd33c48, 0x5a0d14, .25), flat(0xf2c14e, 0x6a4a08, .35), flat(0x5f9fd8, 0x123a5e, .25), flat(0xf4f1ea)];
+    const giftColors = [flat(0xd9534f), flat(0x4f9a6a), flat(0x5b8fd6), flat(0xf0c14b), flat(0xb86fd0)];
+    const ribbonGold = flat(0xf6d77a), ribbonRed = flat(0xc8303e);
+    const place = (o: T.Object3D, x: number, y: number, z: number, parent: T.Object3D = this.root) => { o.position.set(x, y, z); parent.add(o); return o; };
+    const tree3d = (x: number, z: number, s: number) => {
+      const g = new T.Group(); g.name = 'christmas-tree'; place(g, x, .1, z); g.scale.setScalar(s);
+      this.mesh(g, new T.CylinderGeometry(.22, .3, .9, 7), bark, 0, .45, 0);
+      const tiers = [[1.55, 1.5, .9], [1.25, 1.35, 1.75], [.95, 1.2, 2.5], [.62, 1.05, 3.2]];
+      tiers.forEach(([r, h, y], i) => {
+        const cone = this.mesh(g, new T.ConeGeometry(r, h, 9), i % 2 ? pineDark : pine, 0, y, 0); cone.rotation.y = i * .35;
+        const cap = this.mesh(g, new T.ConeGeometry(r * .55, h * .38, 9), snowCap, 0, y + h * .33, 0); cap.rotation.y = i * .35;
+        const n = 5 + (3 - i) * 2;
+        for (let k = 0; k < n; k++) {
+          const a = k / n * Math.PI * 2 + i * .6, rr = r * .78;
+          ball(g, ornaments[(k + i) % ornaments.length], Math.cos(a) * rr, y - h * .28, Math.sin(a) * rr, .11);
+        }
+      });
+      return g;
+    };
+    const snowman3d = (x: number, z: number, s: number, turn: number) => {
+      const g = new T.Group(); g.name = 'christmas-snowman'; place(g, x, 0, z); g.scale.setScalar(s); g.rotation.y = turn;
+      ball(g, snowCap, 0, .55, 0, .58); ball(g, snowCap, 0, 1.3, 0, .42); ball(g, snowCap, 0, 1.92, 0, .3);
+      for (const side of [-1, 1]) ball(g, coal, side * .1, 2, .26, .04);
+      for (const y of [1.45, 1.28, 1.1]) ball(g, coal, 0, y, .41, .045);
+      const nose = this.mesh(g, new T.ConeGeometry(.055, .3, 6), carrot, 0, 1.93, .4); nose.rotation.x = Math.PI / 2;
+      const scarf = this.mesh(g, new T.TorusGeometry(.3, .08, 6, 14), scarfRed, 0, 1.66, 0); scarf.rotation.x = Math.PI / 2;
+      this.mesh(g, new T.BoxGeometry(.16, .42, .08), scarfRed, .18, 1.45, .25).rotation.z = -.18;
+      this.mesh(g, new T.BoxGeometry(.17, .05, .085), scarfCream, .19, 1.33, .25);
+      for (const side of [-1, 1]) {
+        const arm = this.mesh(g, new T.CylinderGeometry(.025, .035, .75, 5), bark, side * .62, 1.45, 0); arm.rotation.z = side * -1.05;
+        const twig = this.mesh(g, new T.CylinderGeometry(.015, .02, .22, 4), bark, side * .88, 1.68, 0); twig.rotation.z = side * -.3;
+      }
+      this.mesh(g, new T.CylinderGeometry(.24, .24, .05, 10), coal, 0, 2.19, 0);
+      this.mesh(g, new T.CylinderGeometry(.16, .17, .28, 10), coal, 0, 2.34, 0);
+      this.mesh(g, new T.CylinderGeometry(.171, .171, .06, 10), scarfRed, 0, 2.25, 0);
+      return g;
+    };
+    const gift3d = (x: number, z: number, w: number, h: number, d: number, color: number, turn: number) => {
+      const g = new T.Group(); g.name = 'christmas-gift'; place(g, x, 0, z); g.rotation.y = turn;
+      this.mesh(g, new T.BoxGeometry(w, h, d), giftColors[color % giftColors.length], 0, h / 2, 0);
+      const rib = color % 2 ? ribbonGold : ribbonRed;
+      this.mesh(g, new T.BoxGeometry(w + .02, h + .02, d * .18), rib, 0, h / 2, 0);
+      this.mesh(g, new T.BoxGeometry(w * .18, h + .02, d + .02), rib, 0, h / 2, 0);
+      for (const side of [-1, 1]) { const loop = this.mesh(g, new T.TorusGeometry(.15 * w, .03, 5, 10), rib, side * .13 * w, h + .06, 0); loop.rotation.y = Math.PI / 2; loop.rotation.z = side * .5; }
+      return g;
+    };
+    const wreath3d = (x: number, y: number, z: number, size: number, parent: T.Object3D = this.root) => {
+      const g = new T.Group(); g.name = 'christmas-wreath'; place(g, x, y, z, parent); g.scale.setScalar(size);
+      this.mesh(g, new T.TorusGeometry(.36, .13, 7, 16), pine);
+      for (let k = 0; k < 10; k++) { const a = k / 10 * Math.PI * 2; ball(g, k % 2 ? ornaments[0] : pineDark, Math.cos(a) * .36, Math.sin(a) * .36, .1, k % 2 ? .06 : .09); }
+      for (const side of [-1, 1]) ball(g, red, side * .11, -.36, .14, .1, .07, .05).rotation.z = side * .4;
+      ball(g, red, 0, -.36, .16, .05);
+      return g;
     };
     const garland = (x: number, y: number, z: number, width: number, parent: T.Object3D = this.root) => {
-      const material = new T.MeshBasicMaterial({ map: mapFor('garland'), transparent: true, alphaTest: .04, depthWrite: false, side: T.DoubleSide, toneMapped: false }); this.materials.push(material);
-      this.mesh(parent, new T.PlaneGeometry(width, width / 6.4), material, x, y, z).name = 'christmas-garland';
+      const pts = Array.from({ length: 25 }, (_, i) => { const s = i / 24; return new T.Vector3(x - width / 2 + s * width, y - Math.sin(s * Math.PI * 2) ** 2 * .18, z); });
+      const rope = this.mesh(parent, new T.TubeGeometry(new T.CatmullRomCurve3(pts), 48, .09, 6, false), pine); rope.name = 'christmas-garland';
+      pts.forEach((pt, i) => { if (i % 3 === 0) ball(parent, i % 2 ? ornaments[1] : ornaments[0], pt.x, pt.y - .06, pt.z + .08, .06); });
     };
     const bow = (x: number, y: number, z: number, size: number) => {
       for (const side of [-1, 1]) {
@@ -105,26 +156,24 @@ export class ChristmasOverlay {
       bow(x, 2.05, z + .17, .8);
     }
     if (options.market) {
-      for (const shop of MARKET_SHOPS) sprite('wreath', shop.x, 1.35, shop.z + 1.95 * MARKET_SCALE, .85, .85);
-      sprite('wreath', -14.5, 1.8, 11.75, 1.05, 1.05);
+      for (const shop of MARKET_SHOPS) wreath3d(shop.x, 1.35, shop.z + 1.95 * MARKET_SCALE, .95);
+      wreath3d(-14.5, 1.8, 11.75, 1.15);
     } else {
-      sprite('tree', -4.9, .25, 4.8, 4.8, 7.2);
-      // Match the sprite's camera-facing up direction, including its illustrated star.
-      const treeDecor = this.treeDecor = new T.Group(); treeDecor.name = 'christmas-tree-lights'; treeDecor.position.set(-4.9, .25, 4.8); treeDecor.quaternion.copy(options.camera.quaternion); this.root.add(treeDecor);
-      sprite('gifts', -4.6, .27, 6, 2.7, 1.55); sprite('gifts', -6.5, .25, 4.6, 1.6, .95);
-      sprite('wreath', POSTBOX_SPOT.x + .2, 2.35, POSTBOX_SPOT.z + 1.25, .8, .8);
-      sprite('wreath', VILLAGE_SPOTS.notice.x - 1.1, 1.65, VILLAGE_SPOTS.notice.z + .38, .9, .9);
-      sprite('wreath', 0, 1.7, -8.95, 1.25, 1.25);
-      sprite('snowman', -15.3, .12, 14.9, 1.6, 2); sprite('snowman', 8.5, .12, 14.5, 1.6, 2);
+      tree3d(-4.9, 4.8, 1.85);
+      const treeDecor = new T.Group(); treeDecor.name = 'christmas-tree-lights'; treeDecor.position.set(-4.9, .1, 4.8); treeDecor.scale.setScalar(1.85); this.root.add(treeDecor);
+      [[-3.3, 6.1, .7, .55, .6, 0, .3], [-4.2, 6.9, .55, .45, .55, 1, -.4], [-2.6, 5.2, .5, .7, .5, 2, .8], [-6.6, 5.9, .65, .5, .6, 3, .2], [-5.6, 6.8, .45, .35, .45, 4, -.6]].forEach(([gx, gz, w, h, d, c, r]) => gift3d(gx, gz, w, h, d, c, r));
+      wreath3d(POSTBOX_SPOT.x + .2, 2.35, POSTBOX_SPOT.z + 1.25, .9);
+      wreath3d(VILLAGE_SPOTS.notice.x - 1.1, 1.65, VILLAGE_SPOTS.notice.z + .38, 1);
+      wreath3d(0, 1.7, -8.95, 1.35);
+      snowman3d(-15.3, 14.9, 1.45, .4); snowman3d(8.5, 14.5, 1.35, -.5);
       for (const x of [-10, 8]) garland(x, 1.05, 19.6, 6);
       // A low loop follows the stone ring without crossing signs or walking lanes.
       strand(Array.from({ length: 129 }, (_, i) => { const a = i / 128 * Math.PI * 2; return new T.Vector3(Math.cos(a) * 7.7, .62 + Math.sin(a * 8) * .12, 2 + Math.sin(a) * 7.7); }), low ? 8 : 2);
-      strand(Array.from({ length: 129 }, (_, i) => { const t = i / 128, a = t * Math.PI * 8, r = 2.05 * (1 - t) + .12; return new T.Vector3(Math.cos(a) * r, .55 + t * 5.9, .18 + Math.sin(a) * r * .18); }), low ? 8 : 3, treeDecor);
+      strand(Array.from({ length: 129 }, (_, i) => { const t = i / 128, a = t * Math.PI * 9, r = 1.45 * (1 - t) + .12; return new T.Vector3(Math.cos(a) * r, .55 + t * 3.15, Math.sin(a) * r); }), low ? 8 : 3, treeDecor);
       const starShape = new T.Shape();
       for (let i = 0; i < 10; i++) { const a = i * Math.PI / 5 + Math.PI / 2, r = i % 2 ? .2 : .44; if (!i) starShape.moveTo(Math.cos(a) * r, Math.sin(a) * r); else starShape.lineTo(Math.cos(a) * r, Math.sin(a) * r); } starShape.closePath();
       const gold = this.material(0xffdf84); gold.emissive.setHex(0xffbd47); gold.emissiveIntensity = 1.4; gold.side = T.DoubleSide;
-      const star = this.mesh(treeDecor, new T.ShapeGeometry(starShape), gold, 0, 6.85, .08); star.name = 'christmas-treetop-star';
-      const halo = sprite('star-glow', 0, 6.85, .12, 2.2, 2.2); halo.center.set(.5, .5); treeDecor.add(halo);
+      const star = this.mesh(treeDecor, new T.ExtrudeGeometry(starShape, { depth: .12, bevelEnabled: true, bevelSize: .03, bevelThickness: .03, bevelSegments: 1 }), gold, 0, 3.85, -.06); star.name = 'christmas-treetop-star'; star.scale.setScalar(.75);
     }
     [0xf55c55, 0xffc34f, 0x69b875, 0xffeed1].forEach((color, index) => {
       const material = this.material(color); material.emissive.setHex(color); material.emissiveIntensity = 1.15; this.bulbs.push(material);
@@ -141,7 +190,7 @@ export class ChristmasOverlay {
       this.cleanups.push(options.sign(this.root));
       const plaque = this.root.getObjectByName('표지판: 메리 크리스마스')!;
       garland(0, 1.25, .04, 7.1, plaque);
-      for (const side of [-1, 1]) { const ribbon = sprite('bow', side * 3, .85, .08, .85, .6); plaque.add(ribbon); }
+      for (const side of [-1, 1]) wreath3d(side * 3.05, .2, .12, .55, plaque);
     }
     const snowMaterial = new T.MeshBasicMaterial({ color: 0xfffcf5, transparent: true, opacity: .8, depthWrite: false }); this.materials.push(snowMaterial);
     const snowGeometry = new T.SphereGeometry(1, 5, 3); this.geometries.add(snowGeometry);
@@ -193,7 +242,6 @@ export class ChristmasOverlay {
     walk(scene);
   }
   update(time: number, player: T.Vector3) {
-    this.treeDecor?.quaternion.copy(this.camera.quaternion);
     if (!this.low && !this.reduced) this.bulbs.forEach((m, i) => { m.emissiveIntensity = 1.1 + Math.sin(time * 1.35 + i * 1.6) * .28; });
     if (this.reduced) return;
     for (let i = 0; i < this.snow.count; i++) {
