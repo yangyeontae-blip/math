@@ -48,7 +48,7 @@ import { VILLAGE_THEMES, villageThemeId, type VillageTheme } from './villages';
 import type { AmbienceScene } from './ambience';
 import { STORYBOOK_LIGHTING, storybookMaterial, seasonalParticleAt } from './storybook-art';
 import { StorybookScene, leafMaterial } from './storybook-scene';
-import { ChristmasOverlay } from './christmas-overlay';
+import { ChristmasOverlay, SIGN_SPOT } from './christmas-overlay';
 
 type Entity = { id: string; name: string; x: number; z: number; mesh: T.Group; label: HTMLDivElement };
 export type GuideKind = 'village' | 'roomExit' | 'academyExit' | 'astralQuestion' | 'astralNext' | 'astralExit' | 'world2Gate' | 'world2Beacon' | 'huntingGate' | 'huntingExit' | 'academyGate' | 'academyBook' | 'guide' | 'marketExit' | 'noticeBoard' | 'homesteadGate' | 'shopStreet' | 'homeEditor' | 'homeExit' | 'homeVisitor' | 'discovery' | 'forestWork' | 'trailSeed' | 'trailLamp' | 'berry' | 'monster' | 'shop' | 'journey' | 'next' | 'star' | 'expMonster' | 'roomExit' | 'storyClue' | 'storyPuzzle' | 'storyMailbox' | 'village' | 'villageProject0' | 'villageProject1' | 'villageProject2';
@@ -1693,7 +1693,7 @@ export class World {
       new Set<T.Object3D>([this.player, ...this.entities.filter(e => !e.id.startsWith('tree')).map(e => e.mesh), ...this.coins.map(c => c.mesh), ...(this.petModel ? [this.petModel] : []), ...(this.weatherMesh ? [this.weatherMesh] : []), ...(this.astralGateway ? [this.astralGateway] : [])]),
       { market: this.isPublicMarket, dog: this.isPublicPlaza ? this.hallGuideDog : null, camera: this.camera,
         characters: ['guide', 'arena'].flatMap(id => this.entities.filter(e => e.id === id).map(e => e.mesh)),
-        sign: parent => this.sign(parent, '메리 크리스마스', 2, 10.8, 16, 6.8, '#a5343d', true) });
+        sign: parent => this.sign(parent, '메리 크리스마스', SIGN_SPOT.x, SIGN_SPOT.y + .45, SIGN_SPOT.z, 3.4, '#a5343d', true) });
     this.setWeather(this.ambienceScene);
     this.renderOnce();
   }

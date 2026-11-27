@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 import { mkdirSync } from 'node:fs';
 import { newSave } from '../src/rules.ts';
 // 크리스마스 광장 확인 캡처(?event=christmas로 강제 표시). 실행: npx playwright test -c scripts/capture.config.mjs
-const OUT = process.env.ART_OUT || '../screenshots/christmas_2026-11-26';
+const OUT = process.env.ART_OUT || '../screenshots/christmas_2026-11-27';
 mkdirSync(OUT, { recursive: true });
 for (const [name, vp] of [['pc', { width: 1280, height: 800 }], ['phone', { width: 390, height: 844 }], ['low', { width: 844, height: 390 }]]) {
   test(`christmas ${name}`, async ({ page }) => {
@@ -18,5 +18,8 @@ for (const [name, vp] of [['pc', { width: 1280, height: 800 }], ['phone', { widt
     await page.locator('body.is-christmas').waitFor({ state: 'attached', timeout: 60000 });
     await page.waitForTimeout(2500);
     await page.screenshot({ path: `${OUT}/${name}-plaza.png` });
+    await page.evaluate(() => { const w = window.__berry.getWorld(); w.player.position.set(-4.5, 0, -6.5); });
+    await page.waitForTimeout(2500);
+    await page.screenshot({ path: `${OUT}/${name}-tree.png` });
   });
 }

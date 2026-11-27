@@ -109,7 +109,7 @@
     "e2e/world-two.spec.mjs": "ccffa5e88c3c2e8b062b172ea2e6c94b80ad2e2302a80ca44f9b392f682a914f",
     "src/plaza-protocol.ts": "ecab1d5ff857711fdeacb125a9246eb5da6ef4923b07f7127fca777bf58b0920",
     "src/plaza-identity.ts": "761b6765d77bb67fb641e11c211487c26bd95dab9d95d6bc751cdff33a32e880",
-    "src/plaza-client.ts": "f861a28fdd0b2e3e7b3803524e1cd4a20a2a015a78e515819c9dec9005ced2e7",
+    "src/plaza-client.ts": "0c81254c7bca023d876459e497b8e5c8707ce9572b5946fbc29de1ea6a2ecfdf",
     "src/plaza-controller.ts": "27e4cc256c19f297ba4c466deba95c2070407eac935c3c322879b9f4cdd38236",
     "src/plaza-world.ts": "5f04d1479b76fdc069282d7002e0285aec832d9dda21799dfa80713a3d8e4b0a",
     "src/plaza-endpoint.ts": "8209e54c95cbd78b65a44eefd6bfd658759567b7d8af6af4a2e87a102249e790",

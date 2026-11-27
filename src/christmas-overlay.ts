@@ -3,6 +3,10 @@ import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { seasonalParticleAt } from './storybook-art';
 import { MARKET_SCALE, MARKET_SHOPS, POSTBOX_SPOT, VILLAGE_SPOTS } from './village-layout';
 
+/** 크리스마스 트리와 간판 자리: 모험학교 왼쪽(화단·가로등과 겹치지 않는 곳), 간판은 트리 앞 광장 쪽. */
+export const TREE_SPOT = { x: -8.5, z: -11 } as const;
+export const SIGN_SPOT = { x: -8.8, y: 2, z: -8.6 } as const;
+
 type Options = { market: boolean; dog: T.Group | null; characters: T.Group[]; camera: T.Camera; sign: (parent: T.Object3D) => () => void };
 
 /** Temporary scenery only. All attachments, materials and lighting changes are owned here. */
@@ -78,17 +82,24 @@ export class ChristmasOverlay {
     const giftColors = [flat(0xd9534f), flat(0x4f9a6a), flat(0x5b8fd6), flat(0xf0c14b), flat(0xb86fd0)];
     const ribbonGold = flat(0xf6d77a), ribbonRed = flat(0xc8303e);
     const place = (o: T.Object3D, x: number, y: number, z: number, parent: T.Object3D = this.root) => { o.position.set(x, y, z); parent.add(o); return o; };
+    // 트리: 5단으로 층이 보이게, 위로 갈수록 좁고 밝게. 단 끝마다 눈, 구슬은 단마다 몇 개만 크게.
+    const pineTiers = [flat(0x2c5e3c), flat(0x336b43), flat(0x3b784a), flat(0x438552), flat(0x4c925a)];
+    const skirt = flat(0xb8343f), skirtTrim = flat(0xf7efe0);
     const tree3d = (x: number, z: number, s: number) => {
-      const g = new T.Group(); g.name = 'christmas-tree'; place(g, x, .1, z); g.scale.setScalar(s);
-      this.mesh(g, new T.CylinderGeometry(.22, .3, .9, 7), bark, 0, .45, 0);
-      const tiers = [[1.55, 1.5, .9], [1.25, 1.35, 1.75], [.95, 1.2, 2.5], [.62, 1.05, 3.2]];
-      tiers.forEach(([r, h, y], i) => {
-        const cone = this.mesh(g, new T.ConeGeometry(r, h, 9), i % 2 ? pineDark : pine, 0, y, 0); cone.rotation.y = i * .35;
-        const cap = this.mesh(g, new T.ConeGeometry(r * .55, h * .38, 9), snowCap, 0, y + h * .33, 0); cap.rotation.y = i * .35;
-        const n = 5 + (3 - i) * 2;
+      const g = new T.Group(); g.name = 'christmas-tree'; place(g, x, 0, z); g.scale.setScalar(s);
+      ball(g, snowCap, 0, .02, 0, 1.75, .18, 1.75);
+      this.mesh(g, new T.CylinderGeometry(1.25, 1.35, .06, 14), skirt, 0, .12, 0);
+      this.mesh(g, new T.TorusGeometry(1.3, .05, 5, 20), skirtTrim, 0, .15, 0).rotation.x = Math.PI / 2;
+      this.mesh(g, new T.CylinderGeometry(.16, .22, .75, 7), bark, 0, .45, 0);
+      const tiers: [number, number, number][] = [[1.4, 1.15, .6], [1.12, 1.0, 1.25], [.86, .9, 1.85], [.6, .8, 2.4], [.36, .68, 2.9]];
+      tiers.forEach(([r, h, base], i) => {
+        const cone = this.mesh(g, new T.ConeGeometry(r, h, 8), pineTiers[i], 0, base + h / 2, 0); cone.rotation.y = i * .4;
+        // 단 아래 끝을 따라 얹힌 눈(얇은 고리)
+        const rim = this.mesh(g, new T.TorusGeometry(r * .9, .07, 4, 16), snowCap, 0, base + .08, 0); rim.rotation.x = Math.PI / 2; rim.scale.z = .6;
+        const n = [5, 4, 4, 3, 0][i];
         for (let k = 0; k < n; k++) {
-          const a = k / n * Math.PI * 2 + i * .6, rr = r * .78;
-          ball(g, ornaments[(k + i) % ornaments.length], Math.cos(a) * rr, y - h * .28, Math.sin(a) * rr, .11);
+          const a = k / n * Math.PI * 2 + i * .9;
+          ball(g, ornaments[(k + i) % 3], Math.cos(a) * r * .86, base + .2, Math.sin(a) * r * .86, .13);
         }
       });
       return g;
@@ -159,21 +170,22 @@ export class ChristmasOverlay {
       for (const shop of MARKET_SHOPS) wreath3d(shop.x, 1.35, shop.z + 1.95 * MARKET_SCALE, .95);
       wreath3d(-14.5, 1.8, 11.75, 1.15);
     } else {
-      tree3d(-4.9, 4.8, 1.85);
-      const treeDecor = new T.Group(); treeDecor.name = 'christmas-tree-lights'; treeDecor.position.set(-4.9, .1, 4.8); treeDecor.scale.setScalar(1.85); this.root.add(treeDecor);
-      [[-3.3, 6.1, .7, .55, .6, 0, .3], [-4.2, 6.9, .55, .45, .55, 1, -.4], [-2.6, 5.2, .5, .7, .5, 2, .8], [-6.6, 5.9, .65, .5, .6, 3, .2], [-5.6, 6.8, .45, .35, .45, 4, -.6]].forEach(([gx, gz, w, h, d, c, r]) => gift3d(gx, gz, w, h, d, c, r));
+      // 2026-11-27 우체통·기부함·공지판이 모인 곳은 번잡해서, 선생님 제안대로 모험학교 왼쪽으로 옮겼어요.
+      tree3d(TREE_SPOT.x, TREE_SPOT.z, 1.9);
+      const treeDecor = new T.Group(); treeDecor.name = 'christmas-tree-lights'; treeDecor.position.set(TREE_SPOT.x, 0, TREE_SPOT.z); treeDecor.scale.setScalar(1.9); this.root.add(treeDecor);
+      [[1.7, 1.1, .7, .55, .6, 0, .3], [2.4, .1, .55, .45, .55, 1, -.4], [-1.8, 1, .5, .7, .5, 2, .8], [.5, 1.9, .65, .5, .6, 3, .2], [-2.3, -.2, .45, .35, .45, 4, -.6]].forEach(([gx, gz, w, h, d, c, r]) => gift3d(TREE_SPOT.x + gx, TREE_SPOT.z + gz, w, h, d, c, r));
       wreath3d(POSTBOX_SPOT.x + .2, 2.35, POSTBOX_SPOT.z + 1.25, .9);
       wreath3d(VILLAGE_SPOTS.notice.x - 1.1, 1.65, VILLAGE_SPOTS.notice.z + .38, 1);
       wreath3d(0, 1.7, -8.95, 1.35);
-      snowman3d(-15.3, 14.9, 1.45, .4); snowman3d(8.5, 14.5, 1.35, -.5);
+      snowman3d(-15.3, 14.9, 1.45, .4); snowman3d(-10.5, 16.2, 1.3, .1);
       for (const x of [-10, 8]) garland(x, 1.05, 19.6, 6);
       // A low loop follows the stone ring without crossing signs or walking lanes.
       strand(Array.from({ length: 129 }, (_, i) => { const a = i / 128 * Math.PI * 2; return new T.Vector3(Math.cos(a) * 7.7, .62 + Math.sin(a * 8) * .12, 2 + Math.sin(a) * 7.7); }), low ? 8 : 2);
-      strand(Array.from({ length: 129 }, (_, i) => { const t = i / 128, a = t * Math.PI * 9, r = 1.45 * (1 - t) + .12; return new T.Vector3(Math.cos(a) * r, .55 + t * 3.15, Math.sin(a) * r); }), low ? 8 : 3, treeDecor);
+      strand(Array.from({ length: 129 }, (_, i) => { const t = i / 128, a = t * Math.PI * 10, r = 1.3 * (1 - t) + .14; return new T.Vector3(Math.cos(a) * r, .7 + t * 2.75, Math.sin(a) * r); }), low ? 8 : 3, treeDecor);
       const starShape = new T.Shape();
       for (let i = 0; i < 10; i++) { const a = i * Math.PI / 5 + Math.PI / 2, r = i % 2 ? .2 : .44; if (!i) starShape.moveTo(Math.cos(a) * r, Math.sin(a) * r); else starShape.lineTo(Math.cos(a) * r, Math.sin(a) * r); } starShape.closePath();
       const gold = this.material(0xffdf84); gold.emissive.setHex(0xffbd47); gold.emissiveIntensity = 1.4; gold.side = T.DoubleSide;
-      const star = this.mesh(treeDecor, new T.ExtrudeGeometry(starShape, { depth: .12, bevelEnabled: true, bevelSize: .03, bevelThickness: .03, bevelSegments: 1 }), gold, 0, 3.85, -.06); star.name = 'christmas-treetop-star'; star.scale.setScalar(.75);
+      const star = this.mesh(treeDecor, new T.ExtrudeGeometry(starShape, { depth: .12, bevelEnabled: true, bevelSize: .03, bevelThickness: .03, bevelSegments: 1 }), gold, 0, 3.72, -.06); star.name = 'christmas-treetop-star'; star.scale.setScalar(1.05);
     }
     [0xf55c55, 0xffc34f, 0x69b875, 0xffeed1].forEach((color, index) => {
       const material = this.material(color); material.emissive.setHex(color); material.emissiveIntensity = 1.15; this.bulbs.push(material);
@@ -189,8 +201,13 @@ export class ChristmasOverlay {
     if (!options.market) {
       this.cleanups.push(options.sign(this.root));
       const plaque = this.root.getObjectByName('표지판: 메리 크리스마스')!;
-      garland(0, 1.25, .04, 7.1, plaque);
-      for (const side of [-1, 1]) wreath3d(side * 3.05, .2, .12, .55, plaque);
+      garland(0, .95, .04, 3.4, plaque);
+      for (const side of [-1, 1]) {
+        const px = SIGN_SPOT.x + side * 1.45;
+        this.mesh(this.root, new T.CylinderGeometry(.1, .12, SIGN_SPOT.y, 8), white, px, SIGN_SPOT.y / 2, SIGN_SPOT.z);
+        const helix = Array.from({ length: 41 }, (_, k) => { const a = k / 40 * Math.PI * 7; return new T.Vector3(px + Math.cos(a) * .115, k / 40 * SIGN_SPOT.y, SIGN_SPOT.z + Math.sin(a) * .115); });
+        this.mesh(this.root, new T.TubeGeometry(new T.CatmullRomCurve3(helix), 40, .03, 4, false), red);
+      }
     }
     const snowMaterial = new T.MeshBasicMaterial({ color: 0xfffcf5, transparent: true, opacity: .8, depthWrite: false }); this.materials.push(snowMaterial);
     const snowGeometry = new T.SphereGeometry(1, 5, 3); this.geometries.add(snowGeometry);
