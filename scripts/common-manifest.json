@@ -69,7 +69,7 @@
     "src/vite-env.d.ts": "65996936fbb042915f7b74a200fcdde7e410f32a669b1ab9597cfaa4b0faddb5",
     "src/world-map.css": "31b7708b738c91d0de2ad31f932fedcf0b50743272d347817204f93e01afb6b4",
     "tests/common-improvements.test.ts": "b2f51e8cde08db2ec17e4680af25511f739b209e53b298e09e34795c8317a441",
-    "src/village-art.ts": "9c7f4ae65068f37be6a973024cbf021962fd7d7888323a2cde8ef4f8485ca1c3",
+    "src/village-art.ts": "e179aca23668f61cd5dcfe934bb37068eef42131c515db7989490ff9b277940a",
     "tests/village-art.test.ts": "91e520c6457801ea865a7b8118d56da22ed9d6d6ed24477087ba05982897ea87",
     "src/academy.ts": "5206e1a2afd48d78115fc02a350d5d31feba2f854fa809fb6ce2169aa30f4c43",
     "src/academy.css": "3f836bd201252c287ca5dc6b9704e4cad306da5fe65ad7b10029412f5df6ca43",

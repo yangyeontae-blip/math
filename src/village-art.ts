@@ -41,6 +41,9 @@ export function flowerBed(g:T.Object3D,x:number,z:number,length=2.4,rotation=0){
  for(let i=0;i<Math.ceil(length/.5);i++){const px=-length/2+.25+i*.5;orb(bed,0x9dbb5a,px,.55,(i%2?.18:-.18),.24,.6);
   const c=colors[i%3];if(c===0xb987c2){for(let k=0;k<3;k++)orb(bed,c,px+(k-1)*.07,.7+k*.07,.0,.07,1.6);}else{for(let k=0;k<5;k++){const a=k*Math.PI*2/5;orb(bed,c,px+Math.cos(a)*.11,.7,Math.sin(a)*.11,.08,.6);}orb(bed,0xf4a420,px,.72,0,.05);}}
 }
+/** 광장·상점거리 벤치 자리 [x, z, 회전]. 앉기(world.sitOnBench)도 같은 자리를 써요. */
+export const PLAZA_BENCHES = [[-8, -1, .15], [7.4, -2, -.2]] as const;
+export const MARKET_BENCHES = [[-8, 9, 0], [8, 9, 0]] as const;
 /** 2026-11-21 Codex 시안: 둥근 팔걸이와 등받이의 나무 벤치 · 쇠띠 · 이끼. */
 export function gardenBench(g:T.Object3D,x:number,z:number,rotation=0){
  const b=new T.Group();b.position.set(x,0,z);b.rotation.y=rotation;g.add(b);
@@ -81,7 +84,7 @@ export function plazaGarden(){
  for(let i=0;i<40;i++){const angle=i*Math.PI/20;const stone=block(g,i%2?a.trim:a.edge,Math.cos(angle)*7.6,.23,2+Math.sin(angle)*7.6,.78,.12,.3);stone.rotation.y=-angle+Math.PI/2;}
  // Inset arcs provide paving detail without obscuring navigation.
  for(const r of [3.4,5.5]){const ring=piece(g,0xe3d0ab,new T.TorusGeometry(r,.025,4,64),0,.215,2);ring.rotation.x=Math.PI/2;ring.castShadow=false;}
- for(const [x,z,angle]of [[-8,-1,.15],[7.4,-2,-.2]]){gardenBench(g,x,z,angle);flowerBed(g,x,z-1.15,3);}
+ for(const [x,z,angle]of PLAZA_BENCHES){gardenBench(g,x,z,angle);flowerBed(g,x,z-1.15,3);}
  for(const [x,z]of [[-6,8],[6,8],[-10,-7],[10,-8]])gardenLamp(g,x,z);
  for(const [x,z,len,angle]of [[-5,-8.5,3.6,0],[5,-8.5,3.6,0],[-13,6,3.2,0],[12,2,3.2,0],[-5,12,2.4,0],[5,12,2.4,0]])flowerBed(g,x,z,len,angle);
  return g;
@@ -173,7 +176,7 @@ export function marketGarden(){
  stoneLane(g,0,5,5,14);stoneLane(g,0,-8,42,3);stoneLane(g,0,2,42,3);
  for(const x of [-19,-6,6,19]){gardenLamp(g,x,5);flowerBed(g,x,6.5,2);}
  for(const x of [-20,-6,6,20]){flowerBed(g,x,-17,2.5);gardenLamp(g,x,-9);}
- gardenBench(g,-8,9);gardenBench(g,8,9);return g;
+ for(const [x,z,angle]of MARKET_BENCHES)gardenBench(g,x,z,angle);return g;
 }
 export function homesteadGarden(){
  const g=new T.Group();districtBorder(g,26,41,8);

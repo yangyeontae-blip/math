@@ -24,7 +24,7 @@ import { huntingPower, huntingCompanionStats, PPOJJAK_PET_ID } from './rules';
 import {createPpojjakiPet,createPpojjakiAura,animatePpojjakiPet,animatePpojjakiAura,disposePpojjakiAssets} from './legendary-pet';
 import {salonHairModel,salonFaceModel,disposeSalonMaterials} from './salon-models';
 import { HUNT_ZONES, HUNT_CAMP } from './hunting';
-import { donationBoxModel, postboxModel, potionWorkshopModel, mathForestGateway, academyBuilding, academyInterior, skillEffectModel, VILLAGE_ART, PLAZA_BERRY_TREES, berryTreeModel, plazaGarden, fountainModel, cottageModel, marketGarden, homesteadGarden, stoneLane, districtBorder, flowerBed } from './village-art';
+import { PLAZA_BENCHES, MARKET_BENCHES, donationBoxModel, postboxModel, potionWorkshopModel, mathForestGateway, academyBuilding, academyInterior, skillEffectModel, VILLAGE_ART, PLAZA_BERRY_TREES, berryTreeModel, plazaGarden, fountainModel, cottageModel, marketGarden, homesteadGarden, stoneLane, districtBorder, flowerBed } from './village-art';
 import { shopSignText, shopInteraction } from './shop-signs';
 import { showEntityLabel } from './navigation';
 import { POTION_WORKSHOP_SPOT, MARKET_SCALE, MARKET_RADIUS, MARKET_DOOR_OFFSET, MARKET_SHOPS, VILLAGE_SPOTS, HALL_GUIDE_SPOT, POSTBOX_SPOT, DONATION_SPOT, villageWelcomeClear, villageTreeSpot, villageMonsterSpot } from './village-layout';
@@ -691,7 +691,7 @@ export class World {
   private homeVisitors:{entity:Entity;cell:number;path:number[];pause:number;turn:number;kind:number}[]=[];
   hallGuideDog: T.Group | null = null;
   active = false; paused = true; inRoom = false; onCollect = (_id: number) => {}; onStar = (_id: number) => {}; onInteract = (_id: string) => {}; onAttack = (_id: string | null) => {}; onNear = (_name: string | null, _id: string | null) => {}; onJump = () => {}; onRescue = () => {}; onStageLoaded = (_stage: number) => {};
-  private roomActivity:{id:number;kind:RoomActionKind;stand:T.Vector3;book:T.Group|null;page:number}|null=null;
+  private roomActivity:{id:number;kind:RoomActionKind;stand:T.Vector3;book:T.Group|null;page:number;bench?:string}|null=null;
   private roomActivityPanel!:HTMLDivElement;
   constructor(private container: HTMLElement) {
     this.scene.background = new T.Color(0xd0eade); this.scene.fog = new T.Fog(0xd0eade, 58, 112);
@@ -767,6 +767,7 @@ export class World {
     stoneLane(this.scene,0,6,4.4,27);stoneLane(this.scene,-7,2,14,4);stoneLane(this.scene,12,-2,24,4);
     for (const end of Object.values(PLAZA_COMBAT_GATES)) { const dx = end.x + 11, dz = end.z - 2, path = box(this.scene, theme.path, (-11 + end.x) / 2, .04, (2 + end.z) / 2, 3.8, .08, Math.hypot(dx, dz)); path.rotation.y = Math.atan2(dx, dz); }
     this.scene.add(plazaGarden());districtBorder(this.scene,49,39);
+    PLAZA_BENCHES.forEach(([x,z,r],i)=>this.addBenchSeat('benchPlaza'+i,x,z,r));
     const fountain=fountainModel();fountain.position.set(-3,0,0);this.scene.add(fountain);this.colliders.push({x:-3,z:0,r:1.95});
     for(const [index,at] of PLAZA_BERRY_TREES.entries()){const tree=berryTreeModel(index%3);tree.position.set(at.x,0,at.z);tree.scale.setScalar(at.scale);this.scene.add(tree);this.colliders.push({x:at.x,z:at.z,r:.48});}
     this.addEntity('guide','연태쌤 · 마을 안내',0,3,makeCharacter(0,6,0));
@@ -812,7 +813,7 @@ export class World {
   enterMarket(s:Save) {
     this.clearInput();this.clearMap();this.inMarket=true;this.inRoom=false;s.room.inside=false;s.homestead.inside=false;this.stage=0;this.forest=s.forest;this.platforms=[];
     this.scene.background=new T.Color(0xd4e9df);this.scene.fog=new T.Fog(0xd4e9df,58,112);
-    box(this.scene,VILLAGE_ART.grass,0,-.55,0,51,1.1,41);box(this.scene,VILLAGE_ART.earth,0,-1.3,0,50,.5,40);this.buildMarket();this.scene.add(marketGarden());
+    box(this.scene,VILLAGE_ART.grass,0,-.55,0,51,1.1,41);box(this.scene,VILLAGE_ART.earth,0,-1.3,0,50,.5,40);this.buildMarket();this.scene.add(marketGarden());MARKET_BENCHES.forEach(([x,z,r],i)=>this.addBenchSeat('benchMarket'+i,x,z,r));
     this.addEntity('weapon', shopInteraction(0) + ' · 강지후', MARKET_SHOPS[0].x, MARKET_SHOPS[0].z+MARKET_DOOR_OFFSET, makeCharacter(1, 6, 1));
     this.addEntity('outfit', shopInteraction(1) + ' · 오지후', MARKET_SHOPS[1].x, MARKET_SHOPS[1].z+MARKET_DOOR_OFFSET, makeCharacter(2, 4, 2));
     this.addEntity('ride', shopInteraction(3) + ' · 나현이', MARKET_SHOPS[3].x, MARKET_SHOPS[3].z+MARKET_DOOR_OFFSET, makeCharacter(0, 10, 6));
@@ -1006,6 +1007,7 @@ export class World {
     if (this.trailScenery) this.disposeModel(this.trailScenery); this.trailScenery = null;
     if (this.storyScenery) this.disposeModel(this.storyScenery);
     this.storyScenery = null; this.craftAnimated = []; this.restoredBridge = false; this.butterflies = []; this.particles = [];
+    this.stopRoomActivity();
     this.clearGuide(); this.selectedId = null; this.petTargetId = null; this.onNear(null, null); this.entities.forEach(e => e.label.remove()); this.stars.forEach(star => star.label.remove()); this.entities = []; this.coins = []; this.stars = []; this.colliders = [];
     for (const child of [...this.scene.children]) if (child !== this.player && child !== this.petModel && child !== this.weatherMesh && !(child instanceof T.Light)) { this.scene.remove(child);disposePlanetaryScenery(child);disposeSalonMaterials(child);disposePpojjakiAssets(child);child.traverse(o=>{if(o instanceof T.Mesh){if(!sharedGeometries.has(o.geometry)&&!o.geometry.userData.sharedSalonAsset&&!o.geometry.userData.ppoDisposed&&!o.geometry.userData.sharedStorybookAsset&&!o.geometry.userData.planetDisposed)o.geometry.dispose();if(o instanceof T.InstancedMesh)o.dispose();}}); }
     this.furnitureRoot = null;
@@ -1536,9 +1538,14 @@ export class World {
     this.camera.position.copy(this.follow).add(ROOM_CAMERA_OFFSET); this.camera.lookAt(this.follow); this.renderOnce();
   }
   get roomActivityStatus(){return this.roomActivity?{id:this.roomActivity.id,kind:this.roomActivity.kind,page:this.roomActivity.page}:null;}
+  /** 광장·상점거리 벤치: 보이지 않는 자리 표시를 두고, 가까이 가서 '앉기'를 누르면 앉아요. */
+  private benchTurn=new Map<string,number>();
+  private addBenchSeat(id:string,x:number,z:number,turn:number){const seat=new T.Group();seat.name='bench-seat';this.benchTurn.set(id,turn);this.addEntity(id,'벤치 · 앉아 쉬기',x,z,seat);}
+  /** 벤치에 앉기. 다시 누르거나 움직이거나 점프하면 일어나요. 앉은 동안은 집 안 의자와 같은 자세를 써요. */
+  sitOnBench(id:string){const entity=this.entities.find(e=>e.id===id),turn=this.benchTurn.get(id);if(!entity||turn===undefined||!this.active||this.paused||Math.hypot(this.player.position.x-entity.x,this.player.position.z-entity.z)>3.2)return false;if(this.roomActivity?.bench===id){this.stopRoomActivity();return true;}this.stopRoomActivity();const stand=this.player.position.clone();this.clearInput();this.player.position.set(entity.x+Math.sin(turn)*.12,0,entity.z+Math.cos(turn)*.12);this.player.rotation.y=turn;this.roomActivity={id:-1,kind:'sit',stand,book:null,page:0,bench:id};this.renderRoomActivity();this.applyRoomActivityPose();this.renderOnce();return true;}
   beginRoomActivity(id:number){const action=roomAction(id),entity=this.entities.find(e=>e.id==='roomUse'+id);if(!this.inRoom||!action||!entity||!this.active||this.paused||Math.hypot(this.player.position.x-entity.x,this.player.position.z-entity.z)>3)return false;if(this.roomActivity?.id===id){this.stopRoomActivity();return true;}this.stopRoomActivity();const stand=this.player.position.clone();this.clearInput();this.player.position.set(entity.x,0,entity.z+(action.kind==='read'?1.15:0));this.player.rotation.y=0;let book:T.Group|null=null;if(action.kind==='read'){book=new T.Group();book.name='room-reading-book';for(const side of [-1,1]){const cover=box(book,0x769c86,side*.2,.79,.5,.44,.045,.47);cover.rotation.z=side*.2;const page=box(book,0xfff1cd,side*.2,.83,.5,.4,.035,.43);page.rotation.z=side*.2;}this.player.userData.body.add(book);}this.roomActivity={id,kind:action.kind,stand,book,page:0};this.renderRoomActivity();this.applyRoomActivityPose();this.renderOnce();return true;}
   stopRoomActivity(){const activity=this.roomActivity;if(!activity)return;this.roomActivity=null;this.roomActivityPanel.hidden=true;if(activity.book){activity.book.removeFromParent();this.disposeModel(activity.book);}const body=this.player.userData.body as T.Group|undefined;if(body){body.position.y=0;body.rotation.x=body.rotation.z=0;body.scale.y=1;}for(const foot of (this.player.userData.feet??[]) as T.Mesh[]){foot.position.y=.18;foot.position.z=.05;}for(const arm of (this.player.userData.arms??[]) as T.Mesh[])arm.rotation.x=0;for(const hand of (this.player.userData.hands??[]) as T.Mesh[]){hand.position.y=.57;hand.position.z=.02;}const weapon=this.player.userData.weapon as T.Group|undefined;if(weapon)weapon.visible=true;this.player.position.copy(activity.stand);this.clearInput();this.renderOnce();}
-  private renderRoomActivity(){const activity=this.roomActivity;if(!activity)return;this.roomActivityPanel.hidden=false;if(activity.kind==='sit'){this.roomActivityPanel.innerHTML='<strong>버섯 의자에서 쉬는 중</strong><p>이동하거나 E를 누르면 일어나요.</p><button data-room-life="stop">일어나기</button>';return;}const page=ROOM_BOOK_PAGES[activity.page];this.roomActivityPanel.innerHTML='<small>모험 책장 · '+(activity.page+1)+' / '+ROOM_BOOK_PAGES.length+'</small><h3>'+page.title+'</h3><p>'+page.text+'</p><div><button data-room-life="next">다음 장 읽기</button><button data-room-life="stop">책 덮기</button></div>';}
+  private renderRoomActivity(){const activity=this.roomActivity;if(!activity)return;this.roomActivityPanel.hidden=false;if(activity.kind==='sit'){this.roomActivityPanel.innerHTML='<strong>'+(activity.bench?'벤치에서 쉬는 중':'버섯 의자에서 쉬는 중')+'</strong><p>이동하거나 E를 누르면 일어나요.</p><button data-room-life="stop">일어나기</button>';return;}const page=ROOM_BOOK_PAGES[activity.page];this.roomActivityPanel.innerHTML='<small>모험 책장 · '+(activity.page+1)+' / '+ROOM_BOOK_PAGES.length+'</small><h3>'+page.title+'</h3><p>'+page.text+'</p><div><button data-room-life="next">다음 장 읽기</button><button data-room-life="stop">책 덮기</button></div>';}
   private applyRoomActivityPose(){const activity=this.roomActivity;if(!activity)return;const body=this.player.userData.body as T.Group;if(activity.kind==='sit'){body.position.y=.48;body.scale.y=.78;body.rotation.z=0;for(const foot of this.player.userData.feet as T.Mesh[]){foot.position.y=-.3;foot.position.z=.58;}}else{body.rotation.x=.07;for(const arm of this.player.userData.arms as T.Mesh[])arm.rotation.x=-.7;for(const hand of this.player.userData.hands as T.Mesh[]){hand.position.y=.8;hand.position.z=.4;}}const weapon=this.player.userData.weapon as T.Group|undefined;if(weapon)weapon.visible=false;}
   updateRoomFurniture(s: Save, render = true) {
     if (!this.inRoom || !this.furnitureRoot) return;
