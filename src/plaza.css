@@ -5,3 +5,12 @@
 
 /* Live speech sits above the existing level and title, without taking pointer input. */
 .plaza-speech{position:relative;box-sizing:border-box;width:max-content;min-width:44px;max-width:200px;margin:0 auto 12px;padding:8px 12px;border:1.5px solid #b9a375;border-radius:13px;background:#fffdf2;color:#244839;box-shadow:0 3px 8px #263d312e;font-size:14px;font-weight:800;line-height:1.35}.plaza-speech[hidden],.plaza-nameplate.is-speaking>.plaza-emote{display:none}.plaza-speech::after{content:"";position:absolute;bottom:-5px;left:calc(50% - 4px);width:8px;height:8px;transform:rotate(45deg);background:#fffdf2;border-right:1.5px solid #b9a375;border-bottom:1.5px solid #b9a375}.plaza-speech>span{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;overflow:hidden;overflow-wrap:anywhere}.plaza-nameplate.is-self .plaza-speech,.plaza-nameplate.is-self .plaza-speech::after{border-color:#c29c4f}.plaza-nameplate.is-self .plaza-speech,.plaza-nameplate.is-self .plaza-speech::after{background:#fff5d8}@media(max-width:650px){.plaza-speech{max-width:160px;font-size:14px;padding:8px 8px}}
+/* 2026-11-27 우리 반 광장 */
+.plaza-class{display:grid;gap:6px;margin:6px 0;padding:10px 12px;border-radius:14px;background:#f3f8ea;border:1.5px solid #cfe0b8}
+.plaza-class b{color:#2f5a22}
+.plaza-class p{margin:0;font-size:.86rem;line-height:1.45;color:#4b5a35}
+.plaza-class-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px}
+.plaza-class-row input{min-height:44px;min-width:0;padding:0 10px;border-radius:10px;border:2px solid #cfe0b8;background:#fffdf6;font-size:1.05rem;letter-spacing:.08em;text-transform:uppercase}
+.plaza-class button{min-height:44px}
+.plaza-class .plaza-class-made{font-weight:700;color:#8c1f45;font-size:1rem}
+.plaza-class .plaza-class-error{color:#a12a3a;font-weight:700}

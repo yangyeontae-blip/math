@@ -109,18 +109,18 @@
     "e2e/world-two.spec.mjs": "ccffa5e88c3c2e8b062b172ea2e6c94b80ad2e2302a80ca44f9b392f682a914f",
     "src/plaza-protocol.ts": "ecab1d5ff857711fdeacb125a9246eb5da6ef4923b07f7127fca777bf58b0920",
     "src/plaza-identity.ts": "761b6765d77bb67fb641e11c211487c26bd95dab9d95d6bc751cdff33a32e880",
-    "src/plaza-client.ts": "0c81254c7bca023d876459e497b8e5c8707ce9572b5946fbc29de1ea6a2ecfdf",
-    "src/plaza-controller.ts": "27e4cc256c19f297ba4c466deba95c2070407eac935c3c322879b9f4cdd38236",
+    "src/plaza-client.ts": "eabc7197528cd17b0fc5e3b438adee0636f567cabc93d093a5522de48c230ec8",
+    "src/plaza-controller.ts": "6a9ecf1d0dfd20df6a7de5e1949b077bc08c1f3e25de18d48f6dd65264efe8e0",
     "src/plaza-world.ts": "5f04d1479b76fdc069282d7002e0285aec832d9dda21799dfa80713a3d8e4b0a",
     "src/plaza-endpoint.ts": "8209e54c95cbd78b65a44eefd6bfd658759567b7d8af6af4a2e87a102249e790",
-    "src/plaza.css": "1841405ff2c88a4de5f3e59e1a1eb73e0dce300b3c66488ecf442c70af65dd20",
+    "src/plaza.css": "23e4a2e29f14b78a883eca45cf23ee08a71ff6dacfefbd0e86a3ca3e9cf43b17",
     "tests/plaza.test.ts": "107e894b5210a171884f85e18a55f9abcbb2bc2a85f99953a9b0434dc428b1c6",
     "e2e/plaza.spec.mjs": "5da02f96c8d88324fd588cbb6648f12af6604e00afbb4ab713b8cfb386ce948e",
     "e2e/plaza-server.mjs": "cd016309ab2ef4b00c50c706f47a120efd73e6ad09e25646404a2aeb90f5d16b",
     "scripts/build-plaza.mjs": "cd9262c9c77bdb2ed4bb6589c14f3d211405f5b8f9a37b815832200d7c15538d",
-    "realtime/index.mjs": "f1285e7f126dadbc9b90caa4518b670cb57788ec391c159f133d81853aa89bb7",
+    "realtime/index.mjs": "134ee5549dca1a060ac622083d3e7c0cc13f7fe1d0a7218134af2e142a719887",
     "realtime/wrangler.jsonc": "f5a20cb84d35d340acf6afb3302bd49985272666cbc171408495f562d33f0cae",
-    "realtime/plaza.test.mjs": "4d01371030aa24c45d7ace93fa0aa77387d492ad192e8ea38f1057ffed1c5b07",
+    "realtime/plaza.test.mjs": "bb01ba7448ed03587ceb4881b35dd273dd720318b541bcc3c43a7b72154b5c53",
     "src/world-two-planet.ts": "71cf7902894fd36bdeb3476930a0363976cd342a50f177491402633f308eeb0d",
     "src/astral-questions.ts": "f22cdfe23dba16a5bd41e1062cbbb95925465d198b00401b676f5eb1714da6e4",
     "src/astral-study.ts": "be9e7191cf5adee5a81fdd5a29f8547f12320a52a1b218e43a50bf90c2982210",
@@ -694,7 +694,8 @@
     "public/art/workshop/potion-3.webp": "83fa45948c468c49b7febe565e675ac3df9e4ee196fcf465f7f4e7921f91b494",
     "public/art/workshop/potion-4.webp": "8466517209a3b90e062033641b0501081fd13e9336816eb23ceae649da02712b",
     "public/art/workshop/potion-5.webp": "259df8df6fde51c800382dd497e4aea5555a911a4cf407ce8cd0cca1066f84a8",
-    "public/art/workshop/recipe-card.webp": "2c7e6fce916e282edfe071b349732df6ab280cc7c37531df1fcde5a9c42c7556"
+    "public/art/workshop/recipe-card.webp": "2c7e6fce916e282edfe071b349732df6ab280cc7c37531df1fcde5a9c42c7556",
+    "src/class-room.ts": "dbd52cafa2d414d2f7cbb3435ec5ccebe3548aba555ded22a686425491d93b0e"
   },
   "generation": "37edd90d33839ddf29d870ad4f5fe8b6df57a5a5872c4ab7b6ea8b26a133ccdb"
 }

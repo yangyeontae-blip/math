@@ -2,6 +2,7 @@ import {handlePartyInvite} from './party-invites.mjs';
 import {HallOfFame} from './hall.mjs';
 import {hallResponseLimit} from '../src/hall.ts';
 import {parseForestRoom,forestRoomKey,presenceIdFromHash} from '../src/forest-room.ts';
+import {normalizeClassRoomCode,classRoomKey} from '../src/class-room.ts';
 export {ForestParty} from './party.mjs';
 import {PlazaSocial} from './social.mjs';
 import {DurableObject} from 'cloudflare:workers';
@@ -30,8 +31,9 @@ export default {
   if(!allowedPlazaOrigin(request.headers.get('origin')))return json({error:'origin'},403);
   if(request.method!=='GET'||request.headers.get('upgrade')?.toLowerCase()!=='websocket')return json({error:'websocket_required'},426);
   if(url.searchParams.get('v')!==String(PLAZA_VERSION))return json({error:'update_required'},409);
-  // One fixed object for every origin, device and profile. No per-user rooms or channels.
-  return env.PLAZA.get(env.PLAZA.idFromName(PLAZA_ROOM)).fetch(request);
+  // 모두의 광장은 고정된 방 하나. 선생님이 만든 반 코드(맞춤 글자까지 맞는 것)가 오면 그 반만의 광장 방으로 보내요.
+  const classCode=normalizeClassRoomCode(url.searchParams.get('class'));
+  return env.PLAZA.get(env.PLAZA.idFromName(classCode?classRoomKey(classCode):PLAZA_ROOM)).fetch(request);
  }
 };
 export class SharedPlaza extends DurableObject {

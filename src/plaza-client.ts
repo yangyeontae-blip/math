@@ -28,6 +28,10 @@ export class PlazaClient {
  private socket:WebSocket|null=null;private active=false;private profile:PlazaProfile|null=null;private pose:PlazaPose={x:0,y:0,z:8,angle:0};
  private peers=new Map<string,PlazaPlayer>();private selfId='';private seq=0;private retryAt=0;private attempt=0;private lastSent='';private lastPose:PlazaPose|null=null;private poseAt=0;private lastProfile='';private profileAt=0;private lastPing=0;private lastPong=0;private openedAt=0;
  constructor(private endpoint:string,private hooks:Hooks,private createSocket:(url:string)=>WebSocket=url=>new WebSocket(url)){}
+ private classCode='';
+ /** 우리 반 광장 코드. 바뀌면 지금 방에서 나와 새 방으로 다시 들어가요(수학숲·상점거리는 그대로 모두의 방). */
+ setClassRoom(code:string|null){const next=code??'';if(next===this.classCode)return;this.classCode=next;if(!this.scene&&!this.market){this.disconnect();this.retryAt=0;}}
+ get classRoom(){return this.classCode;}
  get players(){return [...this.peers.values()];}
  get connected(){return !!this.selfId&&this.socket?.readyState===1;}
  sync(active:boolean,profile:PlazaProfile|null,pose:PlazaPose,now=Date.now(),scene:ForestRoom|null=null,market=false){
@@ -49,7 +53,7 @@ export class PlazaClient {
  }
  private send(value:unknown){try{this.socket?.send(JSON.stringify(value));}catch{if(this.socket)this.fail(this.socket);}}
  private connect(now:number){
-  let url:URL;try{url=new URL(this.endpoint);if(!['wss:','ws:'].includes(url.protocol))throw Error();url.pathname=this.scene?'/forest/connect':this.market?'/market/connect':'/connect';url.search='?v='+PLAZA_VERSION+(this.scene?'&grade='+this.scene.grade+'&forest='+this.scene.forest+'&stage='+this.scene.stage:'');}catch{this.hooks.status('offline',0);this.retryAt=now+60000;return;}
+  let url:URL;try{url=new URL(this.endpoint);if(!['wss:','ws:'].includes(url.protocol))throw Error();url.pathname=this.scene?'/forest/connect':this.market?'/market/connect':'/connect';url.search='?v='+PLAZA_VERSION+(this.scene?'&grade='+this.scene.grade+'&forest='+this.scene.forest+'&stage='+this.scene.stage:'')+(!this.scene&&!this.market&&this.classCode?'&class='+this.classCode:'');}catch{this.hooks.status('offline',0);this.retryAt=now+60000;return;}
   this.openedAt=now;this.hooks.status(this.attempt?'retrying':'connecting',0);
   let socket:WebSocket;try{socket=this.createSocket(url.href);}catch{this.retryAt=now+5000;return;}this.socket=socket;
   socket.onopen=()=>{if(this.socket!==socket)return;this.lastPong=Date.now();this.lastPing=Date.now();this.profileAt=Date.now();this.serverCatalog=2;this.titleCatalog=1;this.titleSelection=false;const wireProfile={...compatiblePlazaProfile(this.profile!,2)};delete wireProfile.selectedTitleId;this.lastProfile=JSON.stringify([wireProfile,this.grade]);this.lastSent=JSON.stringify(this.pose);this.send({type:'join',profile:wireProfile,grade:this.grade,partyInvites:true,pose:this.pose,batchedPoses:true,titleSelection:true,titleCatalog:PLAZA_TITLE_CATALOG,avatarCatalog:2,salonCatalog:true,chatIdentity:this.identity,operatorToken:this.operatorToken});};

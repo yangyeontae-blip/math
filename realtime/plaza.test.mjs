@@ -97,3 +97,12 @@ test('plaza trade: request, accept, offers, both lock → each side gets the oth
  b.socket.send(JSON.stringify({type:'trade-reply',tradeId:second.tradeId,accept:true}));await a.next('trade-state');
  b.socket.close(1000,'bye');assert.equal((await a.next('trade-closed')).reason,'gone');
 });
+test('class plaza codes split the central plaza into separate rooms and bad codes fall back to everyone',{timeout:10000},async t=>{
+ const {makeClassCode}=await import('../src/class-room.ts');
+ const mf=await setup(t),code=makeClassCode(()=>.3),other=makeClassCode(()=>.7);
+ const a=await connect(mf,origin,profile('ClassA1'),true,{},'/connect?v=1&class='+code),b=await connect(mf,origin,profile('ClassA2'),true,{},'/connect?v=1&class='+code.toLowerCase());
+ const c=await connect(mf,origin,profile('ClassB'),true,{},'/connect?v=1&class='+other),d=await connect(mf,origin,profile('Everyone'),true,{},'/connect?v=1&class=ABCDEFG');
+ assert.deepEqual(b.welcome.players.map(p=>p.profile.nickname),['ClassA1']);
+ assert.equal(c.welcome.players.length,0);
+ assert.equal(d.welcome.players.length,0);
+});
