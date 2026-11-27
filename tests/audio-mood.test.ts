@@ -9,3 +9,11 @@ test('time of day picks a calm mood for every hour', () => {
   assert.equal(moodForHour(23), 'night');
   assert.equal(moodForHour(3), 'night');
 });
+
+test('christmas arrangement turns on and off without changing the melody', async () => {
+  const { Sound } = await import('../src/audio.ts');
+  const s = new Sound();
+  assert.equal(s.isChristmas, false);
+  s.setChristmas(true); assert.equal(s.isChristmas, true);
+  s.setChristmas(false); assert.equal(s.isChristmas, false);
+});

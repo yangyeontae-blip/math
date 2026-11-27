@@ -405,6 +405,7 @@ const scheduleAmbience = () => {
 const refreshChristmas = () => {
   const on = !!state && christmasActive();
   world?.setChristmas(on);
+  audio.setChristmas(on); // 12/26 0시가 지나면 원래 배경음악 소리로 돌아가요.
   document.body.classList.toggle('is-christmas', on && !!world?.isPublicPlaza);
   if (!on) document.querySelectorAll('.christmas-notice, [data-christmas-notice]').forEach(el => el.remove());
 };

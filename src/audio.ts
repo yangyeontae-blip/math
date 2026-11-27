@@ -20,7 +20,7 @@ const BATTLE: Melody = { notes: [659, 784, 880, 784, 659, 587, 659, 0, 523, 587,
 export class Sound {
   private ctx?: AudioContext;
   private timer?: ReturnType<typeof setInterval>;
-  music = true; effects = true; private step = 0; private mood: Mood = 'day'; private scene: Scene = 'village'; private battle = false; private watching = false;
+  music = true; effects = true; private christmas = false; private noise?: AudioBuffer; private step = 0; private mood: Mood = 'day'; private scene: Scene = 'village'; private battle = false; private watching = false;
   start() {
     this.ctx ??= new AudioContext(); void this.ctx.resume(); this.restartTimer();
     // 앱을 내렸다 다시 열면(특히 iOS) 소리가 멈춰 있을 수 있어서 다시 깨워요.
@@ -28,6 +28,9 @@ export class Sound {
   }
   setMood(mood: Mood) { if (mood === this.mood) return; this.mood = mood; this.step = 0; if (this.timer) this.restartTimer(); }
   setScene(scene: Scene) { if (scene === this.scene) return; this.scene = scene; this.step = 0; if (this.timer) this.restartTimer(); }
+  /** 크리스마스 이벤트(12/25까지): 원래 베리의 숲 멜로디에 종소리와 썰매 방울을 얹어요. 끝나면 원래 소리로 돌아가요. */
+  setChristmas(on: boolean) { this.christmas = on; }
+  get isChristmas() { return this.christmas; }
   setBattle(battle: boolean) { if (battle === this.battle) return; this.battle = battle; this.step = 0; if (this.timer) this.restartTimer(); }
   private get melody(): Melody { return this.battle ? BATTLE : this.mood === 'night' ? NIGHT : DAY[this.scene]; }
   private restartTimer() { if (this.timer) clearInterval(this.timer); this.timer = setInterval(() => this.background(), this.melody.every); }
@@ -40,7 +43,23 @@ export class Sound {
   private background() {
     if (!this.music || document.hidden) return;
     const m = this.melody, n = m.notes[this.step++ % m.notes.length]; if (n) this.note(n, this.battle ? .4 : .8, m.volume, 0, this.battle ? 'triangle' : 'sine');
+    if (this.christmas) this.christmasLayer(n, m);
     if (this.step % 4 === 0) this.note(m.bass[Math.floor(this.step / 4) % 4], this.battle ? .8 : 1.6, m.volume + .003);
+  }
+  /** 크리스마스 편곡: 한 옥타브 위 글로켄슈필 종소리 + 박자마다 썰매 방울(짤랑). 멜로디·빠르기는 원래 그대로예요. */
+  private christmasLayer(n: number, m: Melody) {
+    if (n) { this.note(n * 2, .5, m.volume * .45, 0, 'sine'); this.note(n * 3, .18, m.volume * .12, 0, 'sine'); }
+    const beat = this.step % 2 === 1;
+    this.sleighBell(beat ? m.volume * 1.1 : m.volume * .5);
+    if (beat && this.step % 4 === 1) this.sleighBell(m.volume * .6, m.every / 2000);
+  }
+  private sleighBell(volume: number, delay = 0) {
+    if (!this.ctx || this.ctx.state !== 'running') return;
+    if (!this.noise) { const b = this.ctx.createBuffer(1, Math.floor(this.ctx.sampleRate * .2), this.ctx.sampleRate), d = b.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1; this.noise = b; }
+    const at = this.ctx.currentTime + delay, src = this.ctx.createBufferSource(), filter = this.ctx.createBiquadFilter(), gain = this.ctx.createGain();
+    src.buffer = this.noise; filter.type = 'bandpass'; filter.frequency.value = 7200; filter.Q.value = 1.4;
+    gain.gain.setValueAtTime(0, at); gain.gain.linearRampToValueAtTime(volume, at + .005); gain.gain.exponentialRampToValueAtTime(.0005, at + .16);
+    src.connect(filter); filter.connect(gain); gain.connect(this.ctx.destination); src.start(at); src.stop(at + .2);
   }
   /** 말풍선에서 글자가 나올 때 나는 작은 '뽀로롱' 소리 (높이를 조금씩 바꿔요). */
   talk(seed: number) {
